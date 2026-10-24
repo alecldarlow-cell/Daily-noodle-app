@@ -292,6 +292,10 @@ async function refusedOne(browser, pg) {
     `replay mini: ${chosen.length} of ${list.length} Mini pages with data (${without} older pages without DN_PUZZLE play on the bridge), ` +
       `${jobs.length} runs, variants ${VARS.join(', ')}, site ${SITE}`,
   );
+  if (!jobs.length) {
+    console.error('replay: nothing to replay (no Mini pages with data found); refusing to pass');
+    process.exit(1);
+  }
   const browser = await H.launch();
   let okRuns = 0;
   let moves = 0;
@@ -345,10 +349,16 @@ async function refusedOne(browser, pg) {
     }
   }
   const secs = Math.round((Date.now() - t0) / 1000);
-  console.log(
-    `\nreplay mini: ${okRuns}/${jobs.length} runs identical (${moves} moves compared) across ${chosen.length} Minis in ${secs} s` +
-      (failures.length ? `; ${failures.length} differ` : ''),
-  );
+  const summary =
+    `replay mini: ${okRuns}/${jobs.length} runs identical (${moves} moves compared) across ${chosen.length} Minis in ${secs} s` +
+    (failures.length ? `; ${failures.length} differ` : '');
+  console.log(`\n${summary}`);
+  // On GitHub, the result as an annotation too, so it can be read from the check run.
+  if (process.env.GITHUB_ACTIONS) {
+    console.log(`::${failures.length ? 'error' : 'notice'} title=replay::${summary}`);
+    for (const f of failures.slice(0, 10))
+      console.log(`::error title=replay differs::${f.label} at ${f.diffs[0].at}`);
+  }
   process.exit(failures.length ? 1 : 0);
 })().catch((e) => {
   console.error(e);
