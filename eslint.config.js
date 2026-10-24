@@ -6,12 +6,18 @@ const { defineConfig } = require('eslint/config');
 const expoConfig = require('eslint-config-expo/flat');
 const prettier = require('eslint-config-prettier');
 const boundaries = require('eslint-plugin-boundaries');
+const globals = require('globals');
 
 module.exports = defineConfig([
   expoConfig,
   prettier,
   {
     ignores: ['node_modules/**', 'coverage/**', '.expo/**', 'dist/**', 'packages/*/vendor/**'],
+  },
+  {
+    // Node scripts and config files.
+    files: ['scripts/**/*.js', '*.config.js', 'test/**/*.js'],
+    languageOptions: { globals: globals.node },
   },
   {
     files: ['src/**/*.{ts,tsx}', 'packages/*/src/**/*.ts'],

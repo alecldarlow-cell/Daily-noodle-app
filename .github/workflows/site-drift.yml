@@ -1,0 +1,35 @@
+name: Site drift
+
+# Nightly: has the site changed a rule @noodle/core ports? Clones the public site repo,
+# checks the vendored copies, and if they are stale re-vendors and reruns the
+# differential tests against the new code. Red means the app no longer matches the site.
+on:
+  schedule:
+    - cron: '23 4 * * *'
+  workflow_dispatch:
+
+jobs:
+  drift:
+    name: drift
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Clone the site
+        run: git clone --depth 1 https://github.com/alecldarlow-cell/dailynoodle ../dailynoodle
+      - name: Vendored copies current?
+        id: fresh
+        run: node scripts/vendor-site.js --site ../dailynoodle --check
+        continue-on-error: true
+      - name: Re-vendor and rerun the differential tests
+        if: steps.fresh.outcome == 'failure'
+        run: |
+          node scripts/vendor-site.js --site ../dailynoodle
+          npx jest packages/core --ci
+          echo "::warning::The site changed code @noodle/core vendors. Tests above show whether the port still matches; re-vendor in a pull request either way."
+          exit 1
