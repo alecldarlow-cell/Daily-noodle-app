@@ -2,7 +2,7 @@ import { londonDay } from '@noodle/core';
 import { act, renderHook } from '@testing-library/react-native';
 import { AppState } from 'react-native';
 
-import { monthLabel, shortDate } from '../format';
+import { longDate, monthLabel, shortDate } from '../format';
 import { msToNextLondonDay, useLondonDay } from '../useLondonDay';
 
 describe('GIVEN an instant', () => {
@@ -22,6 +22,11 @@ describe('GIVEN days to show', () => {
   it('THEN they read the British way', () => {
     expect(shortDate('2026-10-24')).toBe('Sat 24 Oct');
     expect(monthLabel('2026-10-24')).toBe('October 2026');
+    expect(longDate('2026-10-24')).toBe('Saturday 24 October');
+    expect(longDate('2026-09-01')).toBe('Tuesday 1 September');
+  });
+  it('THEN a day that is not a date is shown as it came', () => {
+    expect(longDate('soon')).toBe('soon');
   });
 });
 
