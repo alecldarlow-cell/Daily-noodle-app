@@ -9,28 +9,28 @@ below when it finishes.
 
 ## Status
 
-| WP  | Deliverable                                                   | Status      |
-| --- | ------------------------------------------------------------- | ----------- |
-| 0   | App repo scaffolded, CI green                                 | in review   |
-| 1   | `@noodle/core` with differential test against `dn-core.js`    | not started |
-| 2   | Site publishes `feed-lite.json` and per-puzzle JSON (site PR) | not started |
-| 3   | Today and Archive screens, offline-capable                    | not started |
-| 4   | WebView bridge: play, finish, share, saves                    | not started |
-| 5   | Leagues: board, join, submit, first-run handoff               | not started |
-| 6   | EAS builds, TestFlight and Play internal track                | not started |
-| 7   | Optional sign-in and sync, web and app                        | not started |
-| 8   | Port recipe, shared start card and finish sheet, Mini native  | not started |
-| 9   | Sweep and Path native                                         | not started |
-| 10  | Link, Tangle, Reckon, Borders native                          | not started |
-| 11  | Doku native                                                   | not started |
-| 12  | Polish, notifications decision, release decision              | not started |
+| WP  | Deliverable                                                   | Status                                                                     |
+| --- | ------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| 0   | App repo scaffolded, CI green                                 | done ([#1](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/1))   |
+| 1   | `@noodle/core` with differential test against `dn-core.js`    | done ([#2](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/2))   |
+| 2   | Site publishes `feed-lite.json` and per-puzzle JSON (site PR) | done ([site #21](https://github.com/alecldarlow-cell/dailynoodle/pull/21)) |
+| 3   | Today and Archive screens, offline-capable                    | done ([#3](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/3))   |
+| 4   | WebView bridge: play, finish, share, saves                    | not started                                                                |
+| 5   | Leagues: board, join, submit, first-run handoff               | not started                                                                |
+| 6   | EAS builds, TestFlight and Play internal track                | not started                                                                |
+| 7   | Optional sign-in and sync, web and app                        | not started                                                                |
+| 8   | Port recipe, shared start card and finish sheet, Mini native  | not started                                                                |
+| 9   | Sweep and Path native                                         | not started                                                                |
+| 10  | Link, Tangle, Reckon, Borders native                          | not started                                                                |
+| 11  | Doku native                                                   | not started                                                                |
+| 12  | Polish, notifications decision, release decision              | not started                                                                |
 
 ## Entries
 
 ### 24 Oct 2026 — WP0
 
 - Repo is `alecldarlow-cell/Daily-noodle-app` (the plan said `dailynoodle-app`; read the doc's name as this one). It is
-  **public**; the plan assumed private. Nothing secret is or will be committed
+  **public** at first; the plan assumed private. Alec made it private on 24 Oct 2026. Nothing secret is or will be committed
   (only the Supabase anon key, already public in the site), but Alec may want it
   private before WP5.
 - Expo SDK 58 (`expo` 58.0.19, React Native 0.88, React 19.3, Expo Router 58 with
@@ -118,3 +118,12 @@ below when it finishes.
   iOS simulators on GitHub's macOS runners for every PR would also cost about 10× Linux
   minutes for a hobby project; WP6 should decide between EAS Workflows' Maestro step
   and a nightly macOS job.
+
+### 24 Oct 2026 — housekeeping
+
+- Repo made private by Alec. Branch protection for `main` can't be set from Claude's
+  workspace (GitHub settings writes are blocked), and GitHub Free doesn't offer it on
+  private repos. Merges stay gated by the session rule: only when `check` is green.
+- Expo SDK 58 confirmed as the current stable SDK (npm `latest`, 24 Oct 2026; 59 is canary only).
+- Merged topic branches can't be deleted from the workspace either (the proxy refuses
+  ref deletes); `wp0-scaffold`, `wp1-core`, `wp3-today` remain on GitHub, harmless.
