@@ -1,0 +1,8 @@
+{
+  "name": "@noodle/core",
+  "version": "0.1.0",
+  "private": true,
+  "description": "The Daily Noodle's shared rules: London days, saves, streaks, share lines. Used by the app and, once proven, the site.",
+  "main": "src/index.ts",
+  "types": "src/index.ts"
+}

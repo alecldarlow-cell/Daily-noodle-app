@@ -1,0 +1,7 @@
+node_modules
+coverage
+.expo
+dist
+package-lock.json
+packages/*/vendor
+assets
