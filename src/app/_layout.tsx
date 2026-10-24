@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useColorScheme } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
+import { LeagueResults } from '@/features/leagues';
 import { QueryProvider } from '@/shared/query';
 import { appStorage } from '@/shared/storage';
 import { tokensFor } from '@/shared/theme';
@@ -29,6 +30,7 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: t.canvas }}>
       <QueryProvider>
+        <LeagueResults />
         <ThemeProvider value={scheme === 'dark' ? DarkTheme : DefaultTheme}>
           <Stack
             screenOptions={{ headerShown: false, contentStyle: { backgroundColor: t.canvas } }}>

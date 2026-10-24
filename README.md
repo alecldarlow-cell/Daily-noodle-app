@@ -19,6 +19,14 @@ Node 22 or later.
 npm ci
 ```
 
+## Leagues backend
+
+Leagues call the site's Supabase functions (`board_*`) with the public anon key, as
+`dn-board.js` does. A build reads them from `EXPO_PUBLIC_SUPABASE_URL` and
+`EXPO_PUBLIC_SUPABASE_ANON_KEY`: copy `.env.example` to `.env` for a local build, or set
+them in EAS. Without them Leagues says it isn't available in this build. Tests never
+use them: every test mocks the server, and none may reach `*.supabase.co`.
+
 ## Run
 
 ```sh

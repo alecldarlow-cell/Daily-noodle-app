@@ -1,0 +1,50 @@
+# WP5: start a league, see its boards, invite, and leave; then the way back in.
+# Runs against an installed build (EAS, WP6) whose EXPO_PUBLIC_SUPABASE_URL points at a
+# LOCAL Supabase stack (`supabase start` with dailynoodle's toolchain/sql applied), never
+# the live project:  maestro test -e APP_ID=… .maestro/leagues.yaml
+# Still to add once that CI job exists: finish a puzzle through the bridge (needs a
+# seeded puzzle the flow can solve) and see it on the day's board.
+appId: ${APP_ID}
+---
+- launchApp:
+    clearState: true
+- tapOn: Leagues
+- assertVisible:
+    id: leagues-intro
+- assertVisible: Already in a league on another browser or app?
+- tapOn: Start a league
+- tapOn:
+    id: field-league-name
+- inputText: Maestro family
+- tapOn:
+    id: field-nickname
+- inputText: Tester
+- hideKeyboard
+- tapOn: Start league
+- extendedWaitUntil:
+    visible: Maestro family is ready
+    timeout: 15000
+- assertVisible:
+    id: overall-board
+- tapOn:
+    id: pill-mini
+- assertVisible:
+    id: day-board
+- assertVisible: Previous day
+- tapOn: Invite people
+- back
+- scrollUntilVisible:
+    element: ⚙︎ League settings
+- tapOn: ⚙︎ League settings
+- scrollUntilVisible:
+    element: Leave league
+- tapOn: Leave league
+- tapOn: Leave
+- extendedWaitUntil:
+    visible:
+      id: leagues-intro
+    timeout: 15000
+- tapOn: Already in a league on another browser or app?
+- assertVisible: Already in a league?
+- tapOn: Have a personal link instead?
+- assertVisible: Bring your leagues here
