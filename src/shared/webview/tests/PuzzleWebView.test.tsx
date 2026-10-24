@@ -3,6 +3,7 @@ import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import { router } from 'expo-router';
 import { Linking, Share } from 'react-native';
 
+import { onFinish } from '@/shared/results';
 import { createCachedStorage } from '@/shared/storage';
 
 import { PuzzleWebView } from '../PuzzleWebView';
@@ -60,6 +61,8 @@ describe('GIVEN a puzzle opened through the bridge', () => {
       .spyOn(Share, 'share')
       .mockResolvedValue({ action: 'sharedAction', activityType: undefined });
     const onEnd = jest.fn();
+    const heard = jest.fn();
+    const off = onFinish(heard);
     const { store, saves } = setup();
     await render(<PuzzleWebView file={FILE} store={store} saves={saves} onEnd={onEnd} />);
     await send({ t: 'share', text: '✏️ Mini #105 — 1:27\ndailynoodle.co.uk/mini' });
@@ -67,6 +70,12 @@ describe('GIVEN a puzzle opened through the bridge', () => {
     await send({ nonsense: true });
     expect(share).toHaveBeenCalledWith({ message: '✏️ Mini #105 — 1:27\ndailynoodle.co.uk/mini' });
     expect(onEnd).toHaveBeenCalledWith({ outcome: 'solved' }, FILE);
+    expect(heard).toHaveBeenCalledWith({
+      path: `reports/${FILE}.html`,
+      type: 'mini',
+      detail: { outcome: 'solved' },
+    });
+    off();
   });
 
   it('THEN links go where they belong', async () => {
