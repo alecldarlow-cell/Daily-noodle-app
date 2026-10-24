@@ -48,3 +48,36 @@ below when it finishes.
   with coverage on every PR and on `main`.
 - Placeholder screens for the four tabs, house colour tokens from `front.css`, site icons.
 - Needs Alec: turn on branch protection for `main` requiring the `check` job.
+
+### 24 Oct 2026 — WP1
+
+- `@noodle/core` (`packages/core/src`): `london` (londonDay, dayBefore), `ids` (types,
+  `TYPE_OF_ID`, player numbers, storage keys), `saves` (a save store over any
+  Web-Storage-shaped KV: getDone, putDone, saveProgress, saveStreak, failure notices
+  and retry; mergeStreak, mergeProgress, same, progressOnly), `streaks`, `played`
+  (resultText, playedState, clock, overall run), `share` (all eight lines + short
+  link), `today` (acceptToday).
+- **Streaks are three rules, not one** (found reading the engines): Mini/Doku bump on a
+  solve; Sweep/Link also reset to 0 on a loss; Path has no pre-18-Oct grace day. Plus
+  Doku's seed-from-results and the `{last, n, best}` round streak (Tangle, Borders,
+  Reckon; Tangle and Reckon count only on the puzzle's own day — the caller decides).
+- **Differential tests** against the site's own code, vendored by
+  `scripts/vendor-site.js` from dailynoodle@c26f3ba (dn-core.js verbatim; functions
+  lifted by name from front.js and the engines): 10,000 instants (a third within 90
+  min of London midnight, a third within 48 h of a clock change) for londonDay and
+  dayBefore; 2,000 seeded cases each for mergeStreak, mergeProgress, saveProgress with
+  write failures, putDone/getDone with failure and retry, the Mini/Doku, Sweep, Link and
+  Path streak updates, Path's live count, Doku's seed, card wording and played state,
+  clocks, and Sweep/Link share lines. All identical. Mutation check: breaking the
+  grace-day rule or the 🔥 threshold fails the suite.
+- Tangle, Borders and Reckon share lines are tested against the agreed examples (their
+  engine functions close over page state, so they can't be lifted).
+- **Contract correction:** Tangle's share line ends ` ★` when the star word was found
+  (`engines/tangle.js` shareLine). The plan's Contracts tab omitted it; fixed there.
+- Nightly `Site drift` workflow: clones the site, fails if the vendored copies are stale,
+  and reruns the differential tests against the new site code.
+- 74 tests, 97.7% lines. `dn-core.js`'s `saveStreak` also tries an async external store
+  (`window.storage`, a Claude-artifact API); the app has no such store, so the port
+  writes to its KV only.
+- Not done here (deferred by design): the site adopting `@noodle/core` (open decision on
+  the Plan tab; WP3 or later).

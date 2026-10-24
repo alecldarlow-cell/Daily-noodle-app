@@ -47,7 +47,7 @@ src/
   features/<feature>/  components/ hooks/ api/ schemas/ types/ tests/
   shared/              theme (house tokens), ui, and later storage and the WebView bridge
 packages/core/         @noodle/core: London days, saves, streaks, share lines
-scripts/               tooling (boundary self-test; later the differential replay)
+scripts/               tooling: boundary self-test, vendor-site (copies the site's rules for differential tests)
 docs/                  build log and ADRs
 ```
 
