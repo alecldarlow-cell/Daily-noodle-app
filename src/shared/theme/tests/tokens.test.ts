@@ -1,3 +1,4 @@
+import { puzzleTokensFor } from '../puzzle';
 import { tokensFor } from '../tokens';
 
 describe('GIVEN the house colour tokens', () => {
@@ -23,5 +24,17 @@ describe('GIVEN the house colour tokens', () => {
     it('THEN both define every token', () => {
       expect(Object.keys(tokensFor('dark')).sort()).toEqual(Object.keys(tokensFor('light')).sort());
     });
+  });
+});
+
+describe('GIVEN the players’ palette', () => {
+  it('THEN the cursor is marigold in both schemes and dark falls back to light otherwise', () => {
+    expect(puzzleTokensFor('light').active).toBe('#FFD54A');
+    expect(puzzleTokensFor('dark').active).toBe('#FFD54A');
+    expect(puzzleTokensFor('dark').activeWord).toBe('#4A4220');
+    expect(puzzleTokensFor(null)).toBe(puzzleTokensFor('light'));
+    expect(Object.keys(puzzleTokensFor('dark')).sort()).toEqual(
+      Object.keys(puzzleTokensFor('light')).sort(),
+    );
   });
 });

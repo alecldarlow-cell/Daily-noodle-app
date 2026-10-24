@@ -1,4 +1,5 @@
 # WP4: a puzzle opens through the WebView bridge and its page loads in the app.
+# (Doku: the Mini plays natively from WP8, see mini.yaml.)
 # Runs against an installed build (EAS, WP6): maestro test .maestro/bridge.yaml
 appId: ${APP_ID}
 ---
@@ -6,11 +7,11 @@ appId: ${APP_ID}
 - assertVisible:
     id: today-screen
 - tapOn:
-    id: today-mini
+    id: today-doku
 - assertVisible:
     id: play-webview
 - extendedWaitUntil:
-    visible: 'Mini'
+    visible: 'Doku'
     timeout: 15000
 - back
 - assertVisible:

@@ -8,6 +8,7 @@ reads what its build publishes and talks to the same Supabase backend.
 - Plan, build brief and data contracts: [the conversion plan](https://claude.ai/artifact/HmMQXKYfM23GanNGuV62zB)
 - What has been built, session by session: [`docs/log.md`](docs/log.md)
 - Decisions that depart from the standard: [`docs/adr/`](docs/adr)
+- Porting a puzzle engine to native: [`docs/port-recipe.md`](docs/port-recipe.md)
 - Site and content repo: [`alecldarlow-cell/dailynoodle`](https://github.com/alecldarlow-cell/dailynoodle)
   (start with its `SITE.md`)
 
@@ -44,6 +45,19 @@ npm test           # unit and component tests only (Jest, jest-expo preset)
 npm run test:watch
 ```
 
+Native players are proven against the site's own engine by a differential replay: the
+same moves through the web page's real controls (the site's Playwright harness, fake
+clock) and through the native model, compared move by move and at the finish (save,
+streak, `dn:puzzle_end`, share line). It needs a clone of the site with its dev
+dependencies:
+
+```sh
+git clone https://github.com/alecldarlow-cell/dailynoodle ../dailynoodle
+(cd ../dailynoodle && npm ci --ignore-scripts)
+node scripts/replay.js --type mini --sample 50 --site ../dailynoodle   # CI, every PR
+node scripts/replay.js --type mini --all --site ../dailynoodle         # nightly
+```
+
 Tests follow `describe('GIVEN …') / describe('WHEN …') / it('THEN …')` and CI enforces
 80% line coverage.
 
@@ -53,9 +67,11 @@ Tests follow `describe('GIVEN …') / describe('WHEN …') / it('THEN …')` and
 src/
   app/                 routes only (Expo Router); each file re-exports a feature screen
   features/<feature>/  components/ hooks/ api/ schemas/ types/ tests/
-  shared/              theme (house tokens), ui, and later storage and the WebView bridge
+  features/puzzles/    native players, one folder per type (mini/: model, oracle, screen)
+  shared/              theme, ui, storage, the WebView bridge, start-card, finish-sheet
 packages/core/         @noodle/core: London days, saves, streaks, share lines
-scripts/               tooling: boundary self-test, vendor-site (copies the site's rules for differential tests)
+scripts/               tooling: boundary self-test, vendor-site (copies the site's rules for differential
+                       tests), replay (native players against the site's engines)
 docs/                  build log and ADRs
 ```
 

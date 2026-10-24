@@ -1,0 +1,29 @@
+name: Replay nightly
+
+# Every published puzzle of every type with a native player, replayed against the
+# site's current engine (scripts/replay.js --all). Red means a native player no longer
+# matches the web: turn the type's `enabled` off or port the change, in a pull request.
+on:
+  schedule:
+    - cron: '41 3 * * *'
+  workflow_dispatch:
+
+jobs:
+  mini:
+    name: replay mini --all
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Clone the site
+        run: git clone --depth 1 https://github.com/alecldarlow-cell/dailynoodle ../dailynoodle
+      - name: The site's Playwright and pinned Chromium
+        working-directory: ../dailynoodle
+        run: npm ci --ignore-scripts
+      - name: Replay every Mini
+        run: node scripts/replay.js --type mini --all --site ../dailynoodle --workers 6

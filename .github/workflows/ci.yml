@@ -31,3 +31,26 @@ jobs:
         run: npm run typecheck
       - name: Unit tests and coverage (80% lines)
         run: npm run test:coverage -- --ci
+
+  # Differential replay (WP8): the native Mini against the site's own engine, on 50
+  # Minis spread across the archive, four oracle variants each, in headless Chromium
+  # from the public site repo's pinned dev dependencies. Nothing leaves the runner:
+  # the site's harness answers every request and blocks Supabase.
+  replay:
+    name: replay
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Clone the site
+        run: git clone --depth 1 https://github.com/alecldarlow-cell/dailynoodle ../dailynoodle
+      - name: The site's Playwright and pinned Chromium
+        working-directory: ../dailynoodle
+        run: npm ci --ignore-scripts
+      - name: Replay 50 Minis, web engine against the native model
+        run: node scripts/replay.js --type mini --sample 50 --site ../dailynoodle --workers 4

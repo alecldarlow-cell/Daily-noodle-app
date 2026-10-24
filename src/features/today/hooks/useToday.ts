@@ -1,14 +1,15 @@
-import { acceptToday, londonDay, type TodayList } from '@noodle/core';
+import { acceptToday, londonDay } from '@noodle/core';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { appStorage, type CachedStorage } from '@/shared/storage';
 import { useLondonDay } from '@/shared/time';
+import { TODAY_CACHE_KEY, cachedToday, fetchToday } from '@/shared/today';
 
-import { fetchToday } from '../api/fetchToday';
 import type { TodayStatus } from '../types';
 
-/** App-only key: the last list accepted for its day, so today works offline. */
-export const LAST_TODAY_KEY = 'noodle-app-today';
+/** App-only key: the last list accepted for its day, so today works offline (shared with the finish sheet). */
+export const LAST_TODAY_KEY = TODAY_CACHE_KEY;
+export { cachedToday };
 
 /** The site's list exists but is dated another day (its nightly build hasn't run yet). */
 export class NotTodayYet extends Error {
@@ -19,15 +20,6 @@ export class NotTodayYet extends Error {
 
 /** Retry gaps while the list is yesterday's: 1, 5, then 15 minutes. */
 export const NEARLY_RETRY_MS = [60_000, 300_000, 900_000] as const;
-
-export function cachedToday(day: string, store: CachedStorage = appStorage): TodayList | undefined {
-  try {
-    const list: unknown = JSON.parse(store.getItem(LAST_TODAY_KEY) ?? 'null');
-    return acceptToday(list) && list.today === day ? list : undefined;
-  } catch {
-    return undefined;
-  }
-}
 
 /**
  * Today's puzzles. A list is used only when it is dated today in London (the finish

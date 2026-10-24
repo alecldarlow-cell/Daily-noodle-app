@@ -6,8 +6,9 @@ import { useTokens } from '@/shared/theme';
 import { PuzzleWebView } from '@/shared/webview';
 
 /**
- * Where a puzzle opens. Every type plays through its page on the site for now
- * (the WebView bridge); from WP8 a type with a native player opens that instead.
+ * A puzzle through its page on the site (the WebView bridge). The play route opens a
+ * type's native player instead where one is enabled (src/features/puzzles), and this
+ * is the fallback when a puzzle has no data file or its data can't play natively.
  */
 export function PlayScreen() {
   const t = useTokens();

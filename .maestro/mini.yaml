@@ -1,0 +1,51 @@
+# WP8: today's Mini plays natively to the finish sheet, and reopens on it.
+# Runs against an installed build (EAS, WP6): maestro test .maestro/mini.yaml
+# Solves by Reveal word on every clue, so it works whatever the day's answers are.
+appId: ${APP_ID}
+---
+- launchApp:
+    clearState: true
+- assertVisible:
+    id: today-screen
+- tapOn:
+    id: today-mini
+- extendedWaitUntil:
+    visible:
+      id: start-card
+    timeout: 15000
+- assertVisible: 'Today’s Mini'
+- tapOn: 'Play'
+- assertVisible:
+    id: mini-board
+- assertVisible: '00:00'
+- tapOn:
+    id: key-A
+- repeat:
+    times: 12
+    while:
+      notVisible:
+        id: finish-sheet
+    commands:
+      - tapOn: 'Reveal word'
+      - tapOn: 'Next clue'
+- extendedWaitUntil:
+    visible:
+      id: finish-sheet
+    timeout: 5000
+- assertVisible: 'Solved'
+- assertVisible:
+    id: finish-share-text
+- assertVisible: 'dailynoodle.co.uk/mini'
+- assertVisible: 'Minis played'
+# Reopened: straight to the sheet, no start card
+- tapOn: '← Puzzles'
+- assertVisible:
+    id: today-screen
+- tapOn:
+    id: today-mini
+- extendedWaitUntil:
+    visible:
+      id: finish-sheet
+    timeout: 10000
+- assertNotVisible:
+    id: start-card

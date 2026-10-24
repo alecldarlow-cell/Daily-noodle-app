@@ -18,7 +18,16 @@ const MONTHS_LONG = [
   'December',
 ];
 
+const DAYS_LONG = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
 const at = (day: string) => new Date(`${day}T12:00:00Z`);
+
+/** "Saturday 24 October" for a YYYY-MM-DD day, as the start card and finish sheet write it. */
+export function longDate(day: string): string {
+  const d = at(day);
+  if (Number.isNaN(d.getTime())) return day;
+  return `${DAYS_LONG[d.getUTCDay()]} ${d.getUTCDate()} ${MONTHS_LONG[d.getUTCMonth()]}`;
+}
 
 /** "Sat 24 Oct" for a YYYY-MM-DD day. */
 export function shortDate(day: string): string {
