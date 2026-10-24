@@ -15,7 +15,7 @@ below when it finishes.
 | 1   | `@noodle/core` with differential test against `dn-core.js`    | done ([#2](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/2))   |
 | 2   | Site publishes `feed-lite.json` and per-puzzle JSON (site PR) | done ([site #21](https://github.com/alecldarlow-cell/dailynoodle/pull/21)) |
 | 3   | Today and Archive screens, offline-capable                    | done ([#3](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/3))   |
-| 4   | WebView bridge: play, finish, share, saves                    | in review                                                                  |
+| 4   | WebView bridge: play, finish, share, saves                    | done ([#5](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/5))   |
 | 5   | Leagues: board, join, submit, first-run handoff               | not started                                                                |
 | 6   | EAS builds, TestFlight and Play internal track                | not started                                                                |
 | 7   | Optional sign-in and sync, web and app                        | not started                                                                |
@@ -152,3 +152,10 @@ below when it finishes.
 - Can't be proven from here: real-phone behaviour of the injected script (iOS WKWebView
   and Android WebView both run `injectedJavaScriptBeforeContentLoaded` before page
   scripts, per the library). First hand check on Alec's phone once WP6 builds exist.
+
+### 24 Oct 2026 — parallel lanes
+
+- Alec allowed parallel work. `shared/results` (`announceFinish` / `onFinish`) is the seam
+  between lanes: the bridge (and native players from WP8) announce a finish with the
+  page path and the site's `dn:puzzle_end` detail; leagues (WP5) subscribe. Features
+  still never import each other.

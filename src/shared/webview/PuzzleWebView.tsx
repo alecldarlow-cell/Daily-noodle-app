@@ -9,11 +9,12 @@ import type {
 
 import { appStorage, saves as appSaves, type CachedStorage } from '@/shared/storage';
 import { useTokens } from '@/shared/theme';
+import { announceFinish } from '@/shared/results';
 import { Note } from '@/shared/ui';
 
 import { buildInjection } from './injection';
 import { applySave, parseMessage, seedFrom } from './messages';
-import { decide, pageUrl } from './navigation';
+import { decide, pageUrl, typeOfFile } from './navigation';
 
 interface Props {
   /** The puzzle page's file name without folder or extension. */
@@ -43,7 +44,10 @@ export function PuzzleWebView({ file, onEnd, store = appStorage, saves = appSave
     if (!m) return;
     if (m.t === 'save') applySave(m.key, m.value, store, saves, m.id || undefined);
     else if (m.t === 'share') void Share.share({ message: m.text });
-    else if (m.t === 'end') onEnd?.(m.detail, file);
+    else if (m.t === 'end') {
+      announceFinish({ path: `reports/${file}.html`, type: typeOfFile(file), detail: m.detail });
+      onEnd?.(m.detail, file);
+    }
   };
 
   const onShouldStart = (req: ShouldStartLoadRequest): boolean => {
