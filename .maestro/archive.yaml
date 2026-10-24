@@ -1,0 +1,13 @@
+# Archive: filter by type and find a puzzle by number.
+appId: ${APP_ID}
+---
+- launchApp
+- tapOn: Archive
+- extendedWaitUntil:
+    visible:
+      id: archive-screen
+    timeout: 20000
+- tapOn: Mini
+- tapOn: Find by number
+- inputText: '100'
+- assertVisible: Mini 100

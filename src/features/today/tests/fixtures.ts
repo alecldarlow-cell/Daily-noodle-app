@@ -1,0 +1,63 @@
+import { dayBefore, londonDay, type TodayList } from '@noodle/core';
+
+/** Today's list as the site publishes it (24 Oct 2026's puzzles), dated `day`. */
+export function todayList(day: string = londonDay()): TodayList {
+  return {
+    today: day,
+    items: [
+      {
+        type: 'mini',
+        id: 'DP·MINI·0105',
+        name: 'Mini 105',
+        path: 'reports/2026-10-24-crossword-mini-0105.html',
+      },
+      {
+        type: 'doku',
+        id: 'DP·LEXI·0103',
+        name: 'Doku 103',
+        path: 'reports/2026-10-24-logic-doku-0103.html',
+      },
+      {
+        type: 'sweep',
+        id: 'DP·SWEEP·2026-10-24',
+        name: 'Sweep 100',
+        path: 'reports/2026-10-24-logic-sweep.html',
+      },
+      {
+        type: 'path',
+        id: 'DP·PATH·0098',
+        name: 'Path 98',
+        path: 'reports/2026-10-24-logic-path-0098.html',
+      },
+      {
+        type: 'link',
+        id: 'DP·LINK·0077',
+        name: 'Link 77',
+        path: 'reports/2026-10-24-word-link-0077.html',
+      },
+      {
+        type: 'tangle',
+        id: 'DP·TANG·0018',
+        name: 'Tangle 18',
+        path: 'reports/2026-10-24-word-tangle-0018.html',
+      },
+      {
+        type: 'borders',
+        id: 'DP·BORD·0020',
+        name: 'Borders 20',
+        path: 'reports/2026-10-24-geo-borders-0020.html',
+      },
+      {
+        type: 'reckon',
+        id: 'DP·RECK·0005',
+        name: 'Reckon 5',
+        path: 'reports/2026-10-24-quiz-reckon-0005.html',
+      },
+    ],
+  };
+}
+
+/** The list dated yesterday: what the site serves after midnight until its nightly build runs. */
+export function yesterdaysList(): TodayList {
+  return todayList(dayBefore(londonDay()));
+}

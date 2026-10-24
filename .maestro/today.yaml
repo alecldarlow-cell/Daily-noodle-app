@@ -1,0 +1,17 @@
+# Today: the eight puzzles load from the live site, and a card opens its play screen.
+# Runs against an installed build (WP6: EAS development or preview build).
+appId: ${APP_ID}
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible:
+      id: today-mini
+    timeout: 20000
+- assertVisible:
+    id: today-reckon
+- assertVisible: Play
+- tapOn:
+    id: today-path
+- assertVisible:
+    id: play-screen
