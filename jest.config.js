@@ -12,6 +12,9 @@ module.exports = {
     '^@/assets/(.*)$': '<rootDir>/assets/$1',
     '^@/(.*)$': '<rootDir>/src/$1',
     '^@noodle/core$': '<rootDir>/packages/core/src/index.ts',
+    // AsyncStorage's own in-memory mock (its docs' recommended Jest setup).
+    '^@react-native-async-storage/async-storage$':
+      '<rootDir>/node_modules/@react-native-async-storage/async-storage/jest/async-storage-mock.js',
   },
   collectCoverageFrom: [
     'src/**/*.{ts,tsx}',
@@ -20,6 +23,7 @@ module.exports = {
     '!**/index.ts',
     '!**/*.d.ts',
     '!**/tests/fixtures/**',
+    '!src/shared/testing/**',
   ],
   coverageThreshold: {
     global: { lines: 80, statements: 80, functions: 80, branches: 70 },

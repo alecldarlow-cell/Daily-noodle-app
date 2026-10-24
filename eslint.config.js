@@ -15,6 +15,12 @@ module.exports = defineConfig([
     ignores: ['node_modules/**', 'coverage/**', '.expo/**', 'dist/**', 'packages/*/vendor/**'],
   },
   {
+    // TypeScript checks imported names itself (and correctly through package export
+    // maps, which import/namespace misreads, e.g. expo-splash-screen).
+    files: ['**/*.{ts,tsx}'],
+    rules: { 'import/namespace': 'off' },
+  },
+  {
     // Node scripts and config files.
     files: ['scripts/**/*.js', '*.config.js', 'test/**/*.js'],
     languageOptions: { globals: globals.node },

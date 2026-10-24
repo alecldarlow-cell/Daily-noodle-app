@@ -1,32 +1,45 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router';
-import { NativeTabs } from 'expo-router/native-tabs';
+import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
+import * as SplashScreen from 'expo-splash-screen';
+import { useEffect, useState } from 'react';
 import { useColorScheme } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
+import { QueryProvider } from '@/shared/query';
+import { appStorage } from '@/shared/storage';
 import { tokensFor } from '@/shared/theme';
 
+void SplashScreen.preventAutoHideAsync();
+
+/** Root: providers, and saves loaded before the first screen so results never flash empty. */
 export default function RootLayout() {
   const scheme = useColorScheme();
+  const [ready, setReady] = useState(appStorage.hydrated);
+  useEffect(() => {
+    if (ready) return;
+    appStorage
+      .hydrate()
+      .catch((e: unknown) => console.warn('Saved progress could not be read', e))
+      .finally(() => setReady(true));
+  }, [ready]);
+  useEffect(() => {
+    if (ready) void SplashScreen.hideAsync();
+  }, [ready]);
+  if (!ready) return null;
   const t = tokensFor(scheme);
   return (
-    <ThemeProvider value={scheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <NativeTabs backgroundColor={t.canvas} labelStyle={{ selected: { color: t.ink } }}>
-        <NativeTabs.Trigger name="index">
-          <NativeTabs.Trigger.Label>Today</NativeTabs.Trigger.Label>
-          <NativeTabs.Trigger.Icon sf="square.grid.2x2" md="grid_view" />
-        </NativeTabs.Trigger>
-        <NativeTabs.Trigger name="archive">
-          <NativeTabs.Trigger.Label>Archive</NativeTabs.Trigger.Label>
-          <NativeTabs.Trigger.Icon sf="calendar" md="calendar_month" />
-        </NativeTabs.Trigger>
-        <NativeTabs.Trigger name="leagues">
-          <NativeTabs.Trigger.Label>Leagues</NativeTabs.Trigger.Label>
-          <NativeTabs.Trigger.Icon sf="trophy" md="trophy" />
-        </NativeTabs.Trigger>
-        <NativeTabs.Trigger name="account">
-          <NativeTabs.Trigger.Label>Account</NativeTabs.Trigger.Label>
-          <NativeTabs.Trigger.Icon sf="person.crop.circle" md="account_circle" />
-        </NativeTabs.Trigger>
-      </NativeTabs>
-    </ThemeProvider>
+    <GestureHandlerRootView style={{ flex: 1, backgroundColor: t.canvas }}>
+      <QueryProvider>
+        <ThemeProvider value={scheme === 'dark' ? DarkTheme : DefaultTheme}>
+          <Stack
+            screenOptions={{ headerShown: false, contentStyle: { backgroundColor: t.canvas } }}>
+            <Stack.Screen name="(tabs)" />
+            <Stack.Screen
+              name="play/[type]/[file]"
+              options={{ headerShown: true, title: '', headerBackTitle: 'Back' }}
+            />
+          </Stack>
+        </ThemeProvider>
+      </QueryProvider>
+    </GestureHandlerRootView>
   );
 }

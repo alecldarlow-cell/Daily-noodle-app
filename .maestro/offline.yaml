@@ -1,0 +1,14 @@
+# Offline: today's list, once loaded, still shows with no connection.
+appId: ${APP_ID}
+---
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: today-mini
+    timeout: 20000
+- setAirplaneMode: enabled
+- stopApp
+- launchApp
+- assertVisible:
+    id: today-mini
+- setAirplaneMode: disabled

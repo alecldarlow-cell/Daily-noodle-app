@@ -81,3 +81,40 @@ below when it finishes.
   writes to its KV only.
 - Not done here (deferred by design): the site adopting `@noodle/core` (open decision on
   the Plan tab; WP3 or later).
+
+### 24 Oct 2026 — WP2 (site repo)
+
+- [dailynoodle #21](https://github.com/alecldarlow-cell/dailynoodle/pull/21), merged and
+  deployed: `tools/puzzle-json.js` writes `reports/<page>.json` for every released puzzle
+  page with a `DN_PUZZLE` object (475 of 525 released cards; the 50 without are older
+  self-contained pages) and `feed-lite.json` (180 KB). Evaluated in an empty `vm` sandbox
+  with a 200 ms limit; plain data only. All 5,182 pages in `reports/` parse.
+- Site regression check green; Build feed's live health check (now including today's
+  eight data files and feed-lite) passed after deploy. `SITE.md` › _Puzzle data for the app_.
+- Claude's workspace can't reach dailynoodle.co.uk directly (network allowlist); live
+  checks are read from the site's own post-deploy step.
+
+### 24 Oct 2026 — WP3
+
+- `shared/storage`: AsyncStorage (SDK 58's vetted 2.2.0) behind a synchronous in-memory
+  cache, hydrated at launch before the first screen, written through; per-key change
+  subscriptions; `saves` = @noodle/core's save store over it. **Not MMKV**: v4 needs
+  `react-native-nitro-modules`, which SDK 58 doesn't vet; the brief allowed either.
+- `shared/query` (React Query, refetch on returning to the app), `shared/time`
+  (London-day hook that ticks over at midnight and on resume; dates with a fixed month
+  table — Node's Intl writes "Sept", the site writes "Sep"), `shared/played`
+  (played states + overall run from saves), `shared/ui` (PuzzleRow, Note, Screen).
+- **Today**: today's eight in the daily order; a list is used only if dated today in
+  London; yesterday's list → "Nearly ready" with retries at 1, 5, 15 min; no signal →
+  last accepted list for today, else "No connection" at the first failure (not after
+  the retries); Try again cancels a pending retry and asks now (React Query otherwise
+  waits out the backoff). Results in the site's words; run chip from 2 days.
+- **Archive**: `feed-lite.json`, kept for offline; chips by type, find by number, months
+  newest first; results on each row.
+- Routes: root stack with the tab group and `play/[type]/[file]` (placeholder until WP4).
+- 103 tests, 97% lines. One cosmetic `act()` warning from SectionList virtualisation.
+- **Maestro**: flows written (`.maestro/today|archive|offline.yaml`). The CI job is
+  deferred to WP6: Maestro needs an installed build, which EAS produces there. Running
+  iOS simulators on GitHub's macOS runners for every PR would also cost about 10× Linux
+  minutes for a hobby project; WP6 should decide between EAS Workflows' Maestro step
+  and a nightly macOS job.
