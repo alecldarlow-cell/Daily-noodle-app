@@ -1,0 +1,17 @@
+# WP4: a puzzle opens through the WebView bridge and its page loads in the app.
+# Runs against an installed build (EAS, WP6): maestro test .maestro/bridge.yaml
+appId: ${APP_ID}
+---
+- launchApp
+- assertVisible:
+    id: today-screen
+- tapOn:
+    id: today-mini
+- assertVisible:
+    id: play-webview
+- extendedWaitUntil:
+    visible: 'Mini'
+    timeout: 15000
+- back
+- assertVisible:
+    id: today-screen

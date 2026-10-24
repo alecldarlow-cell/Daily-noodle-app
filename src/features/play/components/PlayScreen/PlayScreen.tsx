@@ -1,22 +1,24 @@
 import { isPuzzleType, TYPE_LABEL } from '@noodle/core';
-import { useLocalSearchParams } from 'expo-router';
-import { StyleSheet, Text } from 'react-native';
+import { Stack, useLocalSearchParams } from 'expo-router';
+import { StyleSheet, View } from 'react-native';
 
 import { useTokens } from '@/shared/theme';
-import { Screen } from '@/shared/ui';
+import { PuzzleWebView } from '@/shared/webview';
 
-/** Where a puzzle opens. WP4 plays it through the site's page; WP8 on, natively by type. */
+/**
+ * Where a puzzle opens. Every type plays through its page on the site for now
+ * (the WebView bridge); from WP8 a type with a native player opens that instead.
+ */
 export function PlayScreen() {
   const t = useTokens();
   const { type, file } = useLocalSearchParams<{ type: string; file: string }>();
   const label = isPuzzleType(type) ? TYPE_LABEL[type] : 'Puzzle';
   return (
-    <Screen title={label} subtitle={file} testID="play-screen">
-      <Text style={[styles.body, { color: t.muted }]}>
-        Playing in the app arrives in the next build.
-      </Text>
-    </Screen>
+    <View style={[styles.fill, { backgroundColor: t.canvas }]} testID="play-screen">
+      <Stack.Screen options={{ title: label }} />
+      <PuzzleWebView file={String(file ?? '')} />
+    </View>
   );
 }
 
-const styles = StyleSheet.create({ body: { fontSize: 17, lineHeight: 26 } });
+const styles = StyleSheet.create({ fill: { flex: 1 } });
