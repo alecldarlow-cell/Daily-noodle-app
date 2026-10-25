@@ -71,6 +71,44 @@ describe('GIVEN a signed-in player with saves on this phone and on their account
       expect(after.pid).toBe(PID_B);
       expect(after.pend).toBeTruthy();
     });
+
+    it('THEN until the player chooses, the account keeps its own league player', async () => {
+      const mine = { pid: PID_B, cur: 'WXYZ', leagues: [] };
+      const store = memoryStorage({
+        'noodle-board-v1': { ...mine, leagues: [{ code: 'WXYZ', name: 'Work', nick: 'A' }] },
+        'digi-mini-v1': { v: 1, done: { A: { s: 1 } } },
+      });
+      const theirs = {
+        pid: PID_A,
+        cur: 'ABCD',
+        leagues: [{ code: 'ABCD', name: 'N', nick: 'Alec' }],
+      };
+      const { client, remote } = fakeClient({
+        email: 'a@b.c',
+        remote: { 'noodle-board-v1': theirs },
+      });
+      await runSync(store, syncApi(client));
+      expect(remote['noodle-board-v1']).toEqual(theirs);
+      expect(remote['digi-mini-v1']).toEqual({ v: 1, done: { A: { s: 1 } } });
+    });
+  });
+
+  describe('WHEN this phone is already the account’s league player', () => {
+    it('THEN its league document is left as it is (no move is marked)', async () => {
+      const board = {
+        pid: PID_A,
+        cur: 'ABCD',
+        leagues: [{ code: 'ABCD', name: 'N', nick: 'Alec' }],
+      };
+      const store = memoryStorage({ 'noodle-board-v1': board });
+      const { client, remote } = fakeClient({
+        email: 'a@b.c',
+        remote: { 'noodle-board-v1': board },
+      });
+      await runSync(store, syncApi(client));
+      expect(read(store, 'noodle-board-v1')).toEqual(board);
+      expect(remote['noodle-board-v1']).toEqual(board);
+    });
   });
 
   describe('WHEN there is nothing anywhere', () => {
