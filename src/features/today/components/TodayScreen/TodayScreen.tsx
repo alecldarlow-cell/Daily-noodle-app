@@ -120,7 +120,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     columnGap: 10,
     rowGap: 6,
-    paddingTop: 12,
+    paddingTop: 0,
     paddingBottom: 2,
   },
   count: {

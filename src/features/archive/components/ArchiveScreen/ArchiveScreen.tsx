@@ -124,7 +124,7 @@ export function ArchiveScreen() {
 const styles = StyleSheet.create({
   // flexShrink 0: the list below takes the rest of the column, and on Android it otherwise
   // squeezed this row, clipping the chip labels (seen at 115% font size on a Pixel 10 Pro).
-  chips: { flexGrow: 0, flexShrink: 0, paddingTop: 12, marginBottom: 10 },
+  chips: { flexGrow: 0, flexShrink: 0, marginBottom: 10 },
   chipsRow: { gap: 6 },
   // front.css .chip: 12.5 px semibold, 6 × 12 padding, a hairline; the chosen one in the accent.
   chip: { borderWidth: 1, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6 },
