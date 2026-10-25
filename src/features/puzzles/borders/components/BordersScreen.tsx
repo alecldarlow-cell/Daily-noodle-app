@@ -3,6 +3,7 @@ import { router } from 'expo-router';
 import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { FinishSheet } from '@/shared/finish-sheet';
+import { usePuzzleVisit } from '@/shared/results';
 
 import type { PuzzleFile } from '../../types';
 import type { FinishInfo } from '../finishing';
@@ -55,6 +56,8 @@ export function BordersScreen({
 }) {
   const c = useBordersColors();
   const { state, info, dispatch, today } = useBordersGame(file, deps);
+  // Play on the home card is the page's #playCard: a start, unless today's round is done.
+  const start = usePuzzleVisit(file.path, 'borders', !!state.save.done[state.P.id]);
   if (state.view === 'winModal' && info)
     return (
       <FinishSheet
@@ -81,7 +84,10 @@ export function BordersScreen({
       state={state}
       today={today}
       c={c}
-      onPlay={() => dispatch({ t: 'play' })}
+      onPlay={() => {
+        start();
+        dispatch({ t: 'play' });
+      }}
       onBack={back}
     />
   );
