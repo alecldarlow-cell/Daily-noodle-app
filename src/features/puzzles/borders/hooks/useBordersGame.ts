@@ -2,12 +2,14 @@ import { londonDay, type SaveStore } from '@noodle/core';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AppState } from 'react-native';
 
+import { useHapticDiff } from '@/shared/haptics';
 import { announceFinish } from '@/shared/results';
 import { appStorage, saves as appSaves, type CachedStorage } from '@/shared/storage';
 
 import type { PuzzleFile } from '../../types';
 import { commitFinish, readSave, reopenInfo, saveHost, type FinishInfo } from '../finishing';
 import { apply, frame, init, type BordersData, type BordersState, type Move } from '../model';
+import { bordersFeel, bordersSnap } from './feel';
 
 interface Deps {
   store?: CachedStorage;
@@ -41,6 +43,7 @@ export function useBordersGame(file: PuzzleFile<BordersData>, deps: Deps = {}) {
   const ref = useRef<BordersState>(initial);
   const [state, setState] = useState<BordersState>(initial);
   const [info, setInfo] = useState<FinishInfo | null>(() => reopenInfo(initial, host.today()));
+  useHapticDiff(bordersSnap(state), bordersFeel);
 
   const settle = useCallback(
     (s: BordersState) => {

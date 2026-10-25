@@ -2,7 +2,7 @@ import type { TodayItem } from '@noodle/core';
 import { router } from 'expo-router';
 import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { FinishSheet } from '@/shared/finish-sheet';
+import { FinishSheet, useFreshFinish } from '@/shared/finish-sheet';
 import { usePuzzleVisit } from '@/shared/results';
 
 import type { PuzzleFile } from '../../types';
@@ -56,11 +56,13 @@ export function BordersScreen({
 }) {
   const c = useBordersColors();
   const { state, info, dispatch, today } = useBordersGame(file, deps);
+  const fresh = useFreshFinish(state.view === 'winModal' && !!info);
   // Play on the home card is the page's #playCard: a start, unless today's round is done.
   const start = usePuzzleVisit(file.path, 'borders', !!state.save.done[state.P.id]);
   if (state.view === 'winModal' && info)
     return (
       <FinishSheet
+        celebrate={fresh}
         type="borders"
         n={serial(file.data.id)}
         date={file.data.date}
