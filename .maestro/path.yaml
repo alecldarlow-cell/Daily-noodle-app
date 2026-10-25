@@ -1,0 +1,35 @@
+# WP9: today's Path plays natively to the finish sheet, and reopens on it.
+# Runs against an installed build (EAS, WP6): maestro test .maestro/path.yaml
+# The answer isn't known to the flow, so it checks the two-end controls and the clock,
+# then leaves; the full solve is proved by scripts/replay.js and PathScreen.test.tsx.
+appId: ${APP_ID}
+---
+- launchApp:
+    clearState: true
+- assertVisible:
+    id: today-screen
+- tapOn:
+    id: today-path
+- extendedWaitUntil:
+    visible:
+      id: start-card
+    timeout: 15000
+- assertVisible: 'Today’s Path'
+- assertVisible: 'Join 1 to 36 in one unbroken thread, through every given number.'
+- tapOn: 'Play'
+- assertVisible:
+    id: path-board
+# the clock starts on Play
+- extendedWaitUntil:
+    visible: '0:0[2-9]'
+    timeout: 6000
+# the 36 end, then Hint: a forced square is placed or the line says none is
+- tapOn: '.*, 36, given.*'
+- assertVisible: 'Counting down from 36 — tap an adjacent square to place 35.'
+- tapOn: 'Hint'
+- tapOn: 'Undo'
+- tapOn: '.*, 1, given.*'
+- assertVisible: 'Counting up from 1 — tap an adjacent square to place 2.'
+- tapOn: 'Back to Puzzles'
+- assertVisible:
+    id: today-screen

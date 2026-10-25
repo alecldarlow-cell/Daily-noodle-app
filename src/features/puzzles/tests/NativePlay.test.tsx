@@ -5,12 +5,16 @@ import { appStorage } from '@/shared/storage';
 import { mockSite, renderWithProviders } from '@/shared/testing';
 
 import { PUZZLE_CACHE_PREFIX } from '../api/usePuzzleData';
-import { hasNativePlayer, NativePlay } from '../components/NativePlay';
+import { hasNativePlayer, NATIVE, NativePlay } from '../components/NativePlay';
 import { enabled as dokuEnabled } from '../doku';
 import { enabled as linkEnabled } from '../link';
 import { clone as cloneLink, file78 } from '../link/tests/fixtures';
 import { enabled } from '../mini';
 import { clone, file105 } from '../mini/tests/fixtures';
+import { enabled as pathOn } from '../path';
+import { file92 } from '../path/tests/fixtures';
+import { enabled as sweepOn } from '../sweep';
+import { file94 } from '../sweep/tests/fixtures';
 import { enabled as tangleEnabled } from '../tangle';
 import { clone as cloneTangle, file19 } from '../tangle/tests/fixtures';
 
@@ -37,7 +41,17 @@ describe('GIVEN the play route asks which types play natively', () => {
     expect(hasNativePlayer('link')).toBe(linkEnabled);
     expect(hasNativePlayer('tangle')).toBe(tangleEnabled);
     expect(hasNativePlayer('doku')).toBe(dokuEnabled);
-    expect(hasNativePlayer('sweep')).toBe(false);
+    expect(hasNativePlayer('sweep')).toBe(sweepOn);
+    expect(hasNativePlayer('path')).toBe(pathOn);
+    expect(NATIVE).toEqual({
+      mini: enabled,
+      link: linkEnabled,
+      tangle: tangleEnabled,
+      doku: dokuEnabled,
+      sweep: sweepOn,
+      path: pathOn,
+    });
+    expect(hasNativePlayer('toString')).toBe(false);
     expect(hasNativePlayer(undefined)).toBe(false);
   });
 });
@@ -88,6 +102,35 @@ describe('GIVEN a Mini opened natively', () => {
       mockSite({ [`reports/${FILE}.json`]: { hello: 1 } });
       await renderWithProviders(<NativePlay type="mini" file={FILE} fallback={bridge} />);
       await waitFor(() => expect(screen.getByText('bridge')).toBeOnTheScreen(), { timeout: 5000 });
+    });
+  });
+});
+
+describe.each([
+  ['sweep', '2026-10-18-logic-sweep', file94],
+  ['path', '2026-10-18-logic-path-0092', file92],
+] as const)('GIVEN a %s opened natively', (type, file, data) => {
+  describe('WHEN the site has its data file', () => {
+    it('THEN it plays natively', async () => {
+      mockSite({ [`reports/${file}.json`]: data });
+      await renderWithProviders(<NativePlay type={type} file={file} fallback={bridge} />);
+      await waitFor(() => expect(screen.getByTestId('start-card')).toBeOnTheScreen());
+    });
+  });
+
+  describe('WHEN the data fails the page’s gate, or is another type’s', () => {
+    it('THEN it plays through the bridge', async () => {
+      const bad = clone(data) as { data: { id: string } };
+      bad.data.id = 'DP·MINI·0001';
+      mockSite({ [`reports/${file}.json`]: bad });
+      await renderWithProviders(<NativePlay type={type} file={file} fallback={bridge} />);
+      await waitFor(() => expect(screen.getByText('bridge')).toBeOnTheScreen());
+    });
+
+    it('THEN a file whose type differs falls back too', async () => {
+      mockSite({ [`reports/${file}.json`]: file105 });
+      await renderWithProviders(<NativePlay type={type} file={file} fallback={bridge} />);
+      await waitFor(() => expect(screen.getByText('bridge')).toBeOnTheScreen());
     });
   });
 });
