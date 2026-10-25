@@ -9,21 +9,21 @@ below when it finishes.
 
 ## Status
 
-| WP  | Deliverable                                                   | Status                                                                                                                                                                                       |
-| --- | ------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 0   | App repo scaffolded, CI green                                 | done ([#1](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/1))                                                                                                                     |
-| 1   | `@noodle/core` with differential test against `dn-core.js`    | done ([#2](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/2))                                                                                                                     |
-| 2   | Site publishes `feed-lite.json` and per-puzzle JSON (site PR) | done ([site #21](https://github.com/alecldarlow-cell/dailynoodle/pull/21))                                                                                                                   |
-| 3   | Today and Archive screens, offline-capable                    | done ([#3](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/3))                                                                                                                     |
-| 4   | WebView bridge: play, finish, share, saves                    | done ([#5](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/5))                                                                                                                     |
-| 5   | Leagues: board, join, submit, first-run handoff               | done ([#8](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/8))                                                                                                                     |
-| 6   | EAS builds, TestFlight and Play internal track                | config ready; needs Alec’s accounts ([guide](https://claude.ai/artifact/CpiPm7oB6wtisZ8x9DDbtm))                                                                                             |
-| 7   | Optional sign-in and sync, web and app                        | built in app, site and database; switched off until Resend + redirect URLs                                                                                                                   |
-| 8   | Port recipe, shared start card and finish sheet, Mini native  | done ([#7](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/7))                                                                                                                     |
-| 9   | Sweep and Path native                                         | done ([#11](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/11))                                                                                                                   |
-| 10  | Link, Tangle, Reckon, Borders native                          | done ([#12](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/12), [#18](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/18)); Reckon/Borders full replay overnight 25 Oct |
-| 11  | Doku native                                                   | done ([#15](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/15), [#22](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/22)); full replay overnight 25 Oct                |
-| 12  | Polish, notifications decision, release decision              | in progress: See today's board, polish lane                                                                                                                                                  |
+| WP  | Deliverable                                                   | Status                                                                                                                                                                                                          |
+| --- | ------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 0   | App repo scaffolded, CI green                                 | done ([#1](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/1))                                                                                                                                        |
+| 1   | `@noodle/core` with differential test against `dn-core.js`    | done ([#2](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/2))                                                                                                                                        |
+| 2   | Site publishes `feed-lite.json` and per-puzzle JSON (site PR) | done ([site #21](https://github.com/alecldarlow-cell/dailynoodle/pull/21))                                                                                                                                      |
+| 3   | Today and Archive screens, offline-capable                    | done ([#3](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/3))                                                                                                                                        |
+| 4   | WebView bridge: play, finish, share, saves                    | done ([#5](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/5))                                                                                                                                        |
+| 5   | Leagues: board, join, submit, first-run handoff               | done ([#8](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/8))                                                                                                                                        |
+| 6   | EAS builds, TestFlight and Play internal track                | config ready; needs Alec’s accounts ([guide](https://claude.ai/artifact/CpiPm7oB6wtisZ8x9DDbtm))                                                                                                                |
+| 7   | Optional sign-in and sync, web and app                        | built in app, site and database; switched off until Resend + redirect URLs                                                                                                                                      |
+| 8   | Port recipe, shared start card and finish sheet, Mini native  | done ([#7](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/7))                                                                                                                                        |
+| 9   | Sweep and Path native                                         | done ([#11](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/11))                                                                                                                                      |
+| 10  | Link, Tangle, Reckon, Borders native                          | done ([#12](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/12), [#18](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/18)); full replay passed 25 Oct                                      |
+| 11  | Doku native                                                   | done ([#15](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/15), [#22](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/22)); full replay passed 25 Oct                                      |
+| 12  | Polish, notifications decision, release decision              | polish and board link done ([#26](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/26), [#25](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/25)); notifications and release decisions open |
 
 ## Entries
 
@@ -281,3 +281,40 @@ below when it finishes.
 - **Rule from Alec**: touch the site only when the app needs it or he asks; site bugs the app's testing finds are reported, and fixed when tested and harmless (site #31).
 - **Alec's to-do guide**: https://claude.ai/artifact/CpiPm7oB6wtisZ8x9DDbtm (first Android build, EXPO_TOKEN, phone test, Resend, Play internal testing, branch protection, tidy-ups, iPhone without a Mac).
 - **Actions minutes**: the app repo was private, so its runs counted against 2,000 free minutes a month; 1,786 were used by mid-afternoon (the lanes' full replays 779, CI 993 before #20). Alec made the repo public on 25 Oct (history checked first: only the public Supabase key), so Actions are free; the nightly is back on.
+
+### 25 Oct 2026 — full proof of Doku, Reckon and Borders
+
+- Replay nightly, dispatched with types `doku reckon borders` (run 40208602946): every Doku (2 shards), Reckon (4)
+  and Borders (6) identical. All eight native types are now proved on every puzzle with data. The run recorded
+  the engine hashes as verified, so later nights replay only new or edited puzzles unless an engine changes.
+
+### 25 Oct 2026 — See today's board
+
+- [#25](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/25): members see "🏆 See today's board" on every
+  native finish sheet, opening Leagues on that puzzle and day (`p`, `d` params, as board.html). Once the result is
+  on the board, `board_moment` gives the league-record or personal-best line (site wording), and a league record
+  adds 🏆 to the share line (finish.js `tagged`). Shared reaches leagues only through a `BoardSlotProvider` at the
+  root. A bridged page's board.html link opens Leagues too.
+- Started by a lane that was stopped; finished by Claude (an un-awaited unmount in the new test left the next
+  render inside an open act), rebased over polish. 778 tests, 98.18% lines; CI replayed all eight types (one
+  Link timing blip on CI, 120/120 identical locally on the same sample, green on rerun).
+
+### 25 Oct 2026 — WP12 (polish)
+
+- [#26](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/26), merged; no model changes.
+- **Haptics** (`shared/haptics`, expo-haptics 58.0.7, ADR-006): each type's `hooks/feel.ts` rule compares the
+  state before and after a move (tap / error / success), so the replay-proved models are untouched and opening a
+  screen never buzzes; Reckon honours its saved `hap` setting (read, never written).
+- **Finish entrance**: a short fade-and-rise on a fresh finish only, still under reduce motion (built-in Animated).
+- **Accessibility**: a quiet timer clock, stat and Back labels, 44 pt Play/Share, Link groups and the Tangle grid
+  labelled, font-scale caps on fixed grids. **Small phones**: Mini, Doku, Sweep and Path boards fit 320 wide.
+- Left for a real phone: buzz strength, entrance timing, TalkBack on the clock, largest text sizes, Mini at
+  568 pt height. Haptics need a new EAS build (native module).
+
+### 25 Oct 2026 — Expo project linked
+
+- [#27](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/27): project id `e45ae724-8006-40ea-87ac-45ef75ceef81`,
+  owner `smellyoldog`, EAS Update URL, from Alec's `eas init` on his PC. Alec's first Android preview build was
+  started from his PC the same afternoon (before polish merged, so without haptics).
+- **Needs Alec**: EXPO_TOKEN secret (then Claude runs a second build with everything), the phone test, Resend and
+  the two redirect URLs, Play internal testing, branch protection and auto-delete of merged branches (now free).
