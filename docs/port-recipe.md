@@ -59,3 +59,22 @@ and the replay is the proof.
   `KNOWN` table in its replay script with what it is; the run prints it as KNOWN and
   still fails on any other difference (Link: the replay's sheet after Play again).
 - Long `--all` runs split with `--shard k/n`.
+
+## What WP11 added (Doku)
+
+- **A ship gate that needs data is vendored, not rewritten.** The Doku page proves each
+  puzzle (word list, bands, uniqueness) before it renders; the model runs the same
+  `validateLexi` on `engine-words.json`, written by `scripts/vendor-doku-words.js`
+  (`--check` in the nightly), and the replay compares those tables with the page's own
+  globals before it plays.
+- **What the player sees is the last paint.** The engine changes state without
+  repainting in one place (a typed letter the bank lacks moves its cursor, unpainted);
+  the model keeps `view`, the cursor as last painted, and the board draws that.
+- **The phone's own keyboard is a control.** A tapped empty square focuses the page's
+  hidden input; the model tracks whether it has focus (`kbd`), the oracle types only
+  while it does, the replay compares `document.activeElement`, and the screen focuses
+  or blurs a hidden `TextInput` to match (letters and space by `onChangeText`, delete
+  by `onKeyPress`).
+- **Writes the page makes on opening are ported too**: Doku's streak is seeded from its
+  results when it is first read (load, solve, reopen), and the replay compares the
+  streak document right after load.
