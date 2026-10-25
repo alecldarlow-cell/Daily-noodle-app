@@ -6,6 +6,7 @@ const { plan, pageOf, spread, SHARDS, RECENT_CAP } = require('../replay-watch') 
     verified: Record<string, string> | null;
     changedFiles: string[];
     fullAll?: boolean;
+    fullTypes?: string[];
   }) => {
     full: { type: string; shard: string }[];
     recent: { type: string; only: string }[];
@@ -84,5 +85,10 @@ describe('GIVEN the nightly replay deciding what to run', () => {
     });
     expect(pageOf('reports/2026-10-25-geo-borders-0021.html', ['mini'])).toBeNull();
     expect(pageOf('index.html', TYPES)).toBeNull();
+  });
+
+  it('THEN named types can be replayed in full on their own (a new type’s proof)', () => {
+    const r = plan({ types: TYPES, hashes: H, verified: H, changedFiles: [], fullTypes: ['link'] });
+    expect(r.full).toEqual([{ type: 'link', shard: '1/1' }]);
   });
 });

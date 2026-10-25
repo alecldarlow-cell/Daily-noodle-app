@@ -10,7 +10,8 @@ name: Replay nightly
 # The last passing engine hashes live in an Actions cache (replay-verified.json).
 # Red means a native player no longer matches the web: switch that type's `enabled`
 # off or port the change, in a pull request. "Run workflow" with full ticked replays
-# every puzzle of every type (hours of runner time; for a new port or a big change).
+# every puzzle of every type (hours of runner time; for a new port or a big change), or
+# give types to replay every puzzle of just those (a newly switched-on type's full proof).
 on:
   schedule:
     - cron: '41 3 * * *'
@@ -20,6 +21,10 @@ on:
         description: 'Replay every puzzle of every type (long)'
         type: boolean
         default: false
+      types:
+        description: 'Or replay every puzzle of just these types, space-separated (e.g. reckon borders)'
+        type: string
+        default: ''
 
 jobs:
   plan:
@@ -43,7 +48,8 @@ jobs:
         name: What to replay
         run: |
           node scripts/replay-watch.js --site ../dailynoodle --verified replay-verified.json \
-            ${{ github.event.inputs.full == 'true' && '--full-all' || '' }} > plan.json
+            ${{ github.event.inputs.full == 'true' && '--full-all' || '' }} \
+            ${{ github.event.inputs.types != '' && format('--full-types "{0}"', github.event.inputs.types) || '' }} > plan.json
           cat plan.json
           echo "full=$(node -e "console.log(JSON.stringify(require('./plan.json').full))")" >> "$GITHUB_OUTPUT"
           echo "recent=$(node -e "console.log(JSON.stringify([...new Set(require('./plan.json').recent.map(r=>r.type))].map(type=>({type,only:require('./plan.json').recent.filter(r=>r.type===type).map(r=>r.only).join(' ')}))))")" >> "$GITHUB_OUTPUT"
