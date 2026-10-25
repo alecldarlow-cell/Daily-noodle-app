@@ -11,7 +11,7 @@
  *   (an Actions cache, replay-verified.json); with none yet, today's are taken as
  *   verified (every type was replayed in full before it was switched on).
  *
- *   node scripts/replay-watch.js --site ../dailynoodle --verified replay-verified.json [--since-hours 26] [--full-all]
+ *   node scripts/replay-watch.js --site ../dailynoodle --verified replay-verified.json [--since-hours 26] [--full-all | --full-types "reckon borders"]
  *   → {"full":[{"type":"sweep","shard":"1/4"},…],"recent":[{"type":"mini","only":"2026-11-02-crossword-mini-0113"}],"hashes":{…}}
  */
 const crypto = require('node:crypto');
@@ -30,7 +30,7 @@ const SLUG = {
   'geo-borders': 'borders',
 };
 /** Shards for a full run, so each job stays well inside GitHub's 6-hour limit. */
-const SHARDS = { mini: 2, link: 1, tangle: 2, doku: 2, sweep: 4, path: 3, reckon: 2, borders: 3 };
+const SHARDS = { mini: 2, link: 1, tangle: 2, doku: 2, sweep: 4, path: 3, reckon: 4, borders: 6 };
 /** Site code every native player was ported from, besides its own engine. */
 const SHARED = ['engines/finish.js', 'engines/house.js', 'dn-core.js'];
 /** Most changed pages replayed per type in one night (a spread sample beyond that). */
@@ -67,11 +67,11 @@ function pageOf(file, types) {
   return type && types.includes(type) ? { type, only: m[1] } : null;
 }
 
-function plan({ types, hashes, verified, changedFiles, fullAll = false }) {
+function plan({ types, hashes, verified, changedFiles, fullAll = false, fullTypes: force = [] }) {
   const seed = !verified;
   const full = [];
   for (const t of types) {
-    if (fullAll || (!seed && verified[t] !== hashes[t]))
+    if (fullAll || force.includes(t) || (!seed && verified[t] !== hashes[t]))
       for (let k = 1; k <= (SHARDS[t] || 2); k++)
         full.push({ type: t, shard: `${k}/${SHARDS[t] || 2}` });
   }
@@ -131,6 +131,9 @@ if (require.main === module) {
     verified,
     changedFiles: changedSince(site, Number(opt('since-hours', 26))),
     fullAll: args.includes('--full-all'),
+    fullTypes: String(opt('full-types', ''))
+      .split(/[\s,]+/)
+      .filter(Boolean),
   });
   process.stdout.write(JSON.stringify(result) + '\n');
 }
