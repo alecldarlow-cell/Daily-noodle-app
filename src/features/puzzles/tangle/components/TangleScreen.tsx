@@ -1,3 +1,9 @@
+'use no memo';
+// React Compiler (app.json experiments.reactCompiler) caches a component while its props are
+// unchanged. Tangle hands its screens the engine, one object mutated in place, so a compiled
+// screen never redrew: the 3-2-1 count-in froze on 3 on a phone (25 Oct 2026). Jest runs
+// without the compiler, so only a device showed it.
+
 import { londonDay, type TodayItem } from '@noodle/core';
 import { router } from 'expo-router';
 
