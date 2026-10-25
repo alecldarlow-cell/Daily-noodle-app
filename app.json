@@ -51,6 +51,15 @@
     },
     "runtimeVersion": {
       "policy": "fingerprint"
+    },
+    "owner": "smellyoldog",
+    "extra": {
+      "eas": {
+        "projectId": "e45ae724-8006-40ea-87ac-45ef75ceef81"
+      }
+    },
+    "updates": {
+      "url": "https://u.expo.dev/e45ae724-8006-40ea-87ac-45ef75ceef81"
     }
   }
 }
