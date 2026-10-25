@@ -99,6 +99,7 @@ export function DokuBoard({ state, side, onCell }: DokuBoardProps) {
                   style={[styles.fill, shaking ? { transform: [{ translateX: dx }] } : null]}>
                   {num ? (
                     <Text
+                      maxFontSizeMultiplier={1.2}
                       style={[
                         styles.num,
                         { color: here ? pt.onActive : pt.inkSoft, fontSize: cell * 0.2 },
@@ -106,7 +107,11 @@ export function DokuBoard({ state, side, onCell }: DokuBoardProps) {
                       {num}
                     </Text>
                   ) : null}
-                  <Text style={[styles.ltr, { fontSize: cell * 0.46, color: ink }]}>{letter}</Text>
+                  <Text
+                    maxFontSizeMultiplier={1.2}
+                    style={[styles.ltr, { fontSize: cell * 0.46, color: ink }]}>
+                    {letter}
+                  </Text>
                 </Animated.View>
               </Pressable>
             );

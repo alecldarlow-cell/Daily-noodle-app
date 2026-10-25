@@ -3,9 +3,10 @@ import { router } from 'expo-router';
 import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { FinishSheet } from '@/shared/finish-sheet';
+import { FinishSheet, useFreshFinish } from '@/shared/finish-sheet';
 import { PuzzleBar, ruleFor, StartCard, useStartStats } from '@/shared/start-card';
 import { usePuzzleTokens } from '@/shared/theme';
+import { fitBoard } from '@/shared/ui';
 
 import type { PuzzleFile } from '../../types';
 import { usePathGame } from '../hooks/usePathGame';
@@ -24,8 +25,9 @@ function openNext(item: TodayItem | null) {
 /** Path, played natively: start card, board, Undo and Hint, finish sheet. */
 export function PathScreen({ file }: { file: PuzzleFile<PathData> }) {
   const pt = usePuzzleTokens();
-  const { width, height } = useWindowDimensions();
+  const win = useWindowDimensions();
   const game = usePathGame(file);
+  const fresh = useFreshFinish(game.phase === 'finished');
   const stats = useStartStats('path');
   const n = pathNumber(file.data.id);
   const { state, dispatch } = game;
@@ -49,6 +51,7 @@ export function PathScreen({ file }: { file: PuzzleFile<PathData> }) {
   if (game.phase === 'finished' && game.info)
     return (
       <FinishSheet
+        celebrate={fresh}
         type="path"
         n={n}
         date={file.date}
@@ -71,7 +74,7 @@ export function PathScreen({ file }: { file: PuzzleFile<PathData> }) {
       />
     );
 
-  const side = Math.max(200, Math.min(width - 32, height - 300, 460));
+  const side = fitBoard(win, 300, 460);
   const btn = [styles.btn, { borderColor: pt.ink, backgroundColor: pt.card }];
   return (
     <SafeAreaView style={[styles.fill, { backgroundColor: pt.paper }]} testID="path-screen">

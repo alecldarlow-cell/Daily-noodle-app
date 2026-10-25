@@ -12,10 +12,11 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { FinishSheet } from '@/shared/finish-sheet';
+import { FinishSheet, useFreshFinish } from '@/shared/finish-sheet';
 import { PuzzleBar, ruleFor, StartCard, useStartStats } from '@/shared/start-card';
 import { useStoredRaw } from '@/shared/storage';
 import { usePuzzleTokens } from '@/shared/theme';
+import { fitBoard } from '@/shared/ui';
 
 import type { PuzzleFile } from '../../types';
 import { MiniArt } from '../../mini/components/MiniGrids';
@@ -45,8 +46,9 @@ function savedStreak(raw: string | null): number {
 /** The Doku, played natively: start card, board and bank, finish sheet. */
 export function DokuScreen({ file }: { file: PuzzleFile<DokuData> }) {
   const pt = usePuzzleTokens();
-  const { width, height } = useWindowDimensions();
+  const win = useWindowDimensions();
   const game = useDokuGame(file);
+  const fresh = useFreshFinish(game.phase === 'finished');
   const stats = useStartStats('doku');
   const streak = savedStreak(useStoredRaw(STREAK_KEY));
   const n = dnNum(file.data.id).slice(1);
@@ -78,6 +80,7 @@ export function DokuScreen({ file }: { file: PuzzleFile<DokuData> }) {
   if (game.phase === 'finished' && game.info)
     return (
       <FinishSheet
+        celebrate={fresh}
         type="doku"
         n={n}
         date={file.date}
@@ -97,7 +100,7 @@ export function DokuScreen({ file }: { file: PuzzleFile<DokuData> }) {
     );
 
   // Board, bank, message and Hints on one screen, as the page's app mode lays them out.
-  const side = Math.max(200, Math.min(width - 32, height - 360, 420));
+  const side = fitBoard(win, 360, 420);
   return (
     <SafeAreaView style={[styles.fill, { backgroundColor: pt.paper }]} testID="doku-screen">
       <View style={styles.in}>

@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { Entrance } from '@/shared/motion';
 import { usePuzzleTokens, useTokens } from '@/shared/theme';
 import { longDate } from '@/shared/time';
 
@@ -32,6 +33,11 @@ export interface FinishSheetProps {
   after?: ReactNode;
   /** Where leagues put "See today's board". */
   boardSlot?: ReactNode;
+  /**
+   * A fresh solve or finish: the outcome and result arrive with a short entrance (still
+   * when the phone asks for reduced motion). Off for a finished puzzle reopened.
+   */
+  celebrate?: boolean;
   onBack: () => void;
   /** Open the Next row's puzzle, or today's list when it names none. */
   onNext: (item: TodayItem | null) => void;
@@ -46,7 +52,7 @@ export interface FinishSheetProps {
  */
 export function FinishSheet(props: FinishSheetProps) {
   const { type, n, date, title, hero, heroNode, note, share, stats, recap, after } = props;
-  const { boardSlot, onBack, onNext } = props;
+  const { boardSlot, onBack, onNext, celebrate = false } = props;
   const t = useTokens();
   const pt = usePuzzleTokens();
   const { next, secs, run } = useFinishData(type);
@@ -58,25 +64,44 @@ export function FinishSheet(props: FinishSheetProps) {
   return (
     <SafeAreaView style={[styles.fill, { backgroundColor: pt.paper }]} testID="finish-sheet">
       <ScrollView contentContainerStyle={styles.in}>
-        <Pressable accessibilityRole="link" onPress={onBack} hitSlop={8} style={styles.back}>
+        <Pressable
+          accessibilityRole="link"
+          accessibilityLabel="Back to Puzzles"
+          onPress={onBack}
+          hitSlop={8}
+          style={styles.back}>
           <Text style={[styles.backText, { color: pt.inkSoft }]}>← Puzzles</Text>
         </Pressable>
         <Text style={[styles.kick, { color: pt.inkSoft }]}>
           {`${TYPE_LABEL[type]} ${n}, ${longDate(date)}`}
         </Text>
-        <Text accessibilityRole="header" style={[styles.title, { color: pt.ink }]}>
-          {title}
-        </Text>
-        {heroNode ? (
-          <View style={styles.heroNode} testID="finish-hero" accessibilityLabel={hero}>
-            {heroNode}
-          </View>
-        ) : (
-          <Text style={[styles.hero, { color: pt.ink }]} testID="finish-hero">
-            {hero}
+        <Entrance play={celebrate} testID="finish-entrance">
+          <Text
+            accessibilityRole="header"
+            maxFontSizeMultiplier={1.4}
+            style={[styles.title, { color: pt.ink }]}>
+            {title}
           </Text>
-        )}
-        {note ? <Text style={[styles.note, { color: pt.inkSoft }]}>{note}</Text> : null}
+        </Entrance>
+        <Entrance play={celebrate} delay={90} from={0.9}>
+          {heroNode ? (
+            <View style={styles.heroNode} testID="finish-hero" accessibilityLabel={hero}>
+              {heroNode}
+            </View>
+          ) : (
+            <Text
+              maxFontSizeMultiplier={1.3}
+              style={[styles.hero, { color: pt.ink }]}
+              testID="finish-hero">
+              {hero}
+            </Text>
+          )}
+        </Entrance>
+        {note ? (
+          <Entrance play={celebrate} delay={180}>
+            <Text style={[styles.note, { color: pt.inkSoft }]}>{note}</Text>
+          </Entrance>
+        ) : null}
 
         <View style={[styles.shareCard, { backgroundColor: pt.card }]}>
           <View style={styles.shareBody}>
@@ -98,8 +123,14 @@ export function FinishSheet(props: FinishSheetProps) {
 
         <View style={styles.stats}>
           {stats.map((s) => (
-            <View key={s.label} style={styles.stat}>
-              <Text style={[styles.statVal, { color: pt.ink }]}>{String(s.value)}</Text>
+            <View
+              key={s.label}
+              style={styles.stat}
+              accessible
+              accessibilityLabel={`${s.value} ${s.label}`}>
+              <Text maxFontSizeMultiplier={1.5} style={[styles.statVal, { color: pt.ink }]}>
+                {String(s.value)}
+              </Text>
               <Text style={[styles.small, { color: pt.inkSoft }]}>{s.label}</Text>
             </View>
           ))}
@@ -165,10 +196,17 @@ const styles = StyleSheet.create({
   shareBody: { gap: 4 },
   shareText: { fontSize: 17, fontWeight: '600' },
   shareUrl: { fontSize: 14 },
-  pill: { alignSelf: 'flex-start', borderRadius: 999, paddingHorizontal: 22, paddingVertical: 10 },
+  pill: {
+    alignSelf: 'flex-start',
+    minHeight: 44,
+    justifyContent: 'center',
+    borderRadius: 999,
+    paddingHorizontal: 22,
+    paddingVertical: 10,
+  },
   pillText: { fontSize: 16, fontWeight: '800' },
   stats: { flexDirection: 'row', marginTop: 22, gap: 12 },
-  stat: { flex: 1 },
+  stat: { flex: 1, minWidth: 0 },
   statVal: { fontSize: 28, fontFamily: 'Georgia' },
   small: { fontSize: 13 },
   next: {

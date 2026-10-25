@@ -3,7 +3,7 @@ import { router } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { FinishSheet } from '@/shared/finish-sheet';
+import { FinishSheet, useFreshFinish } from '@/shared/finish-sheet';
 import { PuzzleBar, ruleFor, StartCard, useStartStats } from '@/shared/start-card';
 import { useStoredRaw } from '@/shared/storage';
 import { usePuzzleTokens } from '@/shared/theme';
@@ -36,6 +36,7 @@ function savedStreak(raw: string | null): number {
 export function LinkScreen({ file }: { file: PuzzleFile<LinkData> }) {
   const pt = usePuzzleTokens();
   const game = useLinkGame(file);
+  const fresh = useFreshFinish(game.phase === 'finished');
   const stats = useStartStats('link');
   const streak = savedStreak(useStoredRaw(STREAK_KEY));
   const n = dnNum(file.data.id).slice(1);
@@ -62,6 +63,7 @@ export function LinkScreen({ file }: { file: PuzzleFile<LinkData> }) {
     );
     return (
       <FinishSheet
+        celebrate={fresh}
         type="link"
         n={n}
         date={file.date}

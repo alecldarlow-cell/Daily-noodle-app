@@ -16,13 +16,19 @@ export function MiniControls({ onCheckWord, onCheckAll, onRevealWord }: MiniCont
   return (
     <View style={styles.row}>
       <Pressable accessibilityRole="button" onPress={onCheckWord} style={b}>
-        <Text style={label}>Check word</Text>
+        <Text maxFontSizeMultiplier={1.3} style={label}>
+          Check word
+        </Text>
       </Pressable>
       <Pressable accessibilityRole="button" onPress={onCheckAll} style={b}>
-        <Text style={label}>Check all</Text>
+        <Text maxFontSizeMultiplier={1.3} style={label}>
+          Check all
+        </Text>
       </Pressable>
       <Pressable accessibilityRole="button" onPress={onRevealWord} style={[b, styles.reveal]}>
-        <Text style={label}>Reveal word</Text>
+        <Text maxFontSizeMultiplier={1.3} style={label}>
+          Reveal word
+        </Text>
       </Pressable>
     </View>
   );

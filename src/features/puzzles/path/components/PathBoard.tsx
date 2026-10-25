@@ -106,6 +106,7 @@ export function PathBoard({ state, side, onCell }: PathBoardProps) {
                 pointerEvents="none"
                 style={[styles.numBox, { left: c * cs, top: r * cs, width: cs, height: cs }]}>
                 <Text
+                  maxFontSizeMultiplier={1.2}
                   style={[
                     styles.num,
                     {
@@ -142,7 +143,9 @@ export function PathRecap({ state }: { state: PathState }) {
                   borderColor: pt.cellEdge,
                 },
               ]}>
-              <Text style={[styles.smallText, { color: pt.ink }]}>{v}</Text>
+              <Text maxFontSizeMultiplier={1.2} style={[styles.smallText, { color: pt.ink }]}>
+                {v}
+              </Text>
             </View>
           ))}
         </View>

@@ -2,11 +2,13 @@ import type { SaveStore } from '@noodle/core';
 import { useCallback, useEffect, useState, useSyncExternalStore } from 'react';
 import { AccessibilityInfo } from 'react-native';
 
+import { useHapticDiff } from '@/shared/haptics';
 import { announceFinish, usePuzzleVisit } from '@/shared/results';
 import { appStorage, saves as appSaves, type CachedStorage } from '@/shared/storage';
 
 import type { PuzzleFile } from '../../types';
 import type { LinkData } from '../model';
+import { linkFeel } from './feel';
 import { LinkGame, type ScreenMove } from './linkGame';
 
 export type { Phase, ScreenMove } from './linkGame';
@@ -33,6 +35,7 @@ export function useLinkGame(file: PuzzleFile<LinkData>, deps: Deps = {}) {
       }),
   );
   useSyncExternalStore(game.subscribe, game.getVersion);
+  useHapticDiff(game.state, linkFeel);
 
   const reduced = deps.reduced;
   useEffect(() => {

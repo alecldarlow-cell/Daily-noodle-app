@@ -62,6 +62,7 @@ export function MiniBoard({ state, side, onCell }: MiniBoardProps) {
                 ]}>
                 {num ? (
                   <Text
+                    maxFontSizeMultiplier={1.2}
                     style={[
                       styles.num,
                       { color: here ? pt.onActive : pt.inkSoft, fontSize: cell * 0.2 },
@@ -70,6 +71,7 @@ export function MiniBoard({ state, side, onCell }: MiniBoardProps) {
                   </Text>
                 ) : null}
                 <Text
+                  maxFontSizeMultiplier={1.2}
                   style={[
                     styles.ltr,
                     {

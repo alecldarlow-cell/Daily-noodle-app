@@ -14,6 +14,18 @@ interface PuzzleBarProps {
   onBack: () => void;
 }
 
+/**
+ * What a screen reader says for the clock: whole minutes only, so the label changes
+ * once a minute rather than every tick ("Time, under a minute", "Time, 3 minutes").
+ */
+export function clockLabel(clock: string): string {
+  const parts = clock.split(':').map(Number);
+  if (parts.some((n) => !Number.isFinite(n))) return 'Time';
+  const mins = parts.length === 3 ? parts[0]! * 60 + parts[1]! : parts[0]!;
+  if (mins < 1) return 'Time, under a minute';
+  return `Time, ${mins} minute${mins === 1 ? '' : 's'}`;
+}
+
 /** The slim bar over a board (engines/house.js): back, name and number, difficulty, streak, clock. */
 export function PuzzleBar({ name, sub, streak, clock, onBack }: PuzzleBarProps) {
   const pt = usePuzzleTokens();
@@ -27,7 +39,9 @@ export function PuzzleBar({ name, sub, streak, clock, onBack }: PuzzleBarProps) 
         <Text style={[styles.chev, { color: pt.ink }]}>‹</Text>
       </Pressable>
       <View style={styles.mid}>
-        <Text style={[styles.name, { color: pt.ink }]}>{name}</Text>
+        <Text style={[styles.name, { color: pt.ink }]} numberOfLines={1}>
+          {name}
+        </Text>
         {sub ? <Text style={[styles.sub, { color: pt.inkSoft }]}>{sub}</Text> : null}
       </View>
       {streak > 0 ? (
@@ -38,7 +52,13 @@ export function PuzzleBar({ name, sub, streak, clock, onBack }: PuzzleBarProps) 
         </Text>
       ) : null}
       {clock !== undefined ? (
-        <Text style={[styles.clock, { color: pt.ink }]} accessibilityLabel={`Time ${clock}`}>
+        <Text
+          style={[styles.clock, { color: pt.ink }]}
+          accessibilityRole="timer"
+          accessibilityLabel={clockLabel(clock)}
+          accessibilityLiveRegion="none"
+          maxFontSizeMultiplier={1.3}
+          testID="puzzle-clock">
           {clock}
         </Text>
       ) : null}

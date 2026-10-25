@@ -1,6 +1,7 @@
 import type { SaveStore } from '@noodle/core';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 
+import { useHapticDiff } from '@/shared/haptics';
 import { announceFinish, usePuzzleVisit } from '@/shared/results';
 import { appStorage, saves as appSaves, type CachedStorage } from '@/shared/storage';
 
@@ -18,6 +19,7 @@ import {
   type DokuState,
   type Move,
 } from '../model';
+import { dokuFeel } from './feel';
 
 export type Phase = 'start' | 'play' | 'finished';
 
@@ -59,6 +61,7 @@ export function useDokuGame(file: PuzzleFile<DokuData>, deps: Deps = {}) {
   const [phase, setPhase] = useState<Phase>(opened ? 'finished' : 'start');
   const [info, setInfo] = useState<FinishInfo | null>(opened?.info ?? null);
   const [secs, setSecs] = useState(0);
+  useHapticDiff(state, dokuFeel);
 
   const running = state.started && !state.solved;
   useEffect(() => {

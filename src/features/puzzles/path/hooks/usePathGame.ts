@@ -1,6 +1,7 @@
 import type { SaveStore } from '@noodle/core';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import { useHapticDiff } from '@/shared/haptics';
 import { announceFinish, usePuzzleVisit } from '@/shared/results';
 import { appStorage, saves as appSaves, type CachedStorage } from '@/shared/storage';
 
@@ -17,6 +18,7 @@ import {
   type PathData,
   type PathState,
 } from '../model';
+import { pathFeel } from './feel';
 import { SHEET_DELAY_MS } from '../simulate';
 
 export type Phase = 'start' | 'play' | 'finished';
@@ -61,6 +63,7 @@ export function usePathGame(file: PuzzleFile<PathData>, deps: Deps = {}) {
   const [streak, setStreak] = useState(opened.streak);
   const [startedAt, setStartedAt] = useState<number | null>(null);
   const [secs, setSecs] = useState(0);
+  useHapticDiff(state, pathFeel);
 
   const begin = useCallback(() => setStartedAt((t) => t ?? now()), [now]);
 

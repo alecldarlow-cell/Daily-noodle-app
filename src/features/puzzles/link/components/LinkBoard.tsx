@@ -33,11 +33,14 @@ export function LinkBoard({ state, dispatch }: LinkBoardProps) {
             <View
               key={g.rank}
               style={[styles.band, { backgroundColor: GROUP[g.rank] }]}
+              accessible
+              accessibilityLabel={`${g.name}: ${g.members.join(', ')}`}
               testID={`band-${g.rank}`}>
-              <Text style={[styles.bname, { color: ON_GROUP[g.rank] }]}>
+              <Text maxFontSizeMultiplier={1.3} style={[styles.bname, { color: ON_GROUP[g.rank] }]}>
                 {g.name.toUpperCase()}
               </Text>
               <Text
+                maxFontSizeMultiplier={1.3}
                 style={[styles.bmem, { color: ON_GROUP[g.rank] }]}
                 numberOfLines={1}
                 adjustsFontSizeToFit>
@@ -70,6 +73,7 @@ export function LinkBoard({ state, dispatch }: LinkBoardProps) {
                     turned && { backgroundColor: GROUP[hitRank], borderWidth: 0 },
                   ]}>
                   <Text
+                    maxFontSizeMultiplier={1.3}
                     style={[styles.tt, { color: turned ? ON_GROUP[hitRank] : pt.ink }]}
                     numberOfLines={2}
                     adjustsFontSizeToFit>
@@ -84,7 +88,9 @@ export function LinkBoard({ state, dispatch }: LinkBoardProps) {
       <View
         style={styles.lives}
         accessibilityLabel={`${MAX_MISTAKES - state.mistakes} mistakes left`}>
-        <Text style={[styles.livesText, { color: pt.inkSoft }]}>MISTAKES LEFT</Text>
+        <Text maxFontSizeMultiplier={1.3} style={[styles.livesText, { color: pt.inkSoft }]}>
+          MISTAKES LEFT
+        </Text>
         {Array.from({ length: MAX_MISTAKES }, (_, i) => (
           <View
             key={i}
@@ -99,6 +105,7 @@ export function LinkBoard({ state, dispatch }: LinkBoardProps) {
         ))}
       </View>
       <Text
+        maxFontSizeMultiplier={1.3}
         style={[
           styles.msg,
           { color: state.msg.tone === 'bad' ? pt.bad : pt.inkSoft },
@@ -127,6 +134,7 @@ export function LinkBoard({ state, dispatch }: LinkBoardProps) {
               t === 'submit' && !dis && { backgroundColor: pt.brand, borderColor: pt.brand },
             ]}>
             <Text
+              maxFontSizeMultiplier={1.3}
               style={[
                 styles.btnText,
                 { color: dis ? pt.inkSoft : t === 'submit' ? '#FFFFFF' : pt.ink },
