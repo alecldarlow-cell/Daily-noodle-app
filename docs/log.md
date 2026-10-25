@@ -318,3 +318,26 @@ below when it finishes.
   started from his PC the same afternoon (before polish merged, so without haptics).
 - **Needs Alec**: EXPO_TOKEN secret (then Claude runs a second build with everything), the phone test, Resend and
   the two redirect URLs, Play internal testing, branch protection and auto-delete of merged branches (now free).
+
+### 25 Oct 2026 — first phone test (Pixel 10 Pro)
+
+- Branch `fix/android-tab-icons-crash`. Tested on Alec's phone over Wi-Fi debugging (adb): install, crash log,
+  screenshots and taps.
+- **Launch crash fixed**: preview build `0410537b` crashed on open; the native tabs' `md` icons need
+  `expo-symbols` on Android. Added 58.0.4 with Alec's approval (ADR-007). Preview build `31289795` (commit
+  3371b13) opens with no crash.
+- **Phone checks**: Today lists the eight puzzles; Mini and Sweep native; a Mini solved by tapping (0:18, streak
+  1, Share opens Android's sheet, "Next: Doku"); Leagues and Account render; Account › Privacy opens in the app.
+- **Archive chips clipped** at 115% font size: the row could shrink under the list. `flexShrink: 0` plus a test;
+  checked on the phone through an EAS Update to preview.
+- **Release workflow**: eas-cli 25.3.0 refuses `update --non-interactive` without `--environment` (seen running it
+  by hand), so the first run with EXPO_TOKEN would have failed. Added `--environment preview`, and the commit
+  message now goes through an env var (first line only).
+- The 17:19 build failure was a stale `node_modules` on Alec's PC (expo-haptics not installed yet, so the local
+  fingerprint differed). Run `npm ci` after pulling, before `eas build`.
+- Set up by Claude in Alec's browser: Resend domain verified (DKIM, two forge CNAMEs, DMARC on Cloudflare);
+  Supabase custom SMTP through Resend (Alec pasted the key); redirect URLs `dailynoodle://auth` and
+  `https://dailynoodle.co.uk/board.html` added; merged branches auto-delete in both repos.
+- **Not yet**: sign-in stays off (Alec's call; switching it on means site `dn-sync.js` ON = true with SYNC-WEB-01
+  updated, then `EXPO_PUBLIC_SYNC=1`). Left for Alec: airplane-mode check and "Bring my leagues here" with his
+  personal link; deleting the 43 already-merged branches.

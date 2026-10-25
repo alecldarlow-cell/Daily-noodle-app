@@ -57,7 +57,11 @@ jobs:
         run: npm ci
       - name: Publish an update to preview builds
         if: env.EXPO_TOKEN != ''
-        run: $EAS update --channel preview --message "${{ github.event.head_commit.message }}" --non-interactive
+        # eas-cli 25 refuses --non-interactive without --environment. The commit's first line
+        # goes through an env var so quotes in a message can't break the command.
+        env:
+          MESSAGE: ${{ github.event.head_commit.message }}
+        run: $EAS update --channel preview --environment preview --message "${MESSAGE%%$'\n'*}" --non-interactive
 
   build:
     name: build
