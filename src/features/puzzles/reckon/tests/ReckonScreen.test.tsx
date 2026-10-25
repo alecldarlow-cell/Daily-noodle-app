@@ -53,6 +53,7 @@ describe('GIVEN a Reckon not yet played', () => {
     it('THEN the start screen says what the page says', async () => {
       await renderWithProviders(<ReckonScreen file={file2} deps={deps} />);
       expect(screen.getByText('No. 2, Wednesday 21 October')).toBeOnTheScreen();
+      expect(screen.getByText('Today’s ten')).toBeOnTheScreen();
       expect(
         screen.getByText(
           'Ten numbers to guess, each from a different topic. The closer you get, the more you score.',
@@ -208,5 +209,15 @@ describe('GIVEN a Reckon already finished', () => {
       '🎯 Reckon #2 — 🎯🎯🎯🎯🎯🟩🟨🟧⬜⬜ · 725 pts · 🔥2',
     );
     expect(finishes).toHaveLength(0);
+  });
+});
+
+// Last in the file: a second day's render is kept apart from the rounds above.
+describe('GIVEN a past day’s round, opened from the Archive', () => {
+  it('THEN its start screen is headed by its number, not “Today’s ten”', async () => {
+    const later = Date.parse('2026-10-24T09:00:00Z');
+    await renderWithProviders(<ReckonScreen file={file2} deps={{ ...deps, wall: () => later }} />);
+    expect(screen.getByText('Reckon 2')).toBeOnTheScreen();
+    expect(screen.queryByText('Today’s ten')).toBeNull();
   });
 });

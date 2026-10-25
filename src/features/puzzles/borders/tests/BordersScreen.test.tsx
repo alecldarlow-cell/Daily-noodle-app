@@ -68,6 +68,7 @@ describe('GIVEN a Borders not yet played', () => {
   it('THEN the start screen says what the page says', async () => {
     await renderWithProviders(<BordersScreen file={file15} deps={deps} />);
     expect(screen.getByText('No. 15, Monday, 19 October')).toBeOnTheScreen();
+    expect(screen.getByText('Today’s ten')).toBeOnTheScreen();
     expect(
       screen.getByText(
         'Ten country outlines, easiest first. Name them from four; scored out of ten.',
@@ -146,5 +147,17 @@ describe('GIVEN a Borders already finished', () => {
     expect(screen.getByText('10 of 10')).toBeOnTheScreen();
     expect(screen.getByText('All ten named.')).toBeOnTheScreen();
     expect(finishes).toHaveLength(0);
+  });
+});
+
+// Last in the file: a second day's render is kept apart from the rounds above.
+describe('GIVEN a past day’s round, opened from the Archive', () => {
+  it('THEN its start screen is headed by its number, not “Today’s ten”', async () => {
+    const later = Date.parse('2026-10-22T09:00:00Z');
+    await renderWithProviders(
+      <BordersScreen file={file15} deps={{ ...deps, wall: () => later }} />,
+    );
+    expect(screen.getByText('Borders 15')).toBeOnTheScreen();
+    expect(screen.queryByText('Today’s ten')).toBeNull();
   });
 });

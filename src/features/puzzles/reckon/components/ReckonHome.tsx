@@ -62,7 +62,7 @@ export function ReckonHome({ state, today, c, onPlay, onBack }: Props) {
       dateLine={`No. ${serial(state.P.id)}, ${longDate(state.P.date)}`}
       streak={h.streak || undefined}
       art={<Art c={c} />}
-      head="Today’s ten"
+      head={state.P.date === today ? 'Today’s ten' : `Reckon ${serial(state.P.id)}`}
       status={h.status}
       statusTestID="reckon-status"
       button={{ label: h.button, onPress: onPlay, testID: 'reckon-play-button' }}

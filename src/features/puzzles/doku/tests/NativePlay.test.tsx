@@ -34,7 +34,8 @@ describe('GIVEN a Doku opened natively', () => {
       await waitFor(() => expect(screen.getByTestId('start-card')).toBeOnTheScreen(), {
         timeout: 5000,
       });
-      expect(screen.getByText('Today’s Doku')).toBeOnTheScreen();
+      // An archive day (18 Oct): the card is headed by its number.
+      expect(screen.getByText('Doku 97')).toBeOnTheScreen();
     });
   });
 

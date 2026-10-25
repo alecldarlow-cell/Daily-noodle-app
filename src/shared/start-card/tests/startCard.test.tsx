@@ -55,6 +55,10 @@ describe('GIVEN the start card', () => {
     />
   );
 
+  // The card is dated 24 Oct; the clock says it is that day unless a test moves it.
+  beforeEach(() => jest.useFakeTimers({ now: new Date('2026-10-24T12:00:00Z') }));
+  afterEach(() => jest.useRealTimers());
+
   it('THEN it names the puzzle and day, the rule and your numbers', async () => {
     await render(card(4));
     expect(screen.getByRole('header', { name: 'Mini' })).toBeOnTheScreen();
@@ -63,6 +67,16 @@ describe('GIVEN the start card', () => {
     expect(screen.getByText('4-day streak')).toBeOnTheScreen();
     expect(screen.getByText('Minis played')).toBeOnTheScreen();
     expect(screen.getByText('12')).toBeOnTheScreen();
+  });
+
+  describe('WHEN it is a past day’s puzzle, opened from the Archive', () => {
+    it('THEN it is headed by its number, not “Today’s”', async () => {
+      jest.setSystemTime(new Date('2026-10-26T12:00:00Z'));
+      await render(card(0));
+      expect(screen.getByText('Mini 105')).toBeOnTheScreen();
+      expect(screen.queryByText('Today’s Mini')).toBeNull();
+      expect(screen.getByText('No. 105, Saturday 24 October')).toBeOnTheScreen();
+    });
   });
 
   describe('WHEN How to play, Play and Puzzles are tapped', () => {

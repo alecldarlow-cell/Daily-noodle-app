@@ -34,7 +34,7 @@ export function BordersHome({ state, today, c, onPlay, onBack }: Props) {
       dateLine={`No. ${serial(state.P.id)}, ${homeDate(state.P.date)}`}
       streak={streak >= 1 ? `${streak}-day streak` : undefined}
       art={<Picture html={worldHtml(c)} style={styles.world} />}
-      head="Today’s ten"
+      head={state.P.date === today ? 'Today’s ten' : `Borders ${serial(state.P.id)}`}
       status={h.status}
       statusTestID="borders-status"
       button={{ label: h.button, onPress: onPlay, testID: 'borders-play-button' }}

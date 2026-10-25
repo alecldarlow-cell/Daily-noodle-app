@@ -9,6 +9,7 @@ import { StartCard } from '../StartCard';
 
 const noop = () => undefined;
 beforeEach(() => mockSite({}));
+afterEach(() => jest.useRealTimers());
 
 describe('GIVEN the clock over a board', () => {
   describe('WHEN a screen reader reads it', () => {
@@ -36,6 +37,7 @@ describe('GIVEN the clock over a board', () => {
 
 describe('GIVEN the start card with large text', () => {
   it('THEN the big type is capped so it still fits, and each number reads with its label', async () => {
+    jest.useFakeTimers({ now: new Date('2026-10-24T12:00:00Z') }); // the card's own day
     await render(
       <StartCard
         type="mini"

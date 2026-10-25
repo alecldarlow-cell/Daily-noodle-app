@@ -57,7 +57,7 @@ const setAppState = (s: AppStateStatus) => appState.forEach((fn) => fn(s));
 beforeEach(() => {
   for (const k of appStorage.keys()) appStorage.setItem(k, 'null');
   jest.clearAllMocks();
-  jest.useFakeTimers();
+  jest.useFakeTimers({ now: new Date('2026-10-25T12:00:00Z') }); // file19's day: “Today’s Tangle”
   finishes = [];
   appState = [];
   off = onFinish((f) => finishes.push(f));

@@ -147,6 +147,13 @@ describe('GIVEN a Tangle not yet played', () => {
     });
   });
 
+  describe('WHEN it is opened from the Archive on a later day', () => {
+    it('THEN the home card is headed by its number, not “Today’s”', () => {
+      const g = open();
+      expect(homeCard(g.e, '2026-10-27').head).toBe('Tangle 19');
+    });
+  });
+
   describe('WHEN Play is pressed', () => {
     it('THEN the round is saved as playing, counts 3-2-1 with the letters hidden, then goes live', () => {
       const g = open();
