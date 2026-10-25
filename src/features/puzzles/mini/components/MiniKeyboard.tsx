@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { usePuzzleTokens } from '@/shared/theme';
+import { FONT, usePuzzleTokens } from '@/shared/theme';
 
 /** The page's on-screen keyboard (#kb): three rows, ⌫ at the end of the last. */
 export const KB_ROWS = ['QWERTYUIOP', 'ASDFGHJKL', 'ZXCVBNM'] as const;
@@ -70,5 +70,5 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   wide: { maxWidth: 64, flex: 1.5 },
-  text: { fontSize: 16, fontWeight: '600' },
+  text: { fontSize: 16, fontFamily: FONT.sansSemi },
 });

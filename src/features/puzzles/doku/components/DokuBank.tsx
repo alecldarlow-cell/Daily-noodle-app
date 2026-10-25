@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { usePuzzleTokens } from '@/shared/theme';
+import { FONT, usePuzzleTokens } from '@/shared/theme';
 
 import { bankTiles, type DokuState } from '../model';
 
@@ -70,6 +70,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  ch: { fontSize: 18, fontWeight: '700' },
-  empty: { alignSelf: 'center', fontSize: 11, letterSpacing: 1.1 },
+  ch: { fontSize: 18, fontFamily: FONT.display },
+  empty: { alignSelf: 'center', fontFamily: FONT.sans, fontSize: 11, letterSpacing: 1.1 },
 });

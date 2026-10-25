@@ -1,5 +1,7 @@
 import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { FONT } from '@/shared/theme';
+
 import type { FinishInfo } from '../finishing';
 import type { ReckonColors } from './colors';
 
@@ -52,16 +54,16 @@ const styles = StyleSheet.create({
     minHeight: 44,
   },
   text: { flex: 1, gap: 3 },
-  rq: { fontSize: 15, lineHeight: 20 },
-  ra: { fontSize: 13 },
+  rq: { fontFamily: FONT.sans, fontSize: 15, lineHeight: 20 },
+  ra: { fontFamily: FONT.sans, fontSize: 13 },
   rp: {
     minWidth: 44,
     textAlign: 'center',
     borderRadius: 999,
     paddingVertical: 4,
-    fontWeight: '800',
+    fontFamily: FONT.displayHeavy,
     overflow: 'hidden',
   },
   link: { minHeight: 44, justifyContent: 'center', marginTop: 8 },
-  linkText: { fontSize: 15, fontWeight: '600', textDecorationLine: 'underline' },
+  linkText: { fontSize: 15, fontFamily: FONT.sansSemi, textDecorationLine: 'underline' },
 });

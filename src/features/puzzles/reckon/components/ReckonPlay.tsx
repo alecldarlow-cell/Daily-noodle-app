@@ -11,6 +11,9 @@ import {
   type Move,
   type ReckonState,
 } from '../model';
+import { FONT } from '@/shared/theme';
+import { Chevron } from '@/shared/ui';
+
 import type { ReckonColors } from './colors';
 import { ReckonSlider } from './ReckonSlider';
 
@@ -97,7 +100,7 @@ export function ReckonPlay({ state, c, dispatch }: Props) {
               disabled={v.prevDisabled}
               onPress={() => dispatch({ t: 'nav', d: -1 })}
               style={[styles.navb, v.prevDisabled && styles.off]}>
-              <Text style={[styles.navt, { color: c.ink }]}>‹</Text>
+              <Chevron color={c.ink} dir="left" />
             </Pressable>
             <Text style={[styles.qn, { color: c.ink }]} testID="reckon-qn">
               {v.qn}
@@ -109,7 +112,7 @@ export function ReckonPlay({ state, c, dispatch }: Props) {
               disabled={v.fwdDisabled}
               onPress={() => dispatch({ t: 'nav', d: 1 })}
               style={[styles.navb, v.fwdDisabled && styles.off]}>
-              <Text style={[styles.navt, { color: c.ink }]}>›</Text>
+              <Chevron color={c.ink} />
             </Pressable>
           </View>
           <Text
@@ -138,8 +141,16 @@ export function ReckonPlay({ state, c, dispatch }: Props) {
           ))}
         </View>
         <ScrollView style={styles.fill} contentContainerStyle={styles.mid}>
-          <View style={[styles.qcard, { backgroundColor: c.paper, borderColor: c.line }]}>
-            {v.reviewing ? <Text style={[styles.rvt, { color: c.tom }]}>{v.reviewing}</Text> : null}
+          <View
+            style={[
+              styles.qcard,
+              { backgroundColor: c.paper, borderColor: c.edge, borderBottomColor: c.ledge },
+            ]}>
+            {v.reviewing ? (
+              <Text style={[styles.rvt, { backgroundColor: c.ink, color: c.bg }]}>
+                {v.reviewing}
+              </Text>
+            ) : null}
             <Text style={[styles.q, { color: c.ink }]} testID="reckon-question">
               {v.question}
             </Text>
@@ -158,18 +169,44 @@ export function ReckonPlay({ state, c, dispatch }: Props) {
               ) : null}
             </View>
           ) : null}
-          <View style={styles.read}>
-            <View style={styles.rc}>
-              <Text style={[styles.rl, { color: c.ink2 }]}>Your guess</Text>
-              <Text style={[styles.rv, { color: c.ink }]} testID="reckon-guess">
+          {/* reckon.css .read: one big reading in the middle while guessing; guess and answer side by side after */}
+          <View style={[styles.read, fb && styles.readTwo]}>
+            <View
+              style={[
+                styles.rc,
+                fb && [styles.rcTwo, { backgroundColor: c.paper, borderColor: c.line }],
+              ]}>
+              <View style={styles.rl}>
+                <View style={[styles.dot, { backgroundColor: c.tom, borderColor: c.ink }]} />
+                <Text style={[styles.rlText, { color: c.ink2 }]}>Your guess</Text>
+              </View>
+              <Text
+                adjustsFontSizeToFit
+                numberOfLines={1}
+                maxFontSizeMultiplier={1.2}
+                style={[styles.rv, fb && styles.rvTwo, { color: fb ? c.tomInk : c.ink }]}
+                testID="reckon-guess">
                 {preview != null ? fmt(preview) : v.guess}
                 <Text style={[styles.ru, { color: c.ink2 }]}>{v.unit ? ` ${v.unit}` : ''}</Text>
               </Text>
             </View>
             {fb ? (
-              <View style={styles.rc}>
-                <Text style={[styles.rl, { color: c.ink2 }]}>Answer</Text>
-                <Text style={[styles.rv, { color: c.ink }]} testID="reckon-answer">
+              <View
+                style={[
+                  styles.rc,
+                  styles.rcTwo,
+                  { backgroundColor: c.paper, borderColor: c.line },
+                ]}>
+                <View style={styles.rl}>
+                  <View style={[styles.dot, { backgroundColor: c.ink, borderColor: c.ink }]} />
+                  <Text style={[styles.rlText, { color: c.ink2 }]}>Answer</Text>
+                </View>
+                <Text
+                  adjustsFontSizeToFit
+                  numberOfLines={1}
+                  maxFontSizeMultiplier={1.2}
+                  style={[styles.rv, styles.rvTwo, { color: c.ink }]}
+                  testID="reckon-answer">
                   {fb.answer}
                   <Text style={[styles.ru, { color: c.ink2 }]}>{fb.unit ? ` ${fb.unit}` : ''}</Text>
                 </Text>
@@ -272,37 +309,74 @@ const styles = StyleSheet.create({
   bars: { flexDirection: 'row', gap: 4 },
   bar: { width: 4, height: 14, borderRadius: 1 },
   chip: { borderRadius: 999, paddingHorizontal: 12, paddingVertical: 5, flexShrink: 1 },
-  chipText: { color: '#FFFFFF', fontWeight: '600', fontSize: 14 },
+  chipText: { color: '#FFFFFF', fontFamily: FONT.sansSemi, fontSize: 14 },
   qnav: { flexDirection: 'row', alignItems: 'center', marginLeft: 'auto' },
   navb: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
-  navt: { fontSize: 26 },
+  navt: { fontFamily: FONT.sans, fontSize: 26 },
   off: { opacity: 0.25 },
   qn: { minWidth: 38, textAlign: 'center', fontVariant: ['tabular-nums'] },
-  sc: { minWidth: 56, textAlign: 'right', fontFamily: 'Georgia', fontSize: 32 },
+  sc: { minWidth: 56, textAlign: 'right', fontFamily: FONT.serif, fontSize: 32 },
   pips: { flexDirection: 'row', gap: 6, paddingHorizontal: 16, marginTop: 4 },
   pip: { flex: 1, height: 10, borderRadius: 5 },
-  mid: { padding: 16, gap: 14 },
-  qcard: { borderRadius: 16, borderWidth: 1, padding: 18, gap: 6 },
-  rvt: { fontSize: 13, fontWeight: '700', textTransform: 'uppercase' },
-  q: { fontSize: 22, lineHeight: 29, fontFamily: 'Georgia' },
+  mid: { padding: 16, gap: 14, flexGrow: 1 },
+  // reckon.css .qcard: a 1.5 px edge and a 3 px ledge underneath.
+  qcard: {
+    borderRadius: 16,
+    borderWidth: 1.5,
+    borderBottomWidth: 4.5,
+    paddingVertical: 16,
+    paddingHorizontal: 18,
+    gap: 6,
+  },
+  rvt: {
+    alignSelf: 'flex-start',
+    borderRadius: 6,
+    overflow: 'hidden',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    fontSize: 11,
+    letterSpacing: 0.9,
+    fontFamily: FONT.display,
+    textTransform: 'uppercase',
+  },
+  q: { fontSize: 21, lineHeight: 27, fontFamily: FONT.sansSemi },
   fb: { gap: 4 },
   fbv: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  verdict: { fontSize: 24, fontWeight: '800' },
+  verdict: { fontSize: 24, fontFamily: FONT.displayHeavy },
   badge: {
     borderRadius: 999,
     paddingHorizontal: 10,
     paddingVertical: 2,
-    fontWeight: '800',
+    fontFamily: FONT.displayHeavy,
     overflow: 'hidden',
   },
-  fbl: { fontSize: 16 },
-  fbn: { fontSize: 15, lineHeight: 21 },
-  read: { flexDirection: 'row', gap: 12 },
-  rc: { flex: 1, gap: 2 },
-  rl: { fontSize: 13 },
-  rv: { fontSize: 30, fontFamily: 'Georgia', fontVariant: ['tabular-nums'] },
-  ru: { fontSize: 16 },
-  tip: { marginHorizontal: 16, borderRadius: 12, padding: 12, fontSize: 15 },
+  fbl: { fontFamily: FONT.sans, fontSize: 16 },
+  fbn: { fontFamily: FONT.sans, fontSize: 15, lineHeight: 21 },
+  read: { flexGrow: 1, justifyContent: 'center', alignItems: 'center', gap: 10 },
+  readTwo: { flexGrow: 0, flexDirection: 'row', alignItems: 'stretch' },
+  rc: { alignItems: 'center', gap: 4, maxWidth: '100%' },
+  rcTwo: {
+    flex: 1,
+    minWidth: 0,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    paddingTop: 10,
+    paddingBottom: 8,
+    paddingHorizontal: 8,
+  },
+  rl: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  dot: { width: 10, height: 10, borderRadius: 5, borderWidth: 1.5 },
+  rlText: { fontSize: 12, fontFamily: FONT.display, letterSpacing: 1, textTransform: 'uppercase' },
+  rv: {
+    fontSize: 84,
+    lineHeight: 90,
+    fontFamily: FONT.serif,
+    letterSpacing: -1.5,
+    fontVariant: ['tabular-nums'],
+  },
+  rvTwo: { fontSize: 44, lineHeight: 50, letterSpacing: -0.5 },
+  ru: { fontFamily: FONT.sansSemi, fontSize: 20, letterSpacing: 0 },
+  tip: { marginHorizontal: 16, borderRadius: 12, padding: 12, fontFamily: FONT.sans, fontSize: 15 },
   ctl: { flexDirection: 'row', gap: 12, paddingHorizontal: 16, alignItems: 'center' },
   nb: {
     width: 56,
@@ -312,8 +386,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  nbt: { fontSize: 28, fontWeight: '600' },
-  nbtSmall: { fontSize: 16, fontWeight: '600' },
+  nbt: { fontSize: 28, fontFamily: FONT.sansSemi },
+  nbtSmall: { fontSize: 16, fontFamily: FONT.sansSemi },
   act: {
     flex: 1,
     minHeight: 52,
@@ -322,7 +396,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 16,
   },
-  actt: { fontSize: 17, fontWeight: '800' },
+  actt: { fontSize: 17, fontFamily: FONT.displayHeavy },
   ov: {
     ...StyleSheet.absoluteFill,
     alignItems: 'center',
@@ -330,7 +404,7 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   sheet: { width: '100%', maxWidth: 360, borderRadius: 18, padding: 22, gap: 12 },
-  h2: { fontSize: 32, fontFamily: 'Georgia', marginBottom: 4 },
+  h2: { fontSize: 32, fontFamily: FONT.serif, marginBottom: 4 },
   wide: {
     minHeight: 48,
     borderRadius: 14,

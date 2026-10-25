@@ -84,3 +84,12 @@ export function clockLine(name: string, s: number, run: number): ClockLine {
     return { lead: 'Today’s puzzles are out.', bold: null, after: '', run };
   return { lead: `A new ${name} in `, bold: hm(s), after: '.', run };
 }
+
+/**
+ * The result and its unit, drawn apart as finish.js draws them (`325<small>pts</small>`):
+ * "325 pts" → ["325", "pts"], "39 points" → ["39", "points"], "1:27" → ["1:27", ""].
+ */
+export function splitHero(hero: string): [string, string] {
+  const m = /^(.*\S)\s+(pts|points?)$/.exec(hero);
+  return m ? [m[1]!, m[2]!] : [hero, ''];
+}

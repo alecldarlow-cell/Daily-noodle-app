@@ -358,3 +358,18 @@ below when it finishes.
   published card, with his approval) first, then `EXPO_PUBLIC_SYNC=1` in eas.json here.
 - **Left for Alec**: try sign-in once both are live (Account › email link on the phone; then board.html on the
   laptop) and check results appear on both.
+
+### 25 Oct 2026 — puzzle visual polish
+
+- Earlier today, also merged: app #31 (BUILD_ENV), #32 (`.gitattributes` LF, so CI builds the same fingerprint as
+  a Windows clone and updates reach phones), #33 (Tangle screens opt out of React Compiler; count-in froze on 3).
+  Play internal testing release 3 (0.1.0) is out to testers.
+- **Polish** ([#34](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/34)): Instrument Serif and
+  Archivo bundled (OFL); one shared `StartLayout` for all eight start cards (Tangle, Borders, Reckon homes rebuilt
+  on it); finish sheet to finish.css values; Tangle word chips; Sweep raised squares and start pulse; Link words
+  no longer break mid-word; Reckon's guess big and centred. Checked on the phone over EAS Update against the site
+  (old archive puzzles; one accidental open of today's Doku 104 with no moves, a stray `start` event only).
+- Tests proved: every font family bundled; no Georgia or `fontWeight` left in the players; `splitHero`;
+  `tileLines`; the Sweep start pulse appears once and stops after the first dig. 810 tests pass.
+- **Left**: start cards say "Today’s Mini" on archive puzzles too (as the site's house.js does); Mini's Check
+  buttons sit above the grid where the site puts them below.

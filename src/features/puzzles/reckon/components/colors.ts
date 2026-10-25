@@ -11,6 +11,11 @@ export interface ReckonColors {
   ink2: string;
   line: string;
   rule: string;
+  /** The question card's edge and its 3 px ledge (reckon.css --edge, --ledge). */
+  edge: string;
+  ledge: string;
+  /** The guess, in tomato, beside the answer (--tomInk). */
+  tomInk: string;
   tom: string;
   onTom: string;
   knob: string;
@@ -29,6 +34,9 @@ const light: ReckonColors = {
   ink2: '#5E5B55',
   line: '#E4DACA',
   rule: '#CBBDA6',
+  edge: '#1E2433',
+  ledge: '#1E2433',
+  tomInk: '#B8402B',
   tom: '#CF472F',
   onTom: '#FFFFFF',
   knob: '#FFFFFF',
@@ -46,6 +54,9 @@ const dark: ReckonColors = {
   ink2: '#ABA497',
   line: '#3A352D',
   rule: '#544D42',
+  edge: '#5C554A',
+  ledge: '#050403',
+  tomInk: '#F2826A',
   tom: '#E8664D',
   onTom: '#16140F',
   knob: '#F1EBDF',

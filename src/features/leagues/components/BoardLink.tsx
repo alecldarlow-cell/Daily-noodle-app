@@ -12,7 +12,7 @@ import { useEffect, useSyncExternalStore } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import type { BoardSlotProps } from '@/shared/finish-sheet';
-import { usePuzzleTokens } from '@/shared/theme';
+import { FONT, usePuzzleTokens } from '@/shared/theme';
 import { useLondonDay } from '@/shared/time';
 
 import { boardMoment } from '../api/board';
@@ -82,7 +82,7 @@ function MemberLink({
 const styles = StyleSheet.create({
   // finish.css .fin-board-slot: its room is kept so nothing below jumps.
   slot: { minHeight: 48, marginTop: 4 },
-  moment: { fontSize: 15, lineHeight: 20, fontWeight: '700', marginTop: 10 },
+  moment: { fontSize: 15, lineHeight: 20, fontFamily: FONT.display, marginTop: 10 },
   link: { minHeight: 44, justifyContent: 'center', alignSelf: 'flex-start', marginTop: 4 },
-  linkText: { fontSize: 15, fontWeight: '600' },
+  linkText: { fontSize: 15, fontFamily: FONT.sansSemi },
 });

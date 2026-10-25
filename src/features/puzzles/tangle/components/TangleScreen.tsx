@@ -17,7 +17,7 @@ import { useTangleGame } from '../hooks/useTangleGame';
 import { homeCard, type TangleData } from '../model';
 import { TangleBoard } from './TangleBoard';
 import { TangleHome } from './TangleHome';
-import { TangleRecap, TangleScore } from './TangleRecap';
+import { TangleRecap } from './TangleRecap';
 
 const back = () => (router.canGoBack() ? router.back() : router.replace('/'));
 
@@ -49,7 +49,6 @@ export function TangleScreen({ file }: { file: PuzzleFile<TangleData> }) {
         date={engine.P.date}
         title={f.title}
         hero={`${f.hero.score} ${f.hero.word}`}
-        heroNode={<TangleScore score={f.hero.score} word={f.hero.word} />}
         note={noteText(f.note)}
         share={f.share}
         stats={f.stats}

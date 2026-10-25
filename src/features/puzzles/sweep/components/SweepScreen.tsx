@@ -13,7 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { FinishSheet, useFreshFinish } from '@/shared/finish-sheet';
 import { PuzzleBar, ruleFor, StartCard, useStartStats } from '@/shared/start-card';
 import { useStoredRaw } from '@/shared/storage';
-import { usePuzzleTokens } from '@/shared/theme';
+import { FONT, usePuzzleTokens } from '@/shared/theme';
 import { fitBoard } from '@/shared/ui';
 
 import type { PuzzleFile } from '../../types';
@@ -207,7 +207,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  modeText: { fontSize: 15, fontWeight: '700' },
+  modeText: { fontSize: 15, fontFamily: FONT.display },
   counter: {
     minWidth: 74,
     borderWidth: 1.5,
@@ -217,8 +217,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   neg: { color: '#fff', borderRadius: 4, paddingHorizontal: 5, overflow: 'hidden' },
-  msg: { fontSize: 13, lineHeight: 18, textAlign: 'center', minHeight: 18 },
-  bold: { fontWeight: '700' },
+  msg: { fontFamily: FONT.sans, fontSize: 13, lineHeight: 18, textAlign: 'center', minHeight: 18 },
+  bold: { fontFamily: FONT.display },
   controls: { flexDirection: 'row', justifyContent: 'center', gap: 6 },
   btn: {
     minHeight: 44,
@@ -229,6 +229,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 14,
   },
-  btnText: { fontSize: 14, fontWeight: '500' },
-  again: { fontSize: 15, textDecorationLine: 'underline' },
+  btnText: { fontSize: 14, fontFamily: FONT.sansMedium },
+  again: { fontFamily: FONT.sans, fontSize: 15, textDecorationLine: 'underline' },
 });

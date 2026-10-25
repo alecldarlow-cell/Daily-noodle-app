@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { StyleSheet, Text, View, type GestureResponderEvent } from 'react-native';
 
+import { FONT } from '@/shared/theme';
+
 import { scaleMarks, type PlayView } from '../model';
 import type { ReckonColors } from './colors';
 
@@ -53,7 +55,7 @@ export function ReckonSlider({ view, c, thumbAt, onDrag, onStep }: Props) {
       onResponderTerminate={(e) => onDrag(frOf(e), true)}>
       <View
         pointerEvents="none"
-        style={[styles.trk, { backgroundColor: c.line }]}
+        style={[styles.trk, { backgroundColor: c.ink }]}
         onLayout={(e) =>
           setBox({ x: e.nativeEvent.layout.x, w: Math.max(1, e.nativeEvent.layout.width) })
         }>
@@ -72,7 +74,8 @@ export function ReckonSlider({ view, c, thumbAt, onDrag, onStep }: Props) {
             style={[
               styles.tick,
               t.kind === 'mj' ? styles.major : t.kind === 'md' ? styles.mid : null,
-              { left: `${t.x}%`, backgroundColor: c.rule },
+              // reckon.css .tk: small ticks in ink2, the decades and their middles in ink.
+              { left: `${t.x}%`, backgroundColor: t.kind ? c.ink : c.ink2 },
             ]}
           />
         ))}
@@ -103,9 +106,9 @@ const styles = StyleSheet.create({
   slz: { paddingTop: 38, paddingHorizontal: PAD, paddingBottom: 6 },
   trk: { height: 12, borderRadius: 6, position: 'relative' },
   band: { position: 'absolute', top: 0, bottom: 0, borderRadius: 6, opacity: 0.9 },
-  tick: { position: 'absolute', top: 16, width: 1, height: 5, marginLeft: -0.5 },
-  major: { height: 12, width: 2, marginLeft: -1 },
-  mid: { height: 8 },
+  tick: { position: 'absolute', top: 14, width: 2, height: 7, marginLeft: -1 },
+  major: { height: 13, width: 2.5, marginLeft: -1.25 },
+  mid: { height: 10 },
   pin: { position: 'absolute', top: -14, width: 3, height: 26, marginLeft: -1.5, borderRadius: 2 },
   thumb: {
     position: 'absolute',
@@ -118,5 +121,12 @@ const styles = StyleSheet.create({
   },
   thumbDone: { opacity: 0.85 },
   labs: { height: 30, marginTop: 14, position: 'relative' },
-  lab: { position: 'absolute', width: 60, marginLeft: -30, textAlign: 'center', fontSize: 13 },
+  lab: {
+    position: 'absolute',
+    width: 60,
+    marginLeft: -30,
+    textAlign: 'center',
+    fontFamily: FONT.sans,
+    fontSize: 13,
+  },
 });

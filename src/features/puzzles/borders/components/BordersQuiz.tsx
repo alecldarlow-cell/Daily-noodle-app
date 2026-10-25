@@ -1,6 +1,8 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { FONT } from '@/shared/theme';
+
 import { quizView, type BordersState, type Move } from '../model';
 import type { BordersColors } from './colors';
 import { mapHtml } from './drawing';
@@ -173,13 +175,13 @@ const styles = StyleSheet.create({
   bar: { width: 3.5, height: 12 },
   ticks: { flex: 1, flexDirection: 'row', gap: 4 },
   tick: { flex: 1, height: 8, borderWidth: 1.25, borderRadius: 2 },
-  pts: { fontFamily: 'Georgia', fontSize: 28, minWidth: 70, textAlign: 'right' },
-  ptsSmall: { fontSize: 13 },
+  pts: { fontFamily: FONT.serif, fontSize: 28, minWidth: 70, textAlign: 'right' },
+  ptsSmall: { fontFamily: FONT.sans, fontSize: 13 },
   sheet: { flex: 1, borderWidth: 1.5, borderRadius: 3, overflow: 'hidden', minHeight: 180 },
   map: { ...StyleSheet.absoluteFill },
   nameplate: { position: 'absolute', left: 0, right: 0, bottom: 0, padding: 12 },
-  plateName: { fontFamily: 'Georgia', fontSize: 28 },
-  plateLine: { fontSize: 14 },
+  plateName: { fontFamily: FONT.serif, fontSize: 28 },
+  plateLine: { fontFamily: FONT.sans, fontSize: 14 },
   coach: {
     position: 'absolute',
     left: 10,
@@ -187,6 +189,7 @@ const styles = StyleSheet.create({
     right: 10,
     padding: 10,
     borderRadius: 8,
+    fontFamily: FONT.sans,
     fontSize: 14,
   },
   opts: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
@@ -199,7 +202,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: 8,
   },
-  optText: { fontSize: 16, fontWeight: '600', textAlign: 'center' },
+  optText: { fontSize: 16, fontFamily: FONT.sansSemi, textAlign: 'center' },
   dim: { opacity: 0.45 },
   qfoot: { gap: 8 },
   btn: {
@@ -210,8 +213,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 16,
   },
-  btnText: { fontSize: 16, fontWeight: '600' },
+  btnText: { fontSize: 16, fontFamily: FONT.sansSemi },
   ov: { ...StyleSheet.absoluteFill, alignItems: 'center', justifyContent: 'center', padding: 20 },
   dialog: { width: '100%', maxWidth: 360, borderRadius: 6, borderWidth: 1.5, padding: 22, gap: 12 },
-  h2: { fontSize: 32, fontFamily: 'Georgia' },
+  h2: { fontSize: 32, fontFamily: FONT.serif },
 });

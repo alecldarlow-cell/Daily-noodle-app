@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { usePuzzleTokens } from '@/shared/theme';
+import { FONT, usePuzzleTokens } from '@/shared/theme';
 
 import { status, type MiniState } from '../model';
 
@@ -65,7 +65,10 @@ export function MiniBoard({ state, side, onCell }: MiniBoardProps) {
                     maxFontSizeMultiplier={1.2}
                     style={[
                       styles.num,
-                      { color: here ? pt.onActive : pt.inkSoft, fontSize: cell * 0.2 },
+                      {
+                        color: here ? pt.onActive : pt.inkSoft,
+                        fontSize: cell * 0.17,
+                      },
                     ]}>
                     {num}
                   </Text>
@@ -95,7 +98,7 @@ const styles = StyleSheet.create({
   grid: { borderWidth: 3, borderRadius: 10, overflow: 'hidden', alignSelf: 'center' },
   row: { flexDirection: 'row' },
   cell: { borderWidth: StyleSheet.hairlineWidth, alignItems: 'center', justifyContent: 'center' },
-  num: { position: 'absolute', top: 2, left: 4 },
-  ltr: { fontWeight: '700' },
+  num: { position: 'absolute', top: 2, left: 4, fontFamily: FONT.sansMedium },
+  ltr: { fontFamily: FONT.display },
   dot: { position: 'absolute', top: 4, right: 4, width: 6, height: 6, borderRadius: 3 },
 });

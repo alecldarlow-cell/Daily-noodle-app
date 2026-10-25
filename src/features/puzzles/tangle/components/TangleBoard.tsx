@@ -16,7 +16,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { usePuzzleTokens } from '@/shared/theme';
+import { FONT, usePuzzleTokens } from '@/shared/theme';
+import { Chevron } from '@/shared/ui';
 
 import { boardTop, current, foundList, N, type Rect, type TangleEngine } from '../model';
 
@@ -114,7 +115,7 @@ export function TangleBoard({ engine, setRects, onHome }: TangleBoardProps) {
             accessibilityLabel="Pause and go back"
             onPress={onHome}
             style={[styles.iconBtn, { borderColor: pt.lineSoft, backgroundColor: pt.card }]}>
-            <Text style={[styles.chev, { color: pt.ink }]}>‹</Text>
+            <Chevron color={pt.ink} dir="left" size={10} />
           </Pressable>
           <View style={styles.scorebox}>
             <Text style={[styles.score, { color: pt.ink }]} testID="tangle-score">
@@ -275,13 +276,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  chev: { fontSize: 26, lineHeight: 28, fontWeight: '600' },
+  chev: { fontSize: 26, lineHeight: 28, fontFamily: FONT.sansSemi },
   scorebox: { flex: 1, flexDirection: 'row', alignItems: 'baseline', gap: 6 },
-  score: { fontSize: 28, fontWeight: '700', fontVariant: ['tabular-nums'] },
-  small: { fontSize: 13 },
+  score: { fontSize: 28, fontFamily: FONT.display, fontVariant: ['tabular-nums'] },
+  small: { fontFamily: FONT.sans, fontSize: 13 },
   clock: {
     fontSize: 22,
-    fontWeight: '700',
+    fontFamily: FONT.display,
     fontVariant: ['tabular-nums'],
     minWidth: 60,
     textAlign: 'right',
@@ -289,13 +290,14 @@ const styles = StyleSheet.create({
   timebar: { height: 4, borderRadius: 2, overflow: 'hidden' },
   timefill: { height: 4 },
   pill: { alignSelf: 'flex-start', borderRadius: 999, paddingHorizontal: 12, paddingVertical: 5 },
-  pillText: { fontSize: 13, fontWeight: '600' },
+  pillText: { fontSize: 13, fontFamily: FONT.sansSemi },
   list: { flexGrow: 0, maxHeight: 150 },
   listIn: { gap: 6 },
   grp: { gap: 4 },
   grpHead: { flexDirection: 'row', justifyContent: 'space-between' },
   ws: { flexDirection: 'row', flexWrap: 'wrap', gap: 5 },
   w: {
+    fontFamily: FONT.sans,
     fontSize: 14,
     paddingHorizontal: 7,
     paddingVertical: 2,
@@ -304,16 +306,16 @@ const styles = StyleSheet.create({
   },
   bon: { fontStyle: 'italic' },
   cur: { minHeight: 34, alignItems: 'center', justifyContent: 'center' },
-  curWord: { fontSize: 22, fontWeight: '700', letterSpacing: 1 },
-  idle: { fontSize: 14, fontWeight: '400', letterSpacing: 0 },
-  toast: { fontSize: 14, fontWeight: '700' },
+  curWord: { fontSize: 22, fontFamily: FONT.display, letterSpacing: 1 },
+  idle: { fontSize: 14, fontFamily: FONT.sans, letterSpacing: 0 },
+  toast: { fontSize: 14, fontFamily: FONT.display },
   boardWrap: { flex: 1, alignItems: 'center', justifyContent: 'flex-start' },
   board: { position: 'relative' },
   tile: { position: 'absolute', borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  letter: { fontSize: 32, fontWeight: '700' },
+  letter: { fontSize: 32, fontFamily: FONT.display },
   bar: { position: 'absolute', height: 6, borderRadius: 3, opacity: 0.8 },
   overlay: { ...StyleSheet.absoluteFill, alignItems: 'center', justifyContent: 'center' },
-  count: { fontSize: 88, fontWeight: '800' },
+  count: { fontSize: 88, fontFamily: FONT.displayHeavy },
   resume: { borderRadius: 999, paddingHorizontal: 28, paddingVertical: 12 },
-  resumeText: { color: '#FFFFFF', fontSize: 17, fontWeight: '800' },
+  resumeText: { color: '#FFFFFF', fontSize: 17, fontFamily: FONT.displayHeavy },
 });

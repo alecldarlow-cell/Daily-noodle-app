@@ -4,6 +4,7 @@ import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { FinishSheet, useFreshFinish } from '@/shared/finish-sheet';
 import { usePuzzleVisit } from '@/shared/results';
+import { FONT } from '@/shared/theme';
 
 import type { PuzzleFile } from '../../types';
 import type { FinishInfo } from '../finishing';
@@ -99,5 +100,5 @@ export function BordersScreen({
 const styles = StyleSheet.create({
   tiles: { aspectRatio: 5 / 2.6 },
   link: { minHeight: 44, justifyContent: 'center', marginTop: 8 },
-  linkText: { fontSize: 15, fontWeight: '600', textDecorationLine: 'underline' },
+  linkText: { fontSize: 15, fontFamily: FONT.sansSemi, textDecorationLine: 'underline' },
 });

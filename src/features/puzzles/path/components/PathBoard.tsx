@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { usePuzzleTokens } from '@/shared/theme';
+import { FONT, usePuzzleTokens } from '@/shared/theme';
 
 import { endMark, lines, N, type Cell, type PathState } from '../model';
 
@@ -183,7 +183,7 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row' },
   cell: { borderWidth: StyleSheet.hairlineWidth },
   numBox: { position: 'absolute', alignItems: 'center', justifyContent: 'center' },
-  num: { fontWeight: '700', borderRadius: 4, paddingHorizontal: 3, overflow: 'hidden' },
+  num: { fontFamily: FONT.display, borderRadius: 4, paddingHorizontal: 3, overflow: 'hidden' },
   recap: { alignSelf: 'flex-start', padding: 2, borderRadius: 8 },
   small: {
     width: 40,
@@ -192,7 +192,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  smallText: { fontSize: 15, fontWeight: '700' },
+  smallText: { fontSize: 15, fontFamily: FONT.display },
   art: { width: 120, height: 120, borderRadius: 8, padding: 4, gap: 2 },
   artRow: { flexDirection: 'row', gap: 2 },
   artSq: { width: 16.5, height: 16.5, borderRadius: 2 },

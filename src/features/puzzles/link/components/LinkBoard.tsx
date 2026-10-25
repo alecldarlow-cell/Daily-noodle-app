@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { usePuzzleTokens } from '@/shared/theme';
+import { FONT, usePuzzleTokens } from '@/shared/theme';
 
 import { disabled, MAX_MISTAKES, type LinkState } from '../model';
 import type { ScreenMove } from '../hooks/useLinkGame';
@@ -17,6 +17,14 @@ interface LinkBoardProps {
  * message line and Shuffle / Deselect / Submit. A right four turns its group's
  * colour while it settles.
  */
+/**
+ * Lines a tile's word may take: one for a single word, so a long one (SPINNAKER) shrinks
+ * to fit rather than breaking mid-word; two when it has a space to break at.
+ */
+export function tileLines(w: string): 1 | 2 {
+  return /\s/.test(w.trim()) ? 2 : 1;
+}
+
 export function LinkBoard({ state, dispatch }: LinkBoardProps) {
   const pt = usePuzzleTokens();
   const off = disabled(state);
@@ -75,7 +83,7 @@ export function LinkBoard({ state, dispatch }: LinkBoardProps) {
                   <Text
                     maxFontSizeMultiplier={1.3}
                     style={[styles.tt, { color: turned ? ON_GROUP[hitRank] : pt.ink }]}
-                    numberOfLines={2}
+                    numberOfLines={tileLines(w)}
                     adjustsFontSizeToFit>
                     {w}
                   </Text>
@@ -160,7 +168,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 4,
   },
-  tt: { fontSize: 15, fontWeight: '700', textAlign: 'center', letterSpacing: 0.3 },
+  tt: { fontSize: 15, fontFamily: FONT.display, textAlign: 'center', letterSpacing: 0.3 },
   band: {
     flex: 1,
     maxHeight: 96,
@@ -170,8 +178,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 12,
   },
-  bname: { fontSize: 11, fontWeight: '700', letterSpacing: 1.5, opacity: 0.8 },
-  bmem: { fontSize: 17, fontWeight: '700', marginTop: 4 },
+  bname: { fontSize: 11, fontFamily: FONT.display, letterSpacing: 1.5, opacity: 0.8 },
+  bmem: { fontSize: 17, fontFamily: FONT.display, marginTop: 4 },
   lives: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -179,10 +187,10 @@ const styles = StyleSheet.create({
     gap: 7,
     marginTop: 14,
   },
-  livesText: { fontSize: 10, letterSpacing: 1.6, marginRight: 4 },
+  livesText: { fontFamily: FONT.sans, fontSize: 10, letterSpacing: 1.6, marginRight: 4 },
   pip: { width: 9, height: 9, borderRadius: 5 },
-  msg: { minHeight: 20, textAlign: 'center', marginTop: 10, fontSize: 13 },
-  msgBad: { fontWeight: '700', letterSpacing: 1.2 },
+  msg: { minHeight: 20, textAlign: 'center', marginTop: 10, fontFamily: FONT.sans, fontSize: 13 },
+  msgBad: { fontFamily: FONT.display, letterSpacing: 1.2 },
   controls: { flexDirection: 'row', gap: 8, marginTop: 10 },
   btn: {
     flex: 1,
@@ -192,5 +200,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  btnText: { fontSize: 14, fontWeight: '600' },
+  btnText: { fontSize: 14, fontFamily: FONT.sansSemi },
 });
