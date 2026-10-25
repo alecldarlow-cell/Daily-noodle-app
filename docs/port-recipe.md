@@ -36,3 +36,26 @@ and the replay is the proof.
    the type; add the type to the nightly `Replay nightly` workflow and the PR sample.
 10. **Tests** GIVEN/WHEN/THEN: model, oracle, finishing, screen (RNTL), `NativePlay`;
     `.maestro/<type>.yaml` for the device run.
+
+## What WP10 added (Link, Tangle)
+
+- **Randomness stays in the screen.** Link deals and shuffles with `Math.random`; the
+  model takes each order as part of the move, and the replay reads the page's order
+  after loading and after every Shuffle and hands it over. Never seed the page.
+- **Animations that gate the rules run on real time in the page** (Link's settle uses
+  Web Animations, which the fake clock doesn't drive): the replay moves the fake clock
+  by the animation's length, waits for it to land, then lets the rest of the step pass,
+  and the native player stops its clock at the same moment.
+- **Clocks that tick by `performance.now()` deltas** (Tangle's 100 ms tick, its saved
+  `left` to the last float): port the tick as it is, run it on a fake clock with the
+  page's timer order (`tangle/simulate.ts` FakeClock), and keep every move 50 ms off
+  the tick so the order of a move against a tick is never a guess.
+- **Pointer input** goes through the page's own pointer events in the replay, with the
+  tiles' rectangles read from the page before each gesture and handed to the native
+  engine with the same points, so its hit-testing is compared too.
+- **An imperative engine is ported as an imperative engine** (`createTangle`), with
+  storage, clock and timers handed in; the React hook only hosts it.
+- **A site bug found by the replay is reported, not ported**: list it in the type's
+  `KNOWN` table in its replay script with what it is; the run prints it as KNOWN and
+  still fails on any other difference (Link: the replay's sheet after Play again).
+- Long `--all` runs split with `--shard k/n`.

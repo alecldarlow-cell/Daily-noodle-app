@@ -1,0 +1,64 @@
+# WP10: today's Tangle plays natively: its home card, the 3-2-1, traces on the board,
+# the 90-second round, the result, and the result again on reopening (one round a day).
+# Runs against an installed build (EAS, WP6): maestro test .maestro/tangle.yaml
+# Traces straight lines across the board, so it works whatever the day's letters are.
+appId: ${APP_ID}
+---
+- launchApp:
+    clearState: true
+- assertVisible:
+    id: today-screen
+- tapOn:
+    id: today-tangle
+- extendedWaitUntil:
+    visible:
+      id: tangle-home
+    timeout: 15000
+- assertVisible: 'Today’s Tangle'
+- tapOn:
+    id: play-card
+- assertVisible:
+    id: tangle-count
+- extendedWaitUntil:
+    notVisible:
+      id: tangle-count
+    timeout: 5000
+- assertVisible: 'Drag across letters, or tap them'
+- swipe:
+    from:
+      id: tangle-tile-0
+    direction: RIGHT
+    duration: 600
+- swipe:
+    from:
+      id: tangle-tile-4
+    direction: RIGHT
+    duration: 600
+- swipe:
+    from:
+      id: tangle-tile-0
+    direction: DOWN
+    duration: 600
+# Back to the home card mid-round: the clock holds
+- tapOn: 'Pause and go back'
+- assertVisible: 'Round paused'
+- tapOn:
+    id: play-card
+- extendedWaitUntil:
+    visible:
+      id: finish-sheet
+    timeout: 100000
+- assertVisible: 'Time’s up'
+- assertVisible:
+    id: finish-share-text
+- assertVisible: 'dailynoodle.co.uk/tangle'
+- assertVisible: 'Today’s words'
+# Reopened: the result, never a second round
+- tapOn: '← Puzzles'
+- tapOn:
+    id: today-tangle
+- extendedWaitUntil:
+    visible:
+      id: finish-sheet
+    timeout: 10000
+- assertVisible: 'Your score'

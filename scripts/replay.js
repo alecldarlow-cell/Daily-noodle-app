@@ -4,6 +4,10 @@
  *
  *   node scripts/replay.js --type mini --sample 50 --site ../dailynoodle
  *   node scripts/replay.js --type mini --all --site ../dailynoodle [--workers 2] [--only 0105]
+ *   node scripts/replay.js --type link|tangle … [--shard 1/2] [--variants a,b]
+ *
+ * Link and Tangle have their own scripts (replay-link.js, replay-tangle.js, on the
+ * shared replay-lib.js), which this one hands over to. What follows is the Mini's.
  *
  * For every Mini page in the site clone's reports/ that carries window.DN_PUZZLE
  * (read with the site's tools/puzzle-json.js), and every oracle variant
@@ -49,8 +53,18 @@ const ONLY = opt('only', null);
 const VARS = (opt('variants', '') || VARIANTS.join(',')).split(',');
 const VERBOSE = flag('verbose');
 
-if (TYPE !== 'mini') {
-  console.error(`replay: no native player for "${TYPE}" yet (mini only)`);
+/** Types whose replay lives in its own script (scripts/replay-<type>.js, on replay-lib.js). */
+const OWN = { link: './replay-link', tangle: './replay-tangle' };
+if (OWN[TYPE])
+  require(OWN[TYPE])
+    .main(require('./replay-lib').options(process.argv))
+    .then((code) => process.exit(code))
+    .catch((e) => {
+      console.error(e);
+      process.exit(1);
+    });
+else if (TYPE !== 'mini') {
+  console.error(`replay: no native player for "${TYPE}" yet`);
   process.exit(2);
 }
 if (!fs.existsSync(path.join(SITE, 'tools/tests/harness.js'))) {
@@ -277,7 +291,7 @@ async function refusedOne(browser, pg) {
   }
 }
 
-(async () => {
+async function runMini() {
   const t0 = Date.now();
   const { list, without } = pages();
   let chosen = ALL ? list : sample(list, SAMPLE);
@@ -360,7 +374,9 @@ async function refusedOne(browser, pg) {
       console.log(`::error title=replay differs::${f.label} at ${f.diffs[0].at}`);
   }
   process.exit(failures.length ? 1 : 0);
-})().catch((e) => {
-  console.error(e);
-  process.exit(1);
-});
+}
+if (!OWN[TYPE])
+  runMini().catch((e) => {
+    console.error(e);
+    process.exit(1);
+  });
