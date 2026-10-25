@@ -27,7 +27,7 @@ fade.
   `useHapticDiff`); puzzle models never do. Each type reads a move's feel from its
   state before and after (`features/puzzles/<type>/hooks/feel.ts`), so the replay-proved
   models are untouched. One switch, `HAPTICS_ON`, on for now; a type whose own saved
-  setting turns haptics off (Reckon's `hap`, when it lands) passes `allowed = false`.
+  setting turns haptics off (Reckon's `hap`) passes `allowed = false`.
 - The finish sheet's entrance uses React Native's built-in `Animated` (native driver),
   with `AccessibilityInfo` for reduce motion (`shared/motion`). No confetti library.
 
