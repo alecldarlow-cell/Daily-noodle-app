@@ -56,15 +56,27 @@ export function Board({ flow, league }: { flow: Flow; league: BoardLeague }) {
   const t = useTokens();
   const today = useLondonDay();
   const s = useBoardState();
-  const view: BoardView = isView(s.ptype) ? s.ptype : 'all';
-  const [date, setDate] = useState(today);
+  // The route's puzzle and day (board.html ?p=&d=), until a pill is picked; else the last pill.
+  const { pick: asked } = flow;
+  const [chosen, setChosen] = useState<BoardView | null>(asked.view);
+  const [date, setDate] = useState(asked.date ?? today);
+  const [seen, setSeen] = useState(asked.key);
+  if (asked.key !== seen) {
+    setSeen(asked.key);
+    setChosen(asked.view);
+    setDate(asked.date ?? today);
+  }
+  const view: BoardView = chosen ?? (isView(s.ptype) ? s.ptype : 'all');
   const day = date > today ? today : date;
   const cards = usePuzzleCards();
   const feed = cards.isPending ? undefined : (cards.data ?? []);
   const { filling } = useBackfill(true, feed, s.pid);
   const data = useBoardData(filling ? undefined : league.code, view, day);
 
-  const pick = (v: BoardView) => setLastType(v);
+  const pick = (v: BoardView) => {
+    setChosen(null);
+    setLastType(v);
+  };
 
   return (
     <View testID="league-board">

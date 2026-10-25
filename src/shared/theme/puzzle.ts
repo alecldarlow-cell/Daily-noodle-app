@@ -22,6 +22,8 @@ export interface PuzzleTokens {
   good: string;
   bad: string;
   brand: string;
+  /** Links on the finish sheet (finish.css --f-actInk): "See today’s board". */
+  actInk: string;
 }
 
 const light: PuzzleTokens = {
@@ -40,6 +42,7 @@ const light: PuzzleTokens = {
   good: '#157A52',
   bad: '#E4483B',
   brand: '#2E5BFF',
+  actInk: '#1B3B9E',
 };
 
 const dark: PuzzleTokens = {
@@ -58,6 +61,7 @@ const dark: PuzzleTokens = {
   good: '#4CC793',
   bad: '#FF7A6E',
   brand: '#3D63FF',
+  actInk: '#A9BBFF',
 };
 
 export function puzzleTokensFor(scheme: string | null | undefined): PuzzleTokens {

@@ -25,9 +25,8 @@ describe('GIVEN the page wants to navigate', () => {
       file: '2026-10-24-logic-doku-0103',
     });
   });
-  it('THEN other sites, the board and other pages go to the browser', () => {
+  it('THEN other sites and other pages go to the browser', () => {
     expect(decide('https://example.com/', CUR)).toEqual({ kind: 'external' });
-    expect(decide(`${S}/board.html?p=x`, CUR)).toEqual({ kind: 'external' });
     expect(decide(`${S}/games.html`, CUR)).toEqual({ kind: 'external' });
     expect(decide(`${S}/reports/2026-10-24-arcade-bubble-burst.html`, CUR)).toEqual({
       kind: 'external',

@@ -3,7 +3,10 @@
  * intro for someone in no league), the start / join / claim / PIN / paste forms, and the
  * one-off card at the top of the board after something happened.
  */
+import { BOARD_TYPE } from '@noodle/core';
 import { useEffect, useState } from 'react';
+
+import type { BoardView } from '../types';
 
 import { codeFrom } from '../schemas';
 import { currentLeague, setCurrent, useBoardState } from './boardStore';
@@ -24,10 +27,27 @@ export type Notice =
   | { k: 'claimed'; nick: string }
   | { k: 'pinSaved' };
 
-/** Route parameters: an invite's `join` code, or `go` straight to a form. */
+/**
+ * Route parameters: an invite's `join` code, `go` straight to a form, or a board to show
+ * as board.html's query names it: `p` the puzzle (or `all`), `d` the day (YYYY-MM-DD).
+ */
 export interface LeaguesParams {
   join?: string;
   go?: string;
+  p?: string;
+  d?: string;
+}
+
+/** The board asked for: board.html takes `p` if it names a pill and `d` if it's a date. */
+export interface BoardPick {
+  view: BoardView | null;
+  date: string | null;
+}
+
+export function pickFrom(p: LeaguesParams): BoardPick {
+  const view = p.p === 'all' || (!!p.p && p.p in BOARD_TYPE) ? (p.p as BoardView) : null;
+  const date = /^\d{4}-\d{2}-\d{2}$/.test(p.d ?? '') ? p.d! : null;
+  return { view, date };
 }
 
 function fromParams(p: LeaguesParams): View | null {
@@ -37,6 +57,8 @@ function fromParams(p: LeaguesParams): View | null {
   if (p.go === 'paste') return { k: 'paste' };
   if (p.go === 'start') return { k: 'start' };
   if (p.go === 'code') return { k: 'code' };
+  const pick = pickFrom(p);
+  if (pick.view || pick.date) return { k: 'home' };
   return null;
 }
 
@@ -48,7 +70,7 @@ export function useLeaguesFlow(params: LeaguesParams) {
   const [needPin, setNeedPin] = useState(false);
 
   // A new invite or shortcut opened while the tab was already showing.
-  const key = `${params.join ?? ''}|${params.go ?? ''}`;
+  const key = `${params.join ?? ''}|${params.go ?? ''}|${params.p ?? ''}|${params.d ?? ''}`;
   const [seen, setSeen] = useState(key);
   if (key !== seen) {
     setSeen(key);
@@ -74,6 +96,8 @@ export function useLeaguesFlow(params: LeaguesParams) {
     view,
     setView,
     home,
+    /** The puzzle and day the route asked for; `key` changes with each new ask. */
+    pick: { ...pickFrom(params), key },
     /** Back from a form: the board if in a league, else the intro (board.html data-go="back"). */
     back: home,
     notice,

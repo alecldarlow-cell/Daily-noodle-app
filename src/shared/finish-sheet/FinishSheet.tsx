@@ -1,5 +1,5 @@
 import { shortLink, TYPE_LABEL, type PuzzleType, type TodayItem } from '@noodle/core';
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -7,6 +7,7 @@ import { Entrance } from '@/shared/motion';
 import { usePuzzleTokens, useTokens } from '@/shared/theme';
 import { longDate } from '@/shared/time';
 
+import { tagged, useBoardSlot } from './boardSlot';
 import { clockLine } from './rules';
 import { useFinishData } from './useFinishData';
 
@@ -31,7 +32,9 @@ export interface FinishSheetProps {
   recap?: { title: string; sub?: string; node: ReactNode };
   /** Placed at the very end (Link's "Play again (not recorded)"). */
   after?: ReactNode;
-  /** Where leagues put "See today's board". */
+  /** "reports/<file>.html": the page's path, for the provided board slot (leagues). */
+  path?: string;
+  /** Drawn in the board slot instead of the provided one. */
   boardSlot?: ReactNode;
   /**
    * A fresh solve or finish: the outcome and result arrive with a short entrance (still
@@ -52,14 +55,18 @@ export interface FinishSheetProps {
  */
 export function FinishSheet(props: FinishSheetProps) {
   const { type, n, date, title, hero, heroNode, note, share, stats, recap, after } = props;
-  const { boardSlot, onBack, onNext, celebrate = false } = props;
+  const { path, boardSlot, onBack, onNext, celebrate = false } = props;
   const t = useTokens();
+  const renderSlot = useBoardSlot();
+  // A tag the board slot adds once the result is on the board (🏆 for a league record).
+  const [tag, setTag] = useState('');
+  const shareText = tagged(share, tag);
   const pt = usePuzzleTokens();
   const { next, secs, run } = useFinishData(type);
   const url = shortLink(type);
   const line = clockLine(TYPE_LABEL[type], secs, run);
   const onShare = () => {
-    void Share.share({ message: `${share}\n${url}` }).catch(() => undefined);
+    void Share.share({ message: `${shareText}\n${url}` }).catch(() => undefined);
   };
   return (
     <SafeAreaView style={[styles.fill, { backgroundColor: pt.paper }]} testID="finish-sheet">
@@ -106,7 +113,7 @@ export function FinishSheet(props: FinishSheetProps) {
         <View style={[styles.shareCard, { backgroundColor: pt.card }]}>
           <View style={styles.shareBody}>
             <Text style={[styles.shareText, { color: pt.ink }]} testID="finish-share-text">
-              {share}
+              {shareText}
             </Text>
             <Text style={[styles.shareUrl, { color: pt.inkSoft }]}>{url}</Text>
           </View>
@@ -148,7 +155,11 @@ export function FinishSheet(props: FinishSheetProps) {
           </View>
           <Text style={[styles.chev, { color: pt.inkSoft }]}>›</Text>
         </Pressable>
-        {boardSlot ? <View>{boardSlot}</View> : null}
+        {boardSlot ? (
+          <View>{boardSlot}</View>
+        ) : renderSlot && path ? (
+          <View>{renderSlot({ path, type, date, onTag: setTag })}</View>
+        ) : null}
         <Text style={[styles.clock, { color: pt.inkSoft }]} testID="finish-clock">
           {line.lead}
           {line.bold ? <Text style={styles.bold}>{line.bold}</Text> : null}
