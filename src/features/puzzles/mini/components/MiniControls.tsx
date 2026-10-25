@@ -14,7 +14,7 @@ export function MiniControls({ onCheckWord, onCheckAll, onRevealWord }: MiniCont
   const b = [styles.btn, { borderColor: pt.ink, backgroundColor: pt.card }];
   const label = [styles.text, { color: pt.ink }];
   return (
-    <View style={styles.row}>
+    <View style={styles.row} testID="mini-controls">
       <Pressable accessibilityRole="button" onPress={onCheckWord} style={b}>
         <Text maxFontSizeMultiplier={1.3} style={label}>
           Check word
