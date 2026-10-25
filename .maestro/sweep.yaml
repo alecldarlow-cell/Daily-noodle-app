@@ -1,0 +1,60 @@
+# WP9: today's Sweep plays natively to the finish sheet, and reopens on it.
+# Runs against an installed build (EAS, WP6): maestro test .maestro/sweep.yaml
+# Solved by Hint alone, so it works whatever the day's board is: dig the square Hint
+# marks when its line ends "safe.", otherwise long-press it (a mine, or a wrong flag).
+appId: ${APP_ID}
+---
+- launchApp:
+    clearState: true
+- assertVisible:
+    id: today-screen
+- tapOn:
+    id: today-sweep
+- extendedWaitUntil:
+    visible:
+      id: start-card
+    timeout: 15000
+- assertVisible: 'Today’s Sweep'
+- tapOn: 'Play'
+- assertVisible:
+    id: sweep-board
+- assertVisible: '00:00'
+- tapOn: '.*the safe start: dig here first.*'
+- repeat:
+    times: 45
+    while:
+      notVisible:
+        id: finish-sheet
+    commands:
+      - tapOn: 'Hint'
+      - runFlow:
+          when:
+            visible: '.*safe\.$'
+          commands:
+            - tapOn: '.*marked by Hint.*'
+      - runFlow:
+          when:
+            notVisible: '.*safe\.$'
+          commands:
+            - longPressOn: '.*marked by Hint.*'
+- extendedWaitUntil:
+    visible:
+      id: finish-sheet
+    timeout: 5000
+- assertVisible: 'Swept'
+- assertVisible:
+    id: finish-share-text
+- assertVisible: 'dailynoodle.co.uk/sweep'
+- assertVisible: 'Sweeps played'
+# Reopened: straight to the sheet, no start card
+- tapOn: '← Puzzles'
+- assertVisible:
+    id: today-screen
+- tapOn:
+    id: today-sweep
+- extendedWaitUntil:
+    visible:
+      id: finish-sheet
+    timeout: 10000
+- assertNotVisible:
+    id: start-card

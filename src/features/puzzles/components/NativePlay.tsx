@@ -1,5 +1,5 @@
 import { Stack } from 'expo-router';
-import type { ReactElement } from 'react';
+import { useMemo, type ReactElement } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
 import { usePuzzleTokens } from '@/shared/theme';
@@ -14,19 +14,41 @@ import { validate as validateLink, type LinkData } from '../link/model';
 import { MiniScreen } from '../mini/components/MiniScreen';
 import { enabled as miniEnabled } from '../mini';
 import { validate as validateMini, type MiniData } from '../mini/model';
+import { enabled as pathEnabled } from '../path';
+import { PathScreen } from '../path/components/PathScreen';
+import { validate as validatePath, type PathData } from '../path/model';
+import { enabled as sweepEnabled } from '../sweep';
+import { SweepScreen } from '../sweep/components/SweepScreen';
+import { validate as validateSweep, type SweepData } from '../sweep/model';
 import { enabled as tangleEnabled } from '../tangle';
 import { TangleScreen } from '../tangle/components/TangleScreen';
 import { validate as validateTangle, type TangleData } from '../tangle/model';
 import type { PuzzleFile } from '../types';
 
+/** Which types have a native player switched on: each once its replay passed on every puzzle. */
+export const NATIVE: Record<string, boolean> = {
+  mini: miniEnabled,
+  link: linkEnabled,
+  tangle: tangleEnabled,
+  doku: dokuEnabled,
+  sweep: sweepEnabled,
+  path: pathEnabled,
+};
+
+/** Each type's own check: would its page play this data to a finish? */
+const VALIDATE: Record<string, (f: PuzzleFile) => boolean> = {
+  mini: (f) => validateMini(f.data).ok,
+  link: (f) => validateLink(f.data).ok,
+  // Tangle's gate also checks the page's dn:date against the puzzle's: the data file's date.
+  tangle: (f) => validateTangle(f.data, f.date).ok,
+  doku: (f) => validateDoku(f.data).ok,
+  sweep: (f) => validateSweep(f.data).ok,
+  path: (f) => validatePath(f.data).ok,
+};
+
 /** Puzzle types with a native player, each on once its replay has passed on every puzzle. */
 export function hasNativePlayer(type: unknown): boolean {
-  return (
-    (type === 'mini' && miniEnabled) ||
-    (type === 'link' && linkEnabled) ||
-    (type === 'tangle' && tangleEnabled) ||
-    (type === 'doku' && dokuEnabled)
-  );
+  return typeof type === 'string' && NATIVE[type] === true;
 }
 
 interface NativePlayProps {
@@ -45,6 +67,11 @@ export function NativePlay({ type, file, fallback }: NativePlayProps) {
   const pt = usePuzzleTokens();
   const q = usePuzzleData(file);
   const data = q.data;
+  // Sweep's gate counts every mine placement (~50 ms): check each file once.
+  const ok = useMemo(
+    () => !!data && data.type === type && Object.hasOwn(VALIDATE, type) && VALIDATE[type]!(data),
+    [data, type],
+  );
   if (!data && q.isPending)
     return (
       <View style={[styles.fill, { backgroundColor: pt.paper }]} testID="native-loading">
@@ -52,41 +79,27 @@ export function NativePlay({ type, file, fallback }: NativePlayProps) {
         <ActivityIndicator style={styles.spin} color={pt.inkSoft} />
       </View>
     );
-  if (type === 'mini' && data && data.type === 'mini' && validateMini(data.data).ok)
-    return (
-      <>
-        <Stack.Screen options={{ headerShown: false }} />
-        <MiniScreen key={file} file={data as PuzzleFile<MiniData>} />
-      </>
+  if (!ok || !data) return fallback;
+  const screen =
+    type === 'mini' ? (
+      <MiniScreen key={file} file={data as PuzzleFile<MiniData>} />
+    ) : type === 'link' ? (
+      <LinkScreen key={file} file={data as PuzzleFile<LinkData>} />
+    ) : type === 'tangle' ? (
+      <TangleScreen key={file} file={data as PuzzleFile<TangleData>} />
+    ) : type === 'doku' ? (
+      <DokuScreen key={file} file={data as PuzzleFile<DokuData>} />
+    ) : type === 'sweep' ? (
+      <SweepScreen key={file} file={data as PuzzleFile<SweepData>} />
+    ) : (
+      <PathScreen key={file} file={data as PuzzleFile<PathData>} />
     );
-  if (type === 'link' && data && data.type === 'link' && validateLink(data.data).ok)
-    return (
-      <>
-        <Stack.Screen options={{ headerShown: false }} />
-        <LinkScreen key={file} file={data as PuzzleFile<LinkData>} />
-      </>
-    );
-  // Tangle's gate also checks the page's dn:date against the puzzle's: the data file's date.
-  if (
-    type === 'tangle' &&
-    data &&
-    data.type === 'tangle' &&
-    validateTangle(data.data, data.date).ok
-  )
-    return (
-      <>
-        <Stack.Screen options={{ headerShown: false }} />
-        <TangleScreen key={file} file={data as PuzzleFile<TangleData>} />
-      </>
-    );
-  if (type === 'doku' && data && data.type === 'doku' && validateDoku(data.data).ok)
-    return (
-      <>
-        <Stack.Screen options={{ headerShown: false }} />
-        <DokuScreen key={file} file={data as PuzzleFile<DokuData>} />
-      </>
-    );
-  return fallback;
+  return (
+    <>
+      <Stack.Screen options={{ headerShown: false }} />
+      {screen}
+    </>
+  );
 }
 
 const styles = StyleSheet.create({
