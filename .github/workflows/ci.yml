@@ -32,11 +32,11 @@ jobs:
       - name: Unit tests and coverage (80% lines)
         run: npm run test:coverage -- --ci
 
-  # Differential replay (WP8, WP10, WP11): each native player against the site's own engine,
-  # on puzzles spread across the archive (50 Minis, 20 Links, 20 Tangles, 20 Dokus), every oracle
-  # variant each, in headless Chromium
-  # from the public site repo's pinned dev dependencies. Nothing leaves the runner:
-  # the site's harness answers every request and blocks Supabase.
+  # Differential replay (WP8-WP11): each native player against the site's own engine,
+  # in headless Chromium from the public site repo's pinned dev dependencies: 50 Minis
+  # (four oracle variants each), 20 Links, 20 Tangles, 20 Dokus, 20 Sweeps (six) and
+  # 20 Paths (four), spread across the archive. Nothing leaves the runner: the site's harness answers every request and
+  # blocks Supabase. Every puzzle of every type is replayed nightly (replay-nightly.yml).
   replay:
     name: replay
     runs-on: ubuntu-latest
@@ -56,8 +56,17 @@ jobs:
       - name: Replay 50 Minis, web engine against the native model
         run: node scripts/replay.js --type mini --sample 50 --site ../dailynoodle --workers 4
       - name: Replay 20 Links, web engine against the native model
+        if: success() || failure()
         run: node scripts/replay.js --type link --sample 20 --site ../dailynoodle --workers 4
       - name: Replay 20 Tangles, web engine against the native engine
+        if: success() || failure()
         run: node scripts/replay.js --type tangle --sample 20 --site ../dailynoodle --workers 4
       - name: Replay 20 Dokus, web engine against the native model
+        if: success() || failure()
         run: node scripts/replay.js --type doku --sample 20 --site ../dailynoodle --workers 4
+      - name: Replay 20 Sweeps
+        if: success() || failure()
+        run: node scripts/replay.js --type sweep --sample 20 --site ../dailynoodle --workers 4
+      - name: Replay 20 Paths
+        if: success() || failure()
+        run: node scripts/replay.js --type path --sample 20 --site ../dailynoodle --workers 4

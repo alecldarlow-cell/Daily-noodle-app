@@ -7,90 +7,58 @@ on:
   schedule:
     - cron: '41 3 * * *'
   workflow_dispatch:
+    inputs:
+      types:
+        description: 'Types to replay, space-separated (mini link tangle doku sweep path)'
+        default: 'mini link tangle doku sweep path'
 
 jobs:
-  mini:
-    name: replay mini --all
-    runs-on: ubuntu-latest
-    timeout-minutes: 300
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-      - run: npm ci
-      - name: Clone the site
-        run: git clone --depth 1 https://github.com/alecldarlow-cell/dailynoodle ../dailynoodle
-      - name: The site's Playwright and pinned Chromium
-        working-directory: ../dailynoodle
-        run: npm ci --ignore-scripts
-      - name: Replay every Mini
-        run: node scripts/replay.js --type mini --all --site ../dailynoodle --workers 6
-
-  link:
-    name: replay link --all
-    runs-on: ubuntu-latest
-    timeout-minutes: 300
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-      - run: npm ci
-      - name: Clone the site
-        run: git clone --depth 1 https://github.com/alecldarlow-cell/dailynoodle ../dailynoodle
-      - name: The site's Playwright and pinned Chromium
-        working-directory: ../dailynoodle
-        run: npm ci --ignore-scripts
-      - name: Replay every Link
-        run: node scripts/replay.js --type link --all --site ../dailynoodle --workers 6
-
-  tangle:
-    name: replay tangle --all
+  replay:
+    name: replay ${{ matrix.type }} --all (${{ matrix.shard }})
     runs-on: ubuntu-latest
     timeout-minutes: 300
     strategy:
       fail-fast: false
       matrix:
-        part: [1/2, 2/2]
+        # Each type's runs split into shards that run side by side (scripts/replay.js --shard).
+        include:
+          - { type: mini, shard: 1/2 }
+          - { type: mini, shard: 2/2 }
+          - { type: link, shard: 1/1 }
+          - { type: tangle, shard: 1/2 }
+          - { type: tangle, shard: 2/2 }
+          - { type: doku, shard: 1/2 }
+          - { type: doku, shard: 2/2 }
+          - { type: sweep, shard: 1/4 }
+          - { type: sweep, shard: 2/4 }
+          - { type: sweep, shard: 3/4 }
+          - { type: sweep, shard: 4/4 }
+          - { type: path, shard: 1/3 }
+          - { type: path, shard: 2/3 }
+          - { type: path, shard: 3/3 }
+    env:
+      # A run started by hand may name only some types; the schedule replays them all.
+      RUN: ${{ contains(format(' {0} ', github.event.inputs.types || 'mini link tangle doku sweep path'), format(' {0} ', matrix.type)) }}
     steps:
       - uses: actions/checkout@v4
+        if: env.RUN == 'true'
       - uses: actions/setup-node@v4
+        if: env.RUN == 'true'
         with:
           node-version: 22
           cache: npm
       - run: npm ci
+        if: env.RUN == 'true'
       - name: Clone the site
+        if: env.RUN == 'true'
         run: git clone --depth 1 https://github.com/alecldarlow-cell/dailynoodle ../dailynoodle
       - name: The site's Playwright and pinned Chromium
-        working-directory: ../dailynoodle
-        run: npm ci --ignore-scripts
-      - name: Replay every Tangle (part ${{ matrix.part }})
-        run: node scripts/replay.js --type tangle --all --shard ${{ matrix.part }} --site ../dailynoodle --workers 6
-
-  doku:
-    name: replay doku --all
-    runs-on: ubuntu-latest
-    timeout-minutes: 300
-    strategy:
-      fail-fast: false
-      matrix:
-        part: [1/2, 2/2]
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-      - run: npm ci
-      - name: Clone the site
-        run: git clone --depth 1 https://github.com/alecldarlow-cell/dailynoodle ../dailynoodle
-      - name: The site's Playwright and pinned Chromium
+        if: env.RUN == 'true'
         working-directory: ../dailynoodle
         run: npm ci --ignore-scripts
       - name: The vendored Doku word list still matches the engine
+        if: env.RUN == 'true' && matrix.type == 'doku'
         run: node scripts/vendor-doku-words.js --site ../dailynoodle --check
-      - name: Replay every Doku (part ${{ matrix.part }})
-        run: node scripts/replay.js --type doku --all --shard ${{ matrix.part }} --site ../dailynoodle --workers 6
+      - name: Replay every ${{ matrix.type }} in shard ${{ matrix.shard }}
+        if: env.RUN == 'true'
+        run: node scripts/replay.js --type ${{ matrix.type }} --all --shard ${{ matrix.shard }} --site ../dailynoodle --workers 6
