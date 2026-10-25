@@ -1,7 +1,7 @@
 import type { SaveStore } from '@noodle/core';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { announceFinish } from '@/shared/results';
+import { announceFinish, usePuzzleVisit } from '@/shared/results';
 import { appStorage, saves as appSaves, type CachedStorage } from '@/shared/storage';
 
 import type { PuzzleFile } from '../../types';
@@ -105,7 +105,12 @@ export function useSweepGame(file: PuzzleFile<SweepData>, deps: Deps = {}) {
     (m: Move) => setState((s) => apply(s, m, { secs: secsRef.current })),
     [],
   );
-  const play = useCallback(() => setPhase('play'), []);
+  // Play on the start card is the page's start; a finished puzzle reopened is not.
+  const start = usePuzzleVisit(file.path, 'sweep', !!opened.rec);
+  const play = useCallback(() => {
+    start();
+    setPhase('play');
+  }, [start]);
   /** The sheet's "Play again (not recorded)": a fresh board, the clock back at zero. */
   const again = useCallback(() => {
     setSecs(0);

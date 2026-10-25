@@ -1,7 +1,7 @@
 import type { SaveStore } from '@noodle/core';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { announceFinish } from '@/shared/results';
+import { announceFinish, usePuzzleVisit } from '@/shared/results';
 import { appStorage, saves as appSaves, type CachedStorage } from '@/shared/storage';
 
 import type { PuzzleFile } from '../../types';
@@ -98,10 +98,13 @@ export function usePathGame(file: PuzzleFile<PathData>, deps: Deps = {}) {
     },
     [begin],
   );
+  // Play on the start card is the page's start; a finished puzzle reopened is not.
+  const start = usePuzzleVisit(file.path, 'path', !!opened.done);
   const play = useCallback(() => {
+    start();
     begin();
     setPhase('play');
-  }, [begin]);
+  }, [begin, start]);
 
   return {
     state,
