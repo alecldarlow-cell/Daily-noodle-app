@@ -15,7 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { FinishSheet, useFreshFinish } from '@/shared/finish-sheet';
 import { PuzzleBar, ruleFor, StartCard, useStartStats } from '@/shared/start-card';
 import { useStoredRaw } from '@/shared/storage';
-import { usePuzzleTokens } from '@/shared/theme';
+import { FONT, usePuzzleTokens } from '@/shared/theme';
 import { fitBoard } from '@/shared/ui';
 
 import type { PuzzleFile } from '../../types';
@@ -168,7 +168,7 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   board: { flex: 1, justifyContent: 'center' },
-  msg: { fontSize: 13, textAlign: 'center', minHeight: 18 },
+  msg: { fontFamily: FONT.sans, fontSize: 13, textAlign: 'center', minHeight: 18 },
   controls: { flexDirection: 'row', gap: 6, justifyContent: 'center' },
   btn: {
     minHeight: 44,
@@ -177,6 +177,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     justifyContent: 'center',
   },
-  btnText: { fontSize: 13, fontWeight: '500' },
+  btnText: { fontSize: 13, fontFamily: FONT.sansMedium },
   hidden: { position: 'absolute', top: 0, left: '50%', width: 1, height: 1, opacity: 0 },
 });

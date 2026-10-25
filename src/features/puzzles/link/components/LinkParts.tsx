@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { usePuzzleTokens } from '@/shared/theme';
+import { FONT, usePuzzleTokens } from '@/shared/theme';
 
 import type { LinkGroup } from '../model';
 
@@ -103,11 +103,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  mark: { fontSize: 20, fontWeight: '800' },
+  mark: { fontSize: 20, fontFamily: FONT.displayHeavy },
   bands: { gap: 8 },
   recapBand: { borderRadius: 11, padding: 12, gap: 2 },
-  recapName: { fontSize: 15, fontWeight: '700' },
-  recapMembers: { fontSize: 14 },
+  recapName: { fontSize: 15, fontFamily: FONT.display },
+  recapMembers: { fontFamily: FONT.sans, fontSize: 14 },
   again: { minHeight: 44, justifyContent: 'center', alignSelf: 'flex-start' },
-  againText: { fontSize: 16, fontWeight: '600', textDecorationLine: 'underline' },
+  againText: { fontSize: 16, fontFamily: FONT.sansSemi, textDecorationLine: 'underline' },
 });

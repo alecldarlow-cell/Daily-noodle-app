@@ -4,11 +4,12 @@ import { Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-nati
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Entrance } from '@/shared/motion';
-import { usePuzzleTokens, useTokens } from '@/shared/theme';
+import { FONT, usePuzzleTokens } from '@/shared/theme';
 import { longDate } from '@/shared/time';
+import { Chevron, ShareGlyph } from '@/shared/ui';
 
 import { tagged, useBoardSlot } from './boardSlot';
-import { clockLine } from './rules';
+import { clockLine, splitHero } from './rules';
 import { useFinishData } from './useFinishData';
 
 export interface FinishSheetProps {
@@ -56,7 +57,6 @@ export interface FinishSheetProps {
 export function FinishSheet(props: FinishSheetProps) {
   const { type, n, date, title, hero, heroNode, note, share, stats, recap, after } = props;
   const { path, boardSlot, onBack, onNext, celebrate = false } = props;
-  const t = useTokens();
   const renderSlot = useBoardSlot();
   // A tag the board slot adds once the result is on the board (🏆 for a league record).
   const [tag, setTag] = useState('');
@@ -65,6 +65,7 @@ export function FinishSheet(props: FinishSheetProps) {
   const { next, secs, run } = useFinishData(type);
   const url = shortLink(type);
   const line = clockLine(TYPE_LABEL[type], secs, run);
+  const [heroVal, heroUnit] = splitHero(hero);
   const onShare = () => {
     void Share.share({ message: `${shareText}\n${url}` }).catch(() => undefined);
   };
@@ -97,10 +98,15 @@ export function FinishSheet(props: FinishSheetProps) {
             </View>
           ) : (
             <Text
+              testID="finish-hero"
               maxFontSizeMultiplier={1.3}
-              style={[styles.hero, { color: pt.ink }]}
-              testID="finish-hero">
-              {hero}
+              adjustsFontSizeToFit
+              numberOfLines={1}
+              style={[styles.hero, { color: pt.ink }]}>
+              {heroVal}
+              {heroUnit ? (
+                <Text style={[styles.heroUnit, { color: pt.inkSoft }]}>{` ${heroUnit}`}</Text>
+              ) : null}
             </Text>
           )}
         </Entrance>
@@ -110,7 +116,7 @@ export function FinishSheet(props: FinishSheetProps) {
           </Entrance>
         ) : null}
 
-        <View style={[styles.shareCard, { backgroundColor: pt.card }]}>
+        <View style={[styles.shareCard, { backgroundColor: pt.sheet }]}>
           <View style={styles.shareBody}>
             <Text style={[styles.shareText, { color: pt.ink }]} testID="finish-share-text">
               {shareText}
@@ -122,17 +128,18 @@ export function FinishSheet(props: FinishSheetProps) {
             onPress={onShare}
             style={({ pressed }) => [
               styles.pill,
-              { backgroundColor: t.play, opacity: pressed ? 0.8 : 1 },
+              { backgroundColor: pt.brand, opacity: pressed ? 0.85 : 1 },
             ]}>
-            <Text style={[styles.pillText, { color: t.onPlay }]}>Share</Text>
+            <ShareGlyph color={pt.onBrand} />
+            <Text style={[styles.pillText, { color: pt.onBrand }]}>Share</Text>
           </Pressable>
         </View>
 
-        <View style={styles.stats}>
-          {stats.map((s) => (
+        <View style={[styles.stats, { borderColor: pt.rule }]}>
+          {stats.map((s, i) => (
             <View
               key={s.label}
-              style={styles.stat}
+              style={[styles.stat, i > 0 && [styles.statNext, { borderColor: pt.hair }]]}
               accessible
               accessibilityLabel={`${s.value} ${s.label}`}>
               <Text maxFontSizeMultiplier={1.5} style={[styles.statVal, { color: pt.ink }]}>
@@ -147,13 +154,16 @@ export function FinishSheet(props: FinishSheetProps) {
           accessibilityRole="button"
           accessibilityLabel={next.main}
           onPress={() => onNext(next.item)}
-          style={[styles.next, { backgroundColor: pt.card }]}
+          style={({ pressed }) => [
+            styles.next,
+            { borderColor: pt.rule, opacity: pressed ? 0.7 : 1 },
+          ]}
           testID="finish-next">
           <View style={styles.fill}>
             <Text style={[styles.nextMain, { color: pt.ink }]}>{next.main}</Text>
             <Text style={[styles.small, { color: pt.inkSoft }]}>{next.sub}</Text>
           </View>
-          <Text style={[styles.chev, { color: pt.inkSoft }]}>›</Text>
+          <Chevron color={pt.inkSoft} />
         </Pressable>
         {boardSlot ? (
           <View>{boardSlot}</View>
@@ -173,11 +183,15 @@ export function FinishSheet(props: FinishSheetProps) {
         </Text>
 
         {recap ? (
-          <View style={styles.recap}>
-            <Text style={[styles.recapTitle, { color: pt.ink }]}>{recap.title}</Text>
-            {recap.sub ? (
-              <Text style={[styles.small, { color: pt.inkSoft }]}>{recap.sub}</Text>
-            ) : null}
+          <View style={[styles.recap, { borderColor: pt.rule }]}>
+            <View>
+              <Text accessibilityRole="header" style={[styles.recapTitle, { color: pt.ink }]}>
+                {recap.title}
+              </Text>
+              {recap.sub ? (
+                <Text style={[styles.recapSub, { color: pt.inkSoft }]}>{recap.sub}</Text>
+              ) : null}
+            </View>
             {recap.node}
           </View>
         ) : null}
@@ -187,6 +201,8 @@ export function FinishSheet(props: FinishSheetProps) {
   );
 }
 
+// finish.css, value for value: Instrument Serif for the outcome, the result and the stats,
+// Archivo for everything else, hairline rules rather than cards between the parts.
 const styles = StyleSheet.create({
   fill: { flex: 1 },
   in: {
@@ -197,42 +213,66 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   back: { minHeight: 44, justifyContent: 'center', alignSelf: 'flex-start' },
-  backText: { fontSize: 15 },
-  kick: { fontSize: 15, marginTop: 10 },
-  title: { fontSize: 44, fontFamily: 'Georgia', marginTop: 4 },
-  hero: { fontSize: 64, fontFamily: 'Georgia', marginTop: 4, fontVariant: ['tabular-nums'] },
-  heroNode: { marginTop: 10, marginBottom: 4 },
-  note: { fontSize: 16, marginTop: 4 },
-  shareCard: { marginTop: 20, borderRadius: 16, padding: 16, gap: 12 },
-  shareBody: { gap: 4 },
-  shareText: { fontSize: 17, fontWeight: '600' },
-  shareUrl: { fontSize: 14 },
-  pill: {
-    alignSelf: 'flex-start',
-    minHeight: 44,
-    justifyContent: 'center',
-    borderRadius: 999,
-    paddingHorizontal: 22,
-    paddingVertical: 10,
+  backText: { fontSize: 15, fontFamily: FONT.sans },
+  kick: { fontSize: 19, lineHeight: 25, fontFamily: FONT.serifItalic, marginTop: 6 },
+  title: {
+    fontSize: 44,
+    lineHeight: 48,
+    fontFamily: FONT.serif,
+    letterSpacing: -0.4,
+    marginTop: 4,
   },
-  pillText: { fontSize: 16, fontWeight: '800' },
-  stats: { flexDirection: 'row', marginTop: 22, gap: 12 },
-  stat: { flex: 1, minWidth: 0 },
-  statVal: { fontSize: 28, fontFamily: 'Georgia' },
-  small: { fontSize: 13 },
-  next: {
+  hero: {
+    fontSize: 112,
+    lineHeight: 112,
+    fontFamily: FONT.serif,
+    letterSpacing: -3,
+    fontVariant: ['lining-nums'],
+  },
+  heroUnit: { fontSize: 30, fontFamily: FONT.serif, letterSpacing: 0 },
+  heroNode: { marginTop: 14, marginBottom: 4 },
+  note: { fontSize: 16, lineHeight: 23, marginTop: 10, fontFamily: FONT.sans },
+  shareCard: {
     marginTop: 22,
-    borderRadius: 14,
-    padding: 16,
+    borderRadius: 16,
+    paddingVertical: 10,
+    paddingRight: 10,
+    paddingLeft: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  shareBody: { flex: 1, minWidth: 0, gap: 2 },
+  shareText: { fontSize: 17, lineHeight: 23, fontFamily: FONT.sansSemi },
+  shareUrl: { fontSize: 13, fontFamily: FONT.sansMedium },
+  pill: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+    minHeight: 44,
+    borderRadius: 24,
+    paddingHorizontal: 16,
   },
-  nextMain: { fontSize: 17, fontWeight: '600' },
-  chev: { fontSize: 24 },
-  clock: { fontSize: 15, lineHeight: 22, marginTop: 16 },
-  bold: { fontWeight: '700' },
-  recap: { marginTop: 26, gap: 10 },
-  recapTitle: { fontSize: 18, fontWeight: '700' },
+  pillText: { fontSize: 16, fontFamily: FONT.sansSemi },
+  stats: { flexDirection: 'row', marginTop: 22, borderTopWidth: 1, borderBottomWidth: 1 },
+  stat: { flex: 1, minWidth: 0, paddingVertical: 12 },
+  statNext: { borderLeftWidth: 1, paddingLeft: 14 },
+  statVal: { fontSize: 34, lineHeight: 38, fontFamily: FONT.serif, fontVariant: ['tabular-nums'] },
+  small: { fontSize: 13, fontFamily: FONT.sans, marginTop: 3 },
+  next: {
+    marginTop: 14,
+    minHeight: 60,
+    borderBottomWidth: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingRight: 4,
+  },
+  nextMain: { fontSize: 17, fontFamily: FONT.sansSemi },
+  clock: { fontSize: 14, lineHeight: 21, marginTop: 12, fontFamily: FONT.sans },
+  bold: { fontFamily: FONT.sansSemi },
+  recap: { marginTop: 30, paddingTop: 18, borderTopWidth: 1, gap: 14 },
+  recapTitle: { fontSize: 28, lineHeight: 32, fontFamily: FONT.serif },
+  recapSub: { fontSize: 14, fontFamily: FONT.sans, marginTop: 6 },
   after: { marginTop: 22 },
 });

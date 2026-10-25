@@ -1,6 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { usePuzzleTokens } from '@/shared/theme';
+import { FONT, usePuzzleTokens } from '@/shared/theme';
+import { Chevron } from '@/shared/ui';
 
 interface ClueBarProps {
   bar: { label: string; clue: string } | null;
@@ -21,7 +22,7 @@ export function ClueBar({ bar, onPrev, onNext, onToggle }: ClueBarProps) {
         accessibilityLabel="Previous clue"
         onPress={onPrev}
         style={[styles.arrow, box]}>
-        <Text style={[styles.arrowText, { color: pt.ink }]}>‹</Text>
+        <Chevron color={pt.ink} dir="left" />
       </Pressable>
       <Pressable
         accessibilityRole="button"
@@ -39,7 +40,7 @@ export function ClueBar({ bar, onPrev, onNext, onToggle }: ClueBarProps) {
         accessibilityLabel="Next clue"
         onPress={onNext}
         style={[styles.arrow, box]}>
-        <Text style={[styles.arrowText, { color: pt.ink }]}>›</Text>
+        <Chevron color={pt.ink} />
       </Pressable>
     </View>
   );
@@ -54,7 +55,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  arrowText: { fontSize: 22, fontWeight: '700' },
+  arrowText: { fontSize: 22, fontFamily: FONT.display },
   bar: {
     flex: 1,
     minHeight: 48,
@@ -64,6 +65,6 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     justifyContent: 'center',
   },
-  text: { fontSize: 15 },
-  label: { fontWeight: '700' },
+  text: { fontFamily: FONT.sans, fontSize: 15 },
+  label: { fontFamily: FONT.display },
 });

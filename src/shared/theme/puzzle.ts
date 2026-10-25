@@ -24,6 +24,19 @@ export interface PuzzleTokens {
   brand: string;
   /** Links on the finish sheet (finish.css --f-actInk): "See today’s board". */
   actInk: string;
+  /** The start card and the share line's card (house.css .dn-start-card, finish.css --f-paper). */
+  sheet: string;
+  /** Rules round the stats and under Next (finish.css --f-line), and between stats (--f-hair). */
+  rule: string;
+  hair: string;
+  /** Text on the brand blue (the Play and Share pills). */
+  onBrand: string;
+  /** A found word or given number on the finish sheet (finish.css --f-actT). */
+  brandTint: string;
+  /** Tangle's longest word (finish.css --f-gold, --f-goldT, --f-goldInk). */
+  gold: string;
+  goldTint: string;
+  goldInk: string;
 }
 
 const light: PuzzleTokens = {
@@ -43,6 +56,14 @@ const light: PuzzleTokens = {
   bad: '#E4483B',
   brand: '#2E5BFF',
   actInk: '#1B3B9E',
+  sheet: '#FFFFFF',
+  rule: '#C6CAD6',
+  hair: '#DCDFE7',
+  onBrand: '#FFFFFF',
+  brandTint: '#DCE4FF',
+  gold: '#E0A100',
+  goldTint: '#FFEFB8',
+  goldInk: '#5C4300',
 };
 
 const dark: PuzzleTokens = {
@@ -62,6 +83,14 @@ const dark: PuzzleTokens = {
   bad: '#FF7A6E',
   brand: '#3D63FF',
   actInk: '#A9BBFF',
+  sheet: '#1B1E29',
+  rule: '#3A3F52',
+  hair: '#2A2E3C',
+  onBrand: '#FFFFFF',
+  brandTint: '#25305C',
+  gold: '#F2BE2E',
+  goldTint: '#3B3010',
+  goldInk: '#FFE08A',
 };
 
 export function puzzleTokensFor(scheme: string | null | undefined): PuzzleTokens {

@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View } from 'react-native';
 
-import { usePuzzleTokens } from '@/shared/theme';
+import { FONT, usePuzzleTokens } from '@/shared/theme';
 
 /** The start card's picture: the day's block pattern, the top row lit (house.js art). */
 export function MiniArt({ grid }: { grid: string[][] }) {
@@ -75,6 +75,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  num: { position: 'absolute', top: 1, left: 3, fontSize: 9 },
-  ltr: { fontSize: 20, fontWeight: '700' },
+  num: { position: 'absolute', top: 1, left: 3, fontFamily: FONT.sans, fontSize: 9 },
+  ltr: { fontSize: 20, fontFamily: FONT.display },
 });

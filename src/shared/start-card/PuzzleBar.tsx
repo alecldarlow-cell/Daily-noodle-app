@@ -1,6 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { usePuzzleTokens } from '@/shared/theme';
+import { FONT, usePuzzleTokens } from '@/shared/theme';
+import { Chevron } from '@/shared/ui';
 
 interface PuzzleBarProps {
   /** "Mini 105" */
@@ -36,13 +37,17 @@ export function PuzzleBar({ name, sub, streak, clock, onBack }: PuzzleBarProps) 
         accessibilityLabel="Back to Puzzles"
         onPress={onBack}
         style={[styles.back, { borderColor: pt.lineSoft, backgroundColor: pt.card }]}>
-        <Text style={[styles.chev, { color: pt.ink }]}>‹</Text>
+        <Chevron color={pt.ink} dir="left" size={10} />
       </Pressable>
       <View style={styles.mid}>
         <Text style={[styles.name, { color: pt.ink }]} numberOfLines={1}>
           {name}
         </Text>
-        {sub ? <Text style={[styles.sub, { color: pt.inkSoft }]}>{sub}</Text> : null}
+        {sub ? (
+          <Text style={[styles.sub, { color: pt.inkSoft }]} numberOfLines={1}>
+            {sub}
+          </Text>
+        ) : null}
       </View>
       {streak > 0 ? (
         <Text
@@ -67,7 +72,7 @@ export function PuzzleBar({ name, sub, streak, clock, onBack }: PuzzleBarProps) 
 }
 
 const styles = StyleSheet.create({
-  bar: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 6 },
+  bar: { flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 52, marginBottom: 6 },
   back: {
     width: 44,
     height: 44,
@@ -75,15 +80,16 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    paddingLeft: 4,
   },
-  chev: { fontSize: 26, lineHeight: 28, fontWeight: '600' },
-  mid: { flex: 1 },
-  name: { fontSize: 16, fontWeight: '600' },
-  sub: { fontSize: 13 },
-  streak: { fontSize: 14 },
+  mid: { flex: 1, minWidth: 0 },
+  name: { fontSize: 16, lineHeight: 19, fontFamily: FONT.sansSemi },
+  // house.css .dn-sub #pband: "Medium · Replay".
+  sub: { fontSize: 13, lineHeight: 16, fontFamily: FONT.sans, textTransform: 'capitalize' },
+  streak: { fontSize: 14, fontFamily: FONT.sans },
   clock: {
     fontSize: 17,
-    fontWeight: '600',
+    fontFamily: FONT.sansSemi,
     minWidth: 54,
     textAlign: 'right',
     fontVariant: ['tabular-nums'],

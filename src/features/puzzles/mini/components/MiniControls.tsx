@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { usePuzzleTokens } from '@/shared/theme';
+import { FONT, usePuzzleTokens } from '@/shared/theme';
 
 interface MiniControlsProps {
   onCheckWord: () => void;
@@ -46,5 +46,5 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
   },
   reveal: { marginLeft: 6 },
-  text: { fontSize: 13, fontWeight: '500' },
+  text: { fontSize: 13, fontFamily: FONT.sansMedium },
 });

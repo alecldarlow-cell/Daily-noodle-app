@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View } from 'react-native';
 
-import { usePuzzleTokens } from '@/shared/theme';
+import { FONT, usePuzzleTokens } from '@/shared/theme';
 
 import { isLock, recapSub, type DokuPuzzle } from '../model';
 import { useLockedColor } from './DokuBoard';
@@ -44,7 +44,7 @@ export function SolvedGrid({ p }: { p: DokuPuzzle }) {
 
 const styles = StyleSheet.create({
   wrap: { gap: 10 },
-  sub: { fontSize: 14 },
+  sub: { fontFamily: FONT.sans, fontSize: 14 },
   solved: { alignSelf: 'flex-start', padding: 2, borderRadius: 8 },
   solvedRow: { flexDirection: 'row' },
   cell: {
@@ -54,6 +54,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  num: { position: 'absolute', top: 1, left: 3, fontSize: 9 },
-  ltr: { fontSize: 20, fontWeight: '700' },
+  num: { position: 'absolute', top: 1, left: 3, fontFamily: FONT.sans, fontSize: 9 },
+  ltr: { fontSize: 20, fontFamily: FONT.display },
 });

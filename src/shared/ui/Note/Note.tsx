@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { useTokens } from '@/shared/theme';
+import { FONT, useTokens } from '@/shared/theme';
 
 interface NoteProps {
   title: string;
@@ -30,8 +30,8 @@ export function Note({ title, body, action, testID }: NoteProps) {
 
 const styles = StyleSheet.create({
   note: { padding: 16, borderRadius: 12, marginBottom: 16, gap: 6 },
-  title: { fontSize: 17, fontWeight: '800' },
-  body: { fontSize: 15, lineHeight: 22 },
+  title: { fontSize: 17, fontFamily: FONT.displayHeavy },
+  body: { fontFamily: FONT.sans, fontSize: 15, lineHeight: 22 },
   btn: {
     alignSelf: 'flex-start',
     marginTop: 6,
@@ -40,5 +40,5 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 6,
   },
-  btnText: { fontSize: 15, fontWeight: '700' },
+  btnText: { fontSize: 15, fontFamily: FONT.display },
 });

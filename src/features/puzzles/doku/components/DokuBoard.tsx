@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, Pressable, StyleSheet, Text, useColorScheme, View } from 'react-native';
 
-import { usePuzzleTokens } from '@/shared/theme';
+import { FONT, usePuzzleTokens } from '@/shared/theme';
 
 import { activeWord, goodSquares, isLock, letterAt, type DokuState } from '../model';
 
@@ -102,7 +102,10 @@ export function DokuBoard({ state, side, onCell }: DokuBoardProps) {
                       maxFontSizeMultiplier={1.2}
                       style={[
                         styles.num,
-                        { color: here ? pt.onActive : pt.inkSoft, fontSize: cell * 0.2 },
+                        {
+                          color: here ? pt.onActive : pt.inkSoft,
+                          fontSize: cell * 0.17,
+                        },
                       ]}>
                       {num}
                     </Text>
@@ -127,6 +130,6 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row' },
   cell: { borderWidth: StyleSheet.hairlineWidth, alignItems: 'center', justifyContent: 'center' },
   fill: { flex: 1, alignSelf: 'stretch', alignItems: 'center', justifyContent: 'center' },
-  num: { position: 'absolute', top: 2, left: 4 },
-  ltr: { fontWeight: '700' },
+  num: { position: 'absolute', top: 2, left: 4, fontFamily: FONT.sansMedium },
+  ltr: { fontFamily: FONT.display },
 });

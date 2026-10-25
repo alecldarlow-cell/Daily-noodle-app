@@ -7,7 +7,7 @@ import { mockSite, renderWithProviders } from '@/shared/testing';
 import { TODAY_CACHE_KEY } from '@/shared/today';
 
 import { FinishSheet } from '../FinishSheet';
-import { clockLine, hm, nextRow, toMidnight } from '../rules';
+import { clockLine, hm, nextRow, splitHero, toMidnight } from '../rules';
 
 const list = (today: string): TodayList => ({
   today,
@@ -158,6 +158,18 @@ describe('GIVEN a finish sheet', () => {
       await renderWithProviders(sheet);
       await fireEvent.press(screen.getByRole('button', { name: 'Today’s puzzles' }));
       expect(onNext).toHaveBeenCalledWith(null);
+    });
+  });
+});
+
+describe('GIVEN a result with a unit (splitHero)', () => {
+  describe('WHEN the sheet draws it', () => {
+    it('THEN the unit is set apart, as finish.js draws it, and a time stays whole', () => {
+      expect(splitHero('325 pts')).toEqual(['325', 'pts']);
+      expect(splitHero('39 points')).toEqual(['39', 'points']);
+      expect(splitHero('1 point')).toEqual(['1', 'point']);
+      expect(splitHero('1:27')).toEqual(['1:27', '']);
+      expect(splitHero('7 of 10')).toEqual(['7 of 10', '']);
     });
   });
 });
