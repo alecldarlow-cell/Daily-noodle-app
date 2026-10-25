@@ -29,7 +29,9 @@ export function MiniKeyboard({ onKey, onDelete }: MiniKeyboardProps) {
                 key,
                 pressed && { backgroundColor: pt.activeWord },
               ]}>
-              <Text style={[styles.text, { color: pt.ink }]}>{ch}</Text>
+              <Text maxFontSizeMultiplier={1.3} style={[styles.text, { color: pt.ink }]}>
+                {ch}
+              </Text>
             </Pressable>
           ))}
           {i === 2 ? (
@@ -44,7 +46,9 @@ export function MiniKeyboard({ onKey, onDelete }: MiniKeyboardProps) {
                 key,
                 pressed && { backgroundColor: pt.activeWord },
               ]}>
-              <Text style={[styles.text, { color: pt.ink }]}>⌫</Text>
+              <Text maxFontSizeMultiplier={1.3} style={[styles.text, { color: pt.ink }]}>
+                ⌫
+              </Text>
             </Pressable>
           ) : null}
         </View>

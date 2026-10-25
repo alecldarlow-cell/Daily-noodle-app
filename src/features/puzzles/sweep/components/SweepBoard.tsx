@@ -103,13 +103,18 @@ function Face({
 }) {
   const fs = size * 0.44;
   if (s.boomed.has(i))
-    return <Text style={[styles.glyph, { fontSize: fs, color: '#fff' }]}>{MINE}</Text>;
+    return (
+      <Text maxFontSizeMultiplier={1.2} style={[styles.glyph, { fontSize: fs, color: '#fff' }]}>
+        {MINE}
+      </Text>
+    );
   if (s.revealed.has(i)) {
     const n = s.p.NUM[i]!;
     if (n <= 0) return null;
     const over = overCount(s, i);
     return (
       <Text
+        maxFontSizeMultiplier={1.2}
         style={[
           styles.num,
           { fontSize: fs, color: over ? pt.bad : sc.n[n] || pt.ink },
@@ -120,7 +125,11 @@ function Face({
     );
   }
   if (s.flagged.has(i))
-    return <Text style={[styles.glyph, { fontSize: fs, color: sc.flag }]}>{FLAG}</Text>;
+    return (
+      <Text maxFontSizeMultiplier={1.2} style={[styles.glyph, { fontSize: fs, color: sc.flag }]}>
+        {FLAG}
+      </Text>
+    );
   return null;
 }
 
@@ -142,6 +151,7 @@ export function SweepRecap({ state }: { state: SweepState }) {
                   { backgroundColor: k === 'boom' ? pt.bad : pt.card, borderColor: pt.cellEdge },
                 ]}>
                 <Text
+                  maxFontSizeMultiplier={1.2}
                   style={[
                     styles.smallText,
                     { color: k === 'flag' ? sc.flag : k === 'boom' ? '#fff' : sc.n[k] || pt.ink },

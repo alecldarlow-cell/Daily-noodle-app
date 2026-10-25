@@ -3,10 +3,11 @@ import { router } from 'expo-router';
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { FinishSheet } from '@/shared/finish-sheet';
+import { FinishSheet, useFreshFinish } from '@/shared/finish-sheet';
 import { PuzzleBar, ruleFor, StartCard, useStartStats } from '@/shared/start-card';
 import { useStoredRaw } from '@/shared/storage';
 import { usePuzzleTokens } from '@/shared/theme';
+import { fitBoard } from '@/shared/ui';
 
 import type { PuzzleFile } from '../../types';
 import { useMiniGame } from '../hooks/useMiniGame';
@@ -37,8 +38,9 @@ function savedStreak(raw: string | null): number {
 /** The Mini, played natively: start card, board, finish sheet. */
 export function MiniScreen({ file }: { file: PuzzleFile<MiniData> }) {
   const pt = usePuzzleTokens();
-  const { width, height } = useWindowDimensions();
+  const win = useWindowDimensions();
   const game = useMiniGame(file);
+  const fresh = useFreshFinish(game.phase === 'finished');
   const stats = useStartStats('mini');
   const streak = savedStreak(useStoredRaw(STREAK_KEY));
   const n = dnNum(file.data.id).slice(1);
@@ -61,6 +63,7 @@ export function MiniScreen({ file }: { file: PuzzleFile<MiniData> }) {
   if (game.phase === 'finished' && game.info)
     return (
       <FinishSheet
+        celebrate={fresh}
         type="mini"
         n={n}
         date={file.date}
@@ -80,7 +83,7 @@ export function MiniScreen({ file }: { file: PuzzleFile<MiniData> }) {
     );
 
   // Board, clue bar and keyboard on one screen, as the page's app mode lays them out.
-  const side = Math.max(200, Math.min(width - 32, height - 400, 420));
+  const side = fitBoard(win, 400, 420);
   return (
     <SafeAreaView style={[styles.fill, { backgroundColor: pt.paper }]} testID="mini-screen">
       <View style={styles.in}>

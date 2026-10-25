@@ -10,10 +10,11 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { FinishSheet } from '@/shared/finish-sheet';
+import { FinishSheet, useFreshFinish } from '@/shared/finish-sheet';
 import { PuzzleBar, ruleFor, StartCard, useStartStats } from '@/shared/start-card';
 import { useStoredRaw } from '@/shared/storage';
 import { usePuzzleTokens } from '@/shared/theme';
+import { fitBoard } from '@/shared/ui';
 
 import type { PuzzleFile } from '../../types';
 import { useSweepGame } from '../hooks/useSweepGame';
@@ -64,8 +65,9 @@ function Message({ msg, color }: { msg: string; color: string }) {
 export function SweepScreen({ file }: { file: PuzzleFile<SweepData> }) {
   const pt = usePuzzleTokens();
   const dark = useColorScheme() === 'dark';
-  const { width, height } = useWindowDimensions();
+  const win = useWindowDimensions();
   const game = useSweepGame(file);
+  const fresh = useFreshFinish(game.phase === 'finished');
   const stats = useStartStats('sweep');
   const streak = savedStreak(useStoredRaw(STREAK_KEY));
   const n = file.n ?? '';
@@ -88,6 +90,7 @@ export function SweepScreen({ file }: { file: PuzzleFile<SweepData> }) {
   if (game.phase === 'finished' && game.info)
     return (
       <FinishSheet
+        celebrate={fresh}
         type="sweep"
         n={n}
         date={file.date}
@@ -113,7 +116,7 @@ export function SweepScreen({ file }: { file: PuzzleFile<SweepData> }) {
       />
     );
 
-  const side = Math.max(200, Math.min(width - 32, height - 330, 460));
+  const side = fitBoard(win, 330, 460);
   const left = minesLeft(state);
   const modeBtn = (flag: boolean) => {
     const on = state.flagMode === flag;

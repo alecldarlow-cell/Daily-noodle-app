@@ -178,6 +178,9 @@ export function TangleBoard({ engine, setRects, onHome }: TangleBoardProps) {
         <View style={styles.boardWrap} onLayout={onLayout} testID="tangle-board-wrap">
           <View
             testID="tangle-grid"
+            accessible
+            accessibilityLabel={`Letters: ${engine.P.tiles.join(', ')}`}
+            accessibilityHint="Trace across neighbouring letters to make a word"
             style={[styles.board, { width: side, height: side }]}
             onStartShouldSetResponder={() => true}
             onMoveShouldSetResponder={() => true}
@@ -211,7 +214,9 @@ export function TangleBoard({ engine, setRects, onHome }: TangleBoardProps) {
                         },
                       ]}>
                       {hide ? null : (
-                        <Text style={[styles.letter, { color: pt.ink }]}>
+                        <Text
+                          maxFontSizeMultiplier={1.2}
+                          style={[styles.letter, { color: pt.ink }]}>
                           {t === 'QU' ? 'Qu' : t}
                         </Text>
                       )}

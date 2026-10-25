@@ -33,12 +33,18 @@ export function DokuBank({ state, onTile }: DokuBankProps) {
                 styles.tile,
                 { borderColor: pt.line, backgroundColor: sel ? pt.active : pt.card },
               ]}>
-              <Text style={[styles.ch, { color: sel ? pt.onActive : pt.ink }]}>{t.ch}</Text>
+              <Text
+                maxFontSizeMultiplier={1.3}
+                style={[styles.ch, { color: sel ? pt.onActive : pt.ink }]}>
+                {t.ch}
+              </Text>
             </Pressable>
           );
         })
       ) : (
-        <Text style={[styles.empty, { color: pt.inkSoft }]}>bank empty</Text>
+        <Text maxFontSizeMultiplier={1.3} style={[styles.empty, { color: pt.inkSoft }]}>
+          bank empty
+        </Text>
       )}
     </View>
   );

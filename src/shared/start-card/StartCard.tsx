@@ -37,7 +37,12 @@ export function StartCard({ type, n, date, rule, stats, art, onPlay, onBack }: S
     <SafeAreaView style={[styles.fill, { backgroundColor: pt.paper }]} testID="start-card">
       <ScrollView contentContainerStyle={styles.in}>
         <View style={styles.top}>
-          <Pressable accessibilityRole="link" onPress={onBack} hitSlop={8} style={styles.back}>
+          <Pressable
+            accessibilityRole="link"
+            accessibilityLabel="Back to Puzzles"
+            onPress={onBack}
+            hitSlop={8}
+            style={styles.back}>
             <Text style={[styles.backText, { color: pt.inkSoft }]}>← Puzzles</Text>
           </Pressable>
           {stats.streak >= 1 ? (
@@ -45,14 +50,19 @@ export function StartCard({ type, n, date, rule, stats, art, onPlay, onBack }: S
               style={[styles.small, { color: pt.inkSoft }]}>{`${stats.streak}-day streak`}</Text>
           ) : null}
         </View>
-        <Text accessibilityRole="header" style={[styles.title, { color: pt.ink }]}>
+        <Text
+          accessibilityRole="header"
+          maxFontSizeMultiplier={1.4}
+          style={[styles.title, { color: pt.ink }]}>
           {name}
         </Text>
         <Text style={[styles.date, { color: pt.inkSoft }]}>{`No. ${n}, ${longDate(date)}`}</Text>
         <View style={[styles.card, { backgroundColor: pt.card }]}>
           {art ? <View style={styles.art}>{art}</View> : null}
           <View>
-            <Text style={[styles.h2, { color: pt.ink }]}>{`Today’s ${name}`}</Text>
+            <Text maxFontSizeMultiplier={1.4} style={[styles.h2, { color: pt.ink }]}>
+              {`Today’s ${name}`}
+            </Text>
             <Text style={[styles.rule, { color: pt.inkSoft }]}>{rule}</Text>
           </View>
           <Pressable
@@ -71,8 +81,14 @@ export function StartCard({ type, n, date, rule, stats, art, onPlay, onBack }: S
             [stats.best, 'best streak'],
             [stats.played, `${name}s played`],
           ].map(([v, label]) => (
-            <View key={String(label)} style={styles.stat}>
-              <Text style={[styles.statVal, { color: pt.ink }]}>{String(v)}</Text>
+            <View
+              key={String(label)}
+              style={styles.stat}
+              accessible
+              accessibilityLabel={`${v} ${label}`}>
+              <Text maxFontSizeMultiplier={1.5} style={[styles.statVal, { color: pt.ink }]}>
+                {String(v)}
+              </Text>
               <Text style={[styles.small, { color: pt.inkSoft }]}>{label}</Text>
             </View>
           ))}
@@ -119,12 +135,19 @@ const styles = StyleSheet.create({
   date: { fontSize: 20, fontStyle: 'italic', fontFamily: 'Georgia', marginTop: 6 },
   card: { marginTop: 22, borderRadius: 18, padding: 20, gap: 16 },
   art: { alignItems: 'flex-start' },
-  h2: { fontSize: 32, fontFamily: 'Georgia', lineHeight: 34 },
+  h2: { fontSize: 32, fontFamily: 'Georgia' },
   rule: { fontSize: 16, lineHeight: 23, marginTop: 6 },
-  pill: { alignSelf: 'flex-start', borderRadius: 999, paddingHorizontal: 28, paddingVertical: 12 },
+  pill: {
+    alignSelf: 'flex-start',
+    minHeight: 44,
+    justifyContent: 'center',
+    borderRadius: 999,
+    paddingHorizontal: 28,
+    paddingVertical: 12,
+  },
   pillText: { fontSize: 17, fontWeight: '800' },
   stats: { flexDirection: 'row', marginTop: 22, gap: 12 },
-  stat: { flex: 1 },
+  stat: { flex: 1, minWidth: 0 },
   statVal: { fontSize: 28, fontFamily: 'Georgia' },
   howBar: {
     marginTop: 18,

@@ -2,12 +2,14 @@ import { londonDay, type KV, type SaveStore } from '@noodle/core';
 import { useEffect, useState, useSyncExternalStore } from 'react';
 import { AccessibilityInfo, AppState } from 'react-native';
 
+import { useHapticDiff } from '@/shared/haptics';
 import { announceFinish } from '@/shared/results';
 import { appStorage, saves as appSaves } from '@/shared/storage';
 
 import type { PuzzleFile } from '../../types';
 import { sheetInfo } from '../finishing';
 import { createTangle, KEY, type Rect, type TangleData, type TangleEngine } from '../model';
+import { tangleFeel, tangleSnap } from './feel';
 
 interface Deps {
   store?: KV;
@@ -84,6 +86,7 @@ export function useTangleGame(file: PuzzleFile<TangleData>, deps: Deps = {}) {
       }),
   );
   useSyncExternalStore(host.subscribe, host.getVersion);
+  useHapticDiff(tangleSnap(host.engine), tangleFeel);
 
   const reduced = deps.reduced;
   useEffect(() => {

@@ -36,6 +36,7 @@ export function TangleScreen({ file }: { file: PuzzleFile<TangleData> }) {
     const f = sheetInfo(engine, londonDay());
     return (
       <FinishSheet
+        celebrate={engine.s.freshResult}
         type="tangle"
         n={engine.P.n}
         date={engine.P.date}

@@ -1,6 +1,7 @@
 import type { SaveStore } from '@noodle/core';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import { useHapticDiff } from '@/shared/haptics';
 import { announceFinish, usePuzzleVisit } from '@/shared/results';
 import { appStorage, saves as appSaves, type CachedStorage } from '@/shared/storage';
 
@@ -19,6 +20,7 @@ import {
   type SweepState,
 } from '../model';
 import { SHEET_DELAY_MS } from '../simulate';
+import { sweepFeel } from './feel';
 
 export type Phase = 'start' | 'play' | 'finished';
 
@@ -63,6 +65,7 @@ export function useSweepGame(file: PuzzleFile<SweepData>, deps: Deps = {}) {
   );
   const [info, setInfo] = useState<FinishInfo | null>(opened.info);
   const [secs, setSecs] = useState(0);
+  useHapticDiff(state, sweepFeel);
 
   const running = state.started && !state.over;
   useEffect(() => {
