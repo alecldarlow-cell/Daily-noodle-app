@@ -1,6 +1,7 @@
 import { router } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { buildLine } from '@/shared/build';
 import { useTokens } from '@/shared/theme';
 import { Screen } from '@/shared/ui';
 
@@ -28,6 +29,9 @@ export function AccountScreen() {
           <Text style={[styles.btnText, { color: t.paper }]}>Bring my leagues here</Text>
         </Pressable>
       </View>
+      <Text style={[styles.build, { color: t.faint }]} testID="account-build" selectable>
+        {buildLine()}
+      </Text>
     </Screen>
   );
 }
@@ -45,4 +49,5 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   btnText: { fontSize: 15, fontWeight: '700' },
+  build: { marginTop: 28, fontSize: 13 },
 });
