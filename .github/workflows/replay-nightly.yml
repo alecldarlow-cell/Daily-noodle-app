@@ -1,64 +1,132 @@
 name: Replay nightly
 
-# Every published puzzle of every type with a native player, replayed against the
-# site's current engine (scripts/replay.js --all). Red means a native player no longer
-# matches the web: turn the type's `enabled` off or port the change, in a pull request.
+# The native players against the site's own engines, cheaply (Alec, 25 Oct 2026: a
+# sample does; the full run every night would use a month's Actions minutes in days).
+# scripts/replay-watch.js decides:
+# - recent: puzzles the site added or edited in the last day (at most 10 per type,
+#   spread), each replayed with every oracle variant;
+# - full: every puzzle of a type, only when the site code its player was ported from
+#   (its engine, finish.js, house.js, dn-core.js) changed since the last full pass.
+# The last passing engine hashes live in an Actions cache (replay-verified.json).
+# Red means a native player no longer matches the web: switch that type's `enabled`
+# off or port the change, in a pull request. "Run workflow" with full ticked replays
+# every puzzle of every type (hours of runner time; for a new port or a big change).
 on:
   schedule:
     - cron: '41 3 * * *'
   workflow_dispatch:
     inputs:
-      types:
-        description: 'Types to replay, space-separated (mini link tangle doku sweep path)'
-        default: 'mini link tangle doku sweep path'
+      full:
+        description: 'Replay every puzzle of every type (long)'
+        type: boolean
+        default: false
 
 jobs:
-  replay:
+  plan:
+    name: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      full: ${{ steps.plan.outputs.full }}
+      recent: ${{ steps.plan.outputs.recent }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Clone the site with its history
+        run: git clone --filter=blob:none https://github.com/alecldarlow-cell/dailynoodle ../dailynoodle
+      - name: Last passing engine hashes
+        uses: actions/cache/restore@v4
+        with:
+          path: replay-verified.json
+          key: replay-verified-${{ github.run_id }}
+          restore-keys: replay-verified-
+      - id: plan
+        name: What to replay
+        run: |
+          node scripts/replay-watch.js --site ../dailynoodle --verified replay-verified.json \
+            ${{ github.event.inputs.full == 'true' && '--full-all' || '' }} > plan.json
+          cat plan.json
+          echo "full=$(node -e "console.log(JSON.stringify(require('./plan.json').full))")" >> "$GITHUB_OUTPUT"
+          echo "recent=$(node -e "console.log(JSON.stringify([...new Set(require('./plan.json').recent.map(r=>r.type))].map(type=>({type,only:require('./plan.json').recent.filter(r=>r.type===type).map(r=>r.only).join(' ')}))))")" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: replay-plan
+          path: plan.json
+          retention-days: 7
+
+  recent:
+    name: replay new ${{ matrix.type }}
+    needs: plan
+    if: needs.plan.outputs.recent != '[]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.plan.outputs.recent) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Clone the site
+        run: git clone --depth 1 https://github.com/alecldarlow-cell/dailynoodle ../dailynoodle
+      - name: The site's Playwright and pinned Chromium
+        working-directory: ../dailynoodle
+        run: npm ci --ignore-scripts
+      - name: The vendored Doku word list still matches the engine
+        if: matrix.type == 'doku'
+        run: node scripts/vendor-doku-words.js --site ../dailynoodle --check
+      - name: Replay each new or edited ${{ matrix.type }}
+        run: |
+          fail=0
+          for only in ${{ matrix.only }}; do
+            echo "::group::$only"
+            node scripts/replay.js --type ${{ matrix.type }} --all --only "$only" --site ../dailynoodle --workers 4 || fail=1
+            echo "::endgroup::"
+          done
+          exit $fail
+
+  full:
     name: replay ${{ matrix.type }} --all (${{ matrix.shard }})
+    needs: plan
+    if: needs.plan.outputs.full != '[]'
     runs-on: ubuntu-latest
     timeout-minutes: 300
     strategy:
       fail-fast: false
       matrix:
-        # Each type's runs split into shards that run side by side (scripts/replay.js --shard).
-        include:
-          - { type: mini, shard: 1/2 }
-          - { type: mini, shard: 2/2 }
-          - { type: link, shard: 1/1 }
-          - { type: tangle, shard: 1/2 }
-          - { type: tangle, shard: 2/2 }
-          - { type: doku, shard: 1/2 }
-          - { type: doku, shard: 2/2 }
-          - { type: sweep, shard: 1/4 }
-          - { type: sweep, shard: 2/4 }
-          - { type: sweep, shard: 3/4 }
-          - { type: sweep, shard: 4/4 }
-          - { type: path, shard: 1/3 }
-          - { type: path, shard: 2/3 }
-          - { type: path, shard: 3/3 }
-    env:
-      # A run started by hand may name only some types; the schedule replays them all.
-      RUN: ${{ contains(format(' {0} ', github.event.inputs.types || 'mini link tangle doku sweep path'), format(' {0} ', matrix.type)) }}
+        include: ${{ fromJSON(needs.plan.outputs.full) }}
     steps:
       - uses: actions/checkout@v4
-        if: env.RUN == 'true'
       - uses: actions/setup-node@v4
-        if: env.RUN == 'true'
         with:
           node-version: 22
           cache: npm
       - run: npm ci
-        if: env.RUN == 'true'
       - name: Clone the site
-        if: env.RUN == 'true'
         run: git clone --depth 1 https://github.com/alecldarlow-cell/dailynoodle ../dailynoodle
       - name: The site's Playwright and pinned Chromium
-        if: env.RUN == 'true'
         working-directory: ../dailynoodle
         run: npm ci --ignore-scripts
-      - name: The vendored Doku word list still matches the engine
-        if: env.RUN == 'true' && matrix.type == 'doku'
-        run: node scripts/vendor-doku-words.js --site ../dailynoodle --check
       - name: Replay every ${{ matrix.type }} in shard ${{ matrix.shard }}
-        if: env.RUN == 'true'
         run: node scripts/replay.js --type ${{ matrix.type }} --all --shard ${{ matrix.shard }} --site ../dailynoodle --workers 6
+
+  # Keep today's engine hashes as verified when every full run passed (or none was due),
+  # so tomorrow only replays again what changes after today.
+  record:
+    name: record verified engines
+    needs: [plan, full]
+    if: always() && needs.plan.result == 'success' && (needs.full.result == 'success' || needs.full.result == 'skipped')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: replay-plan
+      - run: node -e "const p=require('./plan.json');require('fs').writeFileSync('replay-verified.json',JSON.stringify(p.hashes))"
+      - uses: actions/cache/save@v4
+        with:
+          path: replay-verified.json
+          key: replay-verified-${{ github.run_id }}
