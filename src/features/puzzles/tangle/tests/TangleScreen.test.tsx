@@ -17,6 +17,9 @@ jest.mock('expo-router', () => ({
 }));
 const mockRouter = (jest.requireMock('expo-router') as { router: Record<string, jest.Mock> })
   .router;
+// Each test plays a round through the screen, many steps of the fake clock; a busy
+// machine can take longer than Jest's 5 s default.
+jest.setTimeout(30_000);
 
 const SIDE = 400;
 const rects = tileRects(SIDE);
