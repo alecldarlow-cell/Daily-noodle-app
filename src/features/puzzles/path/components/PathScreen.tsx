@@ -61,7 +61,11 @@ export function PathScreen({ file }: { file: PuzzleFile<PathData> }) {
           { value: game.info.best, label: 'best streak' },
           { value: game.info.played, label: 'Paths played' },
         ]}
-        recap={{ title: 'The thread', node: <PathRecap state={state} /> }}
+        recap={{
+          title: 'The thread',
+          sub: 'The given numbers are shaded.',
+          node: <PathRecap state={state} />,
+        }}
         onBack={back}
         onNext={openNext}
       />
