@@ -19,13 +19,17 @@ export interface FinishSheetProps {
   title: string;
   /** The result that gets shared: "1:27". */
   hero: string;
+  /** Drawn in place of `hero` when the result is a picture (Link's guess squares, Tangle's score). */
+  heroNode?: ReactNode;
   /** One line of comment ("No checks, no reveals."); none on a reopened puzzle. */
   note?: string;
   /** The share line, without the short link. */
   share: string;
   stats: { value: string | number; label: string }[];
   /** The type's own section (the Mini's solved grid). */
-  recap?: { title: string; node: ReactNode };
+  recap?: { title: string; sub?: string; node: ReactNode };
+  /** Placed at the very end (Link's "Play again (not recorded)"). */
+  after?: ReactNode;
   /** Where leagues put "See today's board". */
   boardSlot?: ReactNode;
   onBack: () => void;
@@ -41,8 +45,8 @@ export interface FinishSheetProps {
  * link (dailynoodle.co.uk/<type>) to the phone's share sheet.
  */
 export function FinishSheet(props: FinishSheetProps) {
-  const { type, n, date, title, hero, note, share, stats, recap, boardSlot, onBack, onNext } =
-    props;
+  const { type, n, date, title, hero, heroNode, note, share, stats, recap, after } = props;
+  const { boardSlot, onBack, onNext } = props;
   const t = useTokens();
   const pt = usePuzzleTokens();
   const { next, secs, run } = useFinishData(type);
@@ -63,9 +67,15 @@ export function FinishSheet(props: FinishSheetProps) {
         <Text accessibilityRole="header" style={[styles.title, { color: pt.ink }]}>
           {title}
         </Text>
-        <Text style={[styles.hero, { color: pt.ink }]} testID="finish-hero">
-          {hero}
-        </Text>
+        {heroNode ? (
+          <View style={styles.heroNode} testID="finish-hero" accessibilityLabel={hero}>
+            {heroNode}
+          </View>
+        ) : (
+          <Text style={[styles.hero, { color: pt.ink }]} testID="finish-hero">
+            {hero}
+          </Text>
+        )}
         {note ? <Text style={[styles.note, { color: pt.inkSoft }]}>{note}</Text> : null}
 
         <View style={[styles.shareCard, { backgroundColor: pt.card }]}>
@@ -123,9 +133,13 @@ export function FinishSheet(props: FinishSheetProps) {
         {recap ? (
           <View style={styles.recap}>
             <Text style={[styles.recapTitle, { color: pt.ink }]}>{recap.title}</Text>
+            {recap.sub ? (
+              <Text style={[styles.small, { color: pt.inkSoft }]}>{recap.sub}</Text>
+            ) : null}
             {recap.node}
           </View>
         ) : null}
+        {after ? <View style={styles.after}>{after}</View> : null}
       </ScrollView>
     </SafeAreaView>
   );
@@ -145,6 +159,7 @@ const styles = StyleSheet.create({
   kick: { fontSize: 15, marginTop: 10 },
   title: { fontSize: 44, fontFamily: 'Georgia', marginTop: 4 },
   hero: { fontSize: 64, fontFamily: 'Georgia', marginTop: 4, fontVariant: ['tabular-nums'] },
+  heroNode: { marginTop: 10, marginBottom: 4 },
   note: { fontSize: 16, marginTop: 4 },
   shareCard: { marginTop: 20, borderRadius: 16, padding: 16, gap: 12 },
   shareBody: { gap: 4 },
@@ -170,4 +185,5 @@ const styles = StyleSheet.create({
   bold: { fontWeight: '700' },
   recap: { marginTop: 26, gap: 10 },
   recapTitle: { fontSize: 18, fontWeight: '700' },
+  after: { marginTop: 22 },
 });

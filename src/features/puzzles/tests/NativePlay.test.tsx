@@ -6,8 +6,12 @@ import { mockSite, renderWithProviders } from '@/shared/testing';
 
 import { PUZZLE_CACHE_PREFIX } from '../api/usePuzzleData';
 import { hasNativePlayer, NativePlay } from '../components/NativePlay';
+import { enabled as linkEnabled } from '../link';
+import { clone as cloneLink, file78 } from '../link/tests/fixtures';
 import { enabled } from '../mini';
 import { clone, file105 } from '../mini/tests/fixtures';
+import { enabled as tangleEnabled } from '../tangle';
+import { clone as cloneTangle, file19 } from '../tangle/tests/fixtures';
 
 jest.mock('expo-router', () => ({
   router: { back: jest.fn(), replace: jest.fn(), canGoBack: jest.fn(() => true) },
@@ -27,8 +31,10 @@ afterEach(async () => {
 });
 
 describe('GIVEN the play route asks which types play natively', () => {
-  it('THEN only an enabled Mini does', () => {
+  it('THEN only the types switched on do', () => {
     expect(hasNativePlayer('mini')).toBe(enabled);
+    expect(hasNativePlayer('link')).toBe(linkEnabled);
+    expect(hasNativePlayer('tangle')).toBe(tangleEnabled);
     expect(hasNativePlayer('doku')).toBe(false);
     expect(hasNativePlayer(undefined)).toBe(false);
   });
@@ -81,5 +87,35 @@ describe('GIVEN a Mini opened natively', () => {
       await renderWithProviders(<NativePlay type="mini" file={FILE} fallback={bridge} />);
       await waitFor(() => expect(screen.getByText('bridge')).toBeOnTheScreen(), { timeout: 5000 });
     });
+  });
+});
+
+describe('GIVEN a Link or a Tangle opened natively', () => {
+  const LINK = '2026-10-25-word-link-0078';
+  const TANGLE = '2026-10-25-word-tangle-0019';
+
+  it('THEN a Link with good data opens on its start card', async () => {
+    mockSite({ [`reports/${LINK}.json`]: file78 });
+    await renderWithProviders(<NativePlay type="link" file={LINK} fallback={bridge} />);
+    await waitFor(() => expect(screen.getByTestId('start-card')).toBeOnTheScreen());
+  });
+
+  it('THEN a Tangle with good data opens on its home card', async () => {
+    mockSite({ [`reports/${TANGLE}.json`]: file19 });
+    await renderWithProviders(<NativePlay type="tangle" file={TANGLE} fallback={bridge} />);
+    await waitFor(() => expect(screen.getByTestId('tangle-home')).toBeOnTheScreen());
+  });
+
+  it('THEN data the page would refuse plays through the bridge', async () => {
+    const link = cloneLink(file78);
+    link.data.groups.pop();
+    const tangle = cloneTangle(file19);
+    tangle.date = '2026-10-26'; // the page's dn:date no longer matches the puzzle
+    mockSite({ [`reports/${LINK}.json`]: link, [`reports/${TANGLE}.json`]: tangle });
+    await renderWithProviders(<NativePlay type="link" file={LINK} fallback={bridge} />);
+    await waitFor(() => expect(screen.getByText('bridge')).toBeOnTheScreen());
+    screen.unmount();
+    await renderWithProviders(<NativePlay type="tangle" file={TANGLE} fallback={bridge} />);
+    await waitFor(() => expect(screen.getByText('bridge')).toBeOnTheScreen());
   });
 });

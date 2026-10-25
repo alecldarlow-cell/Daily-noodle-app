@@ -1,0 +1,73 @@
+# WP10: today's Link plays natively to the finish sheet, and reopens on it.
+# Runs against an installed build (EAS, WP6): maestro test .maestro/link.yaml
+# Guesses the first four tiles on the board, shuffling between guesses, so it ends
+# (won or out of mistakes) whatever the day's groups are.
+appId: ${APP_ID}
+---
+- launchApp:
+    clearState: true
+- assertVisible:
+    id: today-screen
+- tapOn:
+    id: today-link
+- extendedWaitUntil:
+    visible:
+      id: start-card
+    timeout: 15000
+- assertVisible: 'Today’s Link'
+- tapOn: 'Play'
+- assertVisible:
+    id: link-board
+- assertVisible: 'MISTAKES LEFT'
+- repeat:
+    times: 12
+    while:
+      notVisible:
+        id: finish-sheet
+    commands:
+      - tapOn:
+          id: 'tile-.*'
+          index: 0
+      - tapOn:
+          id: 'tile-.*'
+          index: 1
+      - tapOn:
+          id: 'tile-.*'
+          index: 2
+      - tapOn:
+          id: 'tile-.*'
+          index: 3
+      - tapOn: 'Submit'
+      - waitForAnimationToEnd:
+          timeout: 3000
+      - runFlow:
+          when:
+            notVisible:
+              id: finish-sheet
+          commands:
+            - tapOn: 'Shuffle'
+            - tapOn:
+                text: 'Deselect'
+                optional: true
+- extendedWaitUntil:
+    visible:
+      id: finish-sheet
+    timeout: 5000
+- assertVisible:
+    id: guess-squares
+- assertVisible:
+    id: finish-share-text
+- assertVisible: 'dailynoodle.co.uk/link'
+- assertVisible: 'The groups'
+# Reopened: straight to the sheet, no start card
+- tapOn: '← Puzzles'
+- assertVisible:
+    id: today-screen
+- tapOn:
+    id: today-link
+- extendedWaitUntil:
+    visible:
+      id: finish-sheet
+    timeout: 10000
+- assertNotVisible:
+    id: start-card

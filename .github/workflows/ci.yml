@@ -32,14 +32,15 @@ jobs:
       - name: Unit tests and coverage (80% lines)
         run: npm run test:coverage -- --ci
 
-  # Differential replay (WP8): the native Mini against the site's own engine, on 50
-  # Minis spread across the archive, four oracle variants each, in headless Chromium
+  # Differential replay (WP8, WP10): each native player against the site's own engine,
+  # on puzzles spread across the archive (50 Minis, 20 Links, 20 Tangles), every oracle
+  # variant each, in headless Chromium
   # from the public site repo's pinned dev dependencies. Nothing leaves the runner:
   # the site's harness answers every request and blocks Supabase.
   replay:
     name: replay
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -54,3 +55,7 @@ jobs:
         run: npm ci --ignore-scripts
       - name: Replay 50 Minis, web engine against the native model
         run: node scripts/replay.js --type mini --sample 50 --site ../dailynoodle --workers 4
+      - name: Replay 20 Links, web engine against the native model
+        run: node scripts/replay.js --type link --sample 20 --site ../dailynoodle --workers 4
+      - name: Replay 20 Tangles, web engine against the native engine
+        run: node scripts/replay.js --type tangle --sample 20 --site ../dailynoodle --workers 4
