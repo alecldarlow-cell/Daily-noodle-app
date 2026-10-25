@@ -9,21 +9,21 @@ below when it finishes.
 
 ## Status
 
-| WP  | Deliverable                                                   | Status                                                                     |
-| --- | ------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| 0   | App repo scaffolded, CI green                                 | done ([#1](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/1))   |
-| 1   | `@noodle/core` with differential test against `dn-core.js`    | done ([#2](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/2))   |
-| 2   | Site publishes `feed-lite.json` and per-puzzle JSON (site PR) | done ([site #21](https://github.com/alecldarlow-cell/dailynoodle/pull/21)) |
-| 3   | Today and Archive screens, offline-capable                    | done ([#3](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/3))   |
-| 4   | WebView bridge: play, finish, share, saves                    | done ([#5](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/5))   |
-| 5   | Leagues: board, join, submit, first-run handoff               | done ([#8](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/8))   |
-| 6   | EAS builds, TestFlight and Play internal track                | config ready; needs Alec’s accounts (docs/install.md)                      |
-| 7   | Optional sign-in and sync, web and app                        | app and database done; sign-in waits for Resend + redirect URL             |
-| 8   | Port recipe, shared start card and finish sheet, Mini native  | done ([#7](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/7))   |
-| 9   | Sweep and Path native                                         | in progress (parallel lane)                                                |
-| 10  | Link, Tangle, Reckon, Borders native                          | Link, Tangle in progress (parallel lane); Reckon, Borders next             |
-| 11  | Doku native                                                   | not started                                                                |
-| 12  | Polish, notifications decision, release decision              | not started                                                                |
+| WP  | Deliverable                                                   | Status                                                                                                                                                                                       |
+| --- | ------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 0   | App repo scaffolded, CI green                                 | done ([#1](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/1))                                                                                                                     |
+| 1   | `@noodle/core` with differential test against `dn-core.js`    | done ([#2](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/2))                                                                                                                     |
+| 2   | Site publishes `feed-lite.json` and per-puzzle JSON (site PR) | done ([site #21](https://github.com/alecldarlow-cell/dailynoodle/pull/21))                                                                                                                   |
+| 3   | Today and Archive screens, offline-capable                    | done ([#3](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/3))                                                                                                                     |
+| 4   | WebView bridge: play, finish, share, saves                    | done ([#5](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/5))                                                                                                                     |
+| 5   | Leagues: board, join, submit, first-run handoff               | done ([#8](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/8))                                                                                                                     |
+| 6   | EAS builds, TestFlight and Play internal track                | config ready; needs Alec’s accounts ([guide](https://claude.ai/artifact/CpiPm7oB6wtisZ8x9DDbtm))                                                                                             |
+| 7   | Optional sign-in and sync, web and app                        | built in app, site and database; switched off until Resend + redirect URLs                                                                                                                   |
+| 8   | Port recipe, shared start card and finish sheet, Mini native  | done ([#7](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/7))                                                                                                                     |
+| 9   | Sweep and Path native                                         | done ([#11](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/11))                                                                                                                   |
+| 10  | Link, Tangle, Reckon, Borders native                          | done ([#12](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/12), [#18](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/18)); Reckon/Borders full replay overnight 25 Oct |
+| 11  | Doku native                                                   | done ([#15](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/15), [#22](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/22)); full replay overnight 25 Oct                |
+| 12  | Polish, notifications decision, release decision              | in progress: See today's board, polish lane                                                                                                                                                  |
 
 ## Entries
 
@@ -241,3 +241,43 @@ below when it finishes.
   `EXPO_PUBLIC_SYNC=1` in `eas.json`. Supabase only emails its own organisation's members without a custom sender.
 - Not yet: website sign-in (the site's half of WP7). It can follow once email works, reusing the same functions
   and the site's dn-track import.
+
+### 25 Oct 2026 — WP9
+
+- [#11](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/11), merged: Sweep and Path native, ported line for line from `engines/sweep.js` and `engines/path.js` following `docs/port-recipe.md`. Both on.
+- **Sweep**: the engine's gate (`deduceStep` with `why`, `solveNoGuess`, `countSolutions`) refuses what the page refuses; dig, long-press flag, Dig/Flag modes, crossed-out numbers, the all-36-called nudge. One mine ends it (`{o:'loss', s, b}`, streak to 0 via `recordResultStreak`); "Play again (not recorded)" replays as the page does. Hint with `provable()`, the wrong-flag line, the page's wording, ringed numbers and a 2.4 s mark. `shareSweep` with the day from the id.
+- **Path**: the two-end tap rules unchanged (Alec's call), Undo, Hint's forced square; clock starts on Play; `{t:'m:ss'}`, `bumpPathStreak`, `sharePath`.
+- **Replay**: one runner, `scripts/replay/<type>.js` modules, `--shard k/n`. `--all`: Sweep 731 pages, 4,386 runs, 162,973 moves; Path 760 pages, 3,040 runs, 130,476 moves; all identical. The 30 older Sweep pages without `DN_PUZZLE` stay on the bridge. Breaking the model on purpose fails the replay.
+- **Site findings**: (1) after Play again, `finish.js show()` dropped the adopted title, time and streak ids (Sweep and Link): fixed on the site, [site #31](https://github.com/alecldarlow-cell/dailynoodle/pull/31); (2) Path doesn't repaint after a refused tap, so when Hint switches ends the old end stays lit (ported as painted; Alec's call whether to fix on the site).
+
+### 25 Oct 2026 — WP10 (Link, Tangle)
+
+- [#12](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/12) merged: Link and Tangle native; [#16](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/16): their screen tests get the Mini's 30 s timeout. Both on.
+- **Link**: `engines/link.js` ported line for line (gate, toggle, submit in board order, one away, free repeats, the settle, four mistakes and the reveal, restoreDone, replay label, Play again (not recorded)). Random deals and shuffles are passed in as moves; the replay reads each order from the page. Record `{o,t,m,r,g}`, `recordResultStreak` on today's first go only, `shareLink`.
+- **Tangle**: `engines/tangle.js` ported as an engine with storage, clock and timers handed in: gate, save via `saveProgress`, drag and tap tracing with the page's hit-testing, 3-2-1 then 90 s on the page's 100 ms tick, scoring, pause on back or leaving the app, endRound `{o:'played',s,w,st,d}`, best, own-day streak.
+- **Replay** `--all` identical: Link 347 pages, 2,082 runs, 72,870 moves; Tangle 671 pages, 3,355 runs, 70,455 moves; confirmed again on `main` (run 40189412051, which also passed Mini: 761 pages, 3,044 runs, 144,916 moves).
+- Left: haptics (WP12), Tangle's settings switches, hardware-keyboard typing and Yesterday's answers.
+
+### 25 Oct 2026 — WP11 (Doku)
+
+- [#15](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/15) merged off (the lane stopped at the usage limit before its full replay); [#22](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/22) switches it on after a sample proof (Alec's call: native now, sample first, full overnight).
+- Ported line for line from `engines/doku.js`: tile-then-square and type-on-keyboard placing, send back, Hints switch, the full-grid note, the clock from the first tile or delete, `putDone {s}`, `bumpSolveStreak` in `digi-doku-streak` seeded by `seedDokuStreak`, `shareDoku`.
+- Replay (`scripts/replay-doku.js`): five variants per Doku; CI samples 20. Sample proof for switching on: today and the next three days, 20/20 runs identical (493 moves). Full replay of every Doku dispatched on GitHub on the evening of 25 Oct.
+- Not ported (hidden on the page on every device): Reveal all, Reset, drag and drop from touch.
+
+### 25 Oct 2026 — WP10 (Reckon, Borders)
+
+- [#18](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/18): Reckon and Borders native. The lane stopped mid-way; Claude rebased it onto Sweep/Path and Doku (merging both lanes' replay runners: `begin`/`probe` hooks for players with their own home screen and a frame-timed clock), wired their starts to the visit recorder, and switched both on after a sample proof (Alec's call): today and the next three days, every variant, identical (Reckon 16/16 runs, 640 moves; Borders 16/16, 396 moves), plus CI's 20 each. Full replay of every Reckon (438) and Borders (680) dispatched on GitHub the same evening.
+- Reckon: Ballpark's two-decade scale and wording, scoring 100/75/50/25, `{p,b,z,g,secs,d}`, `cur` resumed exactly, own-day streak, `shareReckon`, "Today's ten".
+- Borders: four names in the page's stamped order, Show on map halves the base, run bonus, `{c,p,secs,ans,on}`, Borderline's atlas updated in place, streak on every finished round, `shareBorders`; outlines drawn by the engine's own drawing code in a WebView loaded on first use (no new dependency).
+
+### 25 Oct 2026 — sign-in, recording, CI and the site
+
+- **Website sign-in** (site [#28](https://github.com/alecldarlow-cell/dailynoodle/pull/28), [#30](https://github.com/alecldarlow-cell/dailynoodle/pull/30), [#32](https://github.com/alecldarlow-cell/dailynoodle/pull/32)): `dn-sync.js`, a card under the board, sync = pull → `dnMove.importData` (dn-track's `#dnmove=` rules, exposed unchanged) → push; puzzle pages pull on open and push after the finish; switched off (`ON = false`) until Resend and the redirect URLs. App [#17](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/17): the same league rules in the app (skip the account's own player; hold back the board while a choice is pending) and a re-vendor.
+- **App plays recorded like website plays** (Alec's call): app [#19](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/19), site [#29](https://github.com/alecldarlow-cell/dailynoodle/pull/29) (privacy wording). Native puzzles send page_view / puzzle_start / puzzle_end exactly as dn-track.js, `inst: 2`; one visitor code (`digi.aid`/`sid`/`last`/`optout`) shared both ways with every page the app opens; the privacy page's switch stops native recording too; nothing from development builds.
+- **Play listing** ([#14](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/14)): `docs/play-listing.md`, `store/feature-graphic.png`, Account › Privacy opens the privacy page in the app.
+- **Publishing outage, 11:33–13:40**: a race in the new SYNC-WEB-08 test (a step during the board's one reload after a sync) failed every release; fixed by a settled marker the tests wait for (site #32), which also turns CI failures into annotations Claude can read. Then BOARD-E2E-01 (records) raced two phones; with Alec's go-ahead the phones now finish in turn, every check unchanged ([site #33](https://github.com/alecldarlow-cell/dailynoodle/pull/33)).
+- **CI cost and speed** (Alec's call: a sample does): app [#20](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/20) replays only the types a change touches, each on its own runner at once (about 7 minutes, from 20); [#21](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/21) the nightly replays new or edited puzzles (≤10 a type) and a type in full only when the site changes its engine. The old full nightly was disabled.
+- **Rule from Alec**: touch the site only when the app needs it or he asks; site bugs the app's testing finds are reported, and fixed when tested and harmless (site #31).
+- **Alec's to-do guide**: https://claude.ai/artifact/CpiPm7oB6wtisZ8x9DDbtm (first Android build, EXPO_TOKEN, phone test, Resend, Play internal testing, branch protection, tidy-ups, iPhone without a Mac).
+- **Actions minutes**: the app repo was private, so its runs counted against 2,000 free minutes a month; 1,786 were used by mid-afternoon (the lanes' full replays 779, CI 993 before #20). Alec made the repo public on 25 Oct (history checked first: only the public Supabase key), so Actions are free; the nightly is back on.
