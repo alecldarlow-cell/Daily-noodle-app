@@ -78,3 +78,23 @@ and the replay is the proof.
 - **Writes the page makes on opening are ported too**: Doku's streak is seeded from its
   results when it is first read (load, solve, reopen), and the replay compares the
   streak document right after load.
+
+## What WP9 added (Sweep, Path)
+
+- **Port what the page paints, not only what it holds.** Path's engine changes its
+  active end and then refuses the square without repainting, so the old end stays lit;
+  the model keeps the painted ends (`lit`) beside the real ones. Sweep's Hint mark and
+  rings live on the DOM until a timer or the next move clears them: the model keeps
+  them, and the clock-driven part (the 2.4 s mark) runs in `simulate.ts` and the hook.
+- **Keep the engine's iteration order.** Sweep's Hint picks the first square its
+  deduction finds, which depends on the order squares were revealed: the model uses
+  `Set`s copied in order, never sorted arrays.
+- **The oracle stops when the sheet rises.** A scripted tap after the finish lands on
+  the sheet on the web (and can leave the page). Each `Player.do` refuses moves once
+  the round is over (Sweep allows only the sheet's Play again).
+- **One runner, a module per type**: `scripts/replay/<type>.js` gives the pattern,
+  `native`, `drive`, `webSnapshot`, `finishRead`, `finalPairs`, `reopenPairs` and
+  `refused`; `scripts/replay.js` does the rest. `--shard k/n` splits `--all`.
+- Site defect seen on two types: after Play again, finish.js `show()` drops the
+  adopted title, time and streak ids, so the replay round's sheet is bare. The native
+  sheet shows them; the replay checks them where the page still has them.
