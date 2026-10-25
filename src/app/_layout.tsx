@@ -9,6 +9,7 @@ import { LeagueResults } from '@/features/leagues';
 import { QueryProvider } from '@/shared/query';
 import { appStorage } from '@/shared/storage';
 import { tokensFor } from '@/shared/theme';
+import { VisitRecorder } from '@/shared/track';
 
 void SplashScreen.preventAutoHideAsync();
 
@@ -33,6 +34,7 @@ export default function RootLayout() {
       <QueryProvider>
         <LeagueResults />
         <SyncRunner />
+        <VisitRecorder />
         <ThemeProvider value={scheme === 'dark' ? DarkTheme : DefaultTheme}>
           <Stack
             screenOptions={{ headerShown: false, contentStyle: { backgroundColor: t.canvas } }}>

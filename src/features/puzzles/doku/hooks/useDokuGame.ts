@@ -1,7 +1,7 @@
 import type { SaveStore } from '@noodle/core';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 
-import { announceFinish } from '@/shared/results';
+import { announceFinish, usePuzzleVisit } from '@/shared/results';
 import { appStorage, saves as appSaves, type CachedStorage } from '@/shared/storage';
 
 import type { PuzzleFile } from '../../types';
@@ -93,7 +93,12 @@ export function useDokuGame(file: PuzzleFile<DokuData>, deps: Deps = {}) {
     },
     [dispatch],
   );
-  const play = useCallback(() => setPhase('play'), []);
+  // Play on the start card is the page's start (a tap in its play area).
+  const start = usePuzzleVisit(file.path, 'doku', !!opened);
+  const play = useCallback(() => {
+    start();
+    setPhase('play');
+  }, [start]);
   const clock = timerText(opened ? opened.secs : secs);
 
   return { state, phase, info, clock, msg: message(state, clock), dispatch, feed, play };

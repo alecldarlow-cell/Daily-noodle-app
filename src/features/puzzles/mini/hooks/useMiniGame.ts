@@ -1,7 +1,7 @@
 import type { SaveStore } from '@noodle/core';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { announceFinish } from '@/shared/results';
+import { announceFinish, usePuzzleVisit } from '@/shared/results';
 import { appStorage, saves as appSaves, type CachedStorage } from '@/shared/storage';
 
 import type { PuzzleFile } from '../../types';
@@ -79,7 +79,12 @@ export function useMiniGame(file: PuzzleFile<MiniData>, deps: Deps = {}) {
   }, [info, phase]);
 
   const dispatch = useCallback((m: Move) => setState((s) => apply(s, m)), []);
-  const play = useCallback(() => setPhase('play'), []);
+  // Play on the start card is the page's start (a tap in its play area).
+  const start = usePuzzleVisit(file.path, 'mini', !!opened);
+  const play = useCallback(() => {
+    start();
+    setPhase('play');
+  }, [start]);
 
   return {
     state,

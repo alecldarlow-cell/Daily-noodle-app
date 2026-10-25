@@ -2,7 +2,7 @@ import type { SaveStore } from '@noodle/core';
 import { useCallback, useEffect, useState, useSyncExternalStore } from 'react';
 import { AccessibilityInfo } from 'react-native';
 
-import { announceFinish } from '@/shared/results';
+import { announceFinish, usePuzzleVisit } from '@/shared/results';
 import { appStorage, saves as appSaves, type CachedStorage } from '@/shared/storage';
 
 import type { PuzzleFile } from '../../types';
@@ -61,7 +61,13 @@ export function useLinkGame(file: PuzzleFile<LinkData>, deps: Deps = {}) {
   }, [game, running]);
 
   const dispatch = useCallback((m: ScreenMove) => game.dispatch(m), [game]);
-  const play = useCallback(() => game.play(), [game]);
+  // Play on the start card is the page's start; a finished Link reopened is not.
+  const [doneAtOpen] = useState(() => game.phase === 'finished');
+  const start = usePuzzleVisit(file.path, 'link', doneAtOpen);
+  const play = useCallback(() => {
+    start();
+    game.play();
+  }, [game, start]);
   return {
     state: game.state,
     phase: game.phase,
