@@ -2,7 +2,7 @@ import { createSaveStore } from '@noodle/core';
 
 import { createCachedStorage } from '@/shared/storage';
 
-import { applySave, parseMessage, seedFrom } from '../messages';
+import { applyId, applySave, parseMessage, seedFrom } from '../messages';
 
 function memoryStore(init: Record<string, unknown> = {}) {
   const backend = {
@@ -122,5 +122,39 @@ describe('GIVEN the app already holds saves', () => {
       });
       expect(Object.keys(seedFrom(store)).sort()).toEqual(['digi-doku-streak', 'digi-mini-v1']);
     });
+  });
+});
+
+describe('GIVEN the site tracker’s keys from a page', () => {
+  it('THEN only well-formed tracker messages are read', () => {
+    expect(parseMessage(JSON.stringify({ t: 'id', key: 'digi.aid', value: 'x' }))).toEqual({
+      t: 'id',
+      key: 'digi.aid',
+      value: 'x',
+    });
+    expect(parseMessage(JSON.stringify({ t: 'id', key: 'digi.optout', value: null }))).toEqual({
+      t: 'id',
+      key: 'digi.optout',
+      value: null,
+    });
+    expect(parseMessage(JSON.stringify({ t: 'id', key: 'digi.aid.prev', value: 'x' }))).toBeNull();
+    expect(parseMessage(JSON.stringify({ t: 'id', key: 'digi.aid', value: 3 }))).toBeNull();
+  });
+
+  it('THEN a code is taken, opting out clears the codes and blocks new ones, opting in clears the switch', () => {
+    const { store } = memoryStore();
+    applyId('digi.aid', 'A', store);
+    applyId('digi.sid', 'S', store);
+    expect(seedFrom(store)).toEqual({ 'digi.aid': 'A', 'digi.sid': 'S' });
+    applyId('digi.optout', '1', store);
+    expect(store.getItem('digi.aid')).toBe('');
+    applyId('digi.aid', 'B', store);
+    expect(store.getItem('digi.aid')).toBe('');
+    expect(seedFrom(store)).toEqual({ 'digi.optout': '1' });
+    applyId('digi.optout', null, store);
+    applyId('digi.aid', 'B', store);
+    expect(seedFrom(store)).toEqual({ 'digi.aid': 'B' });
+    applyId('noodle-board-v1', 'x', store);
+    expect(store.getItem('noodle-board-v1')).toBeNull();
   });
 });

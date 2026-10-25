@@ -2,6 +2,7 @@ import { londonDay, type TodayItem } from '@noodle/core';
 import { router } from 'expo-router';
 
 import { FinishSheet } from '@/shared/finish-sheet';
+import { usePuzzleVisit } from '@/shared/results';
 import { useLondonDay } from '@/shared/time';
 
 import type { PuzzleFile } from '../../types';
@@ -24,6 +25,8 @@ function openNext(item: TodayItem | null) {
 export function TangleScreen({ file }: { file: PuzzleFile<TangleData> }) {
   const { engine, setRects } = useTangleGame(file);
   const day = useLondonDay();
+  // The home card's Play is the page's #playCard: a start, unless today's round is done.
+  const start = usePuzzleVisit(file.path, 'tangle', engine.s.D.state === 'done');
   const view = engine.s.view;
 
   if (view === 'play')
@@ -52,5 +55,14 @@ export function TangleScreen({ file }: { file: PuzzleFile<TangleData> }) {
     );
   }
 
-  return <TangleHome card={homeCard(engine, day)} onPlay={() => engine.playCard()} onBack={back} />;
+  return (
+    <TangleHome
+      card={homeCard(engine, day)}
+      onPlay={() => {
+        start();
+        engine.playCard();
+      }}
+      onBack={back}
+    />
+  );
 }

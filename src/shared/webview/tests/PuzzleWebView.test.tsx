@@ -74,6 +74,7 @@ describe('GIVEN a puzzle opened through the bridge', () => {
       path: `reports/${FILE}.html`,
       type: 'mini',
       detail: { outcome: 'solved' },
+      source: 'page',
     });
     off();
   });

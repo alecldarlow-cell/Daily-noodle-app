@@ -18,6 +18,9 @@ function browser(initial: Record<string, string> = {}, puzzleId = 'DP·TANG·001
     setItem(k: string, v: string) {
       this.m.set(k, String(v));
     }
+    removeItem(k: string) {
+      this.m.delete(k);
+    }
   }
   const localStorage = new Storage();
   for (const [k, v] of Object.entries(initial)) localStorage.setItem(k, v);
@@ -118,6 +121,54 @@ describe('GIVEN a puzzle page about to load in the app', () => {
       vm.runInContext(buildInjection({}), b.ctx);
       b.localStorage.setItem(MINI, '{}');
       expect(b.posted).toHaveLength(1);
+    });
+  });
+
+  describe('WHEN the page and the app share the site tracker’s visitor code (one visitor, web or app)', () => {
+    const AID = '11111111-1111-4111-8111-111111111111';
+    it('THEN the app’s code, session and opt-out are written into the page; empty ones are not', () => {
+      const b = browser({ 'digi.aid': 'old-page-code' });
+      vm.runInContext(
+        buildInjection({ 'digi.aid': AID, 'digi.sid': 's1', 'digi.last': '5', 'digi.optout': '' }),
+        b.ctx,
+      );
+      expect(b.localStorage.getItem('digi.aid')).toBe(AID);
+      expect(b.localStorage.getItem('digi.sid')).toBe('s1');
+      expect(b.localStorage.getItem('digi.optout')).toBeNull();
+      expect(b.posted).toEqual([]);
+    });
+
+    it('THEN a code only the page had goes up to the app', () => {
+      const b = browser({ 'digi.aid': AID, 'digi.aid.prev': '[]' });
+      vm.runInContext(buildInjection({}), b.ctx);
+      expect(b.posted).toEqual([{ t: 'id', key: 'digi.aid', value: AID }]);
+    });
+
+    it('THEN opted out in the app, the page has no code either', () => {
+      const b = browser({
+        'digi.aid': AID,
+        'digi.sid': 's',
+        'digi.last': '1',
+        'digi.aid.prev': '[]',
+      });
+      vm.runInContext(buildInjection({ 'digi.optout': '1' }), b.ctx);
+      expect(b.localStorage.getItem('digi.optout')).toBe('1');
+      for (const k of ['digi.aid', 'digi.sid', 'digi.last', 'digi.aid.prev'])
+        expect(b.localStorage.getItem(k)).toBeNull();
+    });
+
+    it('THEN the page’s later writes and removals of tracker keys reach the app; other keys don’t', () => {
+      const b = browser();
+      vm.runInContext(buildInjection({}), b.ctx);
+      const ls = b.localStorage;
+      ls.setItem('digi.optout', '1');
+      ls.removeItem('digi.aid');
+      ls.setItem('digi.aid.prev', '[]');
+      ls.removeItem('something-else');
+      expect(b.posted).toEqual([
+        { t: 'id', key: 'digi.optout', value: '1' },
+        { t: 'id', key: 'digi.aid', value: null },
+      ]);
     });
   });
 });

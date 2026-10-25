@@ -1,23 +1,24 @@
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { ActivityIndicator, Linking, StyleSheet, View } from 'react-native';
-import { WebView } from 'react-native-webview';
+import { WebView, type WebViewMessageEvent } from 'react-native-webview';
 import type { ShouldStartLoadRequest } from 'react-native-webview/lib/WebViewTypes';
 
 import { SITE } from '@/shared/net';
+import { appStorage, type CachedStorage } from '@/shared/storage';
 import { useTokens } from '@/shared/theme';
 import { Note } from '@/shared/ui';
 
+import { buildInjection } from './injection';
+import { applyId, parseMessage, seedFrom } from './messages';
 import { decide } from './navigation';
 
 interface Props {
   /** The site page's path, e.g. "/privacy.html". */
   path: string;
   testID?: string;
+  store?: CachedStorage;
 }
-
-/** Tells the site's tracker the page is inside the app (inst 2), as puzzle pages do. */
-export const SITE_PAGE_INJECTION = 'window.__DN_APP = 2; true;';
 
 /** The live site page for `path`, tagged as opened from the app. */
 export function sitePageUrl(path: string): string {
@@ -25,16 +26,25 @@ export function sitePageUrl(path: string): string {
 }
 
 /**
- * Shows one of the site's own pages (the privacy page) inside the app. It runs in the
- * same web storage as the bridged puzzles, so a switch on the page (the privacy page's
- * "Don't record my visits") applies to the puzzle pages the app opens. Links follow the
+ * Shows one of the site's own pages (the privacy page) inside the app, with the puzzle
+ * pages' bridge: the page is told it's in the app (inst 2) and shares the tracker's
+ * visitor code and opt-out with the app, so the privacy page's "Don't record my visits"
+ * applies to the app's native puzzles and to the pages it opens. Links follow the
  * puzzle pages' rules: the site's lists go back, a puzzle opens in the app, anything
  * else opens in the phone's browser.
  */
-export function SitePageWebView({ path, testID = 'site-webview' }: Props) {
+export function SitePageWebView({ path, testID = 'site-webview', store = appStorage }: Props) {
   const t = useTokens();
   const [failed, setFailed] = useState(false);
   const [attempt, setAttempt] = useState(0);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const injected = useMemo(() => buildInjection(seedFrom(store)), [path, attempt, store]);
+
+  // Only the tracker keys are taken from this page; it writes no puzzle saves.
+  const onMessage = (e: WebViewMessageEvent): void => {
+    const m = parseMessage(e.nativeEvent.data);
+    if (m?.t === 'id') applyId(m.key, m.value, store);
+  };
 
   const onShouldStart = (req: ShouldStartLoadRequest): boolean => {
     if (req.isTopFrame === false) return true;
@@ -72,7 +82,8 @@ export function SitePageWebView({ path, testID = 'site-webview' }: Props) {
       testID={testID}
       style={[styles.fill, { backgroundColor: t.canvas }]}
       source={{ uri: sitePageUrl(path) }}
-      injectedJavaScriptBeforeContentLoaded={SITE_PAGE_INJECTION}
+      injectedJavaScriptBeforeContentLoaded={injected}
+      onMessage={onMessage}
       onShouldStartLoadWithRequest={onShouldStart}
       onError={() => setFailed(true)}
       onHttpError={(e) => {

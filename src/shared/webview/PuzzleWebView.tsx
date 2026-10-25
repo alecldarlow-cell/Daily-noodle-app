@@ -13,7 +13,7 @@ import { announceFinish } from '@/shared/results';
 import { Note } from '@/shared/ui';
 
 import { buildInjection } from './injection';
-import { applySave, parseMessage, seedFrom } from './messages';
+import { applyId, applySave, parseMessage, seedFrom } from './messages';
 import { decide, pageUrl, typeOfFile } from './navigation';
 
 interface Props {
@@ -43,9 +43,15 @@ export function PuzzleWebView({ file, onEnd, store = appStorage, saves = appSave
     const m = parseMessage(e.nativeEvent.data);
     if (!m) return;
     if (m.t === 'save') applySave(m.key, m.value, store, saves, m.id || undefined);
+    else if (m.t === 'id') applyId(m.key, m.value, store);
     else if (m.t === 'share') void Share.share({ message: m.text });
     else if (m.t === 'end') {
-      announceFinish({ path: `reports/${file}.html`, type: typeOfFile(file), detail: m.detail });
+      announceFinish({
+        path: `reports/${file}.html`,
+        type: typeOfFile(file),
+        detail: m.detail,
+        source: 'page',
+      });
       onEnd?.(m.detail, file);
     }
   };

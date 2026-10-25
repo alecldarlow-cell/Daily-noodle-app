@@ -2,7 +2,9 @@ import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import { router } from 'expo-router';
 import { Linking } from 'react-native';
 
-import { SITE_PAGE_INJECTION, SitePageWebView, sitePageUrl } from '../SitePageWebView';
+import { createCachedStorage } from '@/shared/storage';
+
+import { SitePageWebView, sitePageUrl } from '../SitePageWebView';
 
 // The native WebView, replaced by a stand-in that keeps its props for the test.
 let last: Record<string, any> = {};
@@ -28,8 +30,7 @@ describe('GIVEN the privacy page opened in the app', () => {
     await render(<SitePageWebView path="/privacy.html" />);
     expect(last.source).toEqual({ uri: 'https://dailynoodle.co.uk/privacy.html?via=app' });
     expect(sitePageUrl('/privacy.html')).toBe('https://dailynoodle.co.uk/privacy.html?via=app');
-    expect(last.injectedJavaScriptBeforeContentLoaded).toBe(SITE_PAGE_INJECTION);
-    expect(SITE_PAGE_INJECTION).toContain('window.__DN_APP = 2');
+    expect(last.injectedJavaScriptBeforeContentLoaded).toContain('window.__DN_APP = 2');
     expect(last.domStorageEnabled).toBe(true);
     expect(screen.getByTestId('site-webview')).toBeOnTheScreen();
   });
@@ -87,6 +88,33 @@ describe('GIVEN the privacy page opened in the app', () => {
       expect(screen.getByTestId('site-webview')).toBeOnTheScreen();
       await act(() => last.onHttpError({ nativeEvent: { statusCode: 404 } }));
       expect(screen.getByTestId('site-webview-offline')).toBeOnTheScreen();
+    });
+  });
+
+  describe('WHEN the player taps “Don’t record my visits” on the page', () => {
+    it('THEN the app stops recording too and forgets its visitor code; turning it back on clears the switch', async () => {
+      const backend = {
+        getAllKeys: async () => [],
+        multiGet: async () => [],
+        setItem: async () => {},
+      };
+      const store = createCachedStorage(backend);
+      store.setItem('digi.aid', '11111111-1111-4111-8111-111111111111');
+      await render(<SitePageWebView path="/privacy.html" store={store} />);
+      expect(last.injectedJavaScriptBeforeContentLoaded).toContain(
+        '11111111-1111-4111-8111-111111111111',
+      );
+      const send = (m: unknown) =>
+        act(() => last.onMessage({ nativeEvent: { data: JSON.stringify(m) } }));
+      await send({ t: 'id', key: 'digi.optout', value: '1' });
+      await send({ t: 'id', key: 'digi.aid', value: null });
+      expect(store.getItem('digi.optout')).toBe('1');
+      expect(store.getItem('digi.aid')).toBe('');
+      // a save message from this page is ignored: it writes none
+      await send({ t: 'save', key: 'digi-mini-v1', value: '{"v":1,"done":{}}', id: '' });
+      expect(store.getItem('digi-mini-v1')).toBeNull();
+      await send({ t: 'id', key: 'digi.optout', value: null });
+      expect(store.getItem('digi.optout')).toBe('');
     });
   });
 });

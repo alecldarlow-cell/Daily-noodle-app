@@ -69,21 +69,21 @@ Screenshots need a running build, so they wait for the first Android build.
 Data is encrypted in transit (HTTPS only). Nothing is sold, and nothing is shared with third parties,
 because Supabase acts as our processor and Play doesn't count processors as sharing.
 
-| Play data type                                                 | Collected?                                                                                                   | Why                                    | Optional?                                                                     |
-| -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ | -------------------------------------- | ----------------------------------------------------------------------------- |
-| App activity › App interactions                                | Yes, from puzzles the app opens as web pages (pages opened, puzzle start and finish, time, checks and hints) | Analytics                              | Yes: the "Don't record my visits" switch on the privacy page in the app       |
-| Device or other IDs                                            | Yes: a random visit code; a second random code if the player joins a league                                  | Analytics; app functionality (leagues) | The visit code, yes; the league code only exists if the player joins a league |
-| App activity › Other user-generated content                    | Yes, if the player joins a league: nickname and puzzle results, shown to that league                         | App functionality                      | Yes (leagues are optional)                                                    |
-| Personal info › Email address                                  | Yes, only when the player signs in to sync                                                                   | Account management                     | Yes (sign-in is optional)                                                     |
-| App info and performance                                       | No                                                                                                           |                                        |                                                                               |
-| Location, contacts, photos, files, messages, financial, health | No                                                                                                           |                                        |                                                                               |
+| Play data type                                                 | Collected?                                                                                   | Why                                    | Optional?                                                                     |
+| -------------------------------------------------------------- | -------------------------------------------------------------------------------------------- | -------------------------------------- | ----------------------------------------------------------------------------- |
+| App activity › App interactions                                | Yes, for every puzzle, native or web page (opened, start and finish, time, checks and hints) | Analytics                              | Yes: the "Don't record my visits" switch on the privacy page in the app       |
+| Device or other IDs                                            | Yes: a random visit code; a second random code if the player joins a league                  | Analytics; app functionality (leagues) | The visit code, yes; the league code only exists if the player joins a league |
+| App activity › Other user-generated content                    | Yes, if the player joins a league: nickname and puzzle results, shown to that league         | App functionality                      | Yes (leagues are optional)                                                    |
+| Personal info › Email address                                  | Yes, only when the player signs in to sync                                                   | Account management                     | Yes (sign-in is optional)                                                     |
+| App info and performance                                       | No                                                                                           |                                        |                                                                               |
+| Location, contacts, photos, files, messages, financial, health | No                                                                                           |                                        |                                                                               |
 
 **Deletion:** a signed-in player can delete their synced results in Account. For league records
 or anything else, the privacy page's contact address takes requests. Play asks for a web link where
 people can request account deletion; use https://dailynoodle.co.uk/privacy.html, which gives
 that contact.
 
-Check before submitting: the native puzzles (Mini now, more as they're ported) don't send visit
-records yet, so the "App interactions" row comes only from the puzzles still shown as web pages.
-If Alec wants native plays counted in the admin stats, that's a change to make first, and this row
-then applies to every puzzle.
+Every puzzle counts the same since 25 Oct 2026 (Alec's call): the app records native puzzles
+exactly as the website's pages (page view, start, finish), with one random visitor code shared by
+native puzzles and the pages the app opens. The privacy page's switch, opened from Account ›
+Privacy, stops it. So the "App interactions" row applies to every puzzle.
