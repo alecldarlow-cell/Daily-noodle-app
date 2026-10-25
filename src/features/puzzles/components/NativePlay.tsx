@@ -5,6 +5,9 @@ import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { usePuzzleTokens } from '@/shared/theme';
 
 import { usePuzzleData } from '../api/usePuzzleData';
+import { DokuScreen } from '../doku/components/DokuScreen';
+import { enabled as dokuEnabled } from '../doku';
+import { validate as validateDoku, type DokuData } from '../doku/model';
 import { enabled as linkEnabled } from '../link';
 import { LinkScreen } from '../link/components/LinkScreen';
 import { validate as validateLink, type LinkData } from '../link/model';
@@ -21,7 +24,8 @@ export function hasNativePlayer(type: unknown): boolean {
   return (
     (type === 'mini' && miniEnabled) ||
     (type === 'link' && linkEnabled) ||
-    (type === 'tangle' && tangleEnabled)
+    (type === 'tangle' && tangleEnabled) ||
+    (type === 'doku' && dokuEnabled)
   );
 }
 
@@ -73,6 +77,13 @@ export function NativePlay({ type, file, fallback }: NativePlayProps) {
       <>
         <Stack.Screen options={{ headerShown: false }} />
         <TangleScreen key={file} file={data as PuzzleFile<TangleData>} />
+      </>
+    );
+  if (type === 'doku' && data && data.type === 'doku' && validateDoku(data.data).ok)
+    return (
+      <>
+        <Stack.Screen options={{ headerShown: false }} />
+        <DokuScreen key={file} file={data as PuzzleFile<DokuData>} />
       </>
     );
   return fallback;
