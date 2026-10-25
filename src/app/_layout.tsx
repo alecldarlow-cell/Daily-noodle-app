@@ -41,6 +41,10 @@ export default function RootLayout() {
               name="play/[type]/[file]"
               options={{ headerShown: true, title: '', headerBackTitle: 'Back' }}
             />
+            <Stack.Screen
+              name="privacy"
+              options={{ headerShown: true, title: 'Privacy', headerBackTitle: 'Back' }}
+            />
           </Stack>
         </ThemeProvider>
       </QueryProvider>

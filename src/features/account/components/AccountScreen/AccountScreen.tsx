@@ -29,6 +29,15 @@ export function AccountScreen() {
           <Text style={[styles.btnText, { color: t.paper }]}>Bring my leagues here</Text>
         </Pressable>
       </View>
+      <Pressable
+        accessibilityRole="link"
+        testID="account-privacy"
+        onPress={() => router.navigate('/privacy')}
+        style={styles.link}>
+        <Text style={[styles.linkText, { color: t.accent }]}>
+          Privacy: what’s recorded, and how to stop it
+        </Text>
+      </Pressable>
       <Text style={[styles.build, { color: t.faint }]} testID="account-build" selectable>
         {buildLine()}
       </Text>
@@ -49,5 +58,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   btnText: { fontSize: 15, fontWeight: '700' },
-  build: { marginTop: 28, fontSize: 13 },
+  link: { marginTop: 24, alignSelf: 'flex-start', paddingVertical: 6 },
+  linkText: { fontSize: 15, fontWeight: '600', textDecorationLine: 'underline' },
+  build: { marginTop: 12, fontSize: 13 },
 });

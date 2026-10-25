@@ -1,0 +1,134 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      @font-face {
+        font-family: A;
+        font-weight: 700;
+        src: url(https://cdn.jsdelivr.net/npm/@fontsource/archivo@5.2.5/files/archivo-latin-700-normal.woff2);
+      }
+      @font-face {
+        font-family: A;
+        font-weight: 800;
+        src: url(https://cdn.jsdelivr.net/npm/@fontsource/archivo@5.2.5/files/archivo-latin-800-normal.woff2);
+      }
+      @font-face {
+        font-family: I;
+        font-weight: 500;
+        src: url(https://cdn.jsdelivr.net/npm/@fontsource/inter@5.2.5/files/inter-latin-500-normal.woff2);
+      }
+      @font-face {
+        font-family: I;
+        font-weight: 600;
+        src: url(https://cdn.jsdelivr.net/npm/@fontsource/inter@5.2.5/files/inter-latin-600-normal.woff2);
+      }
+      html,
+      body {
+        margin: 0;
+      }
+      body {
+        width: 1024px;
+        height: 500px;
+        background: #fcfcfb;
+        color: #15171c;
+        overflow: hidden;
+        position: relative;
+        font-family: I;
+      }
+      .l {
+        position: absolute;
+        left: 72px;
+        top: 96px;
+      }
+      .row {
+        display: flex;
+        align-items: center;
+        gap: 26px;
+      }
+      .row img {
+        width: 104px;
+        height: 104px;
+      }
+      .w {
+        font-family: A;
+        font-size: 64px;
+        letter-spacing: -0.025em;
+        font-weight: 700;
+      }
+      .w b {
+        font-weight: 800;
+        color: #0e7a4b;
+      }
+      .t {
+        margin-top: 30px;
+        font-size: 30px;
+        font-weight: 500;
+        color: #5f636b;
+        max-width: 520px;
+        line-height: 1.3;
+      }
+      .pills {
+        margin-top: 30px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        max-width: 560px;
+      }
+      .pills span {
+        font-weight: 600;
+        font-size: 20px;
+        padding: 8px 16px;
+        border-radius: 999px;
+        background: #e4f4eb;
+        color: #0e7a4b;
+      }
+      .g {
+        position: absolute;
+        right: 64px;
+        top: 110px;
+        display: grid;
+        grid-template-columns: repeat(5, 54px);
+        gap: 0;
+        border: 4px solid #15171c;
+        background: #15171c;
+        transform: rotate(4deg);
+      }
+      .g i {
+        width: 54px;
+        height: 54px;
+        background: #fff;
+        box-shadow: inset 0 0 0 1px #15171c;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font: 800 27px A;
+        font-style: normal;
+      }
+      .g i.k {
+        background: #15171c;
+      }
+      .g i.y {
+        background: #ffd54a;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="l">
+      <div class="row">
+        <img src="../assets/images/icon.png" />
+        <div class="w">Daily<b>Noodle</b></div>
+      </div>
+      <div class="t">Eight new puzzles every day. Play, share and compare with friends.</div>
+      <div class="pills">
+        <span>Mini</span><span>Doku</span><span>Sweep</span><span>Path</span><span>Link</span
+        ><span>Tangle</span><span>Borders</span><span>Reckon</span>
+      </div>
+    </div>
+    <div class="g">
+      <i>N</i><i>O</i><i>O</i><i>D</i><i class="k"></i> <i>A</i><i class="k"></i><i>D</i><i>A</i
+      ><i>Y</i> <i class="y">I</i><i>L</i><i>E</i><i class="k"></i><i>E</i> <i>L</i><i class="k"></i
+      ><i>A</i><i>R</i><i>T</i> <i class="k"></i><i>P</i><i>L</i><i>A</i><i>Y</i>
+    </div>
+  </body>
+</html>

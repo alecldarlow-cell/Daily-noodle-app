@@ -25,4 +25,14 @@ describe('GIVEN the Account tab', () => {
       });
     });
   });
+
+  describe('WHEN the player taps the privacy link', () => {
+    it('THEN the privacy page opens inside the app', async () => {
+      await render(<AccountScreen />);
+      await fireEvent.press(
+        screen.getByRole('link', { name: 'Privacy: what’s recorded, and how to stop it' }),
+      );
+      expect(router.navigate).toHaveBeenCalledWith('/privacy');
+    });
+  });
 });
