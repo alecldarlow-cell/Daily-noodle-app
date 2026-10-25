@@ -4,6 +4,7 @@ on:
   pull_request:
   push:
     branches: [main]
+  workflow_dispatch:
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -32,15 +33,47 @@ jobs:
       - name: Unit tests and coverage (80% lines)
         run: npm run test:coverage -- --ci
 
-  # Differential replay (WP8-WP11): each native player against the site's own engine,
-  # in headless Chromium from the public site repo's pinned dev dependencies: 50 Minis
-  # (four oracle variants each), 20 Links, 20 Tangles, 20 Dokus, 20 Sweeps (six) and
-  # 20 Paths (four), spread across the archive. Nothing leaves the runner: the site's harness answers every request and
-  # blocks Supabase. Every puzzle of every type is replayed nightly (replay-nightly.yml).
-  replay:
-    name: replay
+  # Differential replay (WP8-WP11): each native player against the site's own engine, in
+  # headless Chromium from the public site repo's pinned dev dependencies. Nothing leaves
+  # the runner: the site's harness answers every request and blocks Supabase.
+  # Only the types a pull request touches are replayed (scripts/replay-select.js: a type's
+  # own code → that type; shared code → all; docs, leagues, account → none), 20 puzzles
+  # each, every type on its own runner at the same time. A push to main replays nothing:
+  # its pull request already did. "Run workflow" replays every type. Every puzzle of a type
+  # is replayed in full before it's first switched on, and when the site changes its engine.
+  replay-plan:
+    name: replay plan
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 5
+    outputs:
+      types: ${{ steps.pick.outputs.types }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - id: pick
+        name: Types this change needs replayed
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            types=$(node scripts/replay-select.js --all)
+          elif [ "${{ github.event_name }}" = "pull_request" ]; then
+            types=$(git diff --name-only "origin/${{ github.base_ref }}...HEAD" | node scripts/replay-select.js)
+          else
+            types='[]'
+          fi
+          echo "types=$types" >> "$GITHUB_OUTPUT"
+          echo "Replaying: $types"
+
+  replay-type:
+    name: replay ${{ matrix.type }}
+    needs: replay-plan
+    if: needs.replay-plan.outputs.types != '[]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        type: ${{ fromJSON(needs.replay-plan.outputs.types) }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -53,20 +86,20 @@ jobs:
       - name: The site's Playwright and pinned Chromium
         working-directory: ../dailynoodle
         run: npm ci --ignore-scripts
-      - name: Replay 50 Minis, web engine against the native model
-        run: node scripts/replay.js --type mini --sample 50 --site ../dailynoodle --workers 4
-      - name: Replay 20 Links, web engine against the native model
-        if: success() || failure()
-        run: node scripts/replay.js --type link --sample 20 --site ../dailynoodle --workers 4
-      - name: Replay 20 Tangles, web engine against the native engine
-        if: success() || failure()
-        run: node scripts/replay.js --type tangle --sample 20 --site ../dailynoodle --workers 4
-      - name: Replay 20 Dokus, web engine against the native model
-        if: success() || failure()
-        run: node scripts/replay.js --type doku --sample 20 --site ../dailynoodle --workers 4
-      - name: Replay 20 Sweeps
-        if: success() || failure()
-        run: node scripts/replay.js --type sweep --sample 20 --site ../dailynoodle --workers 4
-      - name: Replay 20 Paths
-        if: success() || failure()
-        run: node scripts/replay.js --type path --sample 20 --site ../dailynoodle --workers 4
+      - name: Replay 20 ${{ matrix.type }} puzzles, web engine against the native player
+        run: node scripts/replay.js --type ${{ matrix.type }} --sample 20 --site ../dailynoodle --workers 4
+
+  # The one status a merge waits for, whatever ran above: green when every type that
+  # needed a replay matched the web (or none needed one).
+  replay:
+    name: replay
+    needs: [replay-plan, replay-type]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Every replay that ran matched the web
+        run: |
+          echo "plan: ${{ needs.replay-plan.result }}  types: ${{ needs.replay-plan.outputs.types }}  replays: ${{ needs.replay-type.result }}"
+          [ "${{ needs.replay-plan.result }}" = "success" ] || exit 1
+          case "${{ needs.replay-type.result }}" in success|skipped) ;; *) exit 1;; esac
