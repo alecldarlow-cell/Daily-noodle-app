@@ -120,21 +120,11 @@ module.exports = {
     ['finish note', w.note, n.note],
     ['finish kicker', w.kick, n.kick],
     ['Play again offered', w.again, n.again],
-    ...(n.round === 1
-      ? [
-          ['finish time', w.hero, n.hero],
-          ['finish title', w.title, n.title],
-          ['finish stats', w.stats, n.stats],
-        ]
-      : // Site defect (25 Oct 2026): after Play again, finish.js show() removes the first
-        // sheet with the #winTitle, #winTime, #winStreak and #winBest it adopted, so the
-        // replay round's sheet shows no title, time or streaks. The native sheet shows
-        // them: the time is checked in #msg on every move, the streaks here from the
-        // page's own #streak and #best, and the title must be the page's empty one.
-        [
-          ['replay-round sheet: the page drops its title and time', [w.title, w.hero], ['', '']],
-          ['replay-round streaks (#streak, #best) and played', [...w.bar, w.stats[2]], n.stats],
-        ]),
+    // Every round's sheet, Play again's too (site #31 fixed finish.js dropping the
+    // replay round's title, time and streaks on 25 Oct 2026).
+    ['finish time', w.hero, n.hero],
+    ['finish title', w.title, n.title],
+    ['finish stats', w.stats, n.stats],
   ],
   reopenPairs: (r, nr) => [
     ['reopened share line', r.share, nr.share],
