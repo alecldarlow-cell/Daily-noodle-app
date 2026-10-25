@@ -1,0 +1,101 @@
+# WP10: today's Reckon plays natively to the finish sheet, resumes after leaving, and
+# reopens on its sheet. Runs against an installed build (EAS, WP6):
+#   maestro test .maestro/reckon.yaml
+# Locks in wherever the marker is, so it works whatever the day's answers are.
+appId: ${APP_ID}
+---
+- launchApp:
+    clearState: true
+- assertVisible:
+    id: today-screen
+- tapOn:
+    id: today-reckon
+- extendedWaitUntil:
+    visible:
+      id: reckon-home
+    timeout: 15000
+- assertVisible: 'Today’s ten'
+- tapOn:
+    id: reckon-play-button
+- assertVisible:
+    id: reckon-play
+- assertVisible:
+    id: reckon-tip
+- assertVisible: '1/10'
+# drag along the scale, nudge, hold, lock in
+- swipe:
+    from:
+      id: reckon-slider
+    direction: LEFT
+    duration: 600
+- tapOn:
+    id: reckon-plus
+- longPressOn:
+    id: reckon-minus
+- tapOn: 'Lock in'
+- assertVisible:
+    id: reckon-feedback
+- assertVisible: 'Answer'
+- tapOn: 'Next'
+- assertVisible: '2/10'
+# Pause, Back to start, Resume: the round is kept
+- tapOn:
+    id: reckon-pause
+- assertVisible: 'Paused'
+- tapOn: 'Back to start'
+- assertVisible: 'Resume'
+- assertVisible: 'Question 2 of 10.*'
+- tapOn: 'Resume'
+- assertVisible: '2/10'
+# look back at the first, then return
+- tapOn:
+    id: reckon-prev
+- assertVisible: 'Back to question 2'
+- tapOn: 'Back to question 2'
+# leave the app and come back: still on question 2
+- stopApp
+- launchApp
+- tapOn:
+    id: today-reckon
+- extendedWaitUntil:
+    visible: 'Resume'
+    timeout: 10000
+- tapOn: 'Resume'
+- repeat:
+    times: 9
+    while:
+      notVisible:
+        id: finish-sheet
+    commands:
+      - tapOn:
+          id: reckon-act
+      - tapOn:
+          id: reckon-act
+- extendedWaitUntil:
+    visible:
+      id: finish-sheet
+    timeout: 5000
+- assertVisible: 'Reckoned'
+- assertVisible:
+    id: finish-share-text
+- assertVisible: 'dailynoodle.co.uk/reckon'
+- assertVisible: 'best score'
+# a recap row opens its question for review
+- scrollUntilVisible:
+    element:
+      id: reckon-row-0
+- tapOn:
+    id: reckon-row-0
+- assertVisible: 'Back to results'
+- tapOn: 'Back to results'
+- assertVisible: 'Reckoned'
+# Reopened: straight to the sheet
+- tapOn: '← Puzzles'
+- tapOn:
+    id: today-reckon
+- extendedWaitUntil:
+    visible:
+      id: finish-sheet
+    timeout: 10000
+- assertNotVisible:
+    id: reckon-home

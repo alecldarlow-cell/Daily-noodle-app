@@ -6,6 +6,8 @@ import { mockSite, renderWithProviders } from '@/shared/testing';
 
 import { PUZZLE_CACHE_PREFIX } from '../api/usePuzzleData';
 import { hasNativePlayer, NATIVE, NativePlay } from '../components/NativePlay';
+import { enabled as bordersEnabled } from '../borders';
+import { file15 } from '../borders/tests/fixtures';
 import { enabled as dokuEnabled } from '../doku';
 import { enabled as linkEnabled } from '../link';
 import { clone as cloneLink, file78 } from '../link/tests/fixtures';
@@ -15,9 +17,12 @@ import { enabled as pathOn } from '../path';
 import { file92 } from '../path/tests/fixtures';
 import { enabled as sweepOn } from '../sweep';
 import { file94 } from '../sweep/tests/fixtures';
+import { enabled as reckonEnabled } from '../reckon';
+import { file2 } from '../reckon/tests/fixtures';
 import { enabled as tangleEnabled } from '../tangle';
 import { clone as cloneTangle, file19 } from '../tangle/tests/fixtures';
 
+jest.mock('react-native-webview', () => ({ WebView: () => null }));
 jest.mock('expo-router', () => ({
   router: { back: jest.fn(), replace: jest.fn(), canGoBack: jest.fn(() => true) },
   Stack: { Screen: () => null },
@@ -43,6 +48,8 @@ describe('GIVEN the play route asks which types play natively', () => {
     expect(hasNativePlayer('doku')).toBe(dokuEnabled);
     expect(hasNativePlayer('sweep')).toBe(sweepOn);
     expect(hasNativePlayer('path')).toBe(pathOn);
+    expect(hasNativePlayer('reckon')).toBe(reckonEnabled);
+    expect(hasNativePlayer('borders')).toBe(bordersEnabled);
     expect(NATIVE).toEqual({
       mini: enabled,
       link: linkEnabled,
@@ -50,6 +57,8 @@ describe('GIVEN the play route asks which types play natively', () => {
       doku: dokuEnabled,
       sweep: sweepOn,
       path: pathOn,
+      reckon: reckonEnabled,
+      borders: bordersEnabled,
     });
     expect(hasNativePlayer('toString')).toBe(false);
     expect(hasNativePlayer(undefined)).toBe(false);
@@ -162,5 +171,36 @@ describe('GIVEN a Link or a Tangle opened natively', () => {
     screen.unmount();
     await renderWithProviders(<NativePlay type="tangle" file={TANGLE} fallback={bridge} />);
     await waitFor(() => expect(screen.getByText('bridge')).toBeOnTheScreen());
+  });
+});
+
+describe.each([
+  ['reckon', '2026-10-21-quiz-reckon-0002', file2, 'reckon-home'],
+  ['borders', '2026-10-19-geo-borders-0015', file15, 'borders-home'],
+] as const)('GIVEN a %s opened natively', (type, file, data, home) => {
+  describe('WHEN the site has its data file', () => {
+    it('THEN its own start screen shows', async () => {
+      mockSite({ [`reports/${file}.json`]: data });
+      await renderWithProviders(<NativePlay type={type} file={file} fallback={bridge} />);
+      await waitFor(() => expect(screen.getByTestId(home)).toBeOnTheScreen());
+    });
+  });
+
+  describe('WHEN its data fails the page’s own checks (a date that isn’t the page’s)', () => {
+    it('THEN it plays through the bridge', async () => {
+      const bad = clone(data);
+      bad.date = '2020-01-01';
+      mockSite({ [`reports/${file}.json`]: bad });
+      await renderWithProviders(<NativePlay type={type} file={file} fallback={bridge} />);
+      await waitFor(() => expect(screen.getByText('bridge')).toBeOnTheScreen());
+    });
+  });
+
+  describe('WHEN the file is another type’s', () => {
+    it('THEN it plays through the bridge', async () => {
+      mockSite({ [`reports/${file}.json`]: file105 });
+      await renderWithProviders(<NativePlay type={type} file={file} fallback={bridge} />);
+      await waitFor(() => expect(screen.getByText('bridge')).toBeOnTheScreen());
+    });
   });
 });

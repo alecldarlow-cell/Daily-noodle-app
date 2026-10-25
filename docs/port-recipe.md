@@ -98,3 +98,18 @@ and the replay is the proof.
 - Site defect seen on two types: after Play again, finish.js `show()` drops the
   adopted title, time and streak ids, so the replay round's sheet is bare. The native
   sheet shows them; the replay checks them where the page still has them.
+
+## Players with their own start screen and a frame-timed clock (WP10: Reckon, Borders)
+
+- Tangle, Borders and Reckon keep their own home screens (SITE.md › House chrome), so
+  `scripts/replay/<type>.js` sets `begin` (nothing to tap before the oracle's first
+  move, which is the page's own Play) instead of the house card's `#dnPlay`.
+- Their active-time clocks add up animation frames (`loop`, at most 0.25 s a frame,
+  not while paused or hidden). The replay's paused browser clock fires frames every
+  16 ms of `performance.now()`, which starts a few ms off the wall clock, so the type's
+  `probe` reads that offset once the page has opened and `simulate` plays the same
+  frames (`Session.advance`). The saved round's `secs` then match to the last bit.
+- An unfinished round in `cur` is proved by `reload` moves: the page saves on
+  pagehide and reopens from its save; the replay compares the saved document there.
+- Moves that need time (a held − / +, a Next within 450 ms of Lock in) carry it in
+  the move, and the model takes the clock from its `Host`.

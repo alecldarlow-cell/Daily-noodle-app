@@ -1,0 +1,75 @@
+# WP10: today's Borders plays natively to the finish sheet, resumes after leaving, and
+# reopens on its sheet. Runs against an installed build (EAS, WP6):
+#   maestro test .maestro/borders.yaml
+# Picks the first name every time, so it works whatever the day's countries are.
+appId: ${APP_ID}
+---
+- launchApp:
+    clearState: true
+- assertVisible:
+    id: today-screen
+- tapOn:
+    id: today-borders
+- extendedWaitUntil:
+    visible:
+      id: borders-home
+    timeout: 15000
+- assertVisible: 'Play'
+- tapOn:
+    id: borders-play-button
+- assertVisible:
+    id: borders-map
+- assertVisible: 'Which country is this?.*'
+- tapOn: 'Show on map (half points)'
+- tapOn:
+    id: borders-opt-0
+- assertVisible:
+    id: borders-plate
+- tapOn: 'Next'
+# Pause, Back to start, Resume: the round is kept
+- tapOn:
+    id: borders-pause
+- assertVisible: 'Paused'
+- tapOn: 'Back to start'
+- assertVisible: 'Question 2 of 10.*'
+- tapOn:
+    id: borders-play-button
+# leave the app and come back: still on question 2
+- stopApp
+- launchApp
+- tapOn:
+    id: today-borders
+- extendedWaitUntil:
+    visible: 'Resume'
+    timeout: 10000
+- tapOn:
+    id: borders-play-button
+- repeat:
+    times: 9
+    while:
+      notVisible:
+        id: finish-sheet
+    commands:
+      - tapOn:
+          id: borders-opt-0
+      - tapOn:
+          id: borders-next
+- extendedWaitUntil:
+    visible:
+      id: finish-sheet
+    timeout: 5000
+- assertVisible: 'Spotted'
+- assertVisible: '.* of 10'
+- assertVisible:
+    id: finish-share-text
+- assertVisible: 'dailynoodle.co.uk/borders'
+# Reopened: straight to the sheet
+- tapOn: '← Puzzles'
+- tapOn:
+    id: today-borders
+- extendedWaitUntil:
+    visible:
+      id: finish-sheet
+    timeout: 10000
+- assertNotVisible:
+    id: borders-home
