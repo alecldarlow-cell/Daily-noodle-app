@@ -15,7 +15,10 @@ describe('GIVEN the oracle', () => {
     it('THEN its moves complete the thread, the same way every time', () => {
       const steps = moves(path92, variant);
       expect(steps).toEqual(moves(path92, variant));
-      expect(steps.reduce((s, x) => apply(s, x.move), init(path92)).solved).toBe(true);
+      const states = steps.reduce((a, x) => [...a, apply(a.at(-1)!, x.move)], [init(path92)]);
+      expect(states.at(-1)!.solved).toBe(true);
+      // nothing is pressed once the sheet covers the board
+      expect(states.slice(0, -1).some((s) => s.solved)).toBe(false);
       expect(steps.at(-1)!.ms).toBe(3000);
     });
   });

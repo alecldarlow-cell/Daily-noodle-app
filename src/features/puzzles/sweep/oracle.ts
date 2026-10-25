@@ -82,6 +82,8 @@ class Player {
     return Math.round(lo + this.rand() * (hi - lo));
   }
   do(move: Move, ms = this.gap(300, 1500)) {
+    // Once a round ends the sheet covers the board: only its Play again is pressed.
+    if (this.state.over && !(move.t === 'again' && !this.state.won)) return;
     this.state = apply(this.state, move, { ranked: false });
     this.steps.push({ move, ms });
   }

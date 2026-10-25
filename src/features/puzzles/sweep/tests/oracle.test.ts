@@ -19,11 +19,15 @@ describe('GIVEN the oracle', () => {
     it('THEN its moves sweep the board, the same way every time', () => {
       const steps = moves(sweep94, variant);
       expect(steps).toEqual(moves(sweep94, variant));
-      const end = steps.reduce(
-        (s, x) => apply(s, x.move, { ranked: false }),
-        init(sweep94, { ranked: true }),
+      const states = steps.reduce(
+        (a, x) => [...a, apply(a.at(-1)!, x.move, { ranked: false })],
+        [init(sweep94, { ranked: true })],
       );
-      expect(end.won).toBe(true);
+      expect(states.at(-1)!.won).toBe(true);
+      // after a round ends only the sheet's Play again is pressed
+      steps.forEach((x, k) => {
+        if (states[k]!.over) expect(x.move.t).toBe('again');
+      });
       expect(steps.at(-1)!.ms).toBe(4000);
     });
   });
