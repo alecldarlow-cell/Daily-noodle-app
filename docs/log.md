@@ -341,3 +341,7 @@ below when it finishes.
 - **Not yet**: sign-in stays off (Alec's call; switching it on means site `dn-sync.js` ON = true with SYNC-WEB-01
   updated, then `EXPO_PUBLIC_SYNC=1`). Left for Alec: airplane-mode check and "Bring my leagues here" with his
   personal link; deleting the 43 already-merged branches.
+- **Leagues broken by a hand-published update, then fixed**: `eas update` doesn't read eas.json's build env, so
+  the first chip-fix update shipped without `EXPO_PUBLIC_SUPABASE_*` ("Leagues aren't available in this build").
+  Republished with the preview profile's env; Alec then added his league. Release now evals
+  `scripts/eas-profile-env.js preview` before `eas update` (tested). Publish updates by hand the same way.
