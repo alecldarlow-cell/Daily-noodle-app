@@ -345,3 +345,16 @@ below when it finishes.
   the first chip-fix update shipped without `EXPO_PUBLIC_SUPABASE_*` ("Leagues aren't available in this build").
   Republished with the preview profile's env; Alec then added his league. Release now evals
   `scripts/eas-profile-env.js preview` before `eas update` (tested). Publish updates by hand the same way.
+
+### 25 Oct 2026 — build settings on phones; sign-in on
+
+- **Release builds never saw the Supabase settings in two places**: `shared/track/app.ts` (visit recording) and
+  `authClient.syncEnabled` read `process.env` through a default parameter, and Expo only fills in
+  `process.env.EXPO_PUBLIC_NAME` written out in full (a release build's `process.env` is just NODE_ENV). So app
+  plays were never recorded from phones (since #19) and sign-in could not be switched on. Found by exporting a
+  bundle with `--no-bytecode`; `shared/env` BUILD_ENV fixes both, and a test refuses any other `process.env` use.
+- **Sign-in on** (Alec's call, after seeing the website card on his phone): site
+  [#34](https://github.com/alecldarlow-cell/dailynoodle/pull/34) (`ON = true`, SYNC-WEB-01 now tests the
+  published card, with his approval) first, then `EXPO_PUBLIC_SYNC=1` in eas.json here.
+- **Left for Alec**: try sign-in once both are live (Account › email link on the phone; then board.html on the
+  laptop) and check results appear on both.

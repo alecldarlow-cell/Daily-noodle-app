@@ -8,7 +8,8 @@
       "node": "22.23.4",
       "env": {
         "EXPO_PUBLIC_SUPABASE_URL": "https://gnehttjheoyutrfsvslq.supabase.co",
-        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_dEMntRNiElpGHn3Hd5Ef1Q_HvLa2wTB"
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_dEMntRNiElpGHn3Hd5Ef1Q_HvLa2wTB",
+        "EXPO_PUBLIC_SYNC": "1"
       }
     },
     "development": {

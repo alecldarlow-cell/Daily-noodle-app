@@ -6,9 +6,13 @@
  */
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
+import { BUILD_ENV } from '@/shared/env';
+
 import { chunkedStorage } from './sessionStorage';
 
-export function syncEnabled(env: Record<string, string | undefined> = process.env): boolean {
+export function syncEnabled(
+  env: Readonly<Record<string, string | undefined>> = BUILD_ENV,
+): boolean {
   return (
     env.EXPO_PUBLIC_SYNC === '1' &&
     !!env.EXPO_PUBLIC_SUPABASE_URL &&

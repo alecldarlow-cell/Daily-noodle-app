@@ -1,5 +1,6 @@
 import { uuid } from 'expo';
 
+import { BUILD_ENV } from '@/shared/env';
 import { appStorage } from '@/shared/storage';
 
 import { createRecorder } from './recorder';
@@ -11,7 +12,7 @@ import { createTracker, type TrackEvent } from './tracker';
  * the build has no Supabase settings.
  */
 export function logEventsSender(
-  env: Record<string, string | undefined> = process.env,
+  env: Readonly<Record<string, string | undefined>> = BUILD_ENV,
   dev: boolean = __DEV__,
   post: typeof fetch = fetch,
 ): (batch: TrackEvent[]) => Promise<unknown> {

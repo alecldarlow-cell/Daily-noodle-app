@@ -82,21 +82,33 @@ export function SyncCard({
 
   return (
     <View
-      style={[styles.card, { backgroundColor: t.paper, borderColor: t.hair }]}
+      style={[
+        styles.card,
+        {
+          backgroundColor: t.paper,
+          borderColor: account.kind === 'signed-in' ? t.hair : t.accent,
+        },
+      ]}
       testID="sync-card">
       <Text accessibilityRole="header" style={[styles.h2, { color: t.ink }]}>
-        Keep your streaks on every phone
+        {account.kind === 'signed-in' ? 'Your account' : 'Create a free account'}
       </Text>
       {account.kind === 'loading' ? <ActivityIndicator color={t.muted} /> : null}
 
       {account.kind === 'signed-out' && !sentTo ? (
         <>
           <Text style={[styles.p, { color: t.muted }]}>
-            Optional. Sign in with your email and your results and streaks follow you to another
-            phone or the website. We’ll email you a link; no password.
+            Keep your results and streaks on every phone, browser and the website. Optional and
+            free. Already have an account? Use the same email to sign in. No password: we email you
+            a link.
+          </Text>
+          <Text style={[styles.label, { color: t.ink }]} nativeID="sync-email-label">
+            Your email
           </Text>
           <TextInput
             testID="sync-email"
+            accessibilityLabel="Your email"
+            accessibilityLabelledBy="sync-email-label"
             value={email}
             onChangeText={setEmail}
             placeholder="you@example.com"
@@ -105,7 +117,10 @@ export function SyncCard({
             autoComplete="email"
             keyboardType="email-address"
             inputMode="email"
-            style={[styles.input, { color: t.ink, borderColor: t.hair, backgroundColor: t.canvas }]}
+            style={[
+              styles.input,
+              { color: t.ink, borderColor: t.muted, backgroundColor: t.canvas },
+            ]}
           />
           <Button
             label="Email me a sign-in link"
@@ -215,9 +230,10 @@ const styles = StyleSheet.create({
   card: { marginTop: 18, padding: 16, borderWidth: 1, borderRadius: 12, gap: 10 },
   h2: { fontSize: 19, fontWeight: '800' },
   p: { fontSize: 15, lineHeight: 22 },
+  label: { fontSize: 14, fontWeight: '600', marginBottom: -4 },
   small: { fontSize: 13 },
   input: {
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 10,
