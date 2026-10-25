@@ -1,0 +1,54 @@
+# WP11: today's Doku plays natively to the finish sheet, and reopens on it.
+# Runs against an installed build (EAS, WP6): maestro test .maestro/doku.yaml
+# Reads today's answer from the site's own files (scripts/doku-today.js), then taps each
+# open square and types its letter on the phone's keyboard, as the page lets you.
+appId: ${APP_ID}
+---
+- launchApp:
+    clearState: true
+- assertVisible:
+    id: today-screen
+- runScript: scripts/doku-today.js
+- tapOn:
+    id: today-doku
+- extendedWaitUntil:
+    visible:
+      id: start-card
+    timeout: 15000
+- assertVisible: 'Today’s Doku'
+- tapOn: 'Play'
+- assertVisible:
+    id: doku-board
+- assertVisible:
+    id: doku-bank
+- assertVisible: 'Hints: on'
+- assertVisible: '00:00'
+- repeat:
+    while:
+      true: ${output.i < output.n}
+    commands:
+      - tapOn:
+          id: ${output.cells[output.i]}
+      - inputText: ${output.letters[output.i]}
+      - evalScript: ${output.i = output.i + 1}
+- extendedWaitUntil:
+    visible:
+      id: finish-sheet
+    timeout: 5000
+- assertVisible: 'Solved'
+- assertVisible:
+    id: finish-share-text
+- assertVisible: 'dailynoodle.co.uk/doku'
+- assertVisible: 'Dokus played'
+# Reopened: straight to the sheet, no start card
+- tapOn: '← Puzzles'
+- assertVisible:
+    id: today-screen
+- tapOn:
+    id: today-doku
+- extendedWaitUntil:
+    visible:
+      id: finish-sheet
+    timeout: 10000
+- assertNotVisible:
+    id: start-card

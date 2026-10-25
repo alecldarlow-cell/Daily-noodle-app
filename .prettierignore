@@ -5,3 +5,4 @@ dist
 package-lock.json
 packages/*/vendor
 assets
+src/features/puzzles/doku/engine-words.json

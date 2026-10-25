@@ -69,3 +69,28 @@ jobs:
         run: npm ci --ignore-scripts
       - name: Replay every Tangle (part ${{ matrix.part }})
         run: node scripts/replay.js --type tangle --all --shard ${{ matrix.part }} --site ../dailynoodle --workers 6
+
+  doku:
+    name: replay doku --all
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    strategy:
+      fail-fast: false
+      matrix:
+        part: [1/2, 2/2]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Clone the site
+        run: git clone --depth 1 https://github.com/alecldarlow-cell/dailynoodle ../dailynoodle
+      - name: The site's Playwright and pinned Chromium
+        working-directory: ../dailynoodle
+        run: npm ci --ignore-scripts
+      - name: The vendored Doku word list still matches the engine
+        run: node scripts/vendor-doku-words.js --site ../dailynoodle --check
+      - name: Replay every Doku (part ${{ matrix.part }})
+        run: node scripts/replay.js --type doku --all --shard ${{ matrix.part }} --site ../dailynoodle --workers 6

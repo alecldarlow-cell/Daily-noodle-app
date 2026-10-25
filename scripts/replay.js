@@ -4,10 +4,11 @@
  *
  *   node scripts/replay.js --type mini --sample 50 --site ../dailynoodle
  *   node scripts/replay.js --type mini --all --site ../dailynoodle [--workers 2] [--only 0105]
- *   node scripts/replay.js --type link|tangle … [--shard 1/2] [--variants a,b]
+ *   node scripts/replay.js --type link|tangle|doku … [--shard 1/2] [--variants a,b]
  *
- * Link and Tangle have their own scripts (replay-link.js, replay-tangle.js, on the
- * shared replay-lib.js), which this one hands over to. What follows is the Mini's.
+ * Link, Tangle and Doku have their own scripts (replay-link.js, replay-tangle.js on the
+ * shared replay-lib.js; replay-doku.js with its own options), which this one hands
+ * over to. What follows is the Mini's.
  *
  * For every Mini page in the site clone's reports/ that carries window.DN_PUZZLE
  * (read with the site's tools/puzzle-json.js), and every oracle variant
@@ -54,10 +55,11 @@ const VARS = (opt('variants', '') || VARIANTS.join(',')).split(',');
 const VERBOSE = flag('verbose');
 
 /** Types whose replay lives in its own script (scripts/replay-<type>.js, on replay-lib.js). */
-const OWN = { link: './replay-link', tangle: './replay-tangle' };
-if (OWN[TYPE])
-  require(OWN[TYPE])
-    .main(require('./replay-lib').options(process.argv))
+const OWN = { link: './replay-link', tangle: './replay-tangle', doku: './replay-doku' };
+const own = OWN[TYPE] ? require(OWN[TYPE]) : null;
+if (own)
+  own
+    .main((own.options || require('./replay-lib').options)(process.argv))
     .then((code) => process.exit(code))
     .catch((e) => {
       console.error(e);

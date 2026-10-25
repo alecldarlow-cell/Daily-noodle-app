@@ -6,6 +6,8 @@ import { mockSite, renderWithProviders } from '@/shared/testing';
 
 import { PUZZLE_CACHE_PREFIX } from '../api/usePuzzleData';
 import { hasNativePlayer, NativePlay } from '../components/NativePlay';
+import { enabled as dokuEnabled } from '../doku';
+import { file97 } from '../doku/tests/fixtures';
 import { enabled as linkEnabled } from '../link';
 import { clone as cloneLink, file78 } from '../link/tests/fixtures';
 import { enabled } from '../mini';
@@ -35,7 +37,8 @@ describe('GIVEN the play route asks which types play natively', () => {
     expect(hasNativePlayer('mini')).toBe(enabled);
     expect(hasNativePlayer('link')).toBe(linkEnabled);
     expect(hasNativePlayer('tangle')).toBe(tangleEnabled);
-    expect(hasNativePlayer('doku')).toBe(false);
+    expect(hasNativePlayer('doku')).toBe(dokuEnabled);
+    expect(hasNativePlayer('sweep')).toBe(false);
     expect(hasNativePlayer(undefined)).toBe(false);
   });
 });
@@ -117,5 +120,28 @@ describe('GIVEN a Link or a Tangle opened natively', () => {
     screen.unmount();
     await renderWithProviders(<NativePlay type="tangle" file={TANGLE} fallback={bridge} />);
     await waitFor(() => expect(screen.getByText('bridge')).toBeOnTheScreen());
+  });
+});
+
+const DOKU = '2026-10-18-logic-doku-0097';
+
+describe('GIVEN a Doku opened natively', () => {
+  describe('WHEN the site has its data file', () => {
+    it('THEN it plays natively', async () => {
+      mockSite({ [`reports/${DOKU}.json`]: file97 });
+      await renderWithProviders(<NativePlay type="doku" file={DOKU} fallback={bridge} />);
+      await waitFor(() => expect(screen.getByTestId('start-card')).toBeOnTheScreen());
+      expect(screen.getByText('Today’s Doku')).toBeOnTheScreen();
+    });
+  });
+
+  describe('WHEN the data fails the page’s ship gate', () => {
+    it('THEN it plays through the bridge', async () => {
+      const bad = clone(file97);
+      bad.data.bank[0] = 'Z';
+      mockSite({ [`reports/${DOKU}.json`]: bad });
+      await renderWithProviders(<NativePlay type="doku" file={DOKU} fallback={bridge} />);
+      await waitFor(() => expect(screen.getByText('bridge')).toBeOnTheScreen());
+    });
   });
 });

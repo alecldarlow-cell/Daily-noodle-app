@@ -1,2 +1,3 @@
 export { NativePlay, hasNativePlayer } from './components/NativePlay';
 export { enabled as miniEnabled } from './mini';
+export { enabled as dokuEnabled } from './doku';
