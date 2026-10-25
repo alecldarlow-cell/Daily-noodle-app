@@ -5,14 +5,14 @@ import { buildLine } from '@/shared/build';
 import { useTokens } from '@/shared/theme';
 import { Screen } from '@/shared/ui';
 
+import { SyncCard } from '../SyncCard/SyncCard';
+
 /** Account: sign-in arrives with WP7. For now, the way in for someone who already plays. */
 export function AccountScreen() {
   const t = useTokens();
   return (
     <Screen title="Account" testID="account-screen">
-      <Text style={[styles.body, { color: t.muted }]}>
-        Sign in to keep your streaks on every phone. Optional.
-      </Text>
+      <SyncCard />
       <View style={[styles.card, { backgroundColor: t.paper, borderColor: t.hair }]}>
         <Text accessibilityRole="header" style={[styles.h2, { color: t.ink }]}>
           Already a player?
