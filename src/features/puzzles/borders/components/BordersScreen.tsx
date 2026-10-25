@@ -28,7 +28,6 @@ function openNext(item: TodayItem | null) {
 function Recap({ info, c }: { info: FinishInfo; c: BordersColors }) {
   return (
     <View>
-      <Text style={[styles.sub, { color: c.ink2 }]}>Easiest first</Text>
       <Picture
         html={tilesHtml(info.tiles, c)}
         style={styles.tiles}
@@ -71,7 +70,7 @@ export function BordersScreen({
           { value: info.streak, label: 'day streak' },
           { value: info.best, label: 'best score' },
         ]}
-        recap={{ title: 'Today’s ten', node: <Recap info={info} c={c} /> }}
+        recap={{ title: 'Today’s ten', sub: 'Easiest first', node: <Recap info={info} c={c} /> }}
         onBack={back}
         onNext={openNext}
       />
@@ -89,7 +88,6 @@ export function BordersScreen({
 }
 
 const styles = StyleSheet.create({
-  sub: { fontSize: 14, marginBottom: 8 },
   tiles: { aspectRatio: 5 / 2.6 },
   link: { minHeight: 44, justifyContent: 'center', marginTop: 8 },
   linkText: { fontSize: 15, fontWeight: '600', textDecorationLine: 'underline' },

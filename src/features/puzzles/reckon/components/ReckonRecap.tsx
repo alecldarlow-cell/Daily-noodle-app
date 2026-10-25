@@ -17,7 +17,6 @@ export function ReckonRecap({
 }) {
   return (
     <View style={styles.wrap}>
-      <Text style={[styles.sub, { color: c.ink2 }]}>Tap one to see it on the scale.</Text>
       {info.rows.map((r, k) => (
         <Pressable
           key={r.q}
@@ -44,7 +43,6 @@ export function ReckonRecap({
 
 const styles = StyleSheet.create({
   wrap: { gap: 0 },
-  sub: { fontSize: 14, marginBottom: 6 },
   row: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -47,6 +47,7 @@ export function ReckonScreen({
         ]}
         recap={{
           title: 'Today’s ten',
+          sub: 'Tap one to see it on the scale.',
           node: <ReckonRecap info={info} c={c} onRow={(k) => dispatch({ t: 'recap', k })} />,
         }}
         onBack={back}
