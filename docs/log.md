@@ -18,7 +18,7 @@ below when it finishes.
 | 4   | WebView bridge: play, finish, share, saves                    | done ([#5](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/5))   |
 | 5   | Leagues: board, join, submit, first-run handoff               | done ([#8](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/8))   |
 | 6   | EAS builds, TestFlight and Play internal track                | config ready; needs Alec’s accounts (docs/install.md)                      |
-| 7   | Optional sign-in and sync, web and app                        | not started                                                                |
+| 7   | Optional sign-in and sync, web and app                        | app and database done; sign-in waits for Resend + redirect URL             |
 | 8   | Port recipe, shared start card and finish sheet, Mini native  | done ([#7](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/7))   |
 | 9   | Sweep and Path native                                         | in progress (parallel lane)                                                |
 | 10  | Link, Tangle, Reckon, Borders native                          | Link, Tangle in progress (parallel lane); Reckon, Borders next             |
@@ -214,3 +214,30 @@ below when it finishes.
 - `docs/install.md`: Alec's one-off steps (Expo, Apple, Play accounts; `eas init`; `EXPO_TOKEN`; first iOS build
   by hand for certificates; testers). Config validated with `expo config`; both bundles build.
 - Open: Maestro in CI once builds exist (EAS Workflows step vs nightly macOS job).
+
+### 25 Oct 2026 — WP7
+
+- **Database** (site [#23](https://github.com/alecldarlow-cell/dailynoodle/pull/23), docs
+  [#24](https://github.com/alecldarlow-cell/dailynoodle/pull/24)): `toolchain/sql/2026-10-25-sync.sql`, a private
+  `sync` schema storing a signed-in player's save documents verbatim, reached only through `sync_pull` /
+  `sync_push` / `sync_forget`, callable only by the signed-in user on their own rows; puzzle keys and
+  `noodle-board-v1` only; 256 KB per document. PGlite tests SYNC-01..04. **Applied to the live project** with
+  Alec's go-ahead after a rolled-back dry run; advisors show only the expected notices.
+- **Design change from the plan:** no `user_id` on `board.players` and no `board_claim` variant. The league
+  identity syncs as the `noodle-board-v1` document, and pulling runs the personal-link import (`importMove`), so
+  a phone in no league becomes the account's player, and a phone playing as someone else asks ("Which leagues
+  should this app use?") instead of switching. The board schema is untouched.
+- **App** (`features/account`): sign-in by email link (`signInWithOtp`, back to `dailynoodle://auth`, the
+  `/auth` route sets the session); session in the secure store, chunked under 2 KB per item
+  (`expo-secure-store` 58.0.2); its own Supabase client, separate from the anonymous leagues client. Sync is
+  always pull → merge → push (`runSync`), so two phones never overwrite each other; it runs on opening the app,
+  on returning to it, on signing in, and 3 s after every finish (`SyncRunner`, mounted at the root). Account
+  card: email form (Yup), "Check your email", signed in as …, last synced, Sync now, Sign out, Delete my synced
+  copy (asks first; keeps this phone's saves). Off unless the build sets `EXPO_PUBLIC_SYNC=1`.
+- 317 tests, 97.8% lines.
+- **Before turning it on** (Alec): Resend account, verify dailynoodle.co.uk with its DNS records in Cloudflare,
+  Supabase Auth › SMTP (smtp.resend.com, 465, user `resend`, the API key, sender e.g.
+  `noreply@dailynoodle.co.uk`), and `dailynoodle://auth` in Auth › URL Configuration › Redirect URLs. Then set
+  `EXPO_PUBLIC_SYNC=1` in `eas.json`. Supabase only emails its own organisation's members without a custom sender.
+- Not yet: website sign-in (the site's half of WP7). It can follow once email works, reusing the same functions
+  and the site's dn-track import.
