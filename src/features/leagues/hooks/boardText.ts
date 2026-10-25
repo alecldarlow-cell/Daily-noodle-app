@@ -111,3 +111,26 @@ export function shareAll(
   lines.push(`${league.name} leaderboard:`);
   return `${lines.join('\n')}\n${inviteLink(league.code)}&p=all&d=${date}`;
 }
+
+/**
+ * The finish sheet's line about a result once it's on the board (dn-board.js showMoment):
+ * a league record ("New" on the puzzle's own London day), else a personal best, else none.
+ */
+export function momentLine(
+  m: { pb?: boolean; records?: readonly { name: string }[] | null } | null | undefined,
+  typeName: string,
+  fresh: boolean,
+): { text: string; record: boolean } | null {
+  if (!m) return null;
+  if (m.records && m.records.length)
+    return {
+      text: `🏆 ${fresh ? 'New league record' : 'League record'} in ${m.records.map((l) => l.name).join(', ')}!`,
+      record: true,
+    };
+  if (m.pb)
+    return {
+      text: `⭐ ${fresh ? 'New personal best' : 'Your personal best'} at ${typeName}!`,
+      record: false,
+    };
+  return null;
+}

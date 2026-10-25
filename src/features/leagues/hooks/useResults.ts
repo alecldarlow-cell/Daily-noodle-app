@@ -20,6 +20,7 @@ import { appStorage } from '@/shared/storage';
 
 import { boardBackfill, boardSubmit } from '../api/board';
 import { getPid, loadBoard, saveBoard } from './boardStore';
+import { recordSubmission } from './submissions';
 import { BOARD_QUERY } from './useLeagues';
 
 /** board_submit's arguments for a finish, or null when nothing is sent. */
@@ -37,14 +38,15 @@ export function useSubmitFinishes(): void {
     // As the site: a result that can't be sent is let go (the history copy sends it later).
     onError: () => {},
   });
-  const { mutate } = submit;
+  const { mutateAsync } = submit;
   useEffect(
     () =>
       onFinish((f) => {
         const args = submitFor(f);
-        if (args) mutate(args);
+        // Kept per path, so the finish sheet's board slot waits for it (dn-board.js `submitted`).
+        if (args) recordSubmission(args.p_path, mutateAsync(args));
       }),
-    [mutate],
+    [mutateAsync],
   );
 }
 

@@ -8,6 +8,8 @@ export type NavDecision =
   | { kind: 'back' }
   /** Another puzzle (the finish sheet's Next row): open it in the app. */
   | { kind: 'play'; type: PuzzleType; file: string }
+  /** The board ("See today's board"): the Leagues tab, on board.html's puzzle and day. */
+  | { kind: 'leagues'; params: { p?: string; d?: string; join?: string } }
   /** Anything else: the phone's browser. */
   | { kind: 'external' };
 
@@ -49,7 +51,17 @@ export function decide(url: string, current: string): NavDecision {
   }
   if (p === '/' || p === '/index.html' || p === '/puzzles.html') return { kind: 'back' };
   if (p === '/how-to-play.html' || p === '/privacy.html') return { kind: 'allow' };
-  if (p.endsWith('.html') || p === '/board.html') return { kind: 'external' };
+  if (p === '/board.html') {
+    // A personal link (#dnmove=) is for a browser to import; it stays in the browser.
+    if (/dnmove=/.test(u.hash)) return { kind: 'external' };
+    const params: { p?: string; d?: string; join?: string } = {};
+    for (const k of ['p', 'd', 'join'] as const) {
+      const v = u.searchParams.get(k);
+      if (v) params[k] = v;
+    }
+    return { kind: 'leagues', params };
+  }
+  if (p.endsWith('.html')) return { kind: 'external' };
   return { kind: 'allow' };
 }
 

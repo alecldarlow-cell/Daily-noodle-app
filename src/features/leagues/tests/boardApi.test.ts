@@ -60,3 +60,11 @@ describe('GIVEN the typed board calls', () => {
     ]);
   });
 });
+
+describe('GIVEN board_moment', () => {
+  it('THEN it sends the SQL function’s exact argument names', async () => {
+    call.mockClear();
+    await api.boardMoment(P, 'reports/x.html');
+    expect(call.mock.calls).toEqual([['board_moment', { p_player: P, p_path: 'reports/x.html' }]]);
+  });
+});

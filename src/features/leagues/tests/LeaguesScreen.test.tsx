@@ -645,3 +645,89 @@ describe('GIVEN shortcuts into Leagues', () => {
     expect(m.boardClaim).toHaveBeenCalledWith('ABCD2345', 'Zed', '');
   });
 });
+
+describe('GIVEN Leagues opened on a puzzle’s board (?p=&d=, as board.html)', () => {
+  const earlier = addDays(today, -2);
+
+  describe('WHEN the finish sheet’s link names a puzzle and its day', () => {
+    it('THEN that puzzle’s board for that day shows, without changing the remembered pill', async () => {
+      inFamily({ ptype: 'doku' });
+      params.mockReturnValue({ p: 'mini', d: earlier });
+      await renderWithProviders(<LeaguesScreen />);
+      await waitFor(() => expect(screen.getByTestId('day-board')).toBeOnTheScreen());
+      expect(m.boardDay).toHaveBeenCalledWith(PID, 'ABCD2345', 'mini', earlier);
+      expect(m.boardDay).not.toHaveBeenCalledWith(PID, 'ABCD2345', 'doku', expect.anything());
+      expect(screen.getByRole('button', { name: 'Mini' })).toBeSelected();
+      expect(board().ptype).toBe('doku');
+    });
+
+    it('THEN a pill picked afterwards takes over, and is remembered', async () => {
+      inFamily();
+      params.mockReturnValue({ p: 'mini', d: earlier });
+      await renderWithProviders(<LeaguesScreen />);
+      await waitFor(() => expect(screen.getByTestId('day-board')).toBeOnTheScreen());
+      await fireEvent.press(screen.getByTestId('pill-all'));
+      await waitFor(() => expect(screen.getByTestId('overall-board')).toBeOnTheScreen());
+      expect(m.boardOverall).toHaveBeenCalledWith(PID, 'ABCD2345', earlier);
+      expect(board().ptype).toBe('all');
+    });
+  });
+
+  describe('WHEN only a day is given, or p is all', () => {
+    it('THEN the remembered pill shows on that day; all shows All puzzles', async () => {
+      inFamily({ ptype: 'mini' });
+      params.mockReturnValue({ d: earlier });
+      const r = await renderWithProviders(<LeaguesScreen />);
+      await waitFor(() =>
+        expect(m.boardDay).toHaveBeenCalledWith(PID, 'ABCD2345', 'mini', earlier),
+      );
+      params.mockReturnValue({ p: 'all', d: earlier });
+      await r.rerender(
+        <QueryProvider client={r.client}>
+          <LeaguesScreen />
+        </QueryProvider>,
+      );
+      await waitFor(() => expect(screen.getByTestId('overall-board')).toBeOnTheScreen());
+      expect(m.boardOverall).toHaveBeenCalledWith(PID, 'ABCD2345', earlier);
+    });
+  });
+
+  describe('WHEN the values aren’t ones board.html would take', () => {
+    it('THEN an unknown puzzle or a bad date falls back; a future day is today', async () => {
+      inFamily({ ptype: 'mini' });
+      params.mockReturnValue({ p: 'records', d: 'yesterday' });
+      const r = await renderWithProviders(<LeaguesScreen />);
+      await waitFor(() => expect(m.boardDay).toHaveBeenCalledWith(PID, 'ABCD2345', 'mini', today));
+      params.mockReturnValue({ p: 'doku', d: addDays(today, 5) });
+      await r.rerender(
+        <QueryProvider client={r.client}>
+          <LeaguesScreen />
+        </QueryProvider>,
+      );
+      await waitFor(() => expect(m.boardDay).toHaveBeenCalledWith(PID, 'ABCD2345', 'doku', today));
+      expect(m.boardDay).not.toHaveBeenCalledWith(
+        PID,
+        'ABCD2345',
+        expect.anything(),
+        addDays(today, 5),
+      );
+    });
+  });
+
+  describe('WHEN a form is showing and a board link arrives', () => {
+    it('THEN the board opens on the asked puzzle and day', async () => {
+      inFamily();
+      params.mockReturnValue({ go: 'code' });
+      const r = await renderWithProviders(<LeaguesScreen />);
+      expect(screen.getByRole('header', { name: 'Join a league' })).toBeOnTheScreen();
+      params.mockReturnValue({ p: 'path', d: earlier });
+      await r.rerender(
+        <QueryProvider client={r.client}>
+          <LeaguesScreen />
+        </QueryProvider>,
+      );
+      await waitFor(() => expect(screen.getByTestId('day-board')).toBeOnTheScreen());
+      expect(m.boardDay).toHaveBeenCalledWith(PID, 'ABCD2345', 'path', earlier);
+    });
+  });
+});

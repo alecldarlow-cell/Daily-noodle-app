@@ -5,7 +5,7 @@
  */
 import type { BackfillRow, BoardTypeId, ClaimResult, MineRow, SubmitArgs } from '@noodle/core';
 
-import type { DayBoard, LeagueRef, Overall, Peek } from '../types';
+import type { DayBoard, LeagueRef, Moment, Overall, Peek } from '../types';
 import { rpc } from './client';
 
 export const boardMine = (p_player: string) => rpc<MineRow[]>('board_mine', { p_player });
@@ -61,3 +61,7 @@ export const boardSubmit = (a: SubmitArgs) =>
 
 export const boardBackfill = (p_player: string, p_aid: string | null, p_rows: BackfillRow[]) =>
   rpc<number>('board_backfill', { p_player, p_aid, p_rows });
+
+/** The caller's own result on a puzzle: `{type, pb, records: [{code, name}]}`, null if not completed. */
+export const boardMoment = (p_player: string, p_path: string) =>
+  rpc<Moment | null>('board_moment', { p_player, p_path });

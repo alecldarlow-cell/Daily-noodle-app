@@ -39,6 +39,7 @@ export function ReckonScreen({
       <FinishSheet
         celebrate={fresh}
         type="reckon"
+        path={file.path}
         n={serial(file.data.id)}
         date={file.data.date}
         title="Reckoned"

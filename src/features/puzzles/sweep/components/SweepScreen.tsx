@@ -92,6 +92,7 @@ export function SweepScreen({ file }: { file: PuzzleFile<SweepData> }) {
       <FinishSheet
         celebrate={fresh}
         type="sweep"
+        path={file.path}
         n={n}
         date={file.date}
         title={game.info.title}

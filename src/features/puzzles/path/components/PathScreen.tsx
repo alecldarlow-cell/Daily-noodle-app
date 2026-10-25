@@ -53,6 +53,7 @@ export function PathScreen({ file }: { file: PuzzleFile<PathData> }) {
       <FinishSheet
         celebrate={fresh}
         type="path"
+        path={file.path}
         n={n}
         date={file.date}
         title="Thread complete"

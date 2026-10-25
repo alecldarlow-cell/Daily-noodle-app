@@ -82,6 +82,7 @@ export function DokuScreen({ file }: { file: PuzzleFile<DokuData> }) {
       <FinishSheet
         celebrate={fresh}
         type="doku"
+        path={file.path}
         n={n}
         date={file.date}
         title="Solved"

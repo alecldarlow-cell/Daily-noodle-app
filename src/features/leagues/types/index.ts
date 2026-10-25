@@ -63,6 +63,13 @@ export interface Overall {
   first: string | null;
 }
 
+/** board_moment (2026-10-25-board-records.sql): a personal best, and the leagues it's a record in. */
+export interface Moment {
+  type: string;
+  pb: boolean;
+  records: LeagueRef[] | null;
+}
+
 /** What the board shows: one puzzle, or all eight. */
 export type BoardView = BoardTypeId | 'all';
 

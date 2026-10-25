@@ -20,11 +20,12 @@ import {
 
 /**
  * Leagues: the player's daily boards, or an intro inviting them to start or join one.
- * Opened with `?join=<code>` (an invite) or `?go=claim|paste|start|code`.
+ * Opened with `?join=<code>` (an invite), `?go=claim|paste|start|code`, or `?p=<type>&d=<day>`
+ * (a puzzle's board on a day, as board.html; the finish sheet's "See today's board").
  */
 export function LeaguesScreen() {
   const t = useTokens();
-  const params = useLocalSearchParams<{ join?: string; go?: string }>();
+  const params = useLocalSearchParams<{ join?: string; go?: string; p?: string; d?: string }>();
   const flow = useLeaguesFlow(params as LeaguesParams);
   const mine = useMine(true);
   const { view, league, pending } = flow;

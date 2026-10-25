@@ -65,6 +65,7 @@ export function LinkScreen({ file }: { file: PuzzleFile<LinkData> }) {
       <FinishSheet
         celebrate={fresh}
         type="link"
+        path={file.path}
         n={n}
         date={file.date}
         title={f.title}

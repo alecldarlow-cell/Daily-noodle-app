@@ -5,7 +5,8 @@ import { useColorScheme } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { SyncRunner } from '@/features/account';
-import { LeagueResults } from '@/features/leagues';
+import { BoardLink, LeagueResults } from '@/features/leagues';
+import { BoardSlotProvider } from '@/shared/finish-sheet';
 import { QueryProvider } from '@/shared/query';
 import { appStorage } from '@/shared/storage';
 import { tokensFor } from '@/shared/theme';
@@ -36,18 +37,20 @@ export default function RootLayout() {
         <SyncRunner />
         <VisitRecorder />
         <ThemeProvider value={scheme === 'dark' ? DarkTheme : DefaultTheme}>
-          <Stack
-            screenOptions={{ headerShown: false, contentStyle: { backgroundColor: t.canvas } }}>
-            <Stack.Screen name="(tabs)" />
-            <Stack.Screen
-              name="play/[type]/[file]"
-              options={{ headerShown: true, title: '', headerBackTitle: 'Back' }}
-            />
-            <Stack.Screen
-              name="privacy"
-              options={{ headerShown: true, title: 'Privacy', headerBackTitle: 'Back' }}
-            />
-          </Stack>
+          <BoardSlotProvider slot={BoardLink}>
+            <Stack
+              screenOptions={{ headerShown: false, contentStyle: { backgroundColor: t.canvas } }}>
+              <Stack.Screen name="(tabs)" />
+              <Stack.Screen
+                name="play/[type]/[file]"
+                options={{ headerShown: true, title: '', headerBackTitle: 'Back' }}
+              />
+              <Stack.Screen
+                name="privacy"
+                options={{ headerShown: true, title: 'Privacy', headerBackTitle: 'Back' }}
+              />
+            </Stack>
+          </BoardSlotProvider>
         </ThemeProvider>
       </QueryProvider>
     </GestureHandlerRootView>

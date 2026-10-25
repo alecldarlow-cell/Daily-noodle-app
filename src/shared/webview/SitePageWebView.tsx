@@ -53,6 +53,7 @@ export function SitePageWebView({ path, testID = 'site-webview', store = appStor
     if (d.kind === 'back') router.back();
     else if (d.kind === 'play')
       router.replace({ pathname: '/play/[type]/[file]', params: { type: d.type, file: d.file } });
+    else if (d.kind === 'leagues') router.dismissTo({ pathname: '/leagues', params: d.params });
     else void Linking.openURL(req.url);
     return false;
   };

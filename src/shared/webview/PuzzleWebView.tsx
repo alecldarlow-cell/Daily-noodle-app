@@ -63,6 +63,7 @@ export function PuzzleWebView({ file, onEnd, store = appStorage, saves = appSave
     if (d.kind === 'back') router.back();
     else if (d.kind === 'play')
       router.replace({ pathname: '/play/[type]/[file]', params: { type: d.type, file: d.file } });
+    else if (d.kind === 'leagues') router.dismissTo({ pathname: '/leagues', params: d.params });
     else void Linking.openURL(req.url);
     return false;
   };

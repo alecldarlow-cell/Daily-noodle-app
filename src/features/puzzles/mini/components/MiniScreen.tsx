@@ -65,6 +65,7 @@ export function MiniScreen({ file }: { file: PuzzleFile<MiniData> }) {
       <FinishSheet
         celebrate={fresh}
         type="mini"
+        path={file.path}
         n={n}
         date={file.date}
         title="Solved"

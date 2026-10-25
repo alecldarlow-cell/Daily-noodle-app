@@ -64,6 +64,7 @@ export function BordersScreen({
       <FinishSheet
         celebrate={fresh}
         type="borders"
+        path={file.path}
         n={serial(file.data.id)}
         date={file.data.date}
         title="Spotted"
