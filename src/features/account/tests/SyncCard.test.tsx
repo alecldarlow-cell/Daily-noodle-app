@@ -15,6 +15,15 @@ describe('GIVEN a build with sync off', () => {
 });
 
 describe('GIVEN a player who isn’t signed in', () => {
+  it('THEN the card says it creates a free account, with a labelled email box', async () => {
+    const { client } = fakeClient();
+    await render(<SyncCard client={client} store={memoryStorage()} />);
+    await flush();
+    expect(screen.getByRole('header')).toHaveTextContent('Create a free account');
+    expect(screen.getByText('Your email')).toBeOnTheScreen();
+    expect(screen.getByLabelText('Your email')).toBe(screen.getByTestId('sync-email'));
+  });
+
   it('THEN a wrong email is explained and a right one gets a link sent to the app', async () => {
     const { client, raw } = fakeClient();
     await render(<SyncCard client={client} store={memoryStorage()} />);
