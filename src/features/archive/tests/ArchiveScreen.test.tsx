@@ -45,6 +45,14 @@ describe('GIVEN the site’s archive list', () => {
     });
   });
 
+  describe('WHEN the Archive lays out its type chips', () => {
+    it('THEN the chip row never shrinks, so large text isn’t clipped', async () => {
+      await renderWithProviders(<ArchiveScreen />);
+      await waitFor(() => expect(screen.getByText('October 2026')).toBeOnTheScreen());
+      expect(screen.getByTestId('archive-chips')).toHaveStyle({ flexGrow: 0, flexShrink: 0 });
+    });
+  });
+
   describe('WHEN a number is searched that no puzzle has', () => {
     it('THEN it says none match', async () => {
       await renderWithProviders(<ArchiveScreen />);

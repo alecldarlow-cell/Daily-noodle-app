@@ -38,6 +38,7 @@ export function ArchiveScreen() {
     <Screen title="Archive" testID="archive-screen" scroll={false}>
       <ScrollView
         horizontal
+        testID="archive-chips"
         showsHorizontalScrollIndicator={false}
         style={styles.chips}
         contentContainerStyle={styles.chipsRow}>
@@ -112,7 +113,9 @@ export function ArchiveScreen() {
 }
 
 const styles = StyleSheet.create({
-  chips: { flexGrow: 0, marginBottom: 10 },
+  // flexShrink 0: the list below takes the rest of the column, and on Android it otherwise
+  // squeezed this row, clipping the chip labels (seen at 115% font size on a Pixel 10 Pro).
+  chips: { flexGrow: 0, flexShrink: 0, marginBottom: 10 },
   chipsRow: { gap: 8 },
   chip: {
     borderWidth: StyleSheet.hairlineWidth,

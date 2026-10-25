@@ -57,7 +57,16 @@ jobs:
         run: npm ci
       - name: Publish an update to preview builds
         if: env.EXPO_TOKEN != ''
-        run: $EAS update --channel preview --message "${{ github.event.head_commit.message }}" --non-interactive
+        # eas-cli 25 refuses --non-interactive without --environment. The commit's first line
+        # goes through an env var so quotes in a message can't break the command.
+        # `eas update` doesn't read eas.json's build env (it reads EAS's server-side variables,
+        # and preview has none), so export the preview profile's env here, or the update ships
+        # without EXPO_PUBLIC_SUPABASE_* and leagues stop working (25 Oct 2026).
+        env:
+          MESSAGE: ${{ github.event.head_commit.message }}
+        run: |
+          eval "$(node scripts/eas-profile-env.js preview)"
+          $EAS update --channel preview --environment preview --message "${MESSAGE%%$'\n'*}" --non-interactive
 
   build:
     name: build
