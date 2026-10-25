@@ -1,0 +1,12 @@
+# Every checkout uses LF, Windows included (25 Oct 2026). Expo's fingerprint hashes file
+# contents, so a build made from a Windows checkout with CRLF endings got a different runtime
+# version (e5567ad…) from the one GitHub's Release workflow computes on Linux (b28b8de9…), and
+# no update published by CI reached it. Prettier also expects LF.
+* text=auto eol=lf
+
+# Binary assets: never touch their bytes.
+*.png binary
+*.jpg binary
+*.ttf binary
+*.aab binary
+*.apk binary
