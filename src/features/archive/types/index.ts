@@ -1,25 +1,9 @@
-import type { PuzzleType } from '@noodle/core';
+import type { FeedItem } from '@/shared/feed';
 
-/** One puzzle card in the site's feed-lite.json (tools/puzzle-json.js). */
-export interface ArchiveItem {
-  path: string;
-  type: PuzzleType;
-  id: string;
-  date: string;
-  headline: string;
-  standfirst: string;
-  read: string;
-  mask: string;
-  /** The puzzle's data file, or null for the older pages that have none. */
-  json: string | null;
-}
+export type { FeedLite } from '@/shared/feed';
 
-export interface FeedLite {
-  built: string;
-  today: string;
-  count: number;
-  items: ArchiveItem[];
-}
+/** One puzzle card in the site's feed-lite.json. */
+export type ArchiveItem = FeedItem;
 
 export interface ArchiveSection {
   title: string;

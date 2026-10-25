@@ -1,3 +1,4 @@
+import { useFonts } from 'expo-font';
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect, useState } from 'react';
@@ -9,22 +10,30 @@ import { BoardLink, LeagueResults } from '@/features/leagues';
 import { BoardSlotProvider } from '@/shared/finish-sheet';
 import { QueryProvider } from '@/shared/query';
 import { appStorage } from '@/shared/storage';
-import { tokensFor } from '@/shared/theme';
+import { FONT_FILES, tokensFor } from '@/shared/theme';
 import { VisitRecorder } from '@/shared/track';
 
 void SplashScreen.preventAutoHideAsync();
 
-/** Root: providers, and saves loaded before the first screen so results never flash empty. */
+/**
+ * Root: providers, and saves and the site's fonts loaded before the first screen, so results
+ * never flash empty and type never jumps. A font that fails to load falls back to the system's.
+ */
 export default function RootLayout() {
   const scheme = useColorScheme();
-  const [ready, setReady] = useState(appStorage.hydrated);
+  const [saves, setSaves] = useState(appStorage.hydrated);
+  const [fontsLoaded, fontError] = useFonts(FONT_FILES);
+  const ready = saves && (fontsLoaded || !!fontError);
   useEffect(() => {
-    if (ready) return;
+    if (saves) return;
     appStorage
       .hydrate()
       .catch((e: unknown) => console.warn('Saved progress could not be read', e))
-      .finally(() => setReady(true));
-  }, [ready]);
+      .finally(() => setSaves(true));
+  }, [saves]);
+  useEffect(() => {
+    if (fontError) console.warn('Fonts could not be loaded', fontError);
+  }, [fontError]);
   useEffect(() => {
     if (ready) void SplashScreen.hideAsync();
   }, [ready]);
@@ -48,6 +57,10 @@ export default function RootLayout() {
               <Stack.Screen
                 name="privacy"
                 options={{ headerShown: true, title: 'Privacy', headerBackTitle: 'Back' }}
+              />
+              <Stack.Screen
+                name="how-to-play"
+                options={{ headerShown: true, title: 'How to play', headerBackTitle: 'Back' }}
               />
             </Stack>
           </BoardSlotProvider>

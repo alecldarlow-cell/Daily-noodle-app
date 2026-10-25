@@ -35,16 +35,36 @@ describe('GIVEN the site has published today’s list', () => {
   beforeEach(() => mockSite({ 'puzzles-today.json': todayList() }));
 
   describe('WHEN Today opens', () => {
-    it('THEN all eight puzzles show in the daily order with Play', async () => {
+    it('THEN all eight puzzles show in the daily order as the site’s cards', async () => {
       await renderWithProviders(<TodayScreen />);
       await waitFor(() => expect(screen.getByTestId('today-reckon')).toBeOnTheScreen());
-      expect(
-        screen.getAllByRole('button', {
-          name: /^(Mini 105|Doku 103|Sweep 100|Path 98|Link 77|Tangle 18|Borders 20|Reckon 5)$/,
-        }),
-      ).toHaveLength(8);
-      expect(screen.getAllByText('Play')).toHaveLength(8);
+      const cards = screen.getAllByRole('button', {
+        name: /^(Mini 105|Doku 103|Sweep 100|Path 98|Link 77|Tangle 18|Borders 20|Reckon 5), Today$/,
+      });
+      expect(cards.map((c) => c.props.accessibilityLabel)).toEqual([
+        'Mini 105, Today',
+        'Doku 103, Today',
+        'Sweep 100, Today',
+        'Path 98, Today',
+        'Link 77, Today',
+        'Tangle 18, Today',
+        'Borders 20, Today',
+        'Reckon 5, Today',
+      ]);
+      expect(screen.getAllByText('How to play')).toHaveLength(8);
+      expect(screen.getByTestId('today-count')).toHaveTextContent('8 puzzles');
       expect(screen.getByText(shortDate(today))).toBeOnTheScreen();
+    });
+
+    it('THEN “How to play” opens the guide at that type, not the puzzle', async () => {
+      await renderWithProviders(<TodayScreen />);
+      await waitFor(() => expect(screen.getByTestId('today-link-howto')).toBeOnTheScreen());
+      await fireEvent.press(screen.getByTestId('today-link-howto'));
+      expect(router.push).toHaveBeenCalledTimes(1);
+      expect(router.push).toHaveBeenCalledWith({
+        pathname: '/how-to-play',
+        params: { type: 'link' },
+      });
     });
 
     it('THEN it remembers the list for offline use', async () => {
@@ -52,6 +72,41 @@ describe('GIVEN the site has published today’s list', () => {
       await waitFor(() =>
         expect(JSON.parse(appStorage.getItem(LAST_TODAY_KEY) ?? 'null')).toEqual(todayList()),
       );
+    });
+  });
+
+  describe('WHEN the site’s card list (feed-lite) has today’s cards too', () => {
+    beforeEach(() =>
+      mockSite({
+        'puzzles-today.json': todayList(),
+        'feed-lite.json': {
+          built: today,
+          today,
+          count: 1,
+          items: [
+            {
+              path: 'reports/2026-10-24-crossword-mini-0105.html',
+              type: 'mini',
+              id: 'DP·MINI·0105',
+              date: today,
+              headline: 'Mini 105',
+              standfirst: 'A Bramley or a Cox. Medium.',
+              read: '~3 min',
+              mask: '........#.......#........',
+              json: null,
+            },
+          ],
+        },
+      }),
+    );
+
+    it('THEN the card shows its standfirst, reading time and grid tile', async () => {
+      await renderWithProviders(<TodayScreen />);
+      await waitFor(() =>
+        expect(screen.getByText('A Bramley or a Cox. Medium.')).toBeOnTheScreen(),
+      );
+      expect(screen.getByText('~3 min')).toBeOnTheScreen();
+      expect(screen.getByTestId('today-mini-tile-start')).toBeOnTheScreen();
     });
   });
 
@@ -75,7 +130,11 @@ describe('GIVEN the site has published today’s list', () => {
       );
       expect(screen.getByRole('button', { name: 'Sweep 100, Hit a mine' })).toBeOnTheScreen();
       expect(screen.getByRole('button', { name: 'Borders 20, In progress' })).toBeOnTheScreen();
-      expect(screen.getAllByText('Play')).toHaveLength(5);
+      // The three played cards carry a mark on their tile; the other five don't.
+      expect(screen.getByTestId('today-mini-mark')).toBeOnTheScreen();
+      expect(screen.getByTestId('today-borders-mark')).toBeOnTheScreen();
+      expect(screen.queryByTestId('today-doku-mark')).toBeNull();
+      expect(screen.getByTestId('today-count')).toHaveTextContent('8 puzzles · 2 played');
     });
 
     it('THEN a run of two or more days shows as a streak chip', async () => {

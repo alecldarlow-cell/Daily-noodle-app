@@ -20,9 +20,10 @@ interface Props {
   store?: CachedStorage;
 }
 
-/** The live site page for `path`, tagged as opened from the app. */
+/** The live site page for `path`, tagged as opened from the app; a `#section` stays last. */
 export function sitePageUrl(path: string): string {
-  return `${SITE}${path}?via=app`;
+  const [page, hash] = path.split('#', 2);
+  return `${SITE}${page}?via=app${hash ? `#${hash}` : ''}`;
 }
 
 /**
