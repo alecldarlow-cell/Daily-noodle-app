@@ -16,12 +16,12 @@ below when it finishes.
 | 2   | Site publishes `feed-lite.json` and per-puzzle JSON (site PR) | done ([site #21](https://github.com/alecldarlow-cell/dailynoodle/pull/21)) |
 | 3   | Today and Archive screens, offline-capable                    | done ([#3](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/3))   |
 | 4   | WebView bridge: play, finish, share, saves                    | done ([#5](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/5))   |
-| 5   | Leagues: board, join, submit, first-run handoff               | not started                                                                |
-| 6   | EAS builds, TestFlight and Play internal track                | not started                                                                |
+| 5   | Leagues: board, join, submit, first-run handoff               | done ([#8](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/8))   |
+| 6   | EAS builds, TestFlight and Play internal track                | config ready; needs Alec’s accounts (docs/install.md)                      |
 | 7   | Optional sign-in and sync, web and app                        | not started                                                                |
-| 8   | Port recipe, shared start card and finish sheet, Mini native  | not started                                                                |
-| 9   | Sweep and Path native                                         | not started                                                                |
-| 10  | Link, Tangle, Reckon, Borders native                          | not started                                                                |
+| 8   | Port recipe, shared start card and finish sheet, Mini native  | done ([#7](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/7))   |
+| 9   | Sweep and Path native                                         | in progress (parallel lane)                                                |
+| 10  | Link, Tangle, Reckon, Borders native                          | Link, Tangle in progress (parallel lane); Reckon, Borders next             |
 | 11  | Doku native                                                   | not started                                                                |
 | 12  | Polish, notifications decision, release decision              | not started                                                                |
 
@@ -159,3 +159,58 @@ below when it finishes.
   between lanes: the bridge (and native players from WP8) announce a finish with the
   page path and the site's `dn:puzzle_end` detail; leagues (WP5) subscribe. Features
   still never import each other.
+
+### 24 Oct 2026 — WP5
+
+- [#8](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/8), merged. Leagues tab: league switcher, All puzzles
+  (board_overall: day and Monday–Sunday week), each puzzle's day board with the day bar, start / join (code, pasted
+  invite link, or `/leagues?join=<code>`) / leave, League settings (PIN, Send me my link / Paste a link; owners:
+  rename, Let back in, Remove, New join code, Close), invites and board shares through the share sheet
+  (`…board.html?join=<code>&v=2`). Wording from board.html ("this browser" read as "this app").
+- `@noodle/core` `board.ts` and `handoff.ts`: ports of dn-board.js (noodle-board-v1 in the browser's shape, pid as
+  uuid v4, submit mapping, claim, settlePending, backfillPlan, moveLink) and dn-track.js's #dnmove= import.
+  Personal-link merges use dn-track's mergeObj (the site's rule; first result kept).
+- Differential against the site's own code (dn-board.js and dn-track's import block vendored, watched by Site
+  drift): 600 seeded cases each — identical storage after a link import, identical links, identical
+  board_backfill / board_submit calls, identical claim state. Five deliberately broken rules each fail the suite.
+- `features/leagues`: typed rpc over @supabase/supabase-js 2.118.0 (EXPO*PUBLIC_SUPABASE_URL / \_ANON_KEY; without
+  them every call fails `not_configured`, so no test can reach the live project), 16 board*\* wrappers with argument
+  names pinned by a test, React Query hooks, Yup 1.7.1 schemas. `LeagueResults` (mounted in `src/app/_layout.tsx`)
+  submits every `onFinish` for members; backfill when the board opens.
+- "Already a player?" (Leagues intro, Account): code or invite → nickname → PIN → board_claim, or "Which leagues
+  should this app use?"; or a personal link → saves merge, board adopted. Identity is never inferred.
+- 213 tests at merge. Deferred: CI job with a local Supabase stack (needs WP6 builds for its Maestro step); the
+  finish sheet's "See today's board" (bridge and native) still not routed to the Leagues tab — follow-up.
+- Contracts tab correction: noodle-board-v1 leagues also hold `members` and `pin`, as the site saves them.
+
+### 25 Oct 2026 — WP8
+
+- [#7](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/7), merged: the port recipe
+  (`docs/port-recipe.md`), shared `start-card` (house.js) and `finish-sheet` (finish.js: kicker, result, note,
+  share line + `dailynoodle.co.uk/<type>` through the share sheet, stats, Next row, board slot, countdown and
+  run, recap), and the Mini played natively (`features/puzzles/mini`: model, oracle, finishing, simulate, screen).
+- **Differential replay** (`scripts/replay.js`): the oracle's moves through the page's real controls (site
+  harness, headless Chromium, paused fake clock, jittered taps) and through the native model; board compared after
+  every move, then both saves, the `dn:puzzle_end` detail, share line, sheet text, and the reopened sheet.
+  `--all`: 761 Minis × 4 variants (fresh, live streak across London midnight, pre-tz grace, lapsed): 3,044/3,044
+  identical, 144,956 moves. Mutation check catches broken delete-back and Check-all counting. CI job `replay`
+  (`--sample 50`); nightly `Replay nightly` runs `--all` (~100 min).
+- `enabled = true` for the Mini; other types stay on the bridge. Data from `reports/<file>.json`, kept as
+  `noodle-app-puzzle:<file>`; no data, refused data or offline without a copy → the bridge.
+- Site wins over the brief: the Mini's clock starts on the first letter, delete or reveal, not on Play. Reveal all,
+  Reset and the keyboard toggle are hidden on every device on the site, so not ported; outcome always "solved".
+- No new dependencies. Celebration and haptics left for WP12. Today's list fetch moved to `shared/today`.
+- `.maestro/mini.yaml` written; `bridge.yaml` now opens the Doku.
+
+### 25 Oct 2026 — WP6 (preparation)
+
+- Alec's calls: home-screen name **Daily Noodle**; bundle id / package **uk.co.dailynoodle.app**.
+- `app.json`: bundle ids, `runtimeVersion` fingerprint policy, `expo-updates` plugin, iOS export-compliance flag.
+  `eas.json`: development / preview / production profiles extending a base that carries the public Supabase
+  values. ADR-005: `expo-updates` 58.0.18 and `expo-dev-client` 58.0.15 (first-party, SDK-vetted).
+- `.github/workflows/release.yml`: on every merge, an EAS Update to `preview`; "Run workflow" builds (profile,
+  platform, optional TestFlight submit). Every job skips until the `EXPO_TOKEN` secret exists.
+- Account screen shows "Version · channel · update" (`shared/build`).
+- `docs/install.md`: Alec's one-off steps (Expo, Apple, Play accounts; `eas init`; `EXPO_TOKEN`; first iOS build
+  by hand for certificates; testers). Config validated with `expo config`; both bundles build.
+- Open: Maestro in CI once builds exist (EAS Workflows step vs nightly macOS job).

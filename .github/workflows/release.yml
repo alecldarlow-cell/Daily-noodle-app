@@ -1,0 +1,83 @@
+name: Release
+
+# Ships the app once Alec has added the EXPO_TOKEN repository secret (docs/install.md).
+# Without it every job is skipped, so this workflow is harmless until then.
+#
+# - Every push to main publishes an EAS Update to the "preview" channel: installed
+#   preview builds pick up JavaScript changes on their next launch. Runtime versions use
+#   the native fingerprint, so an update never reaches a build whose native code differs.
+# - "Run workflow" builds new binaries (needed after any native change), and can send
+#   the iOS build to TestFlight.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      profile:
+        description: Build profile
+        type: choice
+        options: [preview, production, development]
+        default: preview
+      platform:
+        description: Platform
+        type: choice
+        options: [all, ios, android]
+        default: all
+      submit:
+        description: Send the iOS production build to TestFlight
+        type: boolean
+        default: false
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+  EAS: npx --yes eas-cli@25.3.0
+
+jobs:
+  update:
+    name: update
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Skip until EXPO_TOKEN is set
+        if: env.EXPO_TOKEN == ''
+        run: echo "::notice::No EXPO_TOKEN secret yet; nothing published (docs/install.md)."
+      - uses: actions/checkout@v4
+        if: env.EXPO_TOKEN != ''
+      - uses: actions/setup-node@v4
+        if: env.EXPO_TOKEN != ''
+        with:
+          node-version: 22
+          cache: npm
+      - if: env.EXPO_TOKEN != ''
+        run: npm ci
+      - name: Publish an update to preview builds
+        if: env.EXPO_TOKEN != ''
+        run: $EAS update --channel preview --message "${{ github.event.head_commit.message }}" --non-interactive
+
+  build:
+    name: build
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Stop without EXPO_TOKEN
+        if: env.EXPO_TOKEN == ''
+        run: |
+          echo "::error::Add the EXPO_TOKEN repository secret first (docs/install.md)."
+          exit 1
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Build on EAS
+        run: >
+          $EAS build --profile ${{ inputs.profile }} --platform ${{ inputs.platform }}
+          --non-interactive --no-wait
+          ${{ inputs.submit && inputs.profile == 'production' && '--auto-submit' || '' }}
