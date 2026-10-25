@@ -5,6 +5,9 @@ import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { usePuzzleTokens } from '@/shared/theme';
 
 import { usePuzzleData } from '../api/usePuzzleData';
+import { enabled as bordersEnabled } from '../borders';
+import { BordersScreen } from '../borders/components/BordersScreen';
+import { validate as validateBorders, type BordersData } from '../borders/model';
 import { DokuScreen } from '../doku/components/DokuScreen';
 import { enabled as dokuEnabled } from '../doku';
 import { validate as validateDoku, type DokuData } from '../doku/model';
@@ -20,6 +23,9 @@ import { validate as validatePath, type PathData } from '../path/model';
 import { enabled as sweepEnabled } from '../sweep';
 import { SweepScreen } from '../sweep/components/SweepScreen';
 import { validate as validateSweep, type SweepData } from '../sweep/model';
+import { enabled as reckonEnabled } from '../reckon';
+import { ReckonScreen } from '../reckon/components/ReckonScreen';
+import { validate as validateReckon, type ReckonData } from '../reckon/model';
 import { enabled as tangleEnabled } from '../tangle';
 import { TangleScreen } from '../tangle/components/TangleScreen';
 import { validate as validateTangle, type TangleData } from '../tangle/model';
@@ -33,17 +39,23 @@ export const NATIVE: Record<string, boolean> = {
   doku: dokuEnabled,
   sweep: sweepEnabled,
   path: pathEnabled,
+  reckon: reckonEnabled,
+  borders: bordersEnabled,
 };
 
-/** Each type's own check: would its page play this data to a finish? */
+/**
+ * Each type's ship gate: would its page play this data to a finish? Tangle's, Reckon's
+ * and Borders' also check the page's dn:date against the puzzle's: the data file's date.
+ */
 const VALIDATE: Record<string, (f: PuzzleFile) => boolean> = {
   mini: (f) => validateMini(f.data).ok,
   link: (f) => validateLink(f.data).ok,
-  // Tangle's gate also checks the page's dn:date against the puzzle's: the data file's date.
   tangle: (f) => validateTangle(f.data, f.date).ok,
   doku: (f) => validateDoku(f.data).ok,
   sweep: (f) => validateSweep(f.data).ok,
   path: (f) => validatePath(f.data).ok,
+  reckon: (f) => validateReckon(f.data, f.date).ok,
+  borders: (f) => validateBorders(f.data, f.date).ok,
 };
 
 /** Puzzle types with a native player, each on once its replay has passed on every puzzle. */
@@ -91,8 +103,12 @@ export function NativePlay({ type, file, fallback }: NativePlayProps) {
       <DokuScreen key={file} file={data as PuzzleFile<DokuData>} />
     ) : type === 'sweep' ? (
       <SweepScreen key={file} file={data as PuzzleFile<SweepData>} />
-    ) : (
+    ) : type === 'path' ? (
       <PathScreen key={file} file={data as PuzzleFile<PathData>} />
+    ) : type === 'reckon' ? (
+      <ReckonScreen key={file} file={data as PuzzleFile<ReckonData>} />
+    ) : (
+      <BordersScreen key={file} file={data as PuzzleFile<BordersData>} />
     );
   return (
     <>

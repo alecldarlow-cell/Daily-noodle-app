@@ -7,6 +7,8 @@
  *   node scripts/replay.js --type path --all --shard 2/4 ...   (the second quarter of the runs)
  *   node scripts/replay.js --type link|tangle|doku … [--shard 1/2] [--variants a,b]
  *
+ *   node scripts/replay.js --type reckon|borders … [--shard 1/2] [--only 0105]
+ *
  * For every page of the type in the site clone's reports/ that carries
  * window.DN_PUZZLE (read with the site's tools/puzzle-json.js), and every oracle
  * variant (src/features/puzzles/<type>/oracle.ts):
@@ -27,6 +29,10 @@
  * scripts/replay/<type>.js; this file runs them. Link, Tangle and Doku have their own
  * scripts (replay-link.js, replay-tangle.js on the shared replay-lib.js; replay-doku.js
  * with its own options), which this one hands over to.
+ * A type may also start its own round (`begin`, in place of tapping the house start
+ * card's #dnPlay) and read the opened page before its native side is played (`probe`,
+ * passed to `native` as `t.probe`): Reckon and Borders time their clocks by the page's
+ * animation frames.
  *
  * Needs the site clone's dev dependencies (npm ci --ignore-scripts there): its
  * Playwright and pinned Chromium. Nothing reaches the network: the harness answers
@@ -40,6 +46,8 @@ const TYPES = {
   mini: () => require('./replay/mini'),
   sweep: () => require('./replay/sweep'),
   path: () => require('./replay/path'),
+  reckon: () => require('./replay/reckon'),
+  borders: () => require('./replay/borders'),
 };
 
 const args = process.argv.slice(2);
@@ -80,13 +88,13 @@ if (!SHARD && !OWN[TYPE]) {
   console.error('replay: --shard takes k/n, 1 ≤ k ≤ n');
   process.exit(2);
 }
-if (!fs.existsSync(path.join(SITE, 'tools/tests/harness.js'))) {
+if (!OWN[TYPE] && !fs.existsSync(path.join(SITE, 'tools/tests/harness.js'))) {
   console.error(`replay: ${SITE} is not a dailynoodle clone (no tools/tests/harness.js)`);
   process.exit(2);
 }
 
-const H = require(path.join(SITE, 'tools/tests/harness.js'));
-const { parseDnPuzzle } = require(path.join(SITE, 'tools/puzzle-json.js'));
+const H = OWN[TYPE] ? null : require(path.join(SITE, 'tools/tests/harness.js'));
+const { parseDnPuzzle } = OWN[TYPE] ? {} : require(path.join(SITE, 'tools/puzzle-json.js'));
 const A = OWN[TYPE] ? null : TYPES[TYPE]();
 const VARS = A ? (opt('variants', '') || A.VARIANTS.join(',')).split(',') : [];
 
@@ -169,17 +177,16 @@ const common = (p) =>
 async function replayOne(browser, pg, variant) {
   const sc = A.scenario(pg.data, variant, pg.date);
   const t = A.startAt(sc, pg.date, LOAD_MS + PLAY_MS);
-  const native = A.native(pg, sc, {
-    openAt: t,
-    playAt: t + LOAD_MS,
-    firstAt: t + LOAD_MS + PLAY_MS,
-  });
+  const times = { openAt: t, playAt: t + LOAD_MS, firstAt: t + LOAD_MS + PLAY_MS };
+  let native = A.probe ? null : A.native(pg, sc, times);
   const diffs = [];
   const { ctx, p } = await newPage(browser, sc.seed, t);
   try {
     await p.goto(`https://dailynoodle.co.uk/reports/${pg.file}`);
+    if (A.probe) native = A.native(pg, sc, { ...times, probe: await A.probe(p, t) });
     await H.wait(p, LOAD_MS);
-    await H.tap(p, p.locator('#dnPlay'));
+    if (A.begin) await A.begin(p, H);
+    else await H.tap(p, p.locator('#dnPlay'));
     await H.wait(p, PLAY_MS);
     for (let i = 0; i < sc.steps.length; i++) {
       const step = sc.steps[i];
