@@ -1,83 +1,157 @@
-import type { PlayedState } from '@noodle/core';
+import type { PlayedState, PuzzleType } from '@noodle/core';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { useTokens } from '@/shared/theme';
+import { FONT, useTokens } from '@/shared/theme';
+
+import { PuzzleTile } from '../PuzzleTile/PuzzleTile';
 
 interface PuzzleRowProps {
-  kicker: string;
+  type: PuzzleType;
   title: string;
+  /** The card's standfirst, up to three lines. */
   detail?: string;
+  /** The tile's grid (feed-lite `mask`); picture types and older cards have none. */
+  mask?: string;
+  /** "Today", "Yesterday" or a short date: the meta line's first word. */
+  when?: string;
+  /** Reading time ("~3 min"), shown until the puzzle is played. */
+  read?: string;
   played: PlayedState | null;
   onPress: () => void;
+  /** "How to play", a sibling of the card so it never opens the puzzle. */
+  onHowTo?: () => void;
   testID?: string;
 }
 
 /**
- * One puzzle as a tappable row: kicker (type or date), title, and either its result
- * with a tick, "In progress" with a dot, or a Play pill. Wording from @noodle/core.
+ * One puzzle as the site's front-page card (front.css `.card`, front.js `card`): the
+ * 96 pt preview tile with a played mark on its corner, the headline, the standfirst, and
+ * a meta line of when · result (or reading time), with "How to play" at its end.
  */
-export function PuzzleRow({ kicker, title, detail, played, onPress, testID }: PuzzleRowProps) {
+export function PuzzleRow({
+  type,
+  title,
+  detail,
+  mask,
+  when,
+  read,
+  played,
+  onPress,
+  onHowTo,
+  testID,
+}: PuzzleRowProps) {
   const t = useTokens();
-  const status = played?.done ? played.text : played ? 'In progress' : null;
-  const label = `${title}${status ? `, ${status}` : ''}`;
+  const result = played?.done ? played.text : played ? 'In progress' : null;
+  const label = [title, result ?? when].filter(Boolean).join(', ');
+  const meta = [when, result ?? read].filter((s): s is string => !!s);
+  const resultColour = played?.done
+    ? played.lost
+      ? t.muted
+      : t.accent
+    : played
+      ? t.startedInk
+      : t.faint;
+
   return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={label}
-      onPress={onPress}
-      testID={testID}
-      style={({ pressed }) => [
-        styles.row,
-        { backgroundColor: t.paper, borderColor: t.hair, opacity: pressed ? 0.7 : 1 },
-      ]}>
-      <View style={styles.text}>
-        <Text style={[styles.kicker, { color: t.faint }]}>{kicker}</Text>
-        <Text style={[styles.title, { color: t.ink }]}>{title}</Text>
-        {detail ? <Text style={[styles.detail, { color: t.muted }]}>{detail}</Text> : null}
-      </View>
-      {played?.done ? (
-        <View style={styles.result}>
-          <Text
-            style={[styles.mark, { color: played.lost ? t.faint : t.accent }]}
-            accessible={false}>
-            ✓
-          </Text>
-          <Text style={[styles.resultText, { color: played.lost ? t.faint : t.ink }]}>
-            {played.text}
-          </Text>
+    <View style={[styles.card, { borderBottomColor: t.hair }]}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={label}
+        onPress={onPress}
+        testID={testID}
+        style={({ pressed }) => [styles.press, { opacity: pressed ? 0.7 : 1 }]}>
+        <View>
+          <PuzzleTile type={type} mask={mask} testID={testID ? `${testID}-tile` : undefined} />
+          {played ? (
+            <View
+              testID={testID ? `${testID}-mark` : undefined}
+              style={[
+                styles.mark,
+                { borderColor: t.canvas, backgroundColor: played.done ? t.accent : t.play },
+              ]}>
+              {played.done ? (
+                <Text style={[styles.tick, { color: t.onAccent }]}>✓</Text>
+              ) : (
+                <View style={[styles.dot, { backgroundColor: t.onPlay }]} />
+              )}
+            </View>
+          ) : null}
         </View>
-      ) : played ? (
-        <View style={styles.result}>
-          <View style={[styles.dot, { backgroundColor: t.play }]} />
-          <Text style={[styles.resultText, { color: t.startedInk }]}>In progress</Text>
+        <View style={styles.body}>
+          <Text style={[styles.title, { color: t.ink }]}>{title}</Text>
+          {detail ? (
+            <Text numberOfLines={3} style={[styles.detail, { color: t.muted }]}>
+              {detail}
+            </Text>
+          ) : null}
+          <View style={[styles.meta, onHowTo ? styles.metaRoom : null]}>
+            {meta.map((m, i) => (
+              <Text key={i} style={styles.metaItem}>
+                {i > 0 ? <Text style={{ color: t.hair }}>{'·  '}</Text> : null}
+                <Text
+                  style={[
+                    { color: m === result ? resultColour : t.faint },
+                    m === result && !(played?.done && played.lost) ? styles.resultText : null,
+                  ]}>
+                  {m}
+                </Text>
+              </Text>
+            ))}
+          </View>
         </View>
-      ) : (
-        <View style={[styles.pill, { backgroundColor: t.play }]}>
-          <Text style={[styles.pillText, { color: t.onPlay }]}>Play</Text>
-        </View>
-      )}
-    </Pressable>
+      </Pressable>
+      {onHowTo ? (
+        <Pressable
+          accessibilityRole="link"
+          accessibilityLabel={`How to play ${title.replace(/\s*\d+$/, '')}`}
+          onPress={onHowTo}
+          hitSlop={10}
+          testID={testID ? `${testID}-howto` : undefined}
+          style={styles.howTo}>
+          <Text style={[styles.howToText, { color: t.muted }]}>How to play</Text>
+        </Pressable>
+      ) : null}
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  row: {
-    flexDirection: 'row',
+  card: { borderBottomWidth: StyleSheet.hairlineWidth, position: 'relative' },
+  press: { flexDirection: 'row', alignItems: 'flex-start', gap: 14, paddingVertical: 18 },
+  mark: {
+    position: 'absolute',
+    top: -7,
+    right: -7,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    borderWidth: 2.5,
     alignItems: 'center',
-    gap: 12,
-    padding: 14,
-    borderRadius: 12,
-    borderWidth: StyleSheet.hairlineWidth,
-    marginBottom: 10,
+    justifyContent: 'center',
   },
-  text: { flex: 1 },
-  kicker: { fontSize: 12, fontWeight: '700', letterSpacing: 0.6, textTransform: 'uppercase' },
-  title: { fontSize: 19, fontWeight: '800', marginTop: 2 },
-  detail: { fontSize: 14, marginTop: 2 },
-  result: { flexDirection: 'row', alignItems: 'center', gap: 6, maxWidth: '50%' },
-  mark: { fontSize: 18, fontWeight: '800' },
-  dot: { width: 10, height: 10, borderRadius: 5 },
-  resultText: { fontSize: 14, fontWeight: '600', flexShrink: 1 },
-  pill: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 999 },
-  pillText: { fontSize: 15, fontWeight: '800' },
+  tick: { fontFamily: FONT.bodyBold, fontSize: 13, lineHeight: 15 },
+  dot: { width: 7, height: 7, borderRadius: 3.5 },
+  body: { flex: 1 },
+  title: { fontFamily: FONT.display, fontSize: 19, lineHeight: 23, letterSpacing: -0.19 },
+  detail: { fontFamily: FONT.body, fontSize: 14, lineHeight: 20, marginTop: 7 },
+  meta: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    columnGap: 7,
+    marginTop: 9,
+    minHeight: 24,
+  },
+  metaRoom: { paddingRight: 88 },
+  metaItem: { fontFamily: FONT.bodySemi, fontSize: 12 },
+  resultText: { fontFamily: FONT.bodyBold },
+  howTo: {
+    position: 'absolute',
+    right: 0,
+    bottom: 18,
+    minHeight: 24,
+    justifyContent: 'center',
+    paddingLeft: 8,
+  },
+  howToText: { fontFamily: FONT.bodySemi, fontSize: 12 },
 });

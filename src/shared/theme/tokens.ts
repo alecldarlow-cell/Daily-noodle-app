@@ -17,6 +17,12 @@ export interface Tokens {
   onPlay: string;
   bad: string;
   startedInk: string;
+  /** Text and marks on an accent fill (the played tick). */
+  onAccent: string;
+  /** Puzzle preview tiles: frame and blocks, an open cell, a pre-set cell. */
+  tileFrame: string;
+  tileCell: string;
+  tileLock: string;
 }
 
 const light: Tokens = {
@@ -32,6 +38,10 @@ const light: Tokens = {
   onPlay: '#15171C',
   bad: '#B3261E',
   startedInk: '#7A5A00',
+  onAccent: '#FFFFFF',
+  tileFrame: '#15171C',
+  tileCell: '#FFFFFF',
+  tileLock: '#ECF0FC',
 };
 
 const dark: Tokens = {
@@ -47,6 +57,10 @@ const dark: Tokens = {
   onPlay: '#15171C',
   bad: '#FF7A6E',
   startedInk: '#FFD54A',
+  onAccent: '#0B0D12',
+  tileFrame: '#050608',
+  tileCell: '#2E3344',
+  tileLock: '#3A4466',
 };
 
 /** Tokens for a colour scheme; anything other than 'dark' gets the light set, as the site does. */

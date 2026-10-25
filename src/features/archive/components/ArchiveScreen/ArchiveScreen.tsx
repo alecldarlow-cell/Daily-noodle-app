@@ -13,8 +13,8 @@ import {
 } from 'react-native';
 
 import { usePlayed } from '@/shared/played';
-import { useTokens } from '@/shared/theme';
-import { shortDate, useLondonDay } from '@/shared/time';
+import { FONT, useTokens } from '@/shared/theme';
+import { relDay, useLondonDay } from '@/shared/time';
 import { Note, PuzzleRow, Screen } from '@/shared/ui';
 
 import { groupArchive } from '../../hooks/groupArchive';
@@ -51,8 +51,13 @@ export function ArchiveScreen() {
               accessibilityRole="button"
               accessibilityState={{ selected: on }}
               onPress={() => setType(ty)}
-              style={[styles.chip, { borderColor: t.hair, backgroundColor: on ? t.ink : t.paper }]}>
-              <Text style={[styles.chipText, { color: on ? t.canvas : t.ink }]}>{label}</Text>
+              style={[
+                styles.chip,
+                on
+                  ? { borderColor: t.accent, backgroundColor: t.accentSoft }
+                  : { borderColor: t.hair, backgroundColor: t.paper },
+              ]}>
+              <Text style={[styles.chipText, { color: on ? t.accent : t.muted }]}>{label}</Text>
             </Pressable>
           );
         })}
@@ -84,17 +89,21 @@ export function ArchiveScreen() {
         stickySectionHeadersEnabled={false}
         initialNumToRender={20}
         renderSectionHeader={({ section }) => (
-          <Text accessibilityRole="header" style={[styles.month, { color: t.muted }]}>
+          <Text accessibilityRole="header" style={[styles.month, { color: t.faint }]}>
             {section.title}
           </Text>
         )}
         renderItem={({ item }) => (
           <PuzzleRow
             testID={`archive-${item.id}`}
-            kicker={`${TYPE_LABEL[item.type]} · ${shortDate(item.date)}`}
+            type={item.type}
             title={item.headline}
             detail={item.standfirst}
+            mask={item.mask}
+            when={relDay(item.date, day)}
+            read={item.read}
             played={byId[item.id] ?? null}
+            onHowTo={() => router.push({ pathname: '/how-to-play', params: { type: item.type } })}
             onPress={() =>
               router.push({
                 pathname: '/play/[type]/[file]',
@@ -115,31 +124,29 @@ export function ArchiveScreen() {
 const styles = StyleSheet.create({
   // flexShrink 0: the list below takes the rest of the column, and on Android it otherwise
   // squeezed this row, clipping the chip labels (seen at 115% font size on a Pixel 10 Pro).
-  chips: { flexGrow: 0, flexShrink: 0, marginBottom: 10 },
-  chipsRow: { gap: 8 },
-  chip: {
-    borderWidth: StyleSheet.hairlineWidth,
-    borderRadius: 999,
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-  },
-  chipText: { fontSize: 15, fontWeight: '700' },
+  chips: { flexGrow: 0, flexShrink: 0, paddingTop: 12, marginBottom: 10 },
+  chipsRow: { gap: 6 },
+  // front.css .chip: 12.5 px semibold, 6 × 12 padding, a hairline; the chosen one in the accent.
+  chip: { borderWidth: 1, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6 },
+  chipText: { fontFamily: FONT.bodySemi, fontSize: 12.5 },
   search: {
-    borderWidth: StyleSheet.hairlineWidth,
-    borderRadius: 10,
+    borderWidth: 1,
+    borderRadius: 6,
     paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 16,
-    marginBottom: 10,
+    paddingVertical: 9,
+    fontFamily: FONT.body,
+    fontSize: 15,
+    marginBottom: 4,
   },
   spinner: { marginTop: 40 },
+  // front.css .count: the list's small uppercase label.
   month: {
-    fontSize: 13,
-    fontWeight: '800',
-    letterSpacing: 0.6,
+    fontFamily: FONT.bodySemi,
+    fontSize: 11.5,
+    letterSpacing: 0.8,
     textTransform: 'uppercase',
-    marginTop: 12,
-    marginBottom: 8,
+    marginTop: 18,
+    marginBottom: 0,
   },
   footer: { height: 72 },
 });

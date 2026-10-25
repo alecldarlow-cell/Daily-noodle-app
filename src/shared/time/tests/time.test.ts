@@ -2,7 +2,7 @@ import { londonDay } from '@noodle/core';
 import { act, renderHook } from '@testing-library/react-native';
 import { AppState } from 'react-native';
 
-import { longDate, monthLabel, shortDate } from '../format';
+import { longDate, monthLabel, relDay, shortDate } from '../format';
 import { msToNextLondonDay, useLondonDay } from '../useLondonDay';
 
 describe('GIVEN an instant', () => {
@@ -56,5 +56,18 @@ describe('GIVEN a September day', () => {
   it('THEN it is "Sep", as the site writes it', () => {
     expect(shortDate('2026-09-01')).toBe('Tue 1 Sep');
     expect(monthLabel('2026-09-01')).toBe('September 2026');
+  });
+});
+
+describe('GIVEN a card’s date and today', () => {
+  describe('WHEN the card says how long ago it was', () => {
+    it('THEN it reads as the site’s cards do', () => {
+      expect(relDay('2026-10-25', '2026-10-25')).toBe('Today');
+      expect(relDay('2026-10-26', '2026-10-25')).toBe('Today');
+      expect(relDay('2026-10-24', '2026-10-25')).toBe('Yesterday');
+      expect(relDay('2026-10-19', '2026-10-25')).toBe('6d ago');
+      expect(relDay('2026-10-18', '2026-10-25')).toBe('18 Oct 2026');
+      expect(relDay('not a day', '2026-10-25')).toBe('');
+    });
   });
 });

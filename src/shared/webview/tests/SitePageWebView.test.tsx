@@ -30,6 +30,9 @@ describe('GIVEN the privacy page opened in the app', () => {
     await render(<SitePageWebView path="/privacy.html" />);
     expect(last.source).toEqual({ uri: 'https://dailynoodle.co.uk/privacy.html?via=app' });
     expect(sitePageUrl('/privacy.html')).toBe('https://dailynoodle.co.uk/privacy.html?via=app');
+    expect(sitePageUrl('/how-to-play.html#mini')).toBe(
+      'https://dailynoodle.co.uk/how-to-play.html?via=app#mini',
+    );
     expect(last.injectedJavaScriptBeforeContentLoaded).toContain('window.__DN_APP = 2');
     expect(last.domStorageEnabled).toBe(true);
     expect(screen.getByTestId('site-webview')).toBeOnTheScreen();

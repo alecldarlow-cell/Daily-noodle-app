@@ -22,6 +22,20 @@ const DAYS_LONG = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Frid
 
 const at = (day: string) => new Date(`${day}T12:00:00Z`);
 
+/**
+ * A card's date as the site's front.js `relTime` writes it: "Today", "Yesterday",
+ * "3d ago" within the week, then "18 Oct 2026".
+ */
+export function relDay(day: string, today: string): string {
+  const d = at(day);
+  if (Number.isNaN(d.getTime())) return '';
+  const days = Math.round((at(today).getTime() - d.getTime()) / 864e5);
+  if (days <= 0) return 'Today';
+  if (days === 1) return 'Yesterday';
+  if (days < 7) return `${days}d ago`;
+  return `${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
+}
+
 /** "Saturday 24 October" for a YYYY-MM-DD day, as the start card and finish sheet write it. */
 export function longDate(day: string): string {
   const d = at(day);
