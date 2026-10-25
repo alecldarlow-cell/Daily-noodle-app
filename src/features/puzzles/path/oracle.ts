@@ -68,6 +68,8 @@ class Player {
     return Math.round(lo + this.rand() * (hi - lo));
   }
   do(move: Move, ms = this.gap(250, 1300)) {
+    // Once the thread is complete the sheet covers the board: nothing more is pressed.
+    if (this.solved) return;
     this.state = apply(this.state, move);
     this.steps.push({ move, ms });
   }

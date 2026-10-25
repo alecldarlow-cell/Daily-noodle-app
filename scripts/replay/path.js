@@ -22,9 +22,9 @@ const webSnapshot = (p) =>
       lines: [...document.querySelectorAll('#lines polyline')].map(
         (l) => `${l.getAttribute('stroke')} ${l.getAttribute('points')}`,
       ),
-      msg: document.getElementById('msg').textContent,
-      timer: document.getElementById('timer').textContent,
-      streak: document.getElementById('streakn').textContent,
+      msg: (document.getElementById('msg') || {}).textContent,
+      timer: (document.getElementById('timer') || {}).textContent,
+      streak: (document.getElementById('streakn') || {}).textContent,
       sheet: !!document.querySelector('#modal.fin-open'),
     };
   });
