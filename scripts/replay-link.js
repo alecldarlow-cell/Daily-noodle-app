@@ -35,16 +35,10 @@ const LOAD_MS = 1200;
 /**
  * Differences that are site bugs, reported rather than ported. Each is printed as KNOWN
  * and does not fail the run; it fails again if it stops matching the bug as described.
- * - The sheet after "Play again (not recorded)": finish.js's show() removes the previous
- *   sheet, and with it the engine's #winTitle, #winTime, #winStreak and #winBest that
- *   sheet had adopted, so the replay's sheet has no title and three blank stats
- *   (engines/link.js showEnd fills them first, then finishSheet builds the new sheet).
- *   The app shows the replay's real title and stats.
+ * None now: the sheet after "Play again (not recorded)" lost its title and stats on the
+ * web until site #31 (25 Oct 2026) fixed finish.js.
  */
-const KNOWN = {
-  'replay sheet title': (web) => web === '',
-  'replay sheet stats': (web) => Array.isArray(web) && web.every((x) => x === ''),
-};
+const KNOWN = {};
 
 const webDeal = (p) =>
   p.evaluate(() => [...document.querySelectorAll('#board .tile')].map((t) => t.dataset.w));
