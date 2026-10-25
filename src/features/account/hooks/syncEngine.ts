@@ -1,4 +1,4 @@
-import { BOARD_KEY, importMove, type KV } from '@noodle/core';
+import { BOARD_KEY, importMove, type KV, type MovePayload } from '@noodle/core';
 
 import type { SyncApi } from '../api/syncApi';
 
@@ -24,7 +24,8 @@ function local(kv: KV & { keys(): string[] }): Record<string, unknown> {
 /**
  * One sync: pull what the account holds, merge it into this phone by the personal-link
  * rules (first result kept, better streak wins; a different league player is asked
- * about, never adopted silently), then push the merged documents back. Pulling first
+ * about, never adopted silently), then push the merged documents back. The website's
+ * dn-sync.js does exactly the same. Pulling first
  * every time means two phones never overwrite each other's results.
  */
 export async function runSync(
@@ -36,9 +37,19 @@ export async function runSync(
   const d: Record<string, string> = {};
   for (const [k, v] of Object.entries(remote))
     if (SYNC_KEY.test(k) && v && typeof v === 'object') d[k] = JSON.stringify(v);
-  const board = remote[BOARD_KEY];
-  importMove(kv, { v: 1, d, b: board && typeof board === 'object' ? board : undefined }, now);
+  // League identity: only another player's needs the import's adopt-or-ask rule; the
+  // same player's leagues come from the server anyway (and adopting would mark a move).
+  const board = remote[BOARD_KEY] as { pid?: unknown } | undefined;
+  const here = local(kv)[BOARD_KEY] as { pid?: unknown } | undefined;
+  const other =
+    board && typeof board === 'object' && !(here?.pid && here.pid === board.pid)
+      ? board
+      : undefined;
+  importMove(kv, { v: 1, d, b: other as MovePayload['b'] }, now);
   const mine = local(kv);
+  // While this phone hasn't chosen between its own league player and the account's,
+  // the account keeps the one it had.
+  if ((mine[BOARD_KEY] as { pend?: unknown } | undefined)?.pend) delete mine[BOARD_KEY];
   const pushed = Object.keys(mine).length ? await api.push(mine) : 0;
   kv.setItem(LAST_SYNC_KEY, JSON.stringify({ at: now() }));
   return { pulled: Object.keys(remote).length, pushed };
