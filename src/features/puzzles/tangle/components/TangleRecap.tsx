@@ -1,10 +1,15 @@
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
+
+import { FinishLink } from '@/shared/finish-sheet';
 
 import { FONT, usePuzzleTokens } from '@/shared/theme';
 import { Chevron } from '@/shared/ui';
 
 import type { recap } from '../model';
+
+/** Yarn: Tangle's game in Noodle Games, as Ballpark is Reckon's and Borderline Borders' (tangle.js). */
+export const YARN = 'https://dailynoodle.co.uk/reports/2026-10-24-quiz-yarn.html';
 
 /**
  * The sheet's recap (finish.css's Tangle word bank): the meter, a key, every common word
@@ -106,6 +111,11 @@ export function TangleRecap({ r }: { r: ReturnType<typeof recap> }) {
           <Text style={[styles.rareList, { color: pt.inkSoft }]}>{r.rareList.toUpperCase()}</Text>
         ) : null}
       </View>
+      <FinishLink
+        role="link"
+        label="Play more boards in Yarn"
+        onPress={() => void Linking.openURL(YARN)}
+      />
     </View>
   );
 }
