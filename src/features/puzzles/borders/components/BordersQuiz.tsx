@@ -1,8 +1,9 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { FONT } from '@/shared/theme';
 
+import { useAnnounce } from '../../link/hooks/announce';
 import { quizView, type BordersState, type Move } from '../model';
 import type { BordersColors } from './colors';
 import { mapHtml } from './drawing';
@@ -14,25 +15,54 @@ interface Props {
   dispatch: (m: Move) => void;
 }
 
-/** A question: the outline, the four names, Show on map, Next; and the pause sheet. */
+/** Text grows with the phone's text size up to these multiples, so Next always fits. */
+const CAP = 1.3;
+const CAP_BIG = 1.15;
+const pressedStyle = { opacity: 0.75 };
+
+/** What a screen reader hears once a question is answered: right or wrong, and the plate. */
+export function verdictOf(state: BordersState): string {
+  const a = state.cur?.ans[state.cur.ans.length - 1];
+  if (!state.locked || !state.plate || !a) return '';
+  return `${a.ok ? 'Right' : 'Wrong'}: ${state.plate.name}. ${state.plate.line}`;
+}
+
+/**
+ * A question: the outline, the four names, Show on map, Next; and the pause sheet. The
+ * column scrolls when it can't fit (a short phone at a large text size), the map giving
+ * way first, so Next is always reachable.
+ */
 export function BordersQuiz({ state, c, dispatch }: Props) {
   const v = quizView(state);
+  const verdict = verdictOf(state);
+  useAnnounce(verdict, `${state.cur?.i ?? 0}|${verdict}`);
   return (
     <SafeAreaView style={[styles.fill, { backgroundColor: c.bg }]} testID="borders-quiz">
-      <View style={styles.wrap}>
+      <ScrollView
+        style={styles.fill}
+        contentContainerStyle={styles.wrap}
+        bounces={false}
+        testID="borders-scroll">
         <View style={styles.qtop}>
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Pause"
             testID="borders-pause"
             onPress={() => dispatch({ t: 'pause' })}
-            style={[styles.iconbtn, { borderColor: c.edge }]}>
+            style={({ pressed }) => [
+              styles.iconbtn,
+              { borderColor: c.edge },
+              pressed && pressedStyle,
+            ]}>
             <View style={styles.bars}>
               <View style={[styles.bar, { backgroundColor: c.ink }]} />
               <View style={[styles.bar, { backgroundColor: c.ink }]} />
             </View>
           </Pressable>
-          <View style={styles.ticks} accessibilityElementsHidden>
+          <View
+            style={styles.ticks}
+            accessibilityElementsHidden
+            importantForAccessibility="no-hide-descendants">
             {v.ticks.map((t, i) => (
               <View
                 key={i}
@@ -47,11 +77,14 @@ export function BordersQuiz({ state, c, dispatch }: Props) {
             ))}
           </View>
           <Text
+            maxFontSizeMultiplier={CAP_BIG}
             style={[styles.pts, { color: c.ink }]}
             testID="borders-points"
             accessibilityLiveRegion="polite">
             {v.pts}
-            <Text style={styles.ptsSmall}> pts</Text>
+            <Text maxFontSizeMultiplier={CAP_BIG} style={styles.ptsSmall}>
+              {' pts'}
+            </Text>
           </Text>
         </View>
         <View style={[styles.sheet, { backgroundColor: c.sea, borderColor: c.edge }]}>
@@ -67,12 +100,18 @@ export function BordersQuiz({ state, c, dispatch }: Props) {
               style={[styles.nameplate, { backgroundColor: c.veil }]}
               testID="borders-plate"
               accessibilityLiveRegion="polite">
-              <Text style={[styles.plateName, { color: c.ink }]}>{v.plate.name}</Text>
-              <Text style={[styles.plateLine, { color: c.ink2 }]}>{v.plate.line}</Text>
+              <Text maxFontSizeMultiplier={CAP_BIG} style={[styles.plateName, { color: c.ink }]}>
+                {v.plate.name}
+              </Text>
+              <Text maxFontSizeMultiplier={CAP} style={[styles.plateLine, { color: c.ink2 }]}>
+                {v.plate.line}
+              </Text>
             </View>
           ) : null}
           {!v.coachOff ? (
-            <Text style={[styles.coach, { backgroundColor: c.paper, color: c.ink }]}>
+            <Text
+              maxFontSizeMultiplier={CAP}
+              style={[styles.coach, { backgroundColor: c.paper, color: c.ink }]}>
               Which country is this? “Show on map” helps, for half points.
             </Text>
           ) : null}
@@ -88,14 +127,16 @@ export function BordersQuiz({ state, c, dispatch }: Props) {
               }}
               testID={`borders-opt-${k}`}
               onPress={() => dispatch({ t: 'answer', k })}
-              style={[
+              style={({ pressed }) => [
                 styles.opt,
                 { borderColor: c.edge, backgroundColor: c.paper },
                 o.mark === 'right' && { backgroundColor: c.okT, borderColor: c.ok },
                 o.mark === 'wrong' && { backgroundColor: c.pinT, borderColor: c.pin },
                 o.mark === 'dim' && styles.dim,
+                pressed && !state.locked && pressedStyle,
               ]}>
               <Text
+                maxFontSizeMultiplier={CAP}
                 style={[
                   styles.optText,
                   {
@@ -114,8 +155,15 @@ export function BordersQuiz({ state, c, dispatch }: Props) {
               testID="borders-hint"
               disabled={v.hintDisabled}
               onPress={() => dispatch({ t: 'hint' })}
-              style={[styles.btn, { borderColor: c.ink2 }, v.hintDisabled && styles.dim]}>
-              <Text style={[styles.btnText, { color: c.ink }]}>Show on map (half points)</Text>
+              style={({ pressed }) => [
+                styles.btn,
+                { borderColor: c.ink2 },
+                v.hintDisabled && styles.dim,
+                pressed && pressedStyle,
+              ]}>
+              <Text maxFontSizeMultiplier={CAP} style={[styles.btnText, { color: c.ink }]}>
+                Show on map (half points)
+              </Text>
             </Pressable>
           ) : null}
           {!v.nextHidden ? (
@@ -123,34 +171,55 @@ export function BordersQuiz({ state, c, dispatch }: Props) {
               accessibilityRole="button"
               testID="borders-next"
               onPress={() => dispatch({ t: 'next' })}
-              style={[styles.btn, { backgroundColor: c.ink, borderColor: c.ink }]}>
-              <Text style={[styles.btnText, { color: c.paper }]}>{v.nextLabel}</Text>
+              style={({ pressed }) => [
+                styles.btn,
+                { backgroundColor: c.ink, borderColor: c.ink },
+                pressed && pressedStyle,
+              ]}>
+              <Text maxFontSizeMultiplier={CAP} style={[styles.btnText, { color: c.paper }]}>
+                {v.nextLabel}
+              </Text>
             </Pressable>
           ) : null}
         </View>
-      </View>
+      </ScrollView>
       {state.paused ? (
         <View
           style={[styles.ov, { backgroundColor: 'rgba(31,58,74,0.45)' }]}
           accessibilityViewIsModal
           testID="borders-paused">
           <View style={[styles.dialog, { backgroundColor: c.paper, borderColor: c.edge }]}>
-            <Text accessibilityRole="header" style={[styles.h2, { color: c.ink }]}>
+            <Text
+              accessibilityRole="header"
+              maxFontSizeMultiplier={CAP_BIG}
+              style={[styles.h2, { color: c.ink }]}>
               Paused
             </Text>
             <Pressable
               accessibilityRole="button"
               testID="borders-resume"
               onPress={() => dispatch({ t: 'resume' })}
-              style={[styles.btn, { backgroundColor: c.ink, borderColor: c.ink }]}>
-              <Text style={[styles.btnText, { color: c.paper }]}>Resume</Text>
+              style={({ pressed }) => [
+                styles.btn,
+                { backgroundColor: c.ink, borderColor: c.ink },
+                pressed && pressedStyle,
+              ]}>
+              <Text maxFontSizeMultiplier={CAP} style={[styles.btnText, { color: c.paper }]}>
+                Resume
+              </Text>
             </Pressable>
             <Pressable
               accessibilityRole="button"
               testID="borders-quit"
               onPress={() => dispatch({ t: 'quit' })}
-              style={[styles.btn, { borderColor: c.ink2 }]}>
-              <Text style={[styles.btnText, { color: c.ink }]}>Back to start</Text>
+              style={({ pressed }) => [
+                styles.btn,
+                { borderColor: c.ink2 },
+                pressed && pressedStyle,
+              ]}>
+              <Text maxFontSizeMultiplier={CAP} style={[styles.btnText, { color: c.ink }]}>
+                Back to start
+              </Text>
             </Pressable>
           </View>
         </View>
@@ -161,7 +230,14 @@ export function BordersQuiz({ state, c, dispatch }: Props) {
 
 const styles = StyleSheet.create({
   fill: { flex: 1 },
-  wrap: { flex: 1, maxWidth: 560, width: '100%', alignSelf: 'center', padding: 14, gap: 12 },
+  wrap: {
+    flexGrow: 1,
+    maxWidth: 560,
+    width: '100%',
+    alignSelf: 'center',
+    padding: 14,
+    gap: 12,
+  },
   qtop: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   iconbtn: {
     width: 44,
@@ -177,7 +253,8 @@ const styles = StyleSheet.create({
   tick: { flex: 1, height: 8, borderWidth: 1.25, borderRadius: 2 },
   pts: { fontFamily: FONT.serif, fontSize: 28, minWidth: 70, textAlign: 'right' },
   ptsSmall: { fontFamily: FONT.sans, fontSize: 13 },
-  sheet: { flex: 1, borderWidth: 1.5, borderRadius: 3, overflow: 'hidden', minHeight: 180 },
+  // The map fills what the column leaves; past its floor the column scrolls instead.
+  sheet: { flex: 1, borderWidth: 1.5, borderRadius: 3, overflow: 'hidden', minHeight: 150 },
   map: { ...StyleSheet.absoluteFill },
   nameplate: { position: 'absolute', left: 0, right: 0, bottom: 0, padding: 12 },
   plateName: { fontFamily: FONT.serif, fontSize: 28 },

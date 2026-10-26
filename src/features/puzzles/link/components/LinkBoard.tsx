@@ -1,18 +1,28 @@
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
+import {
+  PixelRatio,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+  type LayoutChangeEvent,
+} from 'react-native';
 
 import { useReduceMotion } from '@/shared/motion';
 
 import { FONT, usePuzzleTokens } from '@/shared/theme';
 
-import { disabled, MAX_MISTAKES, type LinkState } from '../model';
+import { disabled, MAX_MISTAKES, shownMsg, type LinkState } from '../model';
+import { useAnnounce } from '../hooks/announce';
 import type { ScreenMove } from '../hooks/useLinkGame';
-import { GROUP, ON_GROUP } from './LinkParts';
+import { useBoardColors } from './LinkParts';
 import { Landing, LostPip, SettleTile, Wobble } from './LinkMotion';
 
 interface LinkBoardProps {
   state: LinkState;
   dispatch: (m: ScreenMove) => void;
+  /** An archive Link (its day before today's): words the message line differently. */
+  past?: boolean;
 }
 
 /**
@@ -29,11 +39,33 @@ export function tileLines(w: string): 1 | 2 {
   return /\s/.test(w.trim()) ? 2 : 1;
 }
 
-/** A wrong four's tiles while they wobble (.tile.miss): pale red, red text and ring. */
-const MISS_BG = '#FBE3E0';
+/** The tile text's largest multiple of the phone's text size (as everywhere on the board). */
+const TILE_SCALE = 1.3;
 
-export function LinkBoard({ state, dispatch }: LinkBoardProps) {
+/**
+ * THE ONE tile font size (link.css --tf, link.js fitFont): every tile on the board shares
+ * it, set from the longest word still in play so that word fits the tile's width, between
+ * 12 and 18 pt as the page searches. Ragged per-word sizing reads as a bug. `scale` is the
+ * phone's text size (capped at TILE_SCALE): the size returned is before it is applied, so
+ * the drawn text still fits. A word longer than 12 pt allows still shrinks on its own.
+ */
+export function boardFont(words: readonly string[], tileW: number, scale = 1): number {
+  const s = Math.min(Math.max(scale, 1), TILE_SCALE);
+  if (!(tileW > 0) || !words.length) return 15;
+  const n = Math.max(...words.flatMap((w) => w.trim().split(/\s+/)).map((p) => p.length));
+  // Archivo Bold capitals average 0.7 em; 0.3 pt of letter spacing each; 5 pt padding a side.
+  const room = tileW - 12 - 0.3 * n;
+  const fit = room / (0.7 * n);
+  return Math.min(Math.max(fit, 12), 18 * s) / s;
+}
+
+const pressedStyle = { opacity: 0.75 };
+
+export function LinkBoard({ state, dispatch, past = false }: LinkBoardProps) {
   const pt = usePuzzleTokens();
+  const colors = useBoardColors();
+  const msg = shownMsg(state, past);
+  useAnnounce(msg.text, `${state.guesses.length}|${state.mistakes}|${msg.text}`);
   const off = disabled(state);
   const motion = useReduceMotion() === false;
   const rows: string[][] = [];
@@ -63,6 +95,7 @@ export function LinkBoard({ state, dispatch }: LinkBoardProps) {
     if (height !== geo.h || width !== geo.w) setGeo({ h: height, w: width });
   };
   const tileW = (geo.w - 3 * 8) / 4;
+  const tf = boardFont(state.live, tileW, PixelRatio.getFontScale());
 
   const face = (w: string, look: 'plain' | 'sel' | 'miss' | 'turned') => (
     <View
@@ -75,14 +108,21 @@ export function LinkBoard({ state, dispatch }: LinkBoardProps) {
           borderColor: pt.active,
           borderWidth: 2.5,
         },
-        look === 'miss' && { backgroundColor: MISS_BG, borderColor: pt.bad, borderWidth: 2.5 },
-        look === 'turned' && { backgroundColor: GROUP[hitRank] },
+        look === 'miss' && {
+          backgroundColor: colors.missBg,
+          borderColor: pt.bad,
+          borderWidth: 2.5,
+        },
+        look === 'turned' && { backgroundColor: colors.fill[hitRank] },
       ]}>
       <Text
-        maxFontSizeMultiplier={1.3}
+        maxFontSizeMultiplier={TILE_SCALE}
         style={[
           styles.tt,
-          { color: look === 'turned' ? ON_GROUP[hitRank] : look === 'miss' ? pt.bad : pt.ink },
+          { fontSize: tf },
+          {
+            color: look === 'turned' ? colors.on[hitRank] : look === 'miss' ? pt.bad : pt.ink,
+          },
         ]}
         numberOfLines={tileLines(w)}
         adjustsFontSizeToFit>
@@ -98,19 +138,21 @@ export function LinkBoard({ state, dispatch }: LinkBoardProps) {
           const g = state.p.groups[i]!;
           const words = (
             <>
-              <Text maxFontSizeMultiplier={1.3} style={[styles.bname, { color: ON_GROUP[g.rank] }]}>
+              <Text
+                maxFontSizeMultiplier={1.3}
+                style={[styles.bname, { color: colors.on[g.rank] }]}>
                 {g.name.toUpperCase()}
               </Text>
               <Text
                 maxFontSizeMultiplier={1.3}
-                style={[styles.bmem, { color: ON_GROUP[g.rank] }]}
+                style={[styles.bmem, { color: colors.on[g.rank] }]}
                 numberOfLines={1}
                 adjustsFontSizeToFit>
                 {g.members.join(' · ')}
               </Text>
             </>
           );
-          const style = [styles.band, { backgroundColor: GROUP[g.rank] }];
+          const style = [styles.band, { backgroundColor: colors.fill[g.rank] }];
           const a11y = {
             accessible: true,
             accessibilityLabel: `${g.name}: ${g.members.join(', ')}`,
@@ -154,7 +196,11 @@ export function LinkBoard({ state, dispatch }: LinkBoardProps) {
                   accessibilityLabel={w}
                   testID={`tile-${w}`}
                   onPress={() => dispatch({ t: 'tile', w })}
-                  style={[styles.tile, turned && styles.lift]}>
+                  style={({ pressed }) => [
+                    styles.tile,
+                    turned && styles.lift,
+                    pressed && pressedStyle,
+                  ]}>
                   {body}
                 </Pressable>
               );
@@ -164,6 +210,9 @@ export function LinkBoard({ state, dispatch }: LinkBoardProps) {
       </View>
       <View
         style={styles.lives}
+        accessible
+        accessibilityRole="text"
+        testID="link-lives"
         accessibilityLabel={`${MAX_MISTAKES - state.mistakes} mistakes left`}>
         <Text maxFontSizeMultiplier={1.3} style={[styles.livesText, { color: pt.inkSoft }]}>
           MISTAKES LEFT
@@ -187,13 +236,14 @@ export function LinkBoard({ state, dispatch }: LinkBoardProps) {
       </View>
       <Text
         maxFontSizeMultiplier={1.3}
+        accessibilityLiveRegion="polite"
         style={[
           styles.msg,
-          { color: state.msg.tone === 'bad' ? pt.bad : pt.inkSoft },
-          state.msg.tone === 'bad' && styles.msgBad,
+          { color: msg.tone === 'bad' ? pt.bad : pt.inkSoft },
+          msg.tone === 'bad' && styles.msgBad,
         ]}
         testID="link-msg">
-        {state.msg.tone === 'bad' ? state.msg.text.toUpperCase() : state.msg.text}
+        {msg.tone === 'bad' ? msg.text.toUpperCase() : msg.text}
       </Text>
       <View style={styles.controls}>
         {(
@@ -209,10 +259,12 @@ export function LinkBoard({ state, dispatch }: LinkBoardProps) {
             accessibilityState={{ disabled: dis }}
             disabled={dis}
             onPress={() => dispatch({ t })}
-            style={[
+            testID={`link-${t}`}
+            style={({ pressed }) => [
               styles.btn,
               { borderColor: pt.lineSoft, backgroundColor: pt.card },
               t === 'submit' && !dis && { backgroundColor: pt.brand, borderColor: pt.brand },
+              pressed && pressedStyle,
             ]}>
             <Text
               maxFontSizeMultiplier={1.3}

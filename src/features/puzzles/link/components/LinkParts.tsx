@@ -6,17 +6,6 @@ import { FONT, usePuzzleTokens } from '@/shared/theme';
 
 import type { LinkGroup } from '../model';
 
-/** The four group colours, easiest to hardest (engines/link.css --g1…--g4). */
-export const GROUP = { 1: '#1F9E6B', 2: '#2E5BFF', 3: '#FFD54A', 4: '#141726' } as Record<
-  number,
-  string
->;
-/** Text on a group's colour: ink on marigold, white on the rest. */
-export const ON_GROUP = { 1: '#FFFFFF', 2: '#FFFFFF', 3: '#141726', 4: '#FFFFFF' } as Record<
-  number,
-  string
->;
-
 /**
  * The finish sheet's group colours (finish.css --f-g1…--f-g4 and .fin-g*): the sheet's own
  * green, and group 4 turned light in dark mode so it shows on the dark sheet; the text and
@@ -33,6 +22,16 @@ export function useSheetGroups() {
   };
   const on: Record<number, string> = { 1: '#FFFFFF', 2: '#FFFFFF', 3: '#141726', 4: bg };
   return { fill, on };
+}
+
+/**
+ * The board's colours: the groups as the sheet has them (house.css --g1…--g4: the hardest
+ * group turns light in dark mode, its text the paper), and a wrong four's tiles (.tile.miss:
+ * a pale red slab on light paper, a soft red tint in dark, house.css:134).
+ */
+export function useBoardColors() {
+  const dark = useColorScheme() === 'dark';
+  return { ...useSheetGroups(), missBg: dark ? 'rgba(255,122,110,0.16)' : '#FBE3E0' };
 }
 
 /** The start card's picture: four rows of tiles, three of the second row held (house.js art). */

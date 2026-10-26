@@ -7,12 +7,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { FinishSheet, useFreshFinish } from '@/shared/finish-sheet';
 import { LINK_BURSTS, useWinBursts } from '@/shared/motion';
 import { PuzzleBar, ruleFor, StartCard, useStartStats } from '@/shared/start-card';
-import { useStoredRaw } from '@/shared/storage';
 import { usePuzzleTokens } from '@/shared/theme';
 
 import type { PuzzleFile } from '../../types';
 import { useLinkGame } from '../hooks/useLinkGame';
-import { groupsByRank, STREAK_KEY, type LinkData } from '../model';
+import { groupsByRank, shownLabel, type LinkData } from '../model';
 import { LinkBoard } from './LinkBoard';
 import { GroupBands, GuessSquares, LinkArt, PlayAgain } from './LinkParts';
 
@@ -24,16 +23,6 @@ function openNext(item: TodayItem | null) {
   router.replace({ pathname: '/play/[type]/[file]', params: { type: item.type, file } });
 }
 
-/** The saved streak as the page's bar shows it (#streak: the saved number, live or not). */
-function savedStreak(raw: string | null): number {
-  try {
-    const s = JSON.parse(raw ?? 'null') as { streak?: unknown } | null;
-    return (s && Number(s.streak)) || 0;
-  } catch {
-    return 0;
-  }
-}
-
 /** Link, played natively: start card, board, finish sheet. */
 export function LinkScreen({ file }: { file: PuzzleFile<LinkData> }) {
   const pt = usePuzzleTokens();
@@ -43,8 +32,8 @@ export function LinkScreen({ file }: { file: PuzzleFile<LinkData> }) {
   const winning = game.phase === 'play' && !!game.info?.won;
   const boardRef = useRef<ComponentRef<typeof View>>(null);
   useWinBursts(winning, LINK_BURSTS, boardRef);
+  // The bar's flame is Link's own streak, the number its start card shows (alive or 0).
   const stats = useStartStats('link');
-  const streak = savedStreak(useStoredRaw(STREAK_KEY));
   const n = dnNum(file.data.id).slice(1);
   const { state, dispatch } = game;
 
@@ -101,12 +90,12 @@ export function LinkScreen({ file }: { file: PuzzleFile<LinkData> }) {
       <View style={styles.in}>
         <PuzzleBar
           name={`Link ${n}`}
-          sub={`${file.data.band}${state.label ? ' · replay' : ''}`}
-          streak={streak}
+          sub={`${file.data.band}${shownLabel(state, game.past) ? ' · replay' : ''}`}
+          streak={stats.streak}
           clock={game.clock}
           onBack={back}
         />
-        <LinkBoard state={state} dispatch={dispatch} />
+        <LinkBoard state={state} dispatch={dispatch} past={game.past} />
       </View>
     </SafeAreaView>
   );
