@@ -18,7 +18,6 @@
  * their saved values untouched), the tile flashes, and Yesterday's answers.
  */
 import { dayBefore, londonDay, type SaveStore } from '@noodle/core';
-import { dayHead } from '@/shared/time';
 
 export const N = 4;
 export const MINLEN = 3;
@@ -712,7 +711,7 @@ export function homeCard(e: TangleEngine, t: string) {
     status = `${mmss(D.left)} left, ${plural(D.score, 'point', 'points')} so far.`;
     go = 'Resume';
   } else {
-    head = dayHead('Tangle', P.date, t);
+    head = 'Today’s Tangle';
     status = `90 seconds. Longer words score more; the ${num(P.star.length)}-letter word scores double.`;
     go = 'Play';
   }

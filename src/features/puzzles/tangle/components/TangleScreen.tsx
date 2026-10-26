@@ -27,6 +27,15 @@ function openNext(item: TodayItem | null) {
   router.replace({ pathname: '/play/[type]/[file]', params: { type: item.type, file } });
 }
 
+/**
+ * The home card with its heading naming the puzzle's day: the model keeps the page's
+ * "Today’s Tangle" (the differential replay checks it against tangle.js); the screen
+ * says "Yesterday’s Tangle" or "From the archive" on an older board.
+ */
+export function dayCard<C extends { head: string }>(card: C, date: string, today: string): C {
+  return card.head === 'Today’s Tangle' ? { ...card, head: dayHead('Tangle', date, today) } : card;
+}
+
 /** Tangle, played natively: its home card, the round, the result. */
 export function TangleScreen({ file }: { file: PuzzleFile<TangleData> }) {
   const { engine, setRects } = useTangleGame(file);
@@ -64,7 +73,7 @@ export function TangleScreen({ file }: { file: PuzzleFile<TangleData> }) {
 
   return (
     <TangleHome
-      card={homeCard(engine, day)}
+      card={dayCard(homeCard(engine, day), file.date, day)}
       onPlay={() => {
         start();
         engine.playCard();
