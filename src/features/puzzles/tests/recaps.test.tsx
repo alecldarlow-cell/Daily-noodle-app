@@ -1,5 +1,5 @@
-import { render, renderHook, screen, within } from '@testing-library/react-native';
-import { View } from 'react-native';
+import { fireEvent, render, renderHook, screen, within } from '@testing-library/react-native';
+import { Linking, View } from 'react-native';
 
 import { RECAP_MAX } from '@/shared/finish-sheet';
 
@@ -23,7 +23,7 @@ import { reckon2 } from '../reckon/tests/fixtures';
 import { SweepRecap } from '../sweep/components/SweepBoard';
 import { init as sweepInit } from '../sweep/model';
 import { sweep94 } from '../sweep/tests/fixtures';
-import { TangleRecap } from '../tangle/components/TangleRecap';
+import { TangleRecap, YARN } from '../tangle/components/TangleRecap';
 import { recap as tangleRecap } from '../tangle/model';
 import { tangle19 } from '../tangle/tests/fixtures';
 
@@ -126,6 +126,10 @@ describe('GIVEN the finish sheet’s grid recaps', () => {
       for (const c of chips) expect(c).toHaveStyle({ borderWidth: 2 });
       const found = screen.getByLabelText(/^ago, \d+ points, found$/i);
       expect(found).toHaveStyle({ borderColor: 'transparent' });
+      const open = jest.spyOn(Linking, 'openURL').mockResolvedValue(undefined);
+      await fireEvent.press(screen.getByRole('link', { name: 'Play more boards in Yarn' }));
+      expect(open).toHaveBeenCalledWith(YARN);
+      open.mockRestore();
     });
   });
 

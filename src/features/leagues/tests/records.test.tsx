@@ -182,3 +182,57 @@ describe('GIVEN a player in a league', () => {
     });
   });
 });
+
+describe('GIVEN a puzzle’s daily board, with the league’s records loaded', () => {
+  describe('WHEN it shows the day a record was set', () => {
+    it('THEN the record line closes the board, the row says so, and last week’s champion wears 👑', async () => {
+      params.mockReturnValue({ p: 'mini', d: '2026-10-18' });
+      await renderWithProviders(<LeaguesScreen />);
+      await waitFor(() => expect(screen.getByTestId('record-line')).toBeOnTheScreen());
+      expect(m.boardRecords).toHaveBeenCalledWith(PID, 'ABCD2345');
+      expect(screen.getByTestId('record-line')).toHaveTextContent(
+        '🏅 League record 0:30 · Ma · 18 Oct',
+      );
+      expect(screen.getByTestId('new-record-Ma')).toHaveTextContent('🏆 New league record');
+      expect(screen.queryByTestId('new-record-Alec')).toBeNull();
+      expect(screen.getByTestId('row-Ma')).toHaveTextContent(/Ma 👑/);
+      expect(screen.getByTestId('row-Alec')).not.toHaveTextContent(/👑/);
+    });
+  });
+
+  describe('WHEN it shows another day', () => {
+    it('THEN the record line still shows, but no row claims it', async () => {
+      params.mockReturnValue({ p: 'mini', d: '2026-10-20' });
+      await renderWithProviders(<LeaguesScreen />);
+      await waitFor(() => expect(screen.getByTestId('record-line')).toBeOnTheScreen());
+      expect(screen.queryByTestId('new-record-Ma')).toBeNull();
+    });
+  });
+
+  describe('WHEN a name on the board is tapped', () => {
+    it('THEN Records opens on that player’s card, and picking a pill closes it', async () => {
+      params.mockReturnValue({ p: 'mini', d: '2026-10-18' });
+      await renderWithProviders(<LeaguesScreen />);
+      await waitFor(() => expect(screen.getByTestId('row-Ma')).toBeOnTheScreen());
+      await waitFor(() => expect(screen.getByTestId('record-line')).toBeOnTheScreen());
+      await fireEvent.press(screen.getByTestId('row-Ma'));
+      await waitFor(() => expect(screen.getByTestId('player-card')).toBeOnTheScreen());
+      expect(within(screen.getByTestId('player-card')).getByRole('header')).toHaveTextContent(
+        'Ma 👑',
+      );
+      await fireEvent.press(screen.getByTestId('pill-records'));
+      expect(screen.getByTestId('records-board')).toBeOnTheScreen();
+    });
+  });
+
+  describe('WHEN the records can’t load', () => {
+    it('THEN the board shows as before, without the extras', async () => {
+      params.mockReturnValue({ p: 'mini', d: '2026-10-18' });
+      m.boardRecords.mockRejectedValue(new BoardError('busy'));
+      await renderWithProviders(<LeaguesScreen />);
+      await waitFor(() => expect(screen.getByTestId('day-board')).toBeOnTheScreen());
+      expect(screen.queryByTestId('record-line')).toBeNull();
+      expect(screen.getByTestId('row-Ma')).not.toHaveTextContent(/👑/);
+    });
+  });
+});

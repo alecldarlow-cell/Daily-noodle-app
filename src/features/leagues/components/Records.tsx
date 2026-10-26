@@ -1,6 +1,6 @@
 /* The Records pill and a player's card (board.html renderRecords, renderCard; data: board_records). */
 import { BOARD_TYPES, type BoardLeague, type BoardTypeId } from '@noodle/core';
-import { Fragment, useState, type ReactNode } from 'react';
+import { Fragment, type ReactNode } from 'react';
 import { Pressable, Share, StyleSheet, Text, View } from 'react-native';
 
 import { useTokens } from '@/shared/theme';
@@ -105,9 +105,19 @@ function Names({ names, open }: { names: string[]; open: (n: string) => void }) 
 }
 
 /** The Records pill: each puzzle's record, the honours, and every player. Names open cards. */
-export function RecordsView({ league, d }: { league: BoardLeague; d: Records }) {
+export function RecordsView({
+  league,
+  d,
+  card,
+  setCard,
+}: {
+  league: BoardLeague;
+  d: Records;
+  /** The player whose card is open (a name tapped here or on another board), or none. */
+  card: string | null;
+  setCard: (nick: string | null) => void;
+}) {
   const t = useTokens();
-  const [card, setCard] = useState<string | null>(null);
   const player = card ? d.players.find((p) => p.nick === card) : undefined;
   if (player) return <PlayerCard d={d} p={player} onBack={() => setCard(null)} />;
 
