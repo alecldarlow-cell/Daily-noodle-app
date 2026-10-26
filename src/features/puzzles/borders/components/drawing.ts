@@ -94,19 +94,42 @@ export function worldHtml(c: BordersColors): string {
 }
 
 /** The finish sheet's ten outlines (the engine's tileSVG), each with its name. */
+/** The finish sheet's colours for the outlines (finish.css --f-paper, --f-actT, --f-ink, --f-ink2). */
+export interface SheetOutline {
+  tile: string;
+  fill: string;
+  ink: string;
+  soft: string;
+}
+
+const SHEET_LIGHT: SheetOutline = {
+  tile: '#FFFFFF',
+  fill: '#DCE4FF',
+  ink: '#141726',
+  soft: '#545A6E',
+};
+
+/**
+ * The finish sheet's ten outlines (finish.css .fin-outl): every outline the same pale blue
+ * with an ink edge on a white tile, a miss left unfilled with a dashed soft edge and a soft
+ * caption, not each country in its map colour.
+ */
 export function tilesHtml(
   tiles: { q: BordersQ; ok: boolean; caption: string }[],
   c: BordersColors,
+  s: SheetOutline = SHEET_LIGHT,
 ): string {
   const fig = tiles
     .map(
       (t) =>
-        `<figure class="${t.ok ? 'ok' : 'x'}"><div class="t"><svg viewBox="0 0 600 600" aria-hidden="true"><path class="land" fill="${colourOf(t.q)}" d="${t.q.d}" stroke-width="9"/></svg>${t.ok ? '' : '<b>✕</b>'}</div><figcaption>${t.caption.replace(/</g, '&lt;')}</figcaption></figure>`,
+        `<figure class="${t.ok ? 'ok' : 'x'}"><div class="t"><svg viewBox="0 0 600 600" aria-hidden="true"><path class="land" d="${t.q.d}"/></svg></div><figcaption>${t.caption.replace(/</g, '&lt;')}</figcaption></figure>`,
     )
     .join('');
   return `<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"><style>${css(c)}
-body{display:grid;grid-template-columns:repeat(5,1fr);gap:10px 8px;font:12px -apple-system,Roboto,sans-serif;color:${c.ink}}
-figure{margin:0}.t{position:relative;aspect-ratio:1;background:${c.sea};border:1.25px solid ${c.edge};border-radius:3px;overflow:hidden}
-.t svg{width:100%;height:100%}.x .t{opacity:.55}.t b{position:absolute;right:3px;top:1px;color:${c.pin};font-size:14px}
-figcaption{margin-top:3px;line-height:1.25;text-align:center;overflow-wrap:anywhere}</style></head><body>${fig}</body></html>`;
+body{display:grid;grid-template-columns:repeat(5,1fr);gap:12px 8px;font:12px -apple-system,Roboto,sans-serif;color:${s.ink}}
+figure{margin:0;text-align:center;min-width:0}.t{aspect-ratio:1;background:${s.tile};border-radius:8px;overflow:hidden}
+.t svg{width:100%;height:100%;display:block}
+.t path{fill:${s.fill};stroke:${s.ink};stroke-width:1.5;vector-effect:non-scaling-stroke}
+.x .t path{fill:transparent;stroke:${s.soft};stroke-dasharray:3 2}
+figcaption{margin-top:5px;line-height:1.25;overflow-wrap:anywhere}.x figcaption{color:${s.soft}}</style></head><body>${fig}</body></html>`;
 }

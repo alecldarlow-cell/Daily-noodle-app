@@ -4,6 +4,7 @@ import { Linking, StyleSheet, View } from 'react-native';
 
 import { FinishLink, FinishSheet, useFreshFinish } from '@/shared/finish-sheet';
 import { usePuzzleVisit } from '@/shared/results';
+import { usePuzzleTokens } from '@/shared/theme';
 
 import type { PuzzleFile } from '../../types';
 import type { FinishInfo } from '../finishing';
@@ -27,10 +28,12 @@ function openNext(item: TodayItem | null) {
 
 /** "Today's ten", easiest first: each outline with its name, the misses crossed. */
 function Recap({ info, c }: { info: FinishInfo; c: BordersColors }) {
+  const pt = usePuzzleTokens();
+  const sheet = { tile: pt.sheet, fill: pt.brandTint, ink: pt.ink, soft: pt.sheetSoft };
   return (
     <View>
       <Picture
-        html={tilesHtml(info.tiles, c)}
+        html={tilesHtml(info.tiles, c, sheet)}
         style={styles.tiles}
         label={info.tiles.map((t) => `${t.caption}${t.ok ? '' : ', missed'}`).join('; ')}
         testID="borders-recap"

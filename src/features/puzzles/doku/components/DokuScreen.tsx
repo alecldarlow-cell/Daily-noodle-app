@@ -22,7 +22,7 @@ import { fitBoard } from '@/shared/ui';
 import type { PuzzleFile } from '../../types';
 import { MiniArt } from '../../mini/components/MiniGrids';
 import { useDokuGame } from '../hooks/useDokuGame';
-import { STREAK_KEY, type DokuData } from '../model';
+import { recapSub, STREAK_KEY, type DokuData } from '../model';
 import { DokuBank } from './DokuBank';
 import { DokuBoard } from './DokuBoard';
 import { SolvedGrid } from './DokuGrids';
@@ -99,7 +99,7 @@ export function DokuScreen({ file }: { file: PuzzleFile<DokuData> }) {
           { value: game.info.best, label: 'best streak' },
           { value: game.info.played, label: 'Dokus played' },
         ]}
-        recap={{ title: 'The grid', node: <SolvedGrid p={state.p} /> }}
+        recap={{ title: 'The grid', sub: recapSub(state.p), node: <SolvedGrid p={state.p} /> }}
         onBack={back}
         onNext={openNext}
       />
