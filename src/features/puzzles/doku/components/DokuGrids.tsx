@@ -1,59 +1,32 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { View } from 'react-native';
 
-import { FONT, usePuzzleTokens } from '@/shared/theme';
+import { RecapCell, RecapGrid, RecapText } from '@/shared/finish-sheet';
+import { usePuzzleTokens } from '@/shared/theme';
 
-import { isLock, recapSub, type DokuPuzzle } from '../model';
-import { useLockedColor } from './DokuBoard';
+import { isLock, type DokuPuzzle } from '../model';
 
-/** The finish sheet's recap: "The five given letters are shaded." and the solved grid. */
+/** The finish sheet's recap (.fin-grid g5): the solved grid, the given squares shaded and soft. */
 export function SolvedGrid({ p }: { p: DokuPuzzle }) {
   const pt = usePuzzleTokens();
-  const locked = useLockedColor();
   return (
-    <View style={styles.wrap}>
-      <Text style={[styles.sub, { color: pt.inkSoft }]}>{recapSub(p)}</Text>
-      <View style={[styles.solved, { backgroundColor: pt.line }]} testID="solved-grid">
-        {p.grid.map((row, r) => (
-          <View key={r} style={styles.solvedRow}>
-            {row.map((ch, c) => {
-              const given = ch !== '#' && isLock(p, r, c);
-              return (
-                <View
-                  key={c}
-                  testID={given ? `given-${r}-${c}` : undefined}
-                  style={[
-                    styles.cell,
-                    {
-                      backgroundColor: ch === '#' ? pt.block : given ? locked : pt.card,
-                      borderColor: pt.cellEdge,
-                    },
-                  ]}>
-                  {ch !== '#' && p.nums[r]![c] ? (
-                    <Text style={[styles.num, { color: pt.inkSoft }]}>{p.nums[r]![c]}</Text>
-                  ) : null}
-                  {ch !== '#' ? <Text style={[styles.ltr, { color: pt.ink }]}>{ch}</Text> : null}
-                </View>
-              );
-            })}
-          </View>
-        ))}
-      </View>
-    </View>
+    <RecapGrid
+      n={5}
+      testID="solved-grid"
+      cell={(r, c, size) => {
+        const ch = p.grid[r]![c]!;
+        if (ch === '#')
+          return <View style={{ width: size, height: size, backgroundColor: pt.block }} />;
+        const given = isLock(p, r, c);
+        return (
+          <RecapCell
+            size={size}
+            num={p.nums[r]![c]}
+            bg={given ? pt.cellAlt : undefined}
+            testID={given ? `given-${r}-${c}` : undefined}>
+            <RecapText color={given ? pt.sheetSoft : undefined}>{ch}</RecapText>
+          </RecapCell>
+        );
+      }}
+    />
   );
 }
-
-const styles = StyleSheet.create({
-  wrap: { gap: 10 },
-  sub: { fontFamily: FONT.sans, fontSize: 14 },
-  solved: { alignSelf: 'flex-start', padding: 2, borderRadius: 8 },
-  solvedRow: { flexDirection: 'row' },
-  cell: {
-    width: 44,
-    height: 44,
-    borderWidth: StyleSheet.hairlineWidth,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  num: { position: 'absolute', top: 1, left: 3, fontFamily: FONT.sans, fontSize: 9 },
-  ltr: { fontSize: 20, fontFamily: FONT.display },
-});

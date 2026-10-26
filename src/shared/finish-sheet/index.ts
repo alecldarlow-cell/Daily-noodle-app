@@ -10,3 +10,4 @@ export {
   type BoardSlotComponent,
   type RenderBoardSlot,
 } from './boardSlot';
+export { Flag, RecapCell, RecapGrid, RecapText, RECAP_MAX, useRecapWidth } from './RecapGrid';
