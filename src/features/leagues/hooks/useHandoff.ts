@@ -10,6 +10,7 @@ import { Share } from 'react-native';
 
 import { appStorage } from '@/shared/storage';
 
+import { SaidError } from '../api/errors';
 import { getPid, loadBoard, patchBoard } from './boardStore';
 import { BOARD_QUERY, refreshLeagues } from './useLeagues';
 
@@ -29,7 +30,7 @@ export function useImportLink() {
   return useMutation({
     mutationFn: async (text: string): Promise<Arrival> => {
       const p = unpackMove(text);
-      if (!p) throw new Error(NOT_A_LINK);
+      if (!p) throw new SaidError(NOT_A_LINK);
       importMove(appStorage, p);
       const s = loadBoard();
       // The page reads `moved` once (dn-board.js moved()).

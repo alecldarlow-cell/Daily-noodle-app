@@ -14,9 +14,10 @@ import {
 } from 'react-native';
 
 import { appStorage, useStoredRaw } from '@/shared/storage';
-import { useTokens } from '@/shared/theme';
+import { FONT, useTokens } from '@/shared/theme';
 import { shortDate, useLondonDay } from '@/shared/time';
 
+import { isOffline, sayError } from '../api/errors';
 import { hasPin, setCurrent, setLastType, useBoardState } from '../hooks/boardStore';
 import {
   addDays,
@@ -79,8 +80,11 @@ export function Board({ flow, league }: { flow: Flow; league: BoardLeague }) {
   const [seen, setSeen] = useState(asked.key);
   if (asked.key !== seen) {
     setSeen(asked.key);
-    setChosen(asked.view);
-    setDate(asked.date ?? today);
+    // A new ask from the route; its params being cleared once read keeps what's showing.
+    if (asked.view || asked.date) {
+      setChosen(asked.view);
+      setDate(asked.date ?? today);
+    }
   }
   const view: BoardView = chosen ?? (isView(s.ptype) ? s.ptype : 'all');
   const day = date > today ? today : date;
@@ -151,9 +155,11 @@ export function Board({ flow, league }: { flow: Flow; league: BoardLeague }) {
         ) : shown.isPending ? (
           <ActivityIndicator style={styles.spin} color={t.muted} />
         ) : shown.isError || !shown.data ? (
-          <Text style={[styles.nobody, { color: t.muted }]} testID="board-error">
-            Couldn’t load the board. {shown.error instanceof Error ? shown.error.message : ''}
-          </Text>
+          <BoardFailed
+            error={shown.error}
+            busy={shown.isFetching}
+            retry={() => void shown.refetch()}
+          />
         ) : records ? (
           <RecordsView
             key={league.code}
@@ -191,6 +197,29 @@ export function Board({ flow, league }: { flow: Flow; league: BoardLeague }) {
   );
 }
 
+/** The board didn't load: why, in the site's words (no signal, or the server), and Try again. */
+function BoardFailed({ error, busy, retry }: { error: unknown; busy: boolean; retry: () => void }) {
+  const offline = isOffline(error);
+  return (
+    <Card title={offline ? 'You’re offline' : 'Couldn’t load the board'} testID="board-error">
+      <P>
+        {offline
+          ? 'Couldn’t load the board. Check your connection, then try again.'
+          : sayError(error)}
+      </P>
+      <Acts>
+        <Btn
+          kind="go"
+          label={busy ? 'Trying…' : 'Try again'}
+          disabled={busy}
+          onPress={retry}
+          testID="board-retry"
+        />
+      </Acts>
+    </Card>
+  );
+}
+
 /** The league in the masthead: switch, start or join another. */
 function LeagueBar({
   flow,
@@ -225,7 +254,11 @@ function LeagueBar({
                   backgroundColor: on ? t.accentSoft : t.paper,
                 },
               ]}>
-              <Text style={[styles.pillText, { color: t.ink, fontWeight: on ? '800' : '600' }]}>
+              <Text
+                style={[
+                  styles.pillText,
+                  { color: t.ink, fontFamily: on ? FONT.bodyBold : FONT.bodySemi },
+                ]}>
                 {l.name}
               </Text>
             </Pressable>
@@ -638,16 +671,25 @@ function Settings({
   const [open, setOpen] = useState(false);
   const [name, setName] = useState(league.name);
   const [msg, setMsg] = useState<{ text: string; ok?: boolean }>({ text: '' });
+  // Another league picked: its own name in the rename box, and no message left from the
+  // last one (else Save would rename this league to the other's name).
+  const [forCode, setForCode] = useState(league.code);
+  if (forCode !== league.code) {
+    setForCode(league.code);
+    setName(league.name);
+    setMsg({ text: '' });
+  }
   const leave = useLeaveLeague();
   const owner = useOwnerAction();
-  const fail = (e: unknown) => setMsg({ text: e instanceof Error ? e.message : String(e) });
+  const fail = (e: unknown) => setMsg({ text: sayError(e) });
   const pin = hasPin(s);
   return (
     <View style={[styles.settings, { borderTopColor: t.hair }]} testID="league-settings">
       <Pressable
         accessibilityRole="button"
         accessibilityState={{ expanded: open }}
-        onPress={() => setOpen(!open)}>
+        onPress={() => setOpen(!open)}
+        style={styles.summaryBtn}>
         <Text style={[styles.summary, { color: t.muted }]}>⚙︎ League settings</Text>
       </Pressable>
       {open ? (
@@ -705,7 +747,13 @@ function Settings({
           {league.owner ? (
             <>
               <Sub>League name</Sub>
-              <Field label="League name" maxLength={30} value={name} onChangeText={setName} />
+              <Field
+                label="League name"
+                testID="settings-league-name"
+                maxLength={30}
+                value={name}
+                onChangeText={setName}
+              />
               <Acts>
                 <Btn
                   label="Save"
@@ -718,7 +766,7 @@ function Settings({
                         code: league.code,
                         name: leagueNameSchema.cast(name) as string,
                       },
-                      { onError: fail },
+                      { onSuccess: () => setMsg({ ok: true, text: 'Saved.' }), onError: fail },
                     );
                   }}
                 />
@@ -726,7 +774,7 @@ function Settings({
               <Sub>Players</Sub>
               {players.map((p) => (
                 <View key={p} style={[styles.plist, { borderBottomColor: t.hair }]}>
-                  <Text style={{ color: t.ink, fontSize: 15 }}>
+                  <Text style={[styles.plistName, { color: t.ink }]}>
                     {p}
                     {p === league.nick ? ' (you)' : ''}
                   </Text>
@@ -735,6 +783,7 @@ function Settings({
                       <Pressable
                         accessibilityRole="button"
                         accessibilityLabel={`Let ${p} back in`}
+                        style={styles.plistHit}
                         onPress={() =>
                           owner.mutate(
                             { act: 'let_back', code: league.code, nick: p },
@@ -755,6 +804,7 @@ function Settings({
                       <Pressable
                         accessibilityRole="button"
                         accessibilityLabel={`Remove ${p}`}
+                        style={styles.plistHit}
                         onPress={() =>
                           confirm(
                             'Remove player',
@@ -820,40 +870,53 @@ function Settings({
 const styles = StyleSheet.create({
   leagueBar: { marginBottom: 4 },
   kicker: {
-    fontSize: 10.5,
-    fontWeight: '600',
+    fontFamily: FONT.bodySemi,
+    fontSize: 11,
     letterSpacing: 0.8,
     textTransform: 'uppercase',
     marginBottom: 6,
   },
   pills: { gap: 8, paddingVertical: 6 },
-  pill: { paddingHorizontal: 12, paddingVertical: 7, borderRadius: 999, borderWidth: 1 },
-  pillText: { fontSize: 14, fontWeight: '600' },
-  loading: { textAlign: 'center', paddingVertical: 40, fontSize: 14 },
+  pill: {
+    minHeight: 44,
+    justifyContent: 'center',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 999,
+    borderWidth: 1,
+  },
+  pillText: { fontFamily: FONT.bodySemi, fontSize: 14 },
+  loading: { fontFamily: FONT.body, textAlign: 'center', paddingVertical: 40, fontSize: 14 },
   spin: { marginTop: 40 },
-  nobody: { textAlign: 'center', paddingTop: 28, paddingBottom: 10, fontSize: 15 },
+  nobody: {
+    fontFamily: FONT.body,
+    textAlign: 'center',
+    paddingTop: 28,
+    paddingBottom: 10,
+    fontSize: 15,
+  },
   dayBar: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 14, marginBottom: 6 },
   dayBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  dayArrow: { fontSize: 20, lineHeight: 22 },
+  dayArrow: { fontFamily: FONT.display, fontSize: 22, lineHeight: 26 },
   dayLabel: { flex: 1, alignItems: 'center' },
-  dayName: { fontSize: 16, fontWeight: '800' },
+  dayName: { fontFamily: FONT.displayHeavy, fontSize: 16 },
   daySmall: {
+    fontFamily: FONT.bodySemi,
     fontSize: 11,
-    fontWeight: '600',
     letterSpacing: 0.7,
     textTransform: 'uppercase',
     marginTop: 2,
   },
   play: { marginTop: 10, marginBottom: 4, padding: 12, borderRadius: 10, gap: 4 },
-  playText: { fontSize: 14.5 },
-  playLink: { fontSize: 14.5, fontWeight: '700' },
+  playText: { fontFamily: FONT.body, fontSize: 14.5 },
+  playLink: { fontFamily: FONT.bodyBold, fontSize: 14.5 },
   rows: { marginTop: 10, borderTopWidth: 1 },
   row: {
     flexDirection: 'row',
@@ -863,27 +926,35 @@ const styles = StyleSheet.create({
     paddingHorizontal: 2,
     borderBottomWidth: 1,
   },
-  rk: { width: 34, textAlign: 'center', fontSize: 17, fontWeight: '800' },
+  rk: { fontFamily: FONT.displayHeavy, width: 34, textAlign: 'center', fontSize: 17 },
   who: { flex: 1, minWidth: 0 },
-  nick: { fontSize: 16, fontWeight: '600' },
-  you: { fontSize: 10.5, fontWeight: '700', letterSpacing: 0.7 },
-  st: { fontSize: 12.5, marginTop: 1 },
-  res: { fontSize: 17, fontWeight: '700', textAlign: 'right', fontVariant: ['tabular-nums'] },
-  resSmall: { fontSize: 12, textAlign: 'right' },
-  notyet: { marginTop: 6, fontSize: 14.5 },
-  how: { marginTop: 14, fontSize: 13 },
-  reline: { marginTop: 12, fontSize: 14 },
-  relineBold: { fontWeight: '700' },
+  nick: { fontFamily: FONT.bodySemi, fontSize: 16 },
+  you: { fontFamily: FONT.bodyBold, fontSize: 11, letterSpacing: 0.7 },
+  st: { fontFamily: FONT.body, fontSize: 12.5, marginTop: 1 },
+  res: {
+    fontFamily: FONT.display,
+    fontSize: 17,
+    textAlign: 'right',
+    fontVariant: ['tabular-nums'],
+  },
+  resSmall: { fontFamily: FONT.body, fontSize: 12, textAlign: 'right' },
+  notyet: { fontFamily: FONT.body, marginTop: 6, fontSize: 14.5 },
+  how: { fontFamily: FONT.body, marginTop: 14, fontSize: 13 },
+  reline: { fontFamily: FONT.body, marginTop: 12, fontSize: 14 },
+  relineBold: { fontFamily: FONT.bodyBold },
   settings: { marginTop: 26, borderTopWidth: 1, paddingTop: 12 },
-  summary: { fontSize: 14.5, fontWeight: '600', paddingVertical: 4 },
-  code: { fontWeight: '800', letterSpacing: 1.6 },
+  summaryBtn: { minHeight: 44, justifyContent: 'center', alignSelf: 'flex-start' },
+  summary: { fontFamily: FONT.bodySemi, fontSize: 14.5, paddingVertical: 4 },
+  code: { fontFamily: FONT.display, letterSpacing: 1.6 },
   plist: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 6,
+    paddingVertical: 2,
     borderBottomWidth: 1,
   },
-  plistActs: { flexDirection: 'row', gap: 4 },
-  plistBtn: { fontSize: 13, fontWeight: '600', padding: 6 },
+  plistName: { fontFamily: FONT.body, fontSize: 15, flexShrink: 1 },
+  plistActs: { flexDirection: 'row', gap: 8 },
+  plistHit: { minHeight: 44, minWidth: 44, justifyContent: 'center', paddingHorizontal: 8 },
+  plistBtn: { fontFamily: FONT.bodySemi, fontSize: 14 },
 });
