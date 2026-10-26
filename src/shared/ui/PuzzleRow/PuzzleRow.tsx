@@ -5,6 +5,7 @@ import { Pressable, StyleSheet, Text, View, type LayoutChangeEvent } from 'react
 import { FONT, useTokens } from '@/shared/theme';
 
 import { PuzzleTile } from '../PuzzleTile/PuzzleTile';
+import { Standfirst } from './Standfirst';
 
 interface PuzzleRowProps {
   type: PuzzleType;
@@ -108,9 +109,12 @@ export function PuzzleRow({
         <View style={styles.body} onLayout={onBody} testID={testID ? `${testID}-body` : undefined}>
           <Text style={[styles.title, { color: t.ink }]}>{title}</Text>
           {detail ? (
-            <Text numberOfLines={3} style={[styles.detail, { color: t.muted }]}>
-              {detail}
-            </Text>
+            <Standfirst
+              text={detail}
+              max={3}
+              style={[styles.detail, { color: t.muted }]}
+              testID={testID ? `${testID}-detail` : undefined}
+            />
           ) : null}
           <View
             style={[styles.meta, onHowTo ? howToRoom(bodyW, howTo.w, howTo.h) : null]}
