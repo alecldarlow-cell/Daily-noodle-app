@@ -8,7 +8,7 @@ import { FinishSheet, useFreshFinish } from '@/shared/finish-sheet';
 import { PATH_BURSTS, useWinBursts } from '@/shared/motion';
 import { PuzzleBar, ruleFor, StartCard, useStartStats } from '@/shared/start-card';
 import { FONT, usePuzzleTokens } from '@/shared/theme';
-import { fitBoard } from '@/shared/ui';
+import { fitBoard, pressable, useBoardFit } from '@/shared/ui';
 
 import type { PuzzleFile } from '../../types';
 import { usePathGame } from '../hooks/usePathGame';
@@ -35,6 +35,7 @@ export function PathScreen({ file }: { file: PuzzleFile<PathData> }) {
   const boardRef = useRef<ComponentRef<typeof View>>(null);
   useWinBursts(winning, PATH_BURSTS, boardRef);
   const stats = useStartStats('path');
+  const fit = useBoardFit(fitBoard(win, 300, 460), 460);
   const n = pathNumber(file.data.id);
   const { state, dispatch } = game;
 
@@ -81,8 +82,7 @@ export function PathScreen({ file }: { file: PuzzleFile<PathData> }) {
       />
     );
 
-  const side = fitBoard(win, 300, 460);
-  const btn = [styles.btn, { borderColor: pt.ink, backgroundColor: pt.card }];
+  const btn = pressable([styles.btn, { borderColor: pt.ink, backgroundColor: pt.card }]);
   return (
     <SafeAreaView style={[styles.fill, { backgroundColor: pt.paper }]} testID="path-screen">
       <View style={styles.in}>
@@ -93,11 +93,16 @@ export function PathScreen({ file }: { file: PuzzleFile<PathData> }) {
           clock={game.clock}
           onBack={back}
         />
-        <View ref={boardRef} collapsable={false} style={styles.board}>
+        <View
+          ref={boardRef}
+          collapsable={false}
+          style={styles.board}
+          onLayout={fit.onLayout}
+          testID="board-slot">
           <PathBoard
             celebrating={winning}
             state={state}
-            side={side}
+            side={fit.side}
             onCell={(r, c) => dispatch({ t: 'cell', r, c })}
           />
         </View>
@@ -131,7 +136,7 @@ const styles = StyleSheet.create({
     width: '100%',
     alignSelf: 'center',
   },
-  board: { flex: 1, justifyContent: 'center' },
+  board: { flex: 1, justifyContent: 'center', minHeight: 0 },
   msg: { fontFamily: FONT.sans, fontSize: 14, lineHeight: 19, textAlign: 'center', minHeight: 38 },
   controls: { flexDirection: 'row', justifyContent: 'center', gap: 8 },
   btn: {

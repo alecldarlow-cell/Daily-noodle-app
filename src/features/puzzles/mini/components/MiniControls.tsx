@@ -1,6 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { FONT, usePuzzleTokens } from '@/shared/theme';
+import { pressable } from '@/shared/ui';
 
 interface MiniControlsProps {
   onCheckWord: () => void;
@@ -12,20 +13,21 @@ interface MiniControlsProps {
 export function MiniControls({ onCheckWord, onCheckAll, onRevealWord }: MiniControlsProps) {
   const pt = usePuzzleTokens();
   const b = [styles.btn, { borderColor: pt.ink, backgroundColor: pt.card }];
+  const rb = [b, styles.reveal];
   const label = [styles.text, { color: pt.ink }];
   return (
     <View style={styles.row} testID="mini-controls">
-      <Pressable accessibilityRole="button" onPress={onCheckWord} style={b}>
+      <Pressable accessibilityRole="button" onPress={onCheckWord} style={pressable(b)}>
         <Text maxFontSizeMultiplier={1.3} style={label}>
           Check word
         </Text>
       </Pressable>
-      <Pressable accessibilityRole="button" onPress={onCheckAll} style={b}>
+      <Pressable accessibilityRole="button" onPress={onCheckAll} style={pressable(b)}>
         <Text maxFontSizeMultiplier={1.3} style={label}>
           Check all
         </Text>
       </Pressable>
-      <Pressable accessibilityRole="button" onPress={onRevealWord} style={[b, styles.reveal]}>
+      <Pressable accessibilityRole="button" onPress={onRevealWord} style={pressable(rb)}>
         <Text maxFontSizeMultiplier={1.3} style={label}>
           Reveal word
         </Text>

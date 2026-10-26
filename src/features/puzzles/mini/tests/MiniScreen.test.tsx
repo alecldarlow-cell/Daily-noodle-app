@@ -59,7 +59,7 @@ describe('GIVEN a Mini not yet played', () => {
       await fireEvent.press(screen.getByRole('button', { name: 'Play' }));
       expect(screen.getByTestId('mini-board')).toBeOnTheScreen();
       expect(screen.getByText('Mini 105')).toBeOnTheScreen();
-      expect(screen.getByText('00:00')).toBeOnTheScreen();
+      expect(screen.getByText('0:00')).toBeOnTheScreen();
       expect(screen.getByTestId('clue-bar')).toHaveTextContent("1A 'Please, sir, I want some ___'");
     });
   });
@@ -147,12 +147,12 @@ describe('GIVEN the board in play', () => {
     await act(async () => {
       jest.advanceTimersByTime(5000);
     });
-    expect(screen.getByText('00:00')).toBeOnTheScreen();
+    expect(screen.getByText('0:00')).toBeOnTheScreen();
     await press('key-M');
     await act(async () => {
       jest.advanceTimersByTime(3000);
     });
-    expect(screen.getByText('00:03')).toBeOnTheScreen();
+    expect(screen.getByText('0:03')).toBeOnTheScreen();
   });
 
   it('THEN the clue bar, arrows, delete and the help buttons work as on the page', async () => {

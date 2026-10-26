@@ -422,6 +422,34 @@ below when it finishes.
 - **Small bits** ([#48](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/48), Alec's go-ahead): records
   load with every board view: 👑 for last week's champion, "🏆 New league record" on the row, the "🏅 League record"
   line under each daily board, tap a name for their card; Tangle's "Play more boards in Yarn".
+
+### 26 Oct 2026, polish batch B1 (Mini, Doku, Sweep, Path, shared chrome)
+
+- [#57](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/57) (not merged):
+  - A Sweep from a past day says "A past puzzle — this one won't change your streak." in place of the site's "Today's result is already in — this is a replay". This changes only the text on screen; the model and the replay are untouched.
+  - The bar's flame now shows each type's live streak, the same number as its start card.
+  - The bar clocks all read "0:03".
+  - The clock pauses while the app is in the background (shared `usePuzzleClock`).
+  - Path shakes the square and buzzes on a rejected tap.
+  - New shared helper `pressable()` in `@/shared/ui` gives every in-scope button a pressed look.
+  - Contrast fixes on Mini, Doku, Path and Sweep.
+  - Shared chrome: stat numbers stay on one line, the Share pill stacks under the share line at large text, the board bar's name is a heading, and a fresh finish is announced and focused for screen readers.
+  - Boards are now sized from the space they actually get (`useBoardFit`).
+- Tests proved:
+  - Archive wording and the flame against a lapsed or live streak.
+  - The clock pauses on background and on iOS's inactive state (AppState mocked).
+  - Pressed looks on every in-scope button.
+  - Mini, Doku and Path colours in light and dark, including contrast ratios.
+  - Path shake and buzz, and the Sweep wrong-flag ring and pulse.
+  - Boards shrink to fit a measured slot.
+  - The finish announcement and focus.
+  - `check` is green (916 tests, 98.31% lines).
+- Left:
+  - The gap above the board on tall phones. The board is as wide as the screen allows and stays centred in a taller space; closing the gap means changing the layout.
+- Needs Alec:
+  - Decide that tall-phone layout.
+  - Phone checks: background pause, TalkBack/VoiceOver on a finish, font scale 2.0, dark mode.
+
 - **Polish B2: Link/Tangle/Borders/Reckon** (26 Oct, branch `polish/batch-b2-puzzles`, PR linked from the branch):
   Link: an archive Link never played no longer says "· replay" / "Today's result is already in" (display only:
   `shownLabel`/`shownMsg`; the model's `msg`/`label` and the replay are untouched), the bar's flame is Link's live
