@@ -21,6 +21,7 @@ import {
 } from '../model';
 import { clone, file78, link78 } from './fixtures';
 import { hold, release } from './press';
+import { PRESSED } from '@/shared/ui';
 
 jest.mock('expo-router', () => ({
   router: { back: jest.fn(), replace: jest.fn(), canGoBack: jest.fn(() => true) },
@@ -168,12 +169,12 @@ describe('GIVEN Link’s board in play', () => {
       await press('Play');
       const shuffle = screen.getByTestId('link-shuffle');
       await hold(shuffle);
-      expect(shuffle).toHaveStyle({ opacity: 0.75 });
+      expect(shuffle).toHaveStyle(PRESSED);
       await release(shuffle);
-      expect(shuffle).not.toHaveStyle({ opacity: 0.75 });
+      expect(shuffle).not.toHaveStyle(PRESSED);
       const tile = screen.getByTestId(`tile-${G[0]![0]!}`);
       await hold(tile);
-      expect(tile).toHaveStyle({ opacity: 0.75 });
+      expect(tile).toHaveStyle(PRESSED);
       await release(tile);
     });
   });

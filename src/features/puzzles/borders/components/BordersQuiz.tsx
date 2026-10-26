@@ -2,6 +2,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { FONT } from '@/shared/theme';
+import { PRESSED, pressable } from '@/shared/ui';
 
 import { useAnnounce } from '../../link/hooks/announce';
 import { quizView, type BordersState, type Move } from '../model';
@@ -18,7 +19,6 @@ interface Props {
 /** Text grows with the phone's text size up to these multiples, so Next always fits. */
 const CAP = 1.3;
 const CAP_BIG = 1.15;
-const pressedStyle = { opacity: 0.75 };
 
 /** What a screen reader hears once a question is answered: right or wrong, and the plate. */
 export function verdictOf(state: BordersState): string {
@@ -49,11 +49,7 @@ export function BordersQuiz({ state, c, dispatch }: Props) {
             accessibilityLabel="Pause"
             testID="borders-pause"
             onPress={() => dispatch({ t: 'pause' })}
-            style={({ pressed }) => [
-              styles.iconbtn,
-              { borderColor: c.edge },
-              pressed && pressedStyle,
-            ]}>
+            style={pressable([styles.iconbtn, { borderColor: c.edge }])}>
             <View style={styles.bars}>
               <View style={[styles.bar, { backgroundColor: c.ink }]} />
               <View style={[styles.bar, { backgroundColor: c.ink }]} />
@@ -127,14 +123,16 @@ export function BordersQuiz({ state, c, dispatch }: Props) {
               }}
               testID={`borders-opt-${k}`}
               onPress={() => dispatch({ t: 'answer', k })}
-              style={({ pressed }) => [
-                styles.opt,
-                { borderColor: c.edge, backgroundColor: c.paper },
-                o.mark === 'right' && { backgroundColor: c.okT, borderColor: c.ok },
-                o.mark === 'wrong' && { backgroundColor: c.pinT, borderColor: c.pin },
-                o.mark === 'dim' && styles.dim,
-                pressed && !state.locked && pressedStyle,
-              ]}>
+              style={pressable(
+                [
+                  styles.opt,
+                  { borderColor: c.edge, backgroundColor: c.paper },
+                  o.mark === 'right' && { backgroundColor: c.okT, borderColor: c.ok },
+                  o.mark === 'wrong' && { backgroundColor: c.pinT, borderColor: c.pin },
+                  o.mark === 'dim' && styles.dim,
+                ],
+                state.locked ? null : PRESSED,
+              )}>
               <Text
                 maxFontSizeMultiplier={CAP}
                 style={[
@@ -155,12 +153,11 @@ export function BordersQuiz({ state, c, dispatch }: Props) {
               testID="borders-hint"
               disabled={v.hintDisabled}
               onPress={() => dispatch({ t: 'hint' })}
-              style={({ pressed }) => [
+              style={pressable([
                 styles.btn,
                 { borderColor: c.ink2 },
                 v.hintDisabled && styles.dim,
-                pressed && pressedStyle,
-              ]}>
+              ])}>
               <Text maxFontSizeMultiplier={CAP} style={[styles.btnText, { color: c.ink }]}>
                 Show on map (half points)
               </Text>
@@ -171,11 +168,7 @@ export function BordersQuiz({ state, c, dispatch }: Props) {
               accessibilityRole="button"
               testID="borders-next"
               onPress={() => dispatch({ t: 'next' })}
-              style={({ pressed }) => [
-                styles.btn,
-                { backgroundColor: c.ink, borderColor: c.ink },
-                pressed && pressedStyle,
-              ]}>
+              style={pressable([styles.btn, { backgroundColor: c.ink, borderColor: c.ink }])}>
               <Text maxFontSizeMultiplier={CAP} style={[styles.btnText, { color: c.paper }]}>
                 {v.nextLabel}
               </Text>
@@ -199,11 +192,7 @@ export function BordersQuiz({ state, c, dispatch }: Props) {
               accessibilityRole="button"
               testID="borders-resume"
               onPress={() => dispatch({ t: 'resume' })}
-              style={({ pressed }) => [
-                styles.btn,
-                { backgroundColor: c.ink, borderColor: c.ink },
-                pressed && pressedStyle,
-              ]}>
+              style={pressable([styles.btn, { backgroundColor: c.ink, borderColor: c.ink }])}>
               <Text maxFontSizeMultiplier={CAP} style={[styles.btnText, { color: c.paper }]}>
                 Resume
               </Text>
@@ -212,11 +201,7 @@ export function BordersQuiz({ state, c, dispatch }: Props) {
               accessibilityRole="button"
               testID="borders-quit"
               onPress={() => dispatch({ t: 'quit' })}
-              style={({ pressed }) => [
-                styles.btn,
-                { borderColor: c.ink2 },
-                pressed && pressedStyle,
-              ]}>
+              style={pressable([styles.btn, { borderColor: c.ink2 }])}>
               <Text maxFontSizeMultiplier={CAP} style={[styles.btnText, { color: c.ink }]}>
                 Back to start
               </Text>

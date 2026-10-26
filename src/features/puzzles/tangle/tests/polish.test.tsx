@@ -9,6 +9,7 @@ import { boardSide, tileRects } from '../components/TangleBoard';
 import { TangleScreen } from '../components/TangleScreen';
 import { findPath } from '../oracle';
 import { file19, tangle19 } from './fixtures';
+import { PRESSED } from '@/shared/ui';
 
 jest.mock('expo-router', () => ({
   router: { back: jest.fn(), replace: jest.fn(), canGoBack: jest.fn(() => true) },
@@ -153,7 +154,7 @@ describe('GIVEN the back button', () => {
     await open(400, 400);
     const b = screen.getByTestId('tangle-back');
     await hold(b);
-    expect(b).toHaveStyle({ opacity: 0.75 });
+    expect(b).toHaveStyle(PRESSED);
     await release(b);
   });
 });

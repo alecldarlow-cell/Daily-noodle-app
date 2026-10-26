@@ -7,8 +7,9 @@ import { fileOf, usePlayerExit } from '../playerBack';
 jest.mock('expo-router', () => ({
   router: { back: jest.fn(), replace: jest.fn(), canGoBack: jest.fn(() => true) },
 }));
-const mockRouter = (jest.requireMock('expo-router') as { router: Record<string, jest.Mock> })
-  .router;
+const mockRouter = (
+  jest.requireMock('expo-router') as { router: Record<'back' | 'replace' | 'canGoBack', jest.Mock> }
+).router;
 
 type Handler = () => boolean | null | undefined;
 let handlers: Handler[] = [];
@@ -54,8 +55,8 @@ describe('GIVEN a player on screen', () => {
     it('THEN the first is left to the navigator and the second is swallowed', async () => {
       await renderHook(() => usePlayerExit());
       expect(handlers).toHaveLength(1);
-      expect(handlers[0]()).toBe(false);
-      expect(handlers[0]()).toBe(true);
+      expect(handlers[0]!()).toBe(false);
+      expect(handlers[0]!()).toBe(true);
     });
   });
 
@@ -63,7 +64,7 @@ describe('GIVEN a player on screen', () => {
     it('THEN Android’s Back is swallowed rather than reaching the tabs', async () => {
       const { result } = await renderHook(() => usePlayerExit());
       await act(() => result.current.back());
-      expect(handlers[0]()).toBe(true);
+      expect(handlers[0]!()).toBe(true);
     });
   });
 

@@ -1,6 +1,7 @@
 import { router, Stack } from 'expo-router';
 import { NativeTabs } from 'expo-router/native-tabs';
 import { act, fireEvent, renderRouter, screen } from 'expo-router/testing-library';
+import { useEffect } from 'react';
 import { Pressable, Text } from 'react-native';
 
 import { tokensFor } from '@/shared/theme';
@@ -40,7 +41,9 @@ let crash = false;
 let lastBack: () => void = () => undefined;
 function Play() {
   const { back } = usePlayerExit();
-  lastBack = back;
+  useEffect(() => {
+    lastBack = back;
+  }, [back]);
   if (crash) throw new Error('boom');
   return (
     <Pressable accessibilityRole="button" accessibilityLabel="Back" onPress={back}>

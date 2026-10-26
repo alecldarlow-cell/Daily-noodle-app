@@ -12,7 +12,7 @@ import {
   type ReckonState,
 } from '../model';
 import { FONT } from '@/shared/theme';
-import { Chevron } from '@/shared/ui';
+import { Chevron, pressable } from '@/shared/ui';
 
 import { useAnnounce } from '../../link/hooks/announce';
 import type { ReckonColors } from './colors';
@@ -22,7 +22,6 @@ import { ReckonSlider } from './ReckonSlider';
 export const NARROW = 360;
 /** The top row's text grows with the phone's text size no further than this. */
 const TOP_CAP = 1.2;
-const pressedStyle = { opacity: 0.75 };
 /** The pips are 10 pt bars: their touch reaches 17 pt above and below (44 pt in all). */
 export const PIP_SLOP = { top: 17, bottom: 17, left: 3, right: 3 };
 
@@ -100,11 +99,7 @@ export function ReckonPlay({ state, c, dispatch }: Props) {
             accessibilityElementsHidden={v.pauseHidden}
             importantForAccessibility={v.pauseHidden ? 'no-hide-descendants' : 'auto'}
             onPress={() => dispatch({ t: 'pause' })}
-            style={({ pressed }) => [
-              styles.ib,
-              { borderColor: c.ink, opacity: v.pauseHidden ? 0 : 1 },
-              pressed && pressedStyle,
-            ]}>
+            style={pressable([styles.ib, { borderColor: c.ink, opacity: v.pauseHidden ? 0 : 1 }])}>
             <View style={styles.bars}>
               <View style={[styles.bar, { backgroundColor: c.ink }]} />
               <View style={[styles.bar, { backgroundColor: c.ink }]} />
@@ -135,11 +130,7 @@ export function ReckonPlay({ state, c, dispatch }: Props) {
               testID="reckon-prev"
               disabled={v.prevDisabled}
               onPress={() => dispatch({ t: 'nav', d: -1 })}
-              style={({ pressed }) => [
-                styles.navb,
-                v.prevDisabled && styles.off,
-                pressed && pressedStyle,
-              ]}>
+              style={pressable([styles.navb, v.prevDisabled && styles.off])}>
               <Chevron color={c.ink} dir="left" />
             </Pressable>
             <Text
@@ -154,11 +145,7 @@ export function ReckonPlay({ state, c, dispatch }: Props) {
               testID="reckon-fwd"
               disabled={v.fwdDisabled}
               onPress={() => dispatch({ t: 'nav', d: 1 })}
-              style={({ pressed }) => [
-                styles.navb,
-                v.fwdDisabled && styles.off,
-                pressed && pressedStyle,
-              ]}>
+              style={pressable([styles.navb, v.fwdDisabled && styles.off])}>
               <Chevron color={c.ink} />
             </Pressable>
           </View>
@@ -180,13 +167,12 @@ export function ReckonPlay({ state, c, dispatch }: Props) {
               disabled={p.disabled}
               hitSlop={PIP_SLOP}
               onPress={() => dispatch({ t: 'pip', k: p.k })}
-              style={({ pressed }) => [
+              style={pressable([
                 styles.pip,
                 { backgroundColor: p.zone == null ? c.line : c.zones[p.zone] },
                 p.live && { borderColor: c.tom, borderWidth: 2 },
                 p.view && { borderColor: c.ink, borderWidth: 2 },
-                pressed && pressedStyle,
-              ]}
+              ])}
             />
           ))}
         </View>
@@ -285,7 +271,7 @@ export function ReckonPlay({ state, c, dispatch }: Props) {
               accessibilityLabel="Smaller"
               testID="reckon-minus"
               {...minus}
-              style={({ pressed }) => [styles.nb, { borderColor: c.ink }, pressed && pressedStyle]}>
+              style={pressable([styles.nb, { borderColor: c.ink }])}>
               <Text style={[styles.nbt, { color: c.ink }]}>−</Text>
             </Pressable>
           ) : null}
@@ -293,11 +279,7 @@ export function ReckonPlay({ state, c, dispatch }: Props) {
             accessibilityRole="button"
             testID="reckon-act"
             onPress={() => dispatch({ t: 'act' })}
-            style={({ pressed }) => [
-              styles.act,
-              { backgroundColor: v.guessing ? c.tom : c.ink },
-              pressed && pressedStyle,
-            ]}>
+            style={pressable([styles.act, { backgroundColor: v.guessing ? c.tom : c.ink }])}>
             <Text style={[styles.actt, { color: v.guessing ? c.onTom : c.bg }]}>{v.action}</Text>
           </Pressable>
           {v.guessing ? (
@@ -306,7 +288,7 @@ export function ReckonPlay({ state, c, dispatch }: Props) {
               accessibilityLabel="Bigger"
               testID="reckon-plus"
               {...plus}
-              style={({ pressed }) => [styles.nb, { borderColor: c.ink }, pressed && pressedStyle]}>
+              style={pressable([styles.nb, { borderColor: c.ink }])}>
               <Text style={[styles.nbt, { color: c.ink }]}>+</Text>
             </Pressable>
           ) : null}
@@ -325,22 +307,14 @@ export function ReckonPlay({ state, c, dispatch }: Props) {
               accessibilityRole="button"
               testID="reckon-resume"
               onPress={() => dispatch({ t: 'resume' })}
-              style={({ pressed }) => [
-                styles.act,
-                { backgroundColor: c.tom },
-                pressed && pressedStyle,
-              ]}>
+              style={pressable([styles.act, { backgroundColor: c.tom }])}>
               <Text style={[styles.actt, { color: c.onTom }]}>Resume</Text>
             </Pressable>
             <Pressable
               accessibilityRole="button"
               testID="reckon-quit"
               onPress={() => dispatch({ t: 'quit' })}
-              style={({ pressed }) => [
-                styles.wide,
-                { borderColor: c.ink },
-                pressed && pressedStyle,
-              ]}>
+              style={pressable([styles.wide, { borderColor: c.ink }])}>
               <Text style={[styles.nbtSmall, { color: c.ink }]}>Back to start</Text>
             </Pressable>
           </View>

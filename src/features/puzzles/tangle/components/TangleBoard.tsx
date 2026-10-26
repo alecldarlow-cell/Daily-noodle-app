@@ -17,7 +17,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { FONT, usePuzzleTokens } from '@/shared/theme';
-import { Chevron } from '@/shared/ui';
+import { Chevron, pressable } from '@/shared/ui';
 
 import { useAnnounce } from '../../link/hooks/announce';
 import { boardTop, current, foundList, N, type Rect, type TangleEngine } from '../model';
@@ -25,7 +25,6 @@ import { boardTop, current, foundList, N, type Rect, type TangleEngine } from '.
 const GAP = 8;
 /** The largest the board grows (the page's `min(100%, 400px, …)`, kept at the app's 420). */
 const MAX_SIDE = 420;
-const pressedStyle = { opacity: 0.75 };
 /**
  * Everything above the letters keeps one height for the whole round, so the board never
  * moves under a finger: the found words get their full room from the start (scrolling
@@ -142,11 +141,10 @@ export function TangleBoard({ engine, setRects, onHome }: TangleBoardProps) {
             accessibilityLabel="Pause and go back"
             onPress={onHome}
             testID="tangle-back"
-            style={({ pressed }) => [
+            style={pressable([
               styles.iconBtn,
               { borderColor: pt.lineSoft, backgroundColor: pt.card },
-              pressed && pressedStyle,
-            ]}>
+            ])}>
             <Chevron color={pt.ink} dir="left" size={10} />
           </Pressable>
           <View style={styles.scorebox}>
@@ -313,11 +311,7 @@ export function TangleBoard({ engine, setRects, onHome }: TangleBoardProps) {
                   accessibilityRole="button"
                   onPress={() => engine.resume()}
                   testID="tangle-resume"
-                  style={({ pressed }) => [
-                    styles.resume,
-                    { backgroundColor: pt.brand },
-                    pressed && pressedStyle,
-                  ]}>
+                  style={pressable([styles.resume, { backgroundColor: pt.brand }])}>
                   <Text style={styles.resumeText}>Resume</Text>
                 </Pressable>
               </View>
