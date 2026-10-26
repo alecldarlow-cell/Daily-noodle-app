@@ -44,7 +44,7 @@ also links to the policy from Account › Privacy.
 
 | Asset             | Size                                          | File                                                                                  |
 | ----------------- | --------------------------------------------- | ------------------------------------------------------------------------------------- |
-| App icon          | 512 × 512 PNG                                 | `assets/images/icon.png` (the site's own icon)                                        |
+| App icon          | 512 × 512 PNG                                 | `assets/images/play-store-icon.png` (the site's DN, from its favicon.svg)             |
 | Feature graphic   | 1024 × 500 PNG                                | `store/feature-graphic.png` (source: `store/feature-graphic.html`)                    |
 | Phone screenshots | 2–8, 9:16, at least 1080 px on the short side | take from the first preview build: Today, a Mini mid-solve, the finish sheet, Leagues |
 
