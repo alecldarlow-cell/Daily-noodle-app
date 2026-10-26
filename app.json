@@ -17,8 +17,9 @@
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#FCFCFB",
-        "foregroundImage": "./assets/images/android-icon-foreground.png"
+        "backgroundColor": "#1C46C2",
+        "foregroundImage": "./assets/images/android-icon-foreground.png",
+        "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
       "package": "uk.co.dailynoodle.app",
