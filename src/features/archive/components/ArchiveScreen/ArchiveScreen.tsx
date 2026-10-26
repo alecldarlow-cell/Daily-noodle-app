@@ -8,7 +8,6 @@ import {
   SectionList,
   StyleSheet,
   Text,
-  TextInput,
   View,
 } from 'react-native';
 
@@ -23,15 +22,14 @@ import type { ArchiveItem } from '../../types';
 
 const NO_ITEMS: ArchiveItem[] = [];
 
-/** Every released puzzle, by month, newest first; filter by type, find by number. */
+/** Every released puzzle, by month, newest first; filter by type. */
 export function ArchiveScreen() {
   const t = useTokens();
   const day = useLondonDay();
   const q = useArchive();
   const [type, setType] = useState<PuzzleType | null>(null);
-  const [query, setQuery] = useState('');
   const items = q.data?.items ?? NO_ITEMS;
-  const sections = useMemo(() => groupArchive(items, type, query), [items, type, query]);
+  const sections = useMemo(() => groupArchive(items, type), [items, type]);
   const { byId } = usePlayed(items, day);
 
   return (
@@ -62,15 +60,6 @@ export function ArchiveScreen() {
           );
         })}
       </ScrollView>
-      <TextInput
-        value={query}
-        onChangeText={setQuery}
-        placeholder="Find by number"
-        placeholderTextColor={t.faint}
-        keyboardType="number-pad"
-        accessibilityLabel="Find by number"
-        style={[styles.search, { color: t.ink, borderColor: t.hair, backgroundColor: t.paper }]}
-      />
       {!q.data && q.isPending ? <ActivityIndicator style={styles.spinner} color={t.muted} /> : null}
       {!q.data && q.isError ? (
         <Note
@@ -129,15 +118,6 @@ const styles = StyleSheet.create({
   // front.css .chip: 12.5 px semibold, 6 × 12 padding, a hairline; the chosen one in the accent.
   chip: { borderWidth: 1, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6 },
   chipText: { fontFamily: FONT.bodySemi, fontSize: 12.5 },
-  search: {
-    borderWidth: 1,
-    borderRadius: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 9,
-    fontFamily: FONT.body,
-    fontSize: 15,
-    marginBottom: 4,
-  },
   spinner: { marginTop: 40 },
   // front.css .count: the list's small uppercase label.
   month: {
