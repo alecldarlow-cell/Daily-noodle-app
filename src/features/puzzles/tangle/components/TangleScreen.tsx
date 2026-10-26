@@ -9,7 +9,7 @@ import { router } from 'expo-router';
 
 import { FinishSheet } from '@/shared/finish-sheet';
 import { usePuzzleVisit } from '@/shared/results';
-import { useLondonDay } from '@/shared/time';
+import { dayHead, useLondonDay } from '@/shared/time';
 
 import type { PuzzleFile } from '../../types';
 import { sheetInfo } from '../finishing';
@@ -53,7 +53,7 @@ export function TangleScreen({ file }: { file: PuzzleFile<TangleData> }) {
         share={f.share}
         stats={f.stats}
         recap={{
-          title: 'Today’s words',
+          title: dayHead('words', file.date, day, 'The words'),
           node: <TangleRecap r={f.recap} />,
         }}
         onBack={back}

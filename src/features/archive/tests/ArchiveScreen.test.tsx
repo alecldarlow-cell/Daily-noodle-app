@@ -62,6 +62,42 @@ describe('GIVEN the site’s archive list', () => {
     });
   });
 
+  describe('WHEN Done, Not done or All is picked, with a type chip too', () => {
+    it('THEN the list keeps only the puzzles that match both, and says so when none do', async () => {
+      appStorage.setItem(
+        'digi-mini-v1',
+        JSON.stringify({ v: 1, done: { 'DP·MINI·0105': { s: 87, d: '2026-10-24' } } }),
+      );
+      await renderWithProviders(<ArchiveScreen />);
+      await waitFor(() => expect(screen.getByTestId('archive-DP·MINI·0105')).toBeOnTheScreen());
+      expect(screen.getByTestId('status-all')).toBeSelected();
+
+      await fireEvent.press(screen.getByTestId('status-done'));
+      expect(screen.getByTestId('archive-DP·MINI·0105')).toBeOnTheScreen();
+      expect(screen.queryByTestId('archive-DP·MINI·0010')).toBeNull();
+      expect(screen.queryByTestId('archive-DP·PATH·0050')).toBeNull();
+
+      await fireEvent.press(screen.getByTestId('status-todo'));
+      expect(screen.queryByTestId('archive-DP·MINI·0105')).toBeNull();
+      expect(screen.getByTestId('archive-DP·MINI·0010')).toBeOnTheScreen();
+      expect(screen.getByTestId('archive-DP·PATH·0050')).toBeOnTheScreen();
+
+      // both filters together: Minis not yet done
+      await fireEvent.press(screen.getByRole('button', { name: 'Mini' }));
+      expect(screen.getByTestId('archive-DP·MINI·0010')).toBeOnTheScreen();
+      expect(screen.queryByTestId('archive-DP·PATH·0050')).toBeNull();
+      expect(screen.queryByTestId('archive-DP·MINI·0105')).toBeNull();
+
+      // Paths done: none yet
+      await fireEvent.press(screen.getByRole('button', { name: 'Path' }));
+      await fireEvent.press(screen.getByTestId('status-done'));
+      expect(screen.getByTestId('archive-empty')).toHaveTextContent('Nothing finished here yet');
+
+      await fireEvent.press(screen.getByTestId('status-all'));
+      expect(screen.getByTestId('archive-DP·PATH·0050')).toBeOnTheScreen();
+    });
+  });
+
   describe('WHEN a puzzle you finished is listed and tapped', () => {
     it('THEN it shows your result and opens its play screen', async () => {
       appStorage.setItem(

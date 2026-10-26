@@ -6,6 +6,8 @@ import { mockSite, renderWithProviders } from '@/shared/testing';
 
 import { NativePlay } from '../../components/NativePlay';
 import { clone, file97 } from './fixtures';
+import { londonDay } from '@noodle/core';
+import { dayHead } from '@/shared/time';
 
 // In a file of its own: a Tangle rendered earlier in the shared NativePlay test leaves
 // an act() open that swallows the next render (seen 25 Oct 2026).
@@ -34,7 +36,7 @@ describe('GIVEN a Doku opened natively', () => {
       await waitFor(() => expect(screen.getByTestId('start-card')).toBeOnTheScreen(), {
         timeout: 5000,
       });
-      expect(screen.getByText('Today’s Doku')).toBeOnTheScreen();
+      expect(screen.getByText(dayHead('Doku', file97.date, londonDay()))).toBeOnTheScreen();
     });
   });
 

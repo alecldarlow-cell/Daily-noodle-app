@@ -11,6 +11,7 @@ import { TangleScreen } from '../components/TangleScreen';
 import { KEY } from '../model';
 import { findPath } from '../oracle';
 import { file19, tangle19 } from './fixtures';
+import { dayHead } from '@/shared/time';
 
 jest.mock('expo-router', () => ({
   router: { back: jest.fn(), replace: jest.fn(), canGoBack: jest.fn(() => true) },
@@ -77,7 +78,7 @@ afterEach(async () => {
 describe('GIVEN a Tangle not yet played', () => {
   it('THEN its home card offers the round, and the round plays to its result', async () => {
     await renderWithProviders(<TangleScreen file={file19} />);
-    expect(screen.getByText('Today’s Tangle')).toBeOnTheScreen();
+    expect(screen.getByText(dayHead('Tangle', file19.date, londonDay()))).toBeOnTheScreen();
     expect(screen.getByText('No. 19, Sunday, 25 October')).toBeOnTheScreen();
     await fireEvent.press(screen.getByTestId('play-card'));
     await layOut();

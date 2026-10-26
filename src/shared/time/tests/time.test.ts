@@ -2,7 +2,7 @@ import { londonDay } from '@noodle/core';
 import { act, renderHook } from '@testing-library/react-native';
 import { AppState } from 'react-native';
 
-import { longDate, monthLabel, relDay, shortDate } from '../format';
+import { dayHead, longDate, monthLabel, relDay, shortDate } from '../format';
 import { msToNextLondonDay, useLondonDay } from '../useLondonDay';
 
 describe('GIVEN an instant', () => {
@@ -69,5 +69,17 @@ describe('GIVEN a card’s date and today', () => {
       expect(relDay('2026-10-18', '2026-10-25')).toBe('18 Oct 2026');
       expect(relDay('not a day', '2026-10-25')).toBe('');
     });
+  });
+});
+
+describe('GIVEN a heading that names the puzzle’s day', () => {
+  it('THEN today’s says today, yesterday’s says yesterday, and older is the archive', () => {
+    expect(dayHead('Mini', '2026-10-26', '2026-10-26')).toBe('Today’s Mini');
+    expect(dayHead('Mini', '2026-10-25', '2026-10-26')).toBe('Yesterday’s Mini');
+    expect(dayHead('Mini', '2026-10-24', '2026-10-26')).toBe('From the archive');
+    expect(dayHead('ten', '2026-09-30', '2026-10-01')).toBe('Yesterday’s ten');
+    expect(dayHead('words', '2026-10-01', '2026-10-26', 'The words')).toBe('The words');
+    // a puzzle dated ahead of the phone's day (clock skew) still reads as today's
+    expect(dayHead('Link', '2026-10-27', '2026-10-26')).toBe('Today’s Link');
   });
 });

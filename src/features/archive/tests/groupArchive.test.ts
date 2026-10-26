@@ -17,4 +17,22 @@ describe('GIVEN the released puzzles', () => {
       expect(s.flatMap((x) => x.data)).toHaveLength(3);
     });
   });
+
+  describe('WHEN filtered by done or not', () => {
+    it('THEN Done keeps only finished puzzles, Not done the rest, alongside the type', () => {
+      const done = new Set(['DP·MINI·0105', 'DP·PATH·0050']);
+      const ids = (s: ReturnType<typeof groupArchive>) => s.flatMap((x) => x.data.map((d) => d.id));
+      expect(ids(groupArchive(ITEMS, null, 'done', done)).sort()).toEqual([...done].sort());
+      expect(ids(groupArchive(ITEMS, null, 'todo', done))).toEqual([
+        'DP·SWEEP·2026-10-24',
+        'DP·MINI·0100',
+        'DP·MINI·0010',
+      ]);
+      expect(ids(groupArchive(ITEMS, 'mini', 'todo', done))).toEqual([
+        'DP·MINI·0100',
+        'DP·MINI·0010',
+      ]);
+      expect(ids(groupArchive(ITEMS, null, 'all', done))).toHaveLength(ITEMS.length);
+    });
+  });
 });

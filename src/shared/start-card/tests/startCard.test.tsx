@@ -4,6 +4,8 @@ import { PuzzleBar } from '../PuzzleBar';
 import { StartCard } from '../StartCard';
 import { HOW, ruleFor } from '../copy';
 import { startStats } from '../stats';
+import { londonDay } from '@noodle/core';
+import { dayHead } from '@/shared/time';
 
 describe('GIVEN a puzzle’s rule line', () => {
   it('THEN each type says what its page says', () => {
@@ -59,7 +61,8 @@ describe('GIVEN the start card', () => {
     await render(card(4));
     expect(screen.getByRole('header', { name: 'Mini' })).toBeOnTheScreen();
     expect(screen.getByText('No. 105, Saturday 24 October')).toBeOnTheScreen();
-    expect(screen.getByText('Today’s Mini')).toBeOnTheScreen();
+    // an earlier day's puzzle is not today's (Alec, 26 Oct 2026)
+    expect(screen.getByText(dayHead('Mini', '2026-10-24', londonDay()))).toBeOnTheScreen();
     expect(screen.getByText('4-day streak')).toBeOnTheScreen();
     expect(screen.getByText('Minis played')).toBeOnTheScreen();
     expect(screen.getByText('12')).toBeOnTheScreen();

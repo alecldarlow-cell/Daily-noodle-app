@@ -54,3 +54,20 @@ export function monthLabel(day: string): string {
   const d = at(day);
   return `${MONTHS_LONG[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
 }
+
+/**
+ * A heading that names the puzzle's day: "Today’s Mini" on today's, "Yesterday’s Mini" on
+ * yesterday's, and `older` on anything earlier (an archive puzzle is not today's).
+ */
+export function dayHead(
+  noun: string,
+  day: string,
+  today: string,
+  older = 'From the archive',
+): string {
+  const d = at(day);
+  const days = Math.round((at(today).getTime() - d.getTime()) / 864e5);
+  if (Number.isNaN(days) || days <= 0) return `Today’s ${noun}`;
+  if (days === 1) return `Yesterday’s ${noun}`;
+  return older;
+}
