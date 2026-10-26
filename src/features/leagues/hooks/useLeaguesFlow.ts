@@ -1,6 +1,6 @@
 /**
  * Which part of Leagues is showing, as board.html moves between them: the board (or the
- * intro for someone in no league), the start / join / claim / PIN / paste forms, and the
+ * intro for someone in no league), the start / join / invite / claim / PIN forms, and the
  * one-off card at the top of the board after something happened.
  */
 import { BOARD_TYPE } from '@noodle/core';
@@ -15,10 +15,9 @@ export type View =
   | { k: 'home' }
   | { k: 'start'; from?: string }
   | { k: 'code' }
-  | { k: 'invite'; code: string }
+  | { k: 'invite'; code: string; typed?: boolean }
   | { k: 'claim'; code?: string; name?: string; players?: string[]; back?: View }
-  | { k: 'pin'; fresh: boolean }
-  | { k: 'paste' };
+  | { k: 'pin'; fresh: boolean };
 
 export type Notice =
   | { k: 'created'; code: string }
@@ -70,7 +69,6 @@ function fromParams(p: LeaguesParams): View | null {
   const join = codeFrom(p.join ?? '');
   if (join) return { k: 'invite', code: join };
   if (p.go === 'claim') return { k: 'claim' };
-  if (p.go === 'paste') return { k: 'paste' };
   if (p.go === 'start') return { k: 'start' };
   if (p.go === 'code') return { k: 'code' };
   if (p.go === 'home') return { k: 'home' };

@@ -5,6 +5,7 @@ import { buildLine } from '@/shared/build';
 import { FONT, useTokens } from '@/shared/theme';
 import { Button, Screen } from '@/shared/ui';
 
+import { syncEnabled } from '../../api/authClient';
 import { tapId } from '../../hooks/tap';
 import { SyncCard } from '../SyncCard/SyncCard';
 
@@ -19,12 +20,13 @@ export function AccountScreen() {
           Already a player?
         </Text>
         <Text style={[styles.p, { color: t.muted }]}>
-          In a league on another browser or app? Play as yourself here too, with your league’s
-          invite link and your PIN, or your personal link.
+          {syncEnabled()
+            ? 'In a league on another phone or the website? Sign in above with the same email there and here, and your leagues come with you. Or play as yourself with your league’s code and PIN.'
+            : 'In a league on another phone or the website? Play as yourself here too, with your league’s code and PIN.'}
         </Text>
         <Button
-          kind="go"
-          label="Bring my leagues here"
+          kind={syncEnabled() ? 'plain' : 'go'}
+          label="I have a league PIN"
           testID="account-claim"
           // A fresh `n` each tap, so Leagues opens the form again after its Back.
           onPress={() =>
