@@ -6,9 +6,10 @@ import { heldStyle, mockSite, renderWithProviders } from '@/shared/testing';
 import { puzzleTokensFor } from '@/shared/theme';
 import { PRESSED } from '@/shared/ui';
 
+import { clueNumSize, MiniBoard } from '../components/MiniBoard';
 import { MiniScreen } from '../components/MiniScreen';
-import { STREAK_KEY } from '../model';
-import { file105 } from './fixtures';
+import { init, STREAK_KEY } from '../model';
+import { file105, mini105 } from './fixtures';
 
 jest.mock('expo-router', () => ({
   router: { back: jest.fn(), replace: jest.fn(), canGoBack: jest.fn(() => true) },
@@ -119,6 +120,27 @@ describe('GIVEN a Mini on the board', () => {
       await renderWithProviders(<MiniScreen file={file105} />);
       await play();
       expect(screen.queryByText(/🔥/)).toBeNull();
+    });
+  });
+});
+
+describe('GIVEN the Mini’s clue numbers', () => {
+  describe('WHEN the board is narrow (a 320 pt phone: 58 pt squares and under)', () => {
+    it('THEN a number is never smaller than 10 pt', async () => {
+      expect(clueNumSize(50)).toBe(10);
+      expect(clueNumSize(58)).toBe(10);
+      await renderWithProviders(<MiniBoard state={init(mini105)} side={250} onCell={() => {}} />);
+      expect(within(screen.getByTestId('cell-0-0')).getByText('1')).toHaveStyle({ fontSize: 10 });
+    });
+  });
+  describe('WHEN the board is roomy', () => {
+    it('THEN it keeps 17% of the square, as before', () => {
+      expect(clueNumSize(80)).toBeCloseTo(13.6);
+    });
+  });
+  describe('WHEN the board is tiny (a short phone at large text)', () => {
+    it('THEN it stays within 30% of the square, clear of the letter', () => {
+      expect(clueNumSize(30)).toBeCloseTo(9);
     });
   });
 });

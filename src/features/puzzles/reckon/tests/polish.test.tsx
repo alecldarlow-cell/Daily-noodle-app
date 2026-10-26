@@ -9,6 +9,7 @@ import { cancel, hold } from '../../link/tests/press';
 import { PIP_SLOP, verdictLine } from '../components/ReckonPlay';
 import { ReckonScreen } from '../components/ReckonScreen';
 import { file2 } from './fixtures';
+import { PRESSED } from '@/shared/ui';
 
 jest.mock('expo-router', () => ({
   router: { back: jest.fn(), replace: jest.fn(), canGoBack: jest.fn(() => true) },
@@ -115,9 +116,9 @@ describe('GIVEN Reckon’s buttons', () => {
     await press('reckon-play-button');
     for (const id of ['reckon-act', 'reckon-pause', 'reckon-pip-0']) {
       await hold(screen.getByTestId(id));
-      expect(flat(id)).toMatchObject({ opacity: 0.75 });
+      expect(flat(id)).toMatchObject(PRESSED);
       await cancel(screen.getByTestId(id));
-      expect(flat(id).opacity).not.toBe(0.75);
+      expect(flat(id).opacity).not.toBe(PRESSED.opacity);
     }
   });
 });

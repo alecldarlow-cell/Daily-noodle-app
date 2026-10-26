@@ -1,11 +1,10 @@
-import type { TodayItem } from '@noodle/core';
-import { router } from 'expo-router';
 import { Linking, StyleSheet, View } from 'react-native';
 
 import { FinishLink, FinishSheet, useFreshFinish } from '@/shared/finish-sheet';
 import { dayHead } from '@/shared/time';
 import { usePuzzleVisit } from '@/shared/results';
 import { usePuzzleTokens } from '@/shared/theme';
+import { usePlayerExit } from '@/shared/shell';
 
 import type { PuzzleFile } from '../../types';
 import type { FinishInfo } from '../finishing';
@@ -18,14 +17,6 @@ import { tilesHtml } from './drawing';
 import { Picture } from './Picture';
 
 export const BORDERLINE = 'https://dailynoodle.co.uk/reports/2026-10-05-quiz-borderline.html';
-
-const back = () => (router.canGoBack() ? router.back() : router.replace('/'));
-
-function openNext(item: TodayItem | null) {
-  if (!item) return back();
-  const file = item.path.replace(/^reports\//, '').replace(/\.html$/, '');
-  router.replace({ pathname: '/play/[type]/[file]', params: { type: item.type, file } });
-}
 
 /** "Today's ten", easiest first: each outline with its name, the misses crossed. */
 function Recap({ info, c }: { info: FinishInfo; c: BordersColors }) {
@@ -57,6 +48,7 @@ export function BordersScreen({
   /** Clocks and stores, for tests. */
   deps?: Parameters<typeof useBordersGame>[1];
 }) {
+  const { back, next: openNext } = usePlayerExit();
   const c = useBordersColors();
   const { state, info, dispatch, today } = useBordersGame(file, deps);
   const fresh = useFreshFinish(state.view === 'winModal' && !!info);

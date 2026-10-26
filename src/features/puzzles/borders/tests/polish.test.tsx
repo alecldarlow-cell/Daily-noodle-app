@@ -10,6 +10,7 @@ import { verdictOf } from '../components/BordersQuiz';
 import { BordersScreen } from '../components/BordersScreen';
 import { ATLAS_KEY } from '../model';
 import { borders15, file15 } from './fixtures';
+import { PRESSED } from '@/shared/ui';
 
 jest.mock('expo-router', () => ({
   router: { back: jest.fn(), replace: jest.fn(), canGoBack: jest.fn(() => true) },
@@ -94,17 +95,17 @@ describe('GIVEN the quiz’s buttons', () => {
     await press('borders-play-button');
     const opt = screen.getByTestId('borders-opt-0');
     await hold(opt);
-    expect(flat('borders-opt-0')).toMatchObject({ opacity: 0.75 });
+    expect(flat('borders-opt-0')).toMatchObject(PRESSED);
     await cancel(opt);
     expect(flat('borders-opt-0').opacity).toBeUndefined();
     await hold(screen.getByTestId('borders-pause'));
-    expect(flat('borders-pause')).toMatchObject({ opacity: 0.75 });
+    expect(flat('borders-pause')).toMatchObject(PRESSED);
     await cancel(screen.getByTestId('borders-pause'));
     await press(`borders-opt-${pick(0, true)}`);
     await hold(screen.getByTestId(`borders-opt-${pick(0, true)}`));
     expect(flat(`borders-opt-${pick(0, true)}`).opacity).toBeUndefined();
     await hold(screen.getByTestId('borders-next'));
-    expect(flat('borders-next')).toMatchObject({ opacity: 0.75 });
+    expect(flat('borders-next')).toMatchObject(PRESSED);
     await cancel(screen.getByTestId('borders-next'));
   });
 });

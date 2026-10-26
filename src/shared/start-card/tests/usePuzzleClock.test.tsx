@@ -10,12 +10,12 @@ const wait = (ms: number) =>
     jest.advanceTimersByTime(ms);
   });
 
-type Props = { running: boolean; reset?: number };
+type Props = { running: boolean; reset?: number; initial?: number };
 let hook: {
   result: { current: ReturnType<typeof usePuzzleClock> };
   rerender: (p: Props) => Promise<void> | void;
 };
-const useClock = (q: Props) => usePuzzleClock(q.running, { reset: q.reset });
+const useClock = (q: Props) => usePuzzleClock(q.running, { reset: q.reset, initial: q.initial });
 const mount = async (p: Props) => {
   hook = (await renderHook(useClock, {
     initialProps: p,
@@ -103,6 +103,18 @@ describe('GIVEN a grid player’s clock', () => {
       await r.rerender({ running: true, reset: 2 });
       await wait(2000);
       expect(shown()).toBe('2');
+    });
+  });
+
+  describe('WHEN an unfinished round is resumed with 75 seconds already on it', () => {
+    it('THEN it shows 75 at once and carries on from there', async () => {
+      const m = await mount({ running: false, initial: 75 });
+      expect(shown()).toBe('75');
+      expect(read()).toBe(75);
+      await m.rerender({ running: true, initial: 75 });
+      await wait(3000);
+      expect(shown()).toBe('78');
+      expect(read()).toBe(78);
     });
   });
 });

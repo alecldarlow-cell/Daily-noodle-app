@@ -1,5 +1,4 @@
-import { dnNum, type TodayItem } from '@noodle/core';
-import { router } from 'expo-router';
+import { dnNum } from '@noodle/core';
 import { useRef, type ComponentRef } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -8,6 +7,7 @@ import { FinishSheet, useFreshFinish } from '@/shared/finish-sheet';
 import { LINK_BURSTS, useWinBursts } from '@/shared/motion';
 import { PuzzleBar, ruleFor, StartCard, useStartStats } from '@/shared/start-card';
 import { usePuzzleTokens } from '@/shared/theme';
+import { usePlayerExit } from '@/shared/shell';
 
 import type { PuzzleFile } from '../../types';
 import { useLinkGame } from '../hooks/useLinkGame';
@@ -15,16 +15,9 @@ import { groupsByRank, shownLabel, type LinkData } from '../model';
 import { LinkBoard } from './LinkBoard';
 import { GroupBands, GuessSquares, LinkArt, PlayAgain } from './LinkParts';
 
-const back = () => (router.canGoBack() ? router.back() : router.replace('/'));
-
-function openNext(item: TodayItem | null) {
-  if (!item) return back();
-  const file = item.path.replace(/^reports\//, '').replace(/\.html$/, '');
-  router.replace({ pathname: '/play/[type]/[file]', params: { type: item.type, file } });
-}
-
 /** Link, played natively: start card, board, finish sheet. */
 export function LinkScreen({ file }: { file: PuzzleFile<LinkData> }) {
+  const { back, next: openNext } = usePlayerExit();
   const pt = usePuzzleTokens();
   const game = useLinkGame(file);
   const fresh = useFreshFinish(game.phase === 'finished');

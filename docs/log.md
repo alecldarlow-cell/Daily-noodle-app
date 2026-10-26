@@ -491,6 +491,26 @@ below when it finishes.
 - Left: the offline invite still reads as "expired" (joining review); `/auth` header (router).
 - Needs Alec (phone): the keyboard taps on iOS's number pad; `setParams` clearing under NativeTabs (repeat "Bring my leagues here", reopen an invite after "Not now"); the fonts and spinner in dark mode.
 
+### 26 Oct 2026, polish batch D (brand, saved progress, Tangle, tall phones, Back, small fixes)
+
+- [#61](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/61) (not merged; stacked on #54, #53, #57):
+  - Green DP icon, adaptive icon and splash, drawn by `scripts/make-icons.js` from Archivo ExtraBold. Light and dark splash. This needs a new native build.
+  - Mini, Doku, Sweep and Path keep an unfinished round under `noodle-app-progress-<type>` (new app-only keys, approved by Alec). It is replayed through the model's own `init`/`apply`.
+  - Tangle uses the site's blue thread and tiles.
+  - On tall phones the four grid boards sit under the bar (`BOARD_SLOT`).
+  - The tabs keep their default Back. `usePlayerExit` guards a double Back in all eight players.
+  - Doku has bigger bank tiles, and Hints sits on the message line.
+  - A cut card blurb ends in one ellipsis.
+  - How to play and Privacy show one header.
+  - Sweep draws its flag and mine as the site does.
+  - Mini clue numbers are at least 10 pt.
+  - Link, Tangle, Borders and Reckon use the shared `pressable()`.
+- Tests proved: the router's Back in both cases, and the exit helper. Progress for all four types: restore, write, clear on finish, bad values, another puzzle. Colours and glyphs, layout, the blurb cut, and icons against the tokens and the script's output. `check` green (1132 tests, 98.73% lines).
+- Left:
+  - Date labels are unchanged: they already follow the site cards' `relTime` rule.
+  - The Today card could show "In progress" for a kept round. The site shows it only for Tangle, Borders and Reckon.
+- Needs Alec: a native build for the icon and splash, then the phone checks listed in the PR.
+
 ### 26 Oct 2026 — League joining: App Links and one way in ([#58](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/58), this PR; site [dailynoodle#37](https://github.com/alecldarlow-cell/dailynoodle/pull/37))
 
 - Why: the league-joining review (Alec's go-ahead, 26 Oct). Six ways in became three: join (a link or a code, through

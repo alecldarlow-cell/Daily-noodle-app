@@ -4,12 +4,12 @@
 // screen never redrew: the 3-2-1 count-in froze on 3 on a phone (25 Oct 2026). Jest runs
 // without the compiler, so only a device showed it.
 
-import { londonDay, type TodayItem } from '@noodle/core';
-import { router } from 'expo-router';
+import { londonDay } from '@noodle/core';
 
 import { FinishSheet } from '@/shared/finish-sheet';
 import { usePuzzleVisit } from '@/shared/results';
 import { dayHead, useLondonDay } from '@/shared/time';
+import { usePlayerExit } from '@/shared/shell';
 
 import type { PuzzleFile } from '../../types';
 import { sheetInfo } from '../finishing';
@@ -18,14 +18,6 @@ import { homeCard, type TangleData } from '../model';
 import { TangleBoard } from './TangleBoard';
 import { TangleHome } from './TangleHome';
 import { TangleRecap } from './TangleRecap';
-
-const back = () => (router.canGoBack() ? router.back() : router.replace('/'));
-
-function openNext(item: TodayItem | null) {
-  if (!item) return back();
-  const file = item.path.replace(/^reports\//, '').replace(/\.html$/, '');
-  router.replace({ pathname: '/play/[type]/[file]', params: { type: item.type, file } });
-}
 
 /**
  * The home card with its heading naming the puzzle's day: the model keeps the page's
@@ -38,6 +30,7 @@ export function dayCard<C extends { head: string }>(card: C, date: string, today
 
 /** Tangle, played natively: its home card, the round, the result. */
 export function TangleScreen({ file }: { file: PuzzleFile<TangleData> }) {
+  const { back, next: openNext } = usePlayerExit();
   const { engine, setRects } = useTangleGame(file);
   const day = useLondonDay();
   // The home card's Play is the page's #playCard: a start, unless today's round is done.

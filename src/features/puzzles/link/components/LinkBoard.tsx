@@ -11,6 +11,7 @@ import {
 import { useReduceMotion } from '@/shared/motion';
 
 import { FONT, usePuzzleTokens } from '@/shared/theme';
+import { pressable } from '@/shared/ui';
 
 import { disabled, MAX_MISTAKES, shownMsg, type LinkState } from '../model';
 import { useAnnounce } from '../hooks/announce';
@@ -58,8 +59,6 @@ export function boardFont(words: readonly string[], tileW: number, scale = 1): n
   const fit = room / (0.7 * n);
   return Math.min(Math.max(fit, 12), 18 * s) / s;
 }
-
-const pressedStyle = { opacity: 0.75 };
 
 export function LinkBoard({ state, dispatch, past = false }: LinkBoardProps) {
   const pt = usePuzzleTokens();
@@ -196,11 +195,7 @@ export function LinkBoard({ state, dispatch, past = false }: LinkBoardProps) {
                   accessibilityLabel={w}
                   testID={`tile-${w}`}
                   onPress={() => dispatch({ t: 'tile', w })}
-                  style={({ pressed }) => [
-                    styles.tile,
-                    turned && styles.lift,
-                    pressed && pressedStyle,
-                  ]}>
+                  style={pressable([styles.tile, turned && styles.lift])}>
                   {body}
                 </Pressable>
               );
@@ -260,12 +255,11 @@ export function LinkBoard({ state, dispatch, past = false }: LinkBoardProps) {
             disabled={dis}
             onPress={() => dispatch({ t })}
             testID={`link-${t}`}
-            style={({ pressed }) => [
+            style={pressable([
               styles.btn,
               { borderColor: pt.lineSoft, backgroundColor: pt.card },
               t === 'submit' && !dis && { backgroundColor: pt.brand, borderColor: pt.brand },
-              pressed && pressedStyle,
-            ]}>
+            ])}>
             <Text
               maxFontSizeMultiplier={1.3}
               style={[

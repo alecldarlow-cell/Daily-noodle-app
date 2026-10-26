@@ -14,6 +14,15 @@ interface MiniBoardProps {
   celebrating?: boolean;
 }
 
+/**
+ * A clue number's size on a square `cell` points wide: 17% of it, but never under 10 pt (the
+ * page's own size off app mode), so it stays readable on a narrow phone; and never over 30%
+ * of the square, so on the smallest boards it still clears the letter.
+ */
+export function clueNumSize(cell: number): number {
+  return Math.min(cell * 0.3, Math.max(10, cell * 0.17));
+}
+
 /** The 5×5 grid: blocks, numbers, letters, the marigold cursor, the highlighted word, check marks. */
 export function MiniBoard({ state, side, onCell, celebrating = false }: MiniBoardProps) {
   const pt = usePuzzleTokens();
@@ -83,7 +92,7 @@ export function MiniBoard({ state, side, onCell, celebrating = false }: MiniBoar
                         styles.num,
                         {
                           color: here ? pt.onActive : pt.inkSoft,
-                          fontSize: cell * 0.17,
+                          fontSize: clueNumSize(cell),
                         },
                       ]}>
                       {num}

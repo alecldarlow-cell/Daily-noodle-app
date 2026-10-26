@@ -27,6 +27,20 @@ export function sitePageUrl(path: string): string {
 }
 
 /**
+ * The site page's own masthead (its logo row), hidden: the app's header already sits over
+ * the page with its title and Back, and two headers stacked read as a mistake. Plain ES5,
+ * run before the page's scripts, so the masthead never shows even for a frame.
+ */
+export const HIDE_MASTHEAD = `(function () {
+  try {
+    var s = document.createElement('style');
+    s.textContent = 'header.mast{display:none !important}';
+    (document.head || document.documentElement).appendChild(s);
+  } catch (e) {}
+})();
+`;
+
+/**
  * Shows one of the site's own pages (the privacy page) inside the app, with the puzzle
  * pages' bridge: the page is told it's in the app (inst 2) and shares the tracker's
  * visitor code and opt-out with the app, so the privacy page's "Don't record my visits"
@@ -38,8 +52,11 @@ export function SitePageWebView({ path, testID = 'site-webview', store = appStor
   const t = useTokens();
   const [failed, setFailed] = useState(false);
   const [attempt, setAttempt] = useState(0);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const injected = useMemo(() => buildInjection(seedFrom(store)), [path, attempt, store]);
+  const injected = useMemo(
+    () => HIDE_MASTHEAD + buildInjection(seedFrom(store)),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [path, attempt, store],
+  );
 
   // Only the tracker keys are taken from this page; it writes no puzzle saves.
   const onMessage = (e: WebViewMessageEvent): void => {

@@ -6,6 +6,7 @@ import { announceFinish, usePuzzleVisit } from '@/shared/results';
 import { usePuzzleClock } from '@/shared/start-card';
 import { appStorage, saves as appSaves, type CachedStorage } from '@/shared/storage';
 
+import { isMoveOf, resumeRound, useKeepRound, type MoveSpec } from '../../progress';
 import type { PuzzleFile } from '../../types';
 import { commitFinish, isRanked, reopenInfo, type FinishInfo } from '../finishing';
 import {
@@ -25,6 +26,26 @@ import { sweepFeel } from './feel';
 
 export type Phase = 'start' | 'play' | 'finished';
 
+/** Every move a Sweep round is played with (Play again starts a replay, which isn't kept). */
+const MOVES: MoveSpec = {
+  tap: { i: 'number' },
+  press: { i: 'number' },
+  mode: { flag: 'boolean' },
+  hint: {},
+};
+/** A kept move, with the clock's seconds as the page read them when it was made. */
+interface Entry {
+  m: Move;
+  s: number;
+}
+const isEntry = (x: unknown): x is Entry =>
+  !!x &&
+  typeof x === 'object' &&
+  isMoveOf(MOVES, (x as Entry).m) &&
+  typeof (x as Entry).s === 'number' &&
+  Number.isFinite((x as Entry).s);
+const step = (st: SweepState, e: Entry) => apply(st, e.m, { secs: e.s });
+
 interface Deps {
   store?: CachedStorage;
   saves?: SaveStore;
@@ -38,7 +59,8 @@ interface Deps {
  * to 0); a cleared board shows for 1.45 s before the sheet rises. Play again after a
  * mine starts a replay that records nothing, as on the page. The first finish is
  * announced on the results bus with the tracker's detail; a reopened puzzle shows its
- * sheet and never announces again.
+ * sheet and never announces again. A first round left unfinished is kept (progress.ts)
+ * and opens again on its board, at its time, with no start card.
  */
 export function useSweepGame(file: PuzzleFile<SweepData>, deps: Deps = {}) {
   const store = deps.store ?? appStorage;
@@ -58,18 +80,36 @@ export function useSweepGame(file: PuzzleFile<SweepData>, deps: Deps = {}) {
       info: back && !gave ? reopenInfo(back, store) : null,
     };
   });
-  const [state, setState] = useState<SweepState>(opened.state);
+  const [resumed] = useState(() =>
+    opened.rec ? null : resumeRound(store, 'sweep', id, opened.state, step, isEntry),
+  );
+  const moves = useRef<Entry[]>(resumed?.moves ?? []);
+  const [state, setState] = useState<SweepState>(resumed?.state ?? opened.state);
   // A saved result opens on its sheet (a "gave" result on its board, as the page shows it);
   // one the page won't reopen plays again with no start card.
   const [phase, setPhase] = useState<Phase>(
-    opened.rec ? (opened.info ? 'finished' : 'play') : 'start',
+    opened.rec ? (opened.info ? 'finished' : 'play') : resumed ? 'play' : 'start',
   );
   const [info, setInfo] = useState<FinishInfo | null>(opened.info);
   useHapticDiff(state, sweepFeel);
 
   // Ticks once a second while in play, back to zero each round; time with the app away
   // never counts.
-  const { secs } = usePuzzleClock(state.started && !state.over, { now, reset: state.round });
+  const { secs, read } = usePuzzleClock(state.started && !state.over, {
+    now,
+    reset: state.round,
+    initial: resumed?.secs,
+  });
+  useKeepRound({
+    store,
+    type: 'sweep',
+    id,
+    moves,
+    read,
+    live: !opened.rec && state.round === 1 && state.started && !state.over,
+    done: state.over,
+    state,
+  });
 
   // Hint's mark fades after 2.4 s
   const mark = state.mark;
@@ -101,12 +141,14 @@ export function useSweepGame(file: PuzzleFile<SweepData>, deps: Deps = {}) {
   useEffect(() => {
     secsRef.current = secs;
   }, [secs]);
-  const dispatch = useCallback(
-    (m: Move) => setState((s) => apply(s, m, { secs: secsRef.current })),
-    [],
-  );
+  const dispatch = useCallback((m: Move) => {
+    const e = { m, s: secsRef.current };
+    moves.current.push(e);
+    setState((st) => step(st, e));
+  }, []);
   // Play on the start card is the page's start; a finished puzzle reopened is not.
-  const start = usePuzzleVisit(file.path, 'sweep', !!opened.rec);
+  // A resumed round was started when it was first played.
+  const start = usePuzzleVisit(file.path, 'sweep', !!opened.rec || !!resumed);
   const play = useCallback(() => {
     start();
     setPhase('play');

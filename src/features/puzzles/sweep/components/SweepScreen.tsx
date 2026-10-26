@@ -1,5 +1,3 @@
-import type { TodayItem } from '@noodle/core';
-import { router } from 'expo-router';
 import { useRef, type ComponentRef } from 'react';
 import {
   Pressable,
@@ -15,22 +13,15 @@ import { FinishLink, FinishSheet, useFreshFinish } from '@/shared/finish-sheet';
 import { WIN_BURSTS, useWinBursts } from '@/shared/motion';
 import { PuzzleBar, ruleFor, StartCard, useStartStats } from '@/shared/start-card';
 import { FONT, usePuzzleTokens } from '@/shared/theme';
-import { fitBoard, pressable, useBoardFit } from '@/shared/ui';
+import { BOARD_SLOT, fitBoard, pressable, useBoardFit } from '@/shared/ui';
 import { useLondonDay } from '@/shared/time';
+import { usePlayerExit } from '@/shared/shell';
 
 import type { PuzzleFile } from '../../types';
 import { useSweepGame } from '../hooks/useSweepGame';
 import { shownCopy } from '../copy';
 import { minesLeft, msgText, type SweepData } from '../model';
 import { SweepArt, SweepBoard, SweepRecap } from './SweepBoard';
-
-const back = () => (router.canGoBack() ? router.back() : router.replace('/'));
-
-function openNext(item: TodayItem | null) {
-  if (!item) return back();
-  const file = item.path.replace(/^reports\//, '').replace(/\.html$/, '');
-  router.replace({ pathname: '/play/[type]/[file]', params: { type: item.type, file } });
-}
 
 /** The message under the board, its bold parts (the time, the counter) in bold. */
 function Message({ msg, color }: { msg: string; color: string }) {
@@ -56,6 +47,7 @@ function Message({ msg, color }: { msg: string; color: string }) {
 
 /** Sweep, played natively: start card, board, Dig and Flag, Hint, finish sheet. */
 export function SweepScreen({ file }: { file: PuzzleFile<SweepData> }) {
+  const { back, next: openNext } = usePlayerExit();
   const pt = usePuzzleTokens();
   const dark = useColorScheme() === 'dark';
   const win = useWindowDimensions();
@@ -199,7 +191,7 @@ const styles = StyleSheet.create({
     width: '100%',
     alignSelf: 'center',
   },
-  board: { flex: 1, justifyContent: 'center', minHeight: 0 },
+  board: BOARD_SLOT,
   modes: { flexDirection: 'row', gap: 8 },
   mode: {
     flex: 1,

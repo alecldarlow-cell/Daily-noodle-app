@@ -1,9 +1,7 @@
-import type { TodayItem } from '@noodle/core';
-import { router } from 'expo-router';
-
 import { boldLead, FinishSheet, useFreshFinish } from '@/shared/finish-sheet';
 import { dayHead } from '@/shared/time';
 import { usePuzzleVisit } from '@/shared/results';
+import { usePlayerExit } from '@/shared/shell';
 
 import type { PuzzleFile } from '../../types';
 import { useReckonGame } from '../hooks/useReckonGame';
@@ -12,14 +10,6 @@ import { useReckonColors } from './colors';
 import { ReckonHome } from './ReckonHome';
 import { ReckonPlay } from './ReckonPlay';
 import { ReckonRecap } from './ReckonRecap';
-
-const back = () => (router.canGoBack() ? router.back() : router.replace('/'));
-
-function openNext(item: TodayItem | null) {
-  if (!item) return back();
-  const file = item.path.replace(/^reports\//, '').replace(/\.html$/, '');
-  router.replace({ pathname: '/play/[type]/[file]', params: { type: item.type, file } });
-}
 
 /** Reckon, played natively: its start screen, the ten questions, the finish sheet. */
 export function ReckonScreen({
@@ -30,6 +20,7 @@ export function ReckonScreen({
   /** Clocks and stores, for tests. */
   deps?: Parameters<typeof useReckonGame>[1];
 }) {
+  const { back, next: openNext } = usePlayerExit();
   const c = useReckonColors();
   const { state, info, dispatch, today } = useReckonGame(file, deps);
   const fresh = useFreshFinish(state.view === 'winModal' && !!info);

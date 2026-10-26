@@ -4,7 +4,7 @@ import { Linking } from 'react-native';
 
 import { createCachedStorage } from '@/shared/storage';
 
-import { SitePageWebView, sitePageUrl } from '../SitePageWebView';
+import { HIDE_MASTHEAD, SitePageWebView, sitePageUrl } from '../SitePageWebView';
 
 // The native WebView, replaced by a stand-in that keeps its props for the test.
 let last: Record<string, any> = {};
@@ -25,6 +25,29 @@ const go = (url: string, isTopFrame = true): boolean =>
 
 describe('GIVEN the privacy page opened in the app', () => {
   beforeEach(() => jest.clearAllMocks());
+
+  describe('WHEN it loads under the app’s own header', () => {
+    it('THEN the page’s masthead is hidden before it shows, so there is one header', async () => {
+      await render(<SitePageWebView path="/how-to-play.html#mini" />);
+      const js: string = last.injectedJavaScriptBeforeContentLoaded;
+      expect(js.startsWith(HIDE_MASTHEAD)).toBe(true);
+      expect(js).toContain('header.mast{display:none !important}');
+      // The bridge still ends the script with true; (react-native-webview's rule).
+      expect(js.trimEnd().endsWith('true;')).toBe(true);
+    });
+
+    it('THEN the hiding script runs in a page without a head and adds the rule', () => {
+      const added: { textContent: string }[] = [];
+      const doc = {
+        head: null,
+        createElement: () => ({ textContent: '' }),
+        documentElement: { appendChild: (el: { textContent: string }) => added.push(el) },
+      };
+      new Function('document', HIDE_MASTHEAD)(doc);
+      expect(added).toHaveLength(1);
+      expect(added[0]!.textContent).toContain('header.mast');
+    });
+  });
 
   it('THEN it loads the live page tagged as the app, with web storage on and inst 2 set', async () => {
     await render(<SitePageWebView path="/privacy.html" />);

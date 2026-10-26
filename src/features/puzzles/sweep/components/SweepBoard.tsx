@@ -7,6 +7,7 @@ import { FONT, usePuzzleTokens, type PuzzleTokens } from '@/shared/theme';
 
 import { LONG_PRESS_MS, N, overCount, recapCell, type SweepState } from '../model';
 import { sweepColors, type SweepColors } from './colors';
+import { FlagGlyph, MineGlyph } from './SweepGlyphs';
 
 interface SweepBoardProps {
   state: SweepState;
@@ -17,9 +18,6 @@ interface SweepBoardProps {
   /** A fresh win: play the win's wave across the squares. */
   celebrating?: boolean;
 }
-
-const FLAG = '⚑';
-const MINE = '✹';
 
 function label(s: SweepState, i: number): string {
   const base = squareLabel(s, i);
@@ -207,12 +205,7 @@ function Face({
   sc: SweepColors;
 }) {
   const fs = size * 0.44;
-  if (s.boomed.has(i))
-    return (
-      <Text maxFontSizeMultiplier={1.2} style={[styles.glyph, { fontSize: fs, color: '#fff' }]}>
-        {MINE}
-      </Text>
-    );
+  if (s.boomed.has(i)) return <MineGlyph size={fs} />;
   if (s.revealed.has(i)) {
     const n = s.p.NUM[i]!;
     if (n <= 0) return null;
@@ -229,12 +222,7 @@ function Face({
       </Text>
     );
   }
-  if (s.flagged.has(i))
-    return (
-      <Text maxFontSizeMultiplier={1.2} style={[styles.glyph, { fontSize: fs, color: sc.flag }]}>
-        {FLAG}
-      </Text>
-    );
+  if (s.flagged.has(i)) return <FlagGlyph size={fs} />;
   return null;
 }
 
@@ -313,7 +301,6 @@ const styles = StyleSheet.create({
   },
   num: { fontFamily: FONT.display, fontVariant: ['tabular-nums'] },
   over: { textDecorationLine: 'line-through' },
-  glyph: { fontFamily: FONT.display },
   art: { width: 120, height: 120, borderRadius: 8, padding: 4, gap: 2 },
   artRow: { flexDirection: 'row', gap: 2 },
   artSq: { width: 16.5, height: 16.5, borderRadius: 2 },

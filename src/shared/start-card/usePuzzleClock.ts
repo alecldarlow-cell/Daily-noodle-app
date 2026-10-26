@@ -5,6 +5,8 @@ interface ClockOptions {
   now?: () => number;
   /** Change it to put the clock back to zero (Sweep's Play again: a new round). */
   reset?: unknown;
+  /** Seconds already on the clock: an unfinished round resumed carries on from its time. */
+  initial?: number;
 }
 
 /**
@@ -17,9 +19,10 @@ interface ClockOptions {
 export function usePuzzleClock(running: boolean, opts: ClockOptions = {}) {
   const now = opts.now ?? Date.now;
   const { reset } = opts;
-  const [secs, setSecs] = useState(0);
+  const [start] = useState(() => Math.max(0, Math.floor(opts.initial ?? 0)));
+  const [secs, setSecs] = useState(start);
   const [away, setAway] = useState(false);
-  const acc = useRef(0);
+  const acc = useRef(start * 1000);
   const since = useRef<number | null>(null);
 
   useEffect(() => {
