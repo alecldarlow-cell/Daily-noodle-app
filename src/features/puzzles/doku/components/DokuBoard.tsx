@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, Pressable, StyleSheet, Text, useColorScheme, View } from 'react-native';
 
+import { useWinWave, WaveFlash, WaveScale } from '@/shared/motion';
 import { FONT, usePuzzleTokens } from '@/shared/theme';
 
 import { activeWord, goodSquares, isLock, letterAt, type DokuState } from '../model';
@@ -13,6 +14,8 @@ interface DokuBoardProps {
   /** The board's width and height in points. */
   side: number;
   onCell: (r: number, c: number) => void;
+  /** A fresh solve: play the win's wave across the squares. */
+  celebrating?: boolean;
 }
 
 /**
@@ -20,8 +23,9 @@ interface DokuBoardProps {
  * letters, the marigold cursor, the highlighted word, and words green once they match
  * the answer (with Hints on). A typed letter the bank doesn't hold shakes the square.
  */
-export function DokuBoard({ state, side, onCell }: DokuBoardProps) {
+export function DokuBoard({ state, side, onCell, celebrating = false }: DokuBoardProps) {
   const pt = usePuzzleTokens();
+  const wave = useWinWave(celebrating, 8);
   const locked = useLockedColor();
   const active = activeWord(state);
   const good = goodSquares(state);
@@ -84,39 +88,41 @@ export function DokuBoard({ state, side, onCell }: DokuBoardProps) {
                     ? pt.onWord
                     : pt.ink;
             return (
-              <Pressable
-                key={c}
-                testID={`cell-${r}-${c}`}
-                accessibilityRole="button"
-                accessibilityLabel={`${num ? `${num}, ` : ''}row ${r + 1}, column ${c + 1}, ${letter || 'empty'}${given ? ', given' : ''}${green ? ', right' : ''}`}
-                accessibilityState={{ selected: here }}
-                onPress={() => onCell(r, c)}
-                style={[
-                  styles.cell,
-                  { width: cell, height: cell, borderColor: pt.cellEdge, backgroundColor: bg },
-                ]}>
-                <Animated.View
-                  style={[styles.fill, shaking ? { transform: [{ translateX: dx }] } : null]}>
-                  {num ? (
+              <WaveScale key={c} wave={wave} at={r + c}>
+                <Pressable
+                  testID={`cell-${r}-${c}`}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${num ? `${num}, ` : ''}row ${r + 1}, column ${c + 1}, ${letter || 'empty'}${given ? ', given' : ''}${green ? ', right' : ''}`}
+                  accessibilityState={{ selected: here }}
+                  onPress={() => onCell(r, c)}
+                  style={[
+                    styles.cell,
+                    { width: cell, height: cell, borderColor: pt.cellEdge, backgroundColor: bg },
+                  ]}>
+                  <WaveFlash wave={wave} at={r + c} active={pt.active} word={pt.activeWord} />
+                  <Animated.View
+                    style={[styles.fill, shaking ? { transform: [{ translateX: dx }] } : null]}>
+                    {num ? (
+                      <Text
+                        maxFontSizeMultiplier={1.2}
+                        style={[
+                          styles.num,
+                          {
+                            color: here ? pt.onActive : pt.inkSoft,
+                            fontSize: cell * 0.17,
+                          },
+                        ]}>
+                        {num}
+                      </Text>
+                    ) : null}
                     <Text
                       maxFontSizeMultiplier={1.2}
-                      style={[
-                        styles.num,
-                        {
-                          color: here ? pt.onActive : pt.inkSoft,
-                          fontSize: cell * 0.17,
-                        },
-                      ]}>
-                      {num}
+                      style={[styles.ltr, { fontSize: cell * 0.46, color: ink }]}>
+                      {letter}
                     </Text>
-                  ) : null}
-                  <Text
-                    maxFontSizeMultiplier={1.2}
-                    style={[styles.ltr, { fontSize: cell * 0.46, color: ink }]}>
-                    {letter}
-                  </Text>
-                </Animated.View>
-              </Pressable>
+                  </Animated.View>
+                </Pressable>
+              </WaveScale>
             );
           })}
         </View>

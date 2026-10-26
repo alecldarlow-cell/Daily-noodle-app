@@ -1,5 +1,6 @@
 import type { TodayItem } from '@noodle/core';
 import { router } from 'expo-router';
+import { useRef, type ComponentRef } from 'react';
 import {
   Pressable,
   StyleSheet,
@@ -11,6 +12,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { FinishSheet, useFreshFinish } from '@/shared/finish-sheet';
+import { WIN_BURSTS, useWinBursts } from '@/shared/motion';
 import { PuzzleBar, ruleFor, StartCard, useStartStats } from '@/shared/start-card';
 import { useStoredRaw } from '@/shared/storage';
 import { FONT, usePuzzleTokens } from '@/shared/theme';
@@ -68,6 +70,10 @@ export function SweepScreen({ file }: { file: PuzzleFile<SweepData> }) {
   const win = useWindowDimensions();
   const game = useSweepGame(file);
   const fresh = useFreshFinish(game.phase === 'finished');
+  // A fresh win, between the last move and the sheet: the board's wave and the confetti.
+  const winning = game.phase === 'play' && !!game.info && game.state.won;
+  const boardRef = useRef<ComponentRef<typeof View>>(null);
+  useWinBursts(winning, WIN_BURSTS, boardRef);
   const stats = useStartStats('sweep');
   const streak = savedStreak(useStoredRaw(STREAK_KEY));
   const n = file.n ?? '';
@@ -146,8 +152,9 @@ export function SweepScreen({ file }: { file: PuzzleFile<SweepData> }) {
           clock={game.clock}
           onBack={back}
         />
-        <View style={styles.board}>
+        <View ref={boardRef} collapsable={false} style={styles.board}>
           <SweepBoard
+            celebrating={winning}
             state={state}
             side={side}
             dark={dark}

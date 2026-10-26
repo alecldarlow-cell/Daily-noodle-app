@@ -1,5 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { useWinWave, WaveFlash, WaveScale } from '@/shared/motion';
 import { FONT, usePuzzleTokens } from '@/shared/theme';
 
 import { endMark, lines, N, type Cell, type PathState } from '../model';
@@ -39,6 +40,8 @@ interface PathBoardProps {
   state: PathState;
   side: number;
   onCell: (r: number, c: number) => void;
+  /** A fresh solve: every open square pulses at once, as path.css does. */
+  celebrating?: boolean;
 }
 
 /**
@@ -46,8 +49,9 @@ interface PathBoardProps {
  * active end marigold and the other end ringed, the thread from 1 in cobalt and the
  * thread from 36 in deep blue, one green thread once it is complete.
  */
-export function PathBoard({ state, side, onCell }: PathBoardProps) {
+export function PathBoard({ state, side, onCell, celebrating = false }: PathBoardProps) {
   const pt = usePuzzleTokens();
+  const wave = useWinWave(celebrating, 0);
   const cs = side / N;
   const l = lines(state);
   return (
@@ -64,24 +68,27 @@ export function PathBoard({ state, side, onCell }: PathBoardProps) {
               const v = state.cellValue[r]![c];
               const given = state.p.lockedSet.has(`${r},${c}`);
               const m = endMark(state, r, c);
+              const w = given ? null : wave;
               return (
-                <Pressable
-                  key={c}
-                  testID={`sq-${r}-${c}`}
-                  accessibilityRole="button"
-                  accessibilityLabel={`row ${r + 1}, column ${c + 1}, ${v ?? 'empty'}${given ? ', given' : ''}${m === 'active' ? ', active end' : ''}`}
-                  onPress={() => onCell(r, c)}
-                  style={[
-                    styles.cell,
-                    {
-                      width: cs,
-                      height: cs,
-                      borderColor: pt.cellEdge,
-                      backgroundColor: m === 'active' ? pt.active : given ? pt.lineSoft : pt.card,
-                    },
-                    m === 'endsel' ? { borderWidth: 2, borderColor: pt.active } : null,
-                  ]}
-                />
+                <WaveScale key={c} wave={w} at={0}>
+                  <Pressable
+                    testID={`sq-${r}-${c}`}
+                    accessibilityRole="button"
+                    accessibilityLabel={`row ${r + 1}, column ${c + 1}, ${v ?? 'empty'}${given ? ', given' : ''}${m === 'active' ? ', active end' : ''}`}
+                    onPress={() => onCell(r, c)}
+                    style={[
+                      styles.cell,
+                      {
+                        width: cs,
+                        height: cs,
+                        borderColor: pt.cellEdge,
+                        backgroundColor: m === 'active' ? pt.active : given ? pt.lineSoft : pt.card,
+                      },
+                      m === 'endsel' ? { borderWidth: 2, borderColor: pt.active } : null,
+                    ]}>
+                    <WaveFlash wave={w} at={0} active={pt.active} word={pt.activeWord} />
+                  </Pressable>
+                </WaveScale>
               );
             })}
           </View>

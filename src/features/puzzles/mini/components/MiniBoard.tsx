@@ -1,5 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { useWinWave, WaveFlash, WaveScale } from '@/shared/motion';
 import { FONT, usePuzzleTokens } from '@/shared/theme';
 
 import { status, type MiniState } from '../model';
@@ -9,11 +10,14 @@ interface MiniBoardProps {
   /** The board's width and height in points. */
   side: number;
   onCell: (r: number, c: number) => void;
+  /** A fresh solve: play the win's wave across the squares. */
+  celebrating?: boolean;
 }
 
 /** The 5×5 grid: blocks, numbers, letters, the marigold cursor, the highlighted word, check marks. */
-export function MiniBoard({ state, side, onCell }: MiniBoardProps) {
+export function MiniBoard({ state, side, onCell, celebrating = false }: MiniBoardProps) {
   const pt = usePuzzleTokens();
+  const wave = useWinWave(celebrating, 8);
   const { active } = status(state);
   const cell = side / 5;
   const inWord = (r: number, c: number) => !!active?.cells.some(([y, x]) => y === r && x === c);
@@ -44,48 +48,52 @@ export function MiniBoard({ state, side, onCell }: MiniBoardProps) {
             const num = state.p.nums[r]![c];
             const ink = here ? pt.onActive : word ? pt.onWord : pt.ink;
             return (
-              <Pressable
-                key={c}
-                testID={`cell-${r}-${c}`}
-                accessibilityRole="button"
-                accessibilityLabel={`${num ? `${num}, ` : ''}row ${r + 1}, column ${c + 1}, ${letter || 'empty'}${mark === 'bad' ? ', wrong' : ''}`}
-                accessibilityState={{ selected: here }}
-                onPress={() => onCell(r, c)}
-                style={[
-                  styles.cell,
-                  {
-                    width: cell,
-                    height: cell,
-                    borderColor: pt.cellEdge,
-                    backgroundColor: here ? pt.active : word ? pt.activeWord : pt.card,
-                  },
-                ]}>
-                {num ? (
+              <WaveScale key={c} wave={wave} at={r + c}>
+                <Pressable
+                  testID={`cell-${r}-${c}`}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${num ? `${num}, ` : ''}row ${r + 1}, column ${c + 1}, ${letter || 'empty'}${mark === 'bad' ? ', wrong' : ''}`}
+                  accessibilityState={{ selected: here }}
+                  onPress={() => onCell(r, c)}
+                  style={[
+                    styles.cell,
+                    {
+                      width: cell,
+                      height: cell,
+                      borderColor: pt.cellEdge,
+                      backgroundColor: here ? pt.active : word ? pt.activeWord : pt.card,
+                    },
+                  ]}>
+                  <WaveFlash wave={wave} at={r + c} active={pt.active} word={pt.activeWord} />
+                  {num ? (
+                    <Text
+                      maxFontSizeMultiplier={1.2}
+                      style={[
+                        styles.num,
+                        {
+                          color: here ? pt.onActive : pt.inkSoft,
+                          fontSize: cell * 0.17,
+                        },
+                      ]}>
+                      {num}
+                    </Text>
+                  ) : null}
                   <Text
                     maxFontSizeMultiplier={1.2}
                     style={[
-                      styles.num,
+                      styles.ltr,
                       {
-                        color: here ? pt.onActive : pt.inkSoft,
-                        fontSize: cell * 0.17,
+                        fontSize: cell * 0.46,
+                        color: mark === 'good' ? pt.good : mark === 'bad' ? pt.bad : ink,
                       },
                     ]}>
-                    {num}
+                    {letter}
                   </Text>
-                ) : null}
-                <Text
-                  maxFontSizeMultiplier={1.2}
-                  style={[
-                    styles.ltr,
-                    {
-                      fontSize: cell * 0.46,
-                      color: mark === 'good' ? pt.good : mark === 'bad' ? pt.bad : ink,
-                    },
-                  ]}>
-                  {letter}
-                </Text>
-                {mark === 'bad' ? <View style={[styles.dot, { backgroundColor: pt.bad }]} /> : null}
-              </Pressable>
+                  {mark === 'bad' ? (
+                    <View style={[styles.dot, { backgroundColor: pt.bad }]} />
+                  ) : null}
+                </Pressable>
+              </WaveScale>
             );
           })}
         </View>

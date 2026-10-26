@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Animated, Pressable, StyleSheet, Text, useColorScheme, View } from 'react-native';
 
-import { useReduceMotion } from '@/shared/motion';
+import { useReduceMotion, useWinWave, WaveFlash, WaveScale } from '@/shared/motion';
 import { FONT, usePuzzleTokens, type PuzzleTokens } from '@/shared/theme';
 
 import { LONG_PRESS_MS, N, overCount, recapCell, type SweepState } from '../model';
@@ -13,6 +13,8 @@ interface SweepBoardProps {
   dark: boolean;
   onTap: (i: number) => void;
   onPress: (i: number) => void;
+  /** A fresh win: play the win's wave across the squares. */
+  celebrating?: boolean;
 }
 
 const FLAG = '⚑';
@@ -42,8 +44,16 @@ function squareLabel(s: SweepState, i: number): string {
  * and the numbers its line talks about, ringed. Tap digs (or flags in Flag mode);
  * a long press flags.
  */
-export function SweepBoard({ state, side, dark, onTap, onPress }: SweepBoardProps) {
+export function SweepBoard({
+  state,
+  side,
+  dark,
+  onTap,
+  onPress,
+  celebrating = false,
+}: SweepBoardProps) {
   const pt = usePuzzleTokens();
+  const wave = useWinWave(celebrating, 2 * (N - 1));
   const sc = sweepColors(dark);
   const cell = side / N;
   return (
@@ -58,18 +68,24 @@ export function SweepBoard({ state, side, dark, onTap, onPress }: SweepBoardProp
           {Array.from({ length: N }, (_, c) => {
             const i = r * N + c;
             return (
-              <Pressable
-                key={c}
-                testID={`sq-${i}`}
-                accessibilityRole="button"
-                accessibilityLabel={label(state, i)}
-                delayLongPress={LONG_PRESS_MS}
-                onPress={() => onTap(i)}
-                onLongPress={() => onPress(i)}
-                style={[styles.cell, { width: cell, height: cell }, look(state, i, pt, sc, dark)]}>
-                {!state.startDug && i === state.p.start ? <StartPulse color={pt.active} /> : null}
-                <Face state={state} i={i} size={cell} pt={pt} sc={sc} />
-              </Pressable>
+              <WaveScale key={c} wave={wave} at={r + c}>
+                <Pressable
+                  testID={`sq-${i}`}
+                  accessibilityRole="button"
+                  accessibilityLabel={label(state, i)}
+                  delayLongPress={LONG_PRESS_MS}
+                  onPress={() => onTap(i)}
+                  onLongPress={() => onPress(i)}
+                  style={[
+                    styles.cell,
+                    { width: cell, height: cell },
+                    look(state, i, pt, sc, dark),
+                  ]}>
+                  <WaveFlash wave={wave} at={r + c} active={pt.active} word={pt.activeWord} />
+                  {!state.startDug && i === state.p.start ? <StartPulse color={pt.active} /> : null}
+                  <Face state={state} i={i} size={cell} pt={pt} sc={sc} />
+                </Pressable>
+              </WaveScale>
             );
           })}
         </View>
