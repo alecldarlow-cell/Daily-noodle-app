@@ -6,6 +6,7 @@ import { announceFinish, usePuzzleVisit } from '@/shared/results';
 import { usePuzzleClock } from '@/shared/start-card';
 import { appStorage, saves as appSaves, type CachedStorage } from '@/shared/storage';
 
+import { isMoveOf, resumeRound, useKeepRound, type MoveSpec } from '../../progress';
 import type { PuzzleFile } from '../../types';
 import { commitFinish, liveStreak, reopenInfo, type FinishInfo } from '../finishing';
 import {
@@ -24,6 +25,10 @@ import { SHEET_DELAY_MS } from '../simulate';
 
 export type Phase = 'start' | 'play' | 'finished';
 
+/** Every move Path's model takes, for reading a kept round back. */
+const MOVES: MoveSpec = { cell: { r: 'number', c: 'number' }, undo: {}, hint: {} };
+const isMove = (x: unknown): x is Move => isMoveOf(MOVES, x);
+
 interface Deps {
   store?: CachedStorage;
   saves?: SaveStore;
@@ -38,7 +43,8 @@ interface Deps {
  * announced with the tracker's detail; the sheet rises 0.9 s later. A puzzle already
  * finished opens on its sheet with its saved time and never announces again. The clock
  * stops while the app is away (Alec's call, 26 Oct 2026: the page's wall clock counted
- * time in another app).
+ * time in another app). A round left unfinished is kept (progress.ts) and opens again on
+ * its board, at its time, with no start card.
  */
 export function usePathGame(file: PuzzleFile<PathData>, deps: Deps = {}) {
   const store = deps.store ?? appStorage;
@@ -60,15 +66,34 @@ export function usePathGame(file: PuzzleFile<PathData>, deps: Deps = {}) {
         : null,
     };
   });
-  const [state, setState] = useState<PathState>(() => opened.done?.state ?? init(file.data));
-  const [phase, setPhase] = useState<Phase>(opened.done ? 'finished' : 'start');
+  const [resumed] = useState(() =>
+    opened.done ? null : resumeRound(store, 'path', id, init(file.data), apply, isMove),
+  );
+  const moves = useRef<Move[]>(resumed?.moves ?? []);
+  const [state, setState] = useState<PathState>(
+    () => opened.done?.state ?? resumed?.state ?? init(file.data),
+  );
+  const [phase, setPhase] = useState<Phase>(opened.done ? 'finished' : resumed ? 'play' : 'start');
   const [info, setInfo] = useState<FinishInfo | null>(opened.done?.info ?? null);
   const [streak, setStreak] = useState(opened.streak);
-  const [begun, setBegun] = useState(false);
+  const [begun, setBegun] = useState(!!resumed);
   useHapticDiff(state, pathFeel);
 
   const begin = useCallback(() => setBegun(true), []);
-  const { secs, read } = usePuzzleClock(begun && !state.solved, { now });
+  const { secs, read } = usePuzzleClock(begun && !state.solved, {
+    now,
+    initial: resumed?.secs,
+  });
+  useKeepRound({
+    store,
+    type: 'path',
+    id,
+    moves,
+    read,
+    live: !opened.done && begun && !state.solved,
+    done: !!info,
+    state,
+  });
   const [endSecs, setEndSecs] = useState<number | null>(null);
 
   const finished = useRef(!!opened.done);
@@ -94,12 +119,14 @@ export function usePathGame(file: PuzzleFile<PathData>, deps: Deps = {}) {
   const dispatch = useCallback(
     (m: Move) => {
       if (m.t !== 'undo') begin();
+      moves.current.push(m);
       setState((s) => apply(s, m));
     },
     [begin],
   );
   // Play on the start card is the page's start; a finished puzzle reopened is not.
-  const start = usePuzzleVisit(file.path, 'path', !!opened.done);
+  // A resumed round was started when it was first played.
+  const start = usePuzzleVisit(file.path, 'path', !!opened.done || !!resumed);
   const play = useCallback(() => {
     start();
     begin();
