@@ -9,7 +9,7 @@ const { inflateSync } = require('zlib') as { inflateSync: (b: Uint8Array) => Uin
 const { execFileSync } = require('child_process') as {
   execFileSync: (cmd: string, args: string[], o: { encoding: 'utf8' }) => string;
 };
-const icons = require('../make-icons') as { GREEN: string; GREEN_DARK: string };
+const icons = require('../make-icons') as { GREEN: string; GREEN_DARK: string; LETTERS: string };
 /* eslint-enable @typescript-eslint/no-require-imports */
 
 const read = (rel: string) => readFileSync(`${__dirname}/../../${rel.replace(/^\.\//, '')}`);
@@ -127,14 +127,15 @@ describe('GIVEN the app icon', () => {
       expect(png('assets/images/play-store-icon.png')).toEqual({ w: 512, h: 512, colour: 2 });
     });
 
-    it('THEN they are white DP on the green, with no trace of the old blue', () => {
+    it('THEN they are white DN (Daily Noodle) on the green, with no trace of the old blue', () => {
+      expect(icons.LETTERS).toBe('DN');
       for (const f of ['assets/images/icon.png', 'assets/images/play-store-icon.png']) {
         const p = pixels(f);
         expect(hex(p.at(0, 0))).toBe(GREEN);
         expect(hex(p.at(p.w - 1, p.h - 1))).toBe(GREEN);
         const green = isColour(GREEN);
         const box = inkBox(p, (r, g, b, a) => !green(r, g, b, a));
-        // DP is wider than tall, centred, and white at its heart (the D's stem).
+        // DN is wider than tall, centred, and white at its heart (the D's stem).
         expect(box.x1 - box.x0).toBeGreaterThan((box.y1 - box.y0) * 1.5);
         expect(Math.abs((box.x0 + box.x1) / 2 - p.w / 2)).toBeLessThan(2);
         expect(hex(p.at(box.x0 + 8, Math.round((box.y0 + box.y1) / 2)))).toBe('#FFFFFF');
