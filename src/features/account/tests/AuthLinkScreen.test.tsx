@@ -5,7 +5,7 @@ import { AuthLinkScreen } from '../components/AuthLinkScreen/AuthLinkScreen';
 import { fakeClient } from './fakeClient';
 
 let mockUrl: string | null = null;
-jest.mock('expo-linking', () => ({ useURL: () => mockUrl }));
+jest.mock('expo-linking', () => ({ useLinkingURL: () => mockUrl }));
 jest.mock('expo-router', () => ({ router: { replace: jest.fn() } }));
 
 describe('GIVEN the email’s sign-in link opens the app', () => {
