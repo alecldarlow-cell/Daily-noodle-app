@@ -28,7 +28,7 @@ const STATUS: { id: DoneFilter; label: string }[] = [
   { id: 'done', label: 'Done' },
 ];
 
-/** Every released puzzle, by month, newest first; filter by done or not, and by type. */
+/** Every released puzzle, by month, newest first; filter by type, then by done or not. */
 export function ArchiveScreen() {
   const t = useTokens();
   const day = useLondonDay();
@@ -46,25 +46,6 @@ export function ArchiveScreen() {
 
   return (
     <Screen title="Archive" testID="archive-screen" scroll={false}>
-      <View
-        style={[styles.seg, { borderColor: t.hair, backgroundColor: t.paper }]}
-        testID="archive-status">
-        {STATUS.map((s) => {
-          const on = s.id === status;
-          return (
-            <Pressable
-              key={s.id}
-              accessibilityRole="button"
-              accessibilityState={{ selected: on }}
-              accessibilityLabel={`Show ${s.label === 'All' ? 'all puzzles' : s.label.toLowerCase()}`}
-              testID={`status-${s.id}`}
-              onPress={() => setStatus(s.id)}
-              style={[styles.segBtn, on && { backgroundColor: t.accentSoft }]}>
-              <Text style={[styles.chipText, { color: on ? t.accent : t.muted }]}>{s.label}</Text>
-            </Pressable>
-          );
-        })}
-      </View>
       <ScrollView
         horizontal
         testID="archive-chips"
@@ -91,6 +72,25 @@ export function ArchiveScreen() {
           );
         })}
       </ScrollView>
+      <View
+        style={[styles.seg, { borderColor: t.hair, backgroundColor: t.paper }]}
+        testID="archive-status">
+        {STATUS.map((s) => {
+          const on = s.id === status;
+          return (
+            <Pressable
+              key={s.id}
+              accessibilityRole="button"
+              accessibilityState={{ selected: on }}
+              accessibilityLabel={`Show ${s.label === 'All' ? 'all puzzles' : s.label.toLowerCase()}`}
+              testID={`status-${s.id}`}
+              onPress={() => setStatus(s.id)}
+              style={[styles.segBtn, on && { backgroundColor: t.accentSoft }]}>
+              <Text style={[styles.chipText, { color: on ? t.accent : t.muted }]}>{s.label}</Text>
+            </Pressable>
+          );
+        })}
+      </View>
       {!q.data && q.isPending ? <ActivityIndicator style={styles.spinner} color={t.muted} /> : null}
       {!q.data && q.isError ? (
         <Note
@@ -153,9 +153,9 @@ export function ArchiveScreen() {
 const styles = StyleSheet.create({
   // flexShrink 0: the list below takes the rest of the column, and on Android it otherwise
   // squeezed this row, clipping the chip labels (seen at 115% font size on a Pixel 10 Pro).
-  chips: { flexGrow: 0, flexShrink: 0, marginBottom: 10 },
+  chips: { flexGrow: 0, flexShrink: 0, marginBottom: 8 },
   chipsRow: { gap: 6 },
-  // a three-way switch above the type chips: All, Not done, Done
+  // a three-way switch under the type chips: All, Not done, Done
   seg: {
     flexDirection: 'row',
     alignSelf: 'flex-start',
@@ -163,7 +163,7 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     padding: 3,
     gap: 2,
-    marginBottom: 8,
+    marginBottom: 10,
   },
   segBtn: { borderRadius: 999, paddingHorizontal: 14, paddingVertical: 6, minHeight: 32 },
   // front.css .chip: 12.5 px semibold, 6 × 12 padding, a hairline; the chosen one in the accent.
