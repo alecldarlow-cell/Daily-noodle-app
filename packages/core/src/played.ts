@@ -55,6 +55,8 @@ export function resultText(type: PuzzleType, r: Obj): string {
     case 'tangle':
       return num(r.s) ? `${r.s} points` : '';
     case 'borders':
+      // Points since 26 Oct 2026 (100 a right answer, 50 with Show on map); the right answers after.
+      if (num(r.p)) return `${r.p} points` + (num(r.c) ? ` · ${r.c}/10` : '');
       return num(r.c) ? `Scored ${r.c}/10` : '';
     case 'reckon':
       return num(r.p) ? `${r.p} points` : '';

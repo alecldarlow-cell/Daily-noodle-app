@@ -137,6 +137,19 @@ describe('GIVEN the site has published today’s list', () => {
       expect(screen.getByTestId('today-count')).toHaveTextContent('8 puzzles · 2 played');
     });
 
+    it('THEN a finished Borders shows its points, then its right answers', async () => {
+      appStorage.setItem(
+        'digi-borders-v1',
+        JSON.stringify({ v: 1, done: { 'DP·BORD·0020': { c: 7, p: 650, secs: 80, on: today } } }),
+      );
+      await renderWithProviders(<TodayScreen />);
+      await waitFor(() =>
+        expect(
+          screen.getByRole('button', { name: 'Borders 20, 650 points · 7/10' }),
+        ).toBeOnTheScreen(),
+      );
+    });
+
     it('THEN a run of two or more days shows as a streak chip', async () => {
       appStorage.setItem(
         'digi-mini-v1',

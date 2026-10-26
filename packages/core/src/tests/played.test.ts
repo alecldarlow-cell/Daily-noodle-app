@@ -1,4 +1,4 @@
-import { overallRun } from '../played';
+import { overallRun, resultText } from '../played';
 
 const NOW = Date.parse('2026-10-24T09:00:00Z');
 
@@ -33,6 +33,33 @@ describe('GIVEN saves across the daily types', () => {
       );
       expect(overallRun({}, NOW)).toBe(0);
       expect(overallRun({ 'digi-mini-v1': null, 'digi-mini-streak': { dates: 'x' } }, NOW)).toBe(0);
+    });
+  });
+});
+
+describe('GIVEN a finished Borders round', () => {
+  describe('WHEN its save has points and right answers', () => {
+    it('THEN the row shows the points, then the right answers', () => {
+      expect(resultText('borders', { c: 7, p: 650 })).toBe('650 points · 7/10');
+      expect(resultText('borders', { c: 0, p: 0 })).toBe('0 points · 0/10');
+    });
+  });
+
+  describe('WHEN its save has points but no right-answer count', () => {
+    it('THEN the row shows the points alone', () => {
+      expect(resultText('borders', { p: 1000 })).toBe('1000 points');
+    });
+  });
+
+  describe('WHEN its save has right answers but no points', () => {
+    it('THEN the row keeps the right answers out of ten', () => {
+      expect(resultText('borders', { c: 7 })).toBe('Scored 7/10');
+    });
+  });
+
+  describe('WHEN its save has neither', () => {
+    it('THEN there is no result line', () => {
+      expect(resultText('borders', {})).toBe('');
     });
   });
 });
