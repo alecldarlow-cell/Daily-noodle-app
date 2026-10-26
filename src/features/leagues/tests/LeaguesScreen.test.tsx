@@ -695,7 +695,7 @@ describe('GIVEN Leagues opened on a puzzle’s board (?p=&d=, as board.html)', (
   describe('WHEN the values aren’t ones board.html would take', () => {
     it('THEN an unknown puzzle or a bad date falls back; a future day is today', async () => {
       inFamily({ ptype: 'mini' });
-      params.mockReturnValue({ p: 'records', d: 'yesterday' });
+      params.mockReturnValue({ p: 'crossword', d: 'yesterday' });
       const r = await renderWithProviders(<LeaguesScreen />);
       await waitFor(() => expect(m.boardDay).toHaveBeenCalledWith(PID, 'ABCD2345', 'mini', today));
       params.mockReturnValue({ p: 'doku', d: addDays(today, 5) });

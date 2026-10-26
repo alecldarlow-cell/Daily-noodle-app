@@ -26,12 +26,13 @@ import {
   boardOverall,
   boardPeek,
   boardPinSet,
+  boardRecords,
   boardRemove,
   boardRename,
 } from '../api/board';
 import { BoardError } from '../api/errors';
 import { fetchPuzzleCards } from '../api/feed';
-import type { BoardView, DayBoard, Overall } from '../types';
+import type { BoardView, DayBoard, Overall, Records } from '../types';
 import { getPid, loadBoard, saveBoard, setCurrent, setLeagues } from './boardStore';
 
 export const BOARD_QUERY = ['board'] as const;
@@ -78,6 +79,28 @@ export function useBoardData(code: string | undefined, view: BoardView, date: st
       }
     },
     enabled: !!code,
+    retry: (n, e) => !(e instanceof BoardError) && n < 2,
+  });
+}
+
+/**
+ * The league's records and honours (the Records pill). A minute fresh, as the site keeps
+ * them; off the league is handled as the boards handle it.
+ */
+export function useBoardRecords(code: string | undefined) {
+  return useQuery<Records>({
+    queryKey: [...BOARD_QUERY, 'records', code],
+    queryFn: async () => {
+      try {
+        return await boardRecords(getPid(), code!);
+      } catch (e) {
+        if (e instanceof BoardError && (e.code === 'not_member' || e.code === 'no_league'))
+          await refreshLeagues().catch(() => {});
+        throw e;
+      }
+    },
+    enabled: !!code,
+    staleTime: 60_000,
     retry: (n, e) => !(e instanceof BoardError) && n < 2,
   });
 }

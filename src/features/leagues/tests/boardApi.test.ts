@@ -68,3 +68,11 @@ describe('GIVEN board_moment', () => {
     expect(call.mock.calls).toEqual([['board_moment', { p_player: P, p_path: 'reports/x.html' }]]);
   });
 });
+
+describe('GIVEN board_records', () => {
+  it('THEN it sends the SQL function’s exact argument names', async () => {
+    call.mockClear();
+    await api.boardRecords(P, 'ABCD2345');
+    expect(call.mock.calls).toEqual([['board_records', { p_player: P, p_code: 'ABCD2345' }]]);
+  });
+});

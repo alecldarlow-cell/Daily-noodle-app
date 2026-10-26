@@ -3,7 +3,7 @@ import { BOARD_KEY, readBoard, type BoardState } from '@noodle/core';
 
 import { appStorage } from '@/shared/storage';
 
-import type { DayBoard, Overall } from '../types';
+import type { DayBoard, Overall, Records, RecordsPlayer } from '../types';
 
 export const PID = '00000000-0000-4000-8000-000000000001';
 export const OTHER = '00000000-0000-4000-8000-000000000002';
@@ -68,6 +68,61 @@ export function overall(o: Partial<Overall> = {}): Overall {
     players: ['Alec', 'Ma'],
     members: 2,
     first: '2026-10-01',
+    ...o,
+  };
+}
+
+const nobody = (nick: string, me = false): RecordsPlayer => ({
+  nick,
+  me,
+  completed: 0,
+  wins: 0,
+  titles: 0,
+  perfect: 0,
+  sweeps: 0,
+  longest: 0,
+  current: 0,
+  bests: {},
+  streaks: {},
+});
+
+/** board_records for Family: Ma holds Mini and Link, Alec holds Tangle (set today). */
+export function recordsData(today: string, o: Partial<Records> = {}): Records {
+  return {
+    records: {
+      mini: { nick: 'Ma', me: false, date: '2026-10-18', secs: 30, score: null, mistakes: null },
+      link: { nick: 'Ma', me: false, date: '2026-10-20', secs: 95, score: null, mistakes: 1 },
+      tangle: { nick: 'Alec', me: true, date: today, secs: 240, score: 57, mistakes: null },
+    },
+    players: [
+      {
+        ...nobody('Alec', true),
+        completed: 12,
+        wins: 2,
+        longest: 5,
+        current: 5,
+        bests: {
+          mini: { date: '2026-10-19', secs: 41, score: null, mistakes: null },
+          tangle: { date: today, secs: 240, score: 57, mistakes: null },
+        },
+        streaks: { mini: 4 },
+      },
+      {
+        ...nobody('Ma'),
+        completed: 30,
+        wins: 9,
+        titles: 1,
+        perfect: 2,
+        sweeps: 1,
+        longest: 5,
+        current: 3,
+        bests: { mini: { date: '2026-10-18', secs: 30, score: null, mistakes: null } },
+      },
+      nobody('Jo'),
+    ],
+    crown: ['Ma'],
+    crown_week: '2026-10-12',
+    today,
     ...o,
   };
 }
