@@ -438,3 +438,24 @@ below when it finishes.
 - Tests proved: the rename test fails without the fix; refresh, offline/retry, repeat asks, the pending pointer, the auth timeout, button/field contrast, no `fontWeight` in either feature. `check` green.
 - Left: the offline invite still reads as "expired" (joining review); `/auth` header (router).
 - Needs Alec (phone): the keyboard taps on iOS's number pad; `setParams` clearing under NativeTabs (repeat "Bring my leagues here", reopen an invite after "Not now"); the fonts and spinner in dark mode.
+
+### 26 Oct 2026 — League joining: App Links and one way in ([#58](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/58), this PR; site [dailynoodle#37](https://github.com/alecldarlow-cell/dailynoodle/pull/37))
+
+- Why: the league-joining review (Alec's go-ahead, 26 Oct). Six ways in became three: join (a link or a code, through
+  one invite screen), "Already in X? Pick your name" with the PIN, and sign-in sync.
+- **App Links** (#58, merged): invites are `https://dailynoodle.co.uk/join.html?c=CODE`. Android opens them in the app
+  (`app.json` intentFilters, verified by the site's `/.well-known/assetlinks.json`, which is live with the EAS key's
+  SHA-256); `+native-intent` → `systemPath()` → `/leagues?join=`. Never board.html (it carries the website's sign-in
+  links). Browsers go on from join.html to `board.html?join=CODE&v=2`. Leaderboard shares keep board.html.
+- **One way in** (this PR):
+  - A typed code opens the invite screen (peek first): league name, "Already in X? Pick your name", and "No league has that code".
+  - An invite that can't be fetched says "Couldn't reach the leagues" + Try again, not "expired". Back is there for players in no league too.
+  - The personal link is gone from the app: PasteForm, "Send me my link" / "Paste a link", `?go=paste` (now just opens Leagues), `useHandoff`. `importMove` stays for sync.
+  - Intro: no separate claim link. Account: "I have a league PIN", with sign-in as the way to bring leagues across.
+  - After joining (sync builds): "Sign in on Account".
+- Tests proved: the systemPath/decide rules (auth, board and other-host links untouched), the intent filter is exactly join.html, the join journeys above, offline vs. expired, the claim pending choice both ways. Changed on purpose: the invite share text, the Account button's label, PendCard's wording. `check` green.
+- Left:
+  - Play's app-signing fingerprint goes into assetlinks.json after the first Play upload (site PR).
+  - Switching the website's own invites to join.html (Alec: later).
+  - iOS universal links, with an iOS build.
+- Needs Alec: a new native build for App Links. On the phone: `adb shell pm get-app-links uk.co.dailynoodle.app` shows verified; tapping a join.html invite in WhatsApp opens the app on the invite.
