@@ -5,7 +5,11 @@ import { renderWithProviders } from '@/shared/testing';
 import { LeaguesScreen } from './LeaguesScreen';
 
 // WP5: the screen now reads its route parameters and asks the server (mocked) for leagues.
-jest.mock('expo-router', () => ({ router: { push: jest.fn() }, useLocalSearchParams: () => ({}) }));
+jest.mock('expo-router', () => ({
+  router: { push: jest.fn() },
+  useLocalSearchParams: () => ({}),
+  useNavigation: () => ({ setParams: jest.fn() }),
+}));
 jest.mock('../../api/board');
 
 describe('GIVEN the Leagues tab', () => {

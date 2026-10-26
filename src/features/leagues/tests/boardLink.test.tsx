@@ -224,8 +224,18 @@ describe('GIVEN a finished puzzle’s sheet', () => {
       await fireEvent.press(screen.getByRole('link', { name: '🏆 See today’s board' }));
       expect(router.dismissTo).toHaveBeenCalledWith({
         pathname: '/leagues',
-        params: { p: 'mini', d: earlier },
+        params: { p: 'mini', d: earlier, n: expect.any(String) },
       });
+    });
+    it('THEN a second tap asks again with a fresh n, so Leagues opens that board again', async () => {
+      setBoard({ pid: PID, leagues: [FAMILY] });
+      await slot(pathOn(earlier));
+      await fireEvent.press(screen.getByRole('link', { name: '🏆 See today’s board' }));
+      await fireEvent.press(screen.getByRole('link', { name: '🏆 See today’s board' }));
+      const [a, b] = jest
+        .mocked(router.dismissTo)
+        .mock.calls.map((c) => (c[0] as unknown as { params: { n: string } }).params.n);
+      expect(a).not.toBe(b);
     });
     it('THEN a page whose name carries no date opens that puzzle on today', async () => {
       setBoard({ pid: PID, leagues: [FAMILY] });
@@ -233,7 +243,7 @@ describe('GIVEN a finished puzzle’s sheet', () => {
       await fireEvent.press(screen.getByRole('link', { name: '🏆 See today’s board' }));
       expect(router.dismissTo).toHaveBeenCalledWith({
         pathname: '/leagues',
-        params: { p: 'mini' },
+        params: { p: 'mini', n: expect.any(String) },
       });
     });
   });

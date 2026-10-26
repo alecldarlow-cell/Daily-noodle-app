@@ -21,7 +21,7 @@ describe('GIVEN the Account tab', () => {
       await fireEvent.press(screen.getByRole('button', { name: 'Bring my leagues here' }));
       expect(router.navigate).toHaveBeenCalledWith({
         pathname: '/leagues',
-        params: { go: 'claim' },
+        params: { go: 'claim', n: expect.any(String) },
       });
     });
   });

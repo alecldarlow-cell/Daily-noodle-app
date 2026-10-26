@@ -2,9 +2,10 @@
 import type { BoardPending } from '@noodle/core';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { useTokens } from '@/shared/theme';
+import { FONT, useTokens } from '@/shared/theme';
+import { FieldLabel } from '@/shared/ui';
 
-import { BoardError } from '../api/errors';
+import { BoardError, SaidError } from '../api/errors';
 import { useBoardState } from '../hooks/boardStore';
 import { useImportLink } from '../hooks/useHandoff';
 import { useForm } from '../hooks/useForm';
@@ -150,13 +151,21 @@ export function CodeForm({ flow }: { flow: Flow }) {
 
 /** Opened from a league's invite link: join it, or pick your name if you're already in it. */
 export function InviteForm({ flow, code }: { flow: Flow; code: string }) {
+  const t = useTokens();
   const peek = usePeek(code);
   const join = useJoinLeague();
   const f = useForm(
     { nick: '', pin: '' },
     object({ nick: nicknameSchema, pin: optionalPinSchema }),
   );
-  if (peek.isPending) return <ActivityIndicator style={styles.spin} />;
+  if (peek.isPending)
+    return (
+      <ActivityIndicator
+        style={styles.spin}
+        color={t.muted}
+        accessibilityLabel="Loading the invite"
+      />
+    );
   if (peek.isError || !peek.data) {
     return (
       <Card title="That link has expired" testID="invite-expired">
@@ -193,7 +202,7 @@ export function InviteForm({ flow, code }: { flow: Flow; code: string }) {
                 await join.mutateAsync({ code, nick: v.nick, pin: v.pin || undefined });
               } catch (e) {
                 if (e instanceof BoardError && e.code === 'nick_taken')
-                  throw new Error(
+                  throw new SaidError(
                     `${e.message} If that’s you, tap “Already in ${info.name}?” below.`,
                   );
                 throw e;
@@ -258,7 +267,7 @@ export function ClaimForm({
       )}
       {names ? (
         <View>
-          <Text style={[styles.label, { color: t.faint }]}>Your nickname</Text>
+          <FieldLabel>Your nickname</FieldLabel>
           <View style={styles.names} accessibilityRole="radiogroup">
             {names.map((n) => {
               const on = f.values.nick === n;
@@ -271,11 +280,17 @@ export function ClaimForm({
                   style={[
                     styles.name,
                     {
-                      borderColor: on ? t.accent : t.hair,
+                      borderColor: on ? t.accent : t.muted,
                       backgroundColor: on ? t.accentSoft : t.paper,
                     },
                   ]}>
-                  <Text style={{ color: t.ink, fontWeight: on ? '700' : '500' }}>{n}</Text>
+                  <Text
+                    style={[
+                      styles.nameText,
+                      { color: t.ink, fontFamily: on ? FONT.bodyBold : FONT.body },
+                    ]}>
+                    {n}
+                  </Text>
                 </Pressable>
               );
             })}
@@ -434,19 +449,19 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 23,
     fontSize: 12.5,
-    fontWeight: '700',
+    fontFamily: FONT.bodyBold,
     overflow: 'hidden',
   },
-  stepText: { flex: 1, fontSize: 15, lineHeight: 21 },
+  stepText: { flex: 1, fontFamily: FONT.body, fontSize: 15, lineHeight: 21 },
   spin: { marginTop: 40 },
-  label: {
-    fontSize: 12,
-    fontWeight: '600',
-    letterSpacing: 0.7,
-    textTransform: 'uppercase',
-    marginTop: 6,
-    marginBottom: 5,
+  names: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 6 },
+  name: {
+    minHeight: 44,
+    justifyContent: 'center',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 999,
+    borderWidth: 1.5,
   },
-  names: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  name: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 999, borderWidth: 1 },
+  nameText: { fontSize: 15 },
 });

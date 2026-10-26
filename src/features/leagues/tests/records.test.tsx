@@ -26,6 +26,7 @@ jest.mock('../api/feed');
 jest.mock('expo-router', () => ({
   router: { push: jest.fn(), navigate: jest.fn() },
   useLocalSearchParams: jest.fn(() => ({})),
+  useNavigation: () => ({ setParams: jest.fn() }),
 }));
 
 const m = jest.mocked(api);
