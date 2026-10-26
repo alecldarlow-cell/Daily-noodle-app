@@ -136,3 +136,16 @@ describe('GIVEN no connection', () => {
     await waitFor(() => expect(site.mock.calls.length).toBeGreaterThan(n));
   }, 20_000);
 });
+
+describe('GIVEN the Archive’s two filters', () => {
+  beforeEach(() => mockSite({ 'feed-lite.json': FEED_LITE }));
+  it('THEN the type chips come first and the done switch sits under them', async () => {
+    await renderWithProviders(<ArchiveScreen />);
+    await waitFor(() => expect(screen.getByText('October 2026')).toBeOnTheScreen());
+    const chips = screen.getByTestId('archive-chips');
+    const status = screen.getByTestId('archive-status');
+    const kids = chips.parent!.children as unknown[];
+    expect(kids.indexOf(chips)).toBeGreaterThanOrEqual(0);
+    expect(kids.indexOf(chips)).toBeLessThan(kids.indexOf(status));
+  });
+});
