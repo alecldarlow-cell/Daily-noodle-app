@@ -126,7 +126,7 @@ describe('GIVEN Link’s streak', () => {
       await renderWithProviders(<LinkScreen file={file78} />);
       expect(screen.getByText('3-day streak')).toBeOnTheScreen();
       await press('Play');
-      expect(screen.getByLabelText('Day streak 3')).toHaveTextContent('🔥3');
+      expect(screen.getByLabelText('3-day streak')).toHaveTextContent('🔥3');
     });
   });
 
@@ -139,7 +139,7 @@ describe('GIVEN Link’s streak', () => {
       await renderWithProviders(<LinkScreen file={file78} />);
       expect(screen.queryByText('6-day streak')).toBeNull();
       await press('Play');
-      expect(screen.queryByLabelText(/Day streak/)).toBeNull();
+      expect(screen.queryByLabelText(/day streak/)).toBeNull();
     });
   });
 });
