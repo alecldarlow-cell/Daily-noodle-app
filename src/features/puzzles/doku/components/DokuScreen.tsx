@@ -1,6 +1,6 @@
 import { dnNum, type TodayItem } from '@noodle/core';
 import { router } from 'expo-router';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, type ComponentRef } from 'react';
 import {
   Pressable,
   StyleSheet,
@@ -13,6 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { FinishSheet, useFreshFinish } from '@/shared/finish-sheet';
+import { WIN_BURSTS, useWinBursts } from '@/shared/motion';
 import { PuzzleBar, ruleFor, StartCard, useStartStats } from '@/shared/start-card';
 import { useStoredRaw } from '@/shared/storage';
 import { FONT, usePuzzleTokens } from '@/shared/theme';
@@ -49,6 +50,10 @@ export function DokuScreen({ file }: { file: PuzzleFile<DokuData> }) {
   const win = useWindowDimensions();
   const game = useDokuGame(file);
   const fresh = useFreshFinish(game.phase === 'finished');
+  // A fresh win, between the last move and the sheet: the board's wave and the confetti.
+  const winning = game.phase === 'play' && !!game.info;
+  const boardRef = useRef<ComponentRef<typeof View>>(null);
+  useWinBursts(winning, WIN_BURSTS, boardRef);
   const stats = useStartStats('doku');
   const streak = savedStreak(useStoredRaw(STREAK_KEY));
   const n = dnNum(file.data.id).slice(1);
@@ -112,8 +117,13 @@ export function DokuScreen({ file }: { file: PuzzleFile<DokuData> }) {
           clock={game.clock}
           onBack={back}
         />
-        <View style={styles.board}>
-          <DokuBoard state={state} side={side} onCell={(r, c) => dispatch({ t: 'cell', r, c })} />
+        <View ref={boardRef} collapsable={false} style={styles.board}>
+          <DokuBoard
+            celebrating={winning}
+            state={state}
+            side={side}
+            onCell={(r, c) => dispatch({ t: 'cell', r, c })}
+          />
         </View>
         <DokuBank state={state} onTile={(id) => dispatch({ t: 'tile', id })} />
         <Text

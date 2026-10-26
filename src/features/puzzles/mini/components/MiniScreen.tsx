@@ -1,9 +1,11 @@
 import { dnNum, type TodayItem } from '@noodle/core';
 import { router } from 'expo-router';
+import { useRef, type ComponentRef } from 'react';
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { FinishSheet, useFreshFinish } from '@/shared/finish-sheet';
+import { WIN_BURSTS, useWinBursts } from '@/shared/motion';
 import { PuzzleBar, ruleFor, StartCard, useStartStats } from '@/shared/start-card';
 import { useStoredRaw } from '@/shared/storage';
 import { usePuzzleTokens } from '@/shared/theme';
@@ -41,6 +43,10 @@ export function MiniScreen({ file }: { file: PuzzleFile<MiniData> }) {
   const win = useWindowDimensions();
   const game = useMiniGame(file);
   const fresh = useFreshFinish(game.phase === 'finished');
+  // A fresh win, between the last move and the sheet: the board's wave and the confetti.
+  const winning = game.phase === 'play' && !!game.info;
+  const boardRef = useRef<ComponentRef<typeof View>>(null);
+  useWinBursts(winning, WIN_BURSTS, boardRef);
   const stats = useStartStats('mini');
   const streak = savedStreak(useStoredRaw(STREAK_KEY));
   const n = dnNum(file.data.id).slice(1);
@@ -100,8 +106,13 @@ export function MiniScreen({ file }: { file: PuzzleFile<MiniData> }) {
           onCheckAll={() => dispatch({ t: 'checkAll' })}
           onRevealWord={() => dispatch({ t: 'revealWord' })}
         />
-        <View style={styles.board}>
-          <MiniBoard state={state} side={side} onCell={(r, c) => dispatch({ t: 'cell', r, c })} />
+        <View ref={boardRef} collapsable={false} style={styles.board}>
+          <MiniBoard
+            celebrating={winning}
+            state={state}
+            side={side}
+            onCell={(r, c) => dispatch({ t: 'cell', r, c })}
+          />
         </View>
         <ClueBar
           bar={game.bar}

@@ -1,9 +1,11 @@
 import { dnNum, type TodayItem } from '@noodle/core';
 import { router } from 'expo-router';
+import { useRef, type ComponentRef } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { FinishSheet, useFreshFinish } from '@/shared/finish-sheet';
+import { LINK_BURSTS, useWinBursts } from '@/shared/motion';
 import { PuzzleBar, ruleFor, StartCard, useStartStats } from '@/shared/start-card';
 import { useStoredRaw } from '@/shared/storage';
 import { usePuzzleTokens } from '@/shared/theme';
@@ -37,6 +39,10 @@ export function LinkScreen({ file }: { file: PuzzleFile<LinkData> }) {
   const pt = usePuzzleTokens();
   const game = useLinkGame(file);
   const fresh = useFreshFinish(game.phase === 'finished');
+  // A fresh win, between the last move and the sheet: the board's wave and the confetti.
+  const winning = game.phase === 'play' && !!game.info?.won;
+  const boardRef = useRef<ComponentRef<typeof View>>(null);
+  useWinBursts(winning, LINK_BURSTS, boardRef);
   const stats = useStartStats('link');
   const streak = savedStreak(useStoredRaw(STREAK_KEY));
   const n = dnNum(file.data.id).slice(1);

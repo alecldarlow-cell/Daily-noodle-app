@@ -1,9 +1,11 @@
 import type { TodayItem } from '@noodle/core';
 import { router } from 'expo-router';
+import { useRef, type ComponentRef } from 'react';
 import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { FinishSheet, useFreshFinish } from '@/shared/finish-sheet';
+import { PATH_BURSTS, useWinBursts } from '@/shared/motion';
 import { PuzzleBar, ruleFor, StartCard, useStartStats } from '@/shared/start-card';
 import { FONT, usePuzzleTokens } from '@/shared/theme';
 import { fitBoard } from '@/shared/ui';
@@ -28,6 +30,10 @@ export function PathScreen({ file }: { file: PuzzleFile<PathData> }) {
   const win = useWindowDimensions();
   const game = usePathGame(file);
   const fresh = useFreshFinish(game.phase === 'finished');
+  // A fresh win, between the last move and the sheet: the board's wave and the confetti.
+  const winning = game.phase === 'play' && !!game.info;
+  const boardRef = useRef<ComponentRef<typeof View>>(null);
+  useWinBursts(winning, PATH_BURSTS, boardRef);
   const stats = useStartStats('path');
   const n = pathNumber(file.data.id);
   const { state, dispatch } = game;
@@ -87,8 +93,13 @@ export function PathScreen({ file }: { file: PuzzleFile<PathData> }) {
           clock={game.clock}
           onBack={back}
         />
-        <View style={styles.board}>
-          <PathBoard state={state} side={side} onCell={(r, c) => dispatch({ t: 'cell', r, c })} />
+        <View ref={boardRef} collapsable={false} style={styles.board}>
+          <PathBoard
+            celebrating={winning}
+            state={state}
+            side={side}
+            onCell={(r, c) => dispatch({ t: 'cell', r, c })}
+          />
         </View>
         <Text
           style={[styles.msg, { color: pt.inkSoft }]}

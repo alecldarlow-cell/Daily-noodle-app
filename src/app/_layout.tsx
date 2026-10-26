@@ -8,6 +8,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SyncRunner } from '@/features/account';
 import { BoardLink, LeagueResults } from '@/features/leagues';
 import { BoardSlotProvider } from '@/shared/finish-sheet';
+import { ConfettiHost } from '@/shared/motion';
 import { QueryProvider } from '@/shared/query';
 import { appStorage } from '@/shared/storage';
 import { FONT_FILES, tokensFor } from '@/shared/theme';
@@ -65,6 +66,8 @@ export default function RootLayout() {
             </Stack>
           </BoardSlotProvider>
         </ThemeProvider>
+        {/* the win's confetti, over every screen so it carries on as the sheet rises */}
+        <ConfettiHost />
       </QueryProvider>
     </GestureHandlerRootView>
   );
