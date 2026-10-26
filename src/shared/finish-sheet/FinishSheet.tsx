@@ -1,17 +1,36 @@
 import { shortLink, TYPE_LABEL, type PuzzleType, type TodayItem } from '@noodle/core';
-import { useState, type ReactNode } from 'react';
-import { Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useRef, useState, type ComponentRef, type ReactNode } from 'react';
+import {
+  AccessibilityInfo,
+  Pressable,
+  ScrollView,
+  Share,
+  StyleSheet,
+  Text,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Entrance } from '@/shared/motion';
 import { FONT, usePuzzleTokens } from '@/shared/theme';
 import { longDate } from '@/shared/time';
-import { Chevron, ShareGlyph } from '@/shared/ui';
+import { Chevron, pressable, ShareGlyph } from '@/shared/ui';
 
 import { tagged, useBoardSlot } from './boardSlot';
 import type { NoteParts } from './FinishParts';
 import { clockLine, splitHero } from './rules';
 import { useFinishData } from './useFinishData';
+
+/** How long after a fresh finish the screen reader is told the result (the entrance has begun). */
+export const ANNOUNCE_MS = 300;
+
+/**
+ * When the share line and its pill sit one above the other: large text or a narrow phone,
+ * where side by side would squeeze the line into a thin column.
+ */
+export const stackShare = (w: { width: number; fontScale: number }) =>
+  w.fontScale > 1.3 || w.width < 360;
 
 export interface FinishSheetProps {
   type: PuzzleType;
@@ -71,6 +90,20 @@ export function FinishSheet(props: FinishSheetProps) {
   const line = clockLine(TYPE_LABEL[type], secs, run);
   const [heroVal, heroUnit] = splitHero(hero);
   const soft = pt.sheetSoft;
+  const win = useWindowDimensions();
+  const stacked = stackShare(win);
+  // A fresh finish replaces the board in the same route, so a screen reader would be left on
+  // a square that is gone: say the result, and move focus to the outcome (finish.js focuses
+  // .fin-title the same way). A finished puzzle reopened says nothing.
+  const titleRef = useRef<ComponentRef<typeof Text>>(null);
+  useEffect(() => {
+    if (!celebrate) return;
+    const t = setTimeout(() => {
+      AccessibilityInfo.announceForAccessibility(`${title}. ${hero}`);
+      if (titleRef.current) AccessibilityInfo.sendAccessibilityEvent(titleRef.current, 'focus');
+    }, ANNOUNCE_MS);
+    return () => clearTimeout(t);
+  }, [celebrate, title, hero]);
   const onShare = () => {
     void Share.share({ message: `${shareText}\n${url}` }).catch(() => undefined);
   };
@@ -82,7 +115,7 @@ export function FinishSheet(props: FinishSheetProps) {
           accessibilityLabel="Back to Puzzles"
           onPress={onBack}
           hitSlop={8}
-          style={styles.back}>
+          style={pressable(styles.back)}>
           <Text style={[styles.backText, { color: soft }]}>← Puzzles</Text>
         </Pressable>
         <Text style={[styles.kick, { color: soft }]}>
@@ -90,9 +123,11 @@ export function FinishSheet(props: FinishSheetProps) {
         </Text>
         <Entrance play={celebrate} testID="finish-entrance">
           <Text
+            ref={titleRef}
             accessibilityRole="header"
             maxFontSizeMultiplier={1.4}
-            style={[styles.title, { color: pt.ink }]}>
+            style={[styles.title, { color: pt.ink }]}
+            testID="finish-title">
             {title}
           </Text>
         </Entrance>
@@ -131,8 +166,10 @@ export function FinishSheet(props: FinishSheetProps) {
           </Entrance>
         ) : null}
 
-        <View style={[styles.shareCard, { backgroundColor: pt.sheet }]}>
-          <View style={styles.shareBody}>
+        <View
+          style={[styles.shareCard, stacked && styles.shareStacked, { backgroundColor: pt.sheet }]}
+          testID="finish-share-card">
+          <View style={[styles.shareBody, stacked && styles.shareBodyStacked]}>
             <Text style={[styles.shareText, { color: pt.ink }]} testID="finish-share-text">
               {shareText}
             </Text>
@@ -141,10 +178,7 @@ export function FinishSheet(props: FinishSheetProps) {
           <Pressable
             accessibilityRole="button"
             onPress={onShare}
-            style={({ pressed }) => [
-              styles.pill,
-              { backgroundColor: pt.brand, opacity: pressed ? 0.85 : 1 },
-            ]}>
+            style={pressable([styles.pill, { backgroundColor: pt.brand }])}>
             <ShareGlyph color={pt.onBrand} />
             <Text style={[styles.pillText, { color: pt.onBrand }]}>Share</Text>
           </Pressable>
@@ -157,7 +191,12 @@ export function FinishSheet(props: FinishSheetProps) {
               style={[styles.stat, i > 0 && [styles.statNext, { borderColor: pt.hair }]]}
               accessible
               accessibilityLabel={`${s.value} ${s.label}`}>
-              <Text maxFontSizeMultiplier={1.5} style={[styles.statVal, { color: pt.ink }]}>
+              <Text
+                maxFontSizeMultiplier={1.5}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.6}
+                style={[styles.statVal, { color: pt.ink }]}>
                 {String(s.value)}
               </Text>
               <Text style={[styles.small, { color: soft }]}>{s.label}</Text>
@@ -169,10 +208,7 @@ export function FinishSheet(props: FinishSheetProps) {
           accessibilityRole="button"
           accessibilityLabel={next.main}
           onPress={() => onNext(next.item)}
-          style={({ pressed }) => [
-            styles.next,
-            { borderColor: pt.rule, opacity: pressed ? 0.7 : 1 },
-          ]}
+          style={pressable([styles.next, { borderColor: pt.rule }])}
           testID="finish-next">
           <View style={styles.fill}>
             <Text style={[styles.nextMain, { color: pt.ink }]}>{next.main}</Text>
@@ -258,7 +294,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
   },
+  shareStacked: { flexDirection: 'column', alignItems: 'flex-start', paddingBottom: 12 },
   shareBody: { flex: 1, minWidth: 0, gap: 2 },
+  shareBodyStacked: { flex: 0, alignSelf: 'stretch' },
   shareText: { fontSize: 17, lineHeight: 23, fontFamily: FONT.sansSemi },
   shareUrl: { fontSize: 13, fontFamily: FONT.sansMedium },
   pill: {

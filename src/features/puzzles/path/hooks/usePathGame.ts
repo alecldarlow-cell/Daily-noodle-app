@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { useHapticDiff } from '@/shared/haptics';
 import { announceFinish, usePuzzleVisit } from '@/shared/results';
+import { usePuzzleClock } from '@/shared/start-card';
 import { appStorage, saves as appSaves, type CachedStorage } from '@/shared/storage';
 
 import type { PuzzleFile } from '../../types';
@@ -35,7 +36,9 @@ interface Deps {
  * and Link clocks start on Play), or on the first tap if Play was somehow skipped. On
  * the last square the result is saved (first kept), the streak bumped, and the finish
  * announced with the tracker's detail; the sheet rises 0.9 s later. A puzzle already
- * finished opens on its sheet with its saved time and never announces again.
+ * finished opens on its sheet with its saved time and never announces again. The clock
+ * stops while the app is away (Alec's call, 26 Oct 2026: the page's wall clock counted
+ * time in another app).
  */
 export function usePathGame(file: PuzzleFile<PathData>, deps: Deps = {}) {
   const store = deps.store ?? appStorage;
@@ -61,31 +64,25 @@ export function usePathGame(file: PuzzleFile<PathData>, deps: Deps = {}) {
   const [phase, setPhase] = useState<Phase>(opened.done ? 'finished' : 'start');
   const [info, setInfo] = useState<FinishInfo | null>(opened.done?.info ?? null);
   const [streak, setStreak] = useState(opened.streak);
-  const [startedAt, setStartedAt] = useState<number | null>(null);
-  const [secs, setSecs] = useState(0);
+  const [begun, setBegun] = useState(false);
   useHapticDiff(state, pathFeel);
 
-  const begin = useCallback(() => setStartedAt((t) => t ?? now()), [now]);
-
-  useEffect(() => {
-    if (startedAt === null || state.solved) return;
-    const tick = () => setSecs(Math.floor((now() - startedAt) / 1000));
-    const h = setInterval(tick, 1000);
-    return () => clearInterval(h);
-  }, [startedAt, state.solved, now]);
+  const begin = useCallback(() => setBegun(true), []);
+  const { secs, read } = usePuzzleClock(begun && !state.solved, { now });
+  const [endSecs, setEndSecs] = useState<number | null>(null);
 
   const finished = useRef(!!opened.done);
   useEffect(() => {
     if (!state.solved || finished.current) return;
     finished.current = true;
     const at = now();
-    const clock = startedAt === null ? 0 : Math.floor((at - startedAt) / 1000);
-    setSecs(clock);
+    const clock = read();
+    setEndSecs(clock);
     const f = commitFinish(state, clock, saves, store, at);
     if (f.first) announceFinish({ path: file.path, type: 'path', detail: f.detail });
     setStreak(f.streak);
     setInfo(f);
-  }, [state, startedAt, saves, store, now, file.path]);
+  }, [state, read, saves, store, now, file.path]);
 
   useEffect(() => {
     if (!info || phase !== 'play') return;
@@ -114,7 +111,7 @@ export function usePathGame(file: PuzzleFile<PathData>, deps: Deps = {}) {
     phase,
     info,
     streak,
-    clock: opened.done ? opened.done.time : timerText(secs),
+    clock: opened.done ? opened.done.time : timerText(endSecs ?? secs),
     dispatch,
     play,
   };

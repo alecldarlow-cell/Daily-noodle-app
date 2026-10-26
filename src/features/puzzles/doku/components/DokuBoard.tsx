@@ -78,15 +78,19 @@ export function DokuBoard({ state, side, onCell, celebrating = false }: DokuBoar
             const num = state.p.nums[r]![c];
             const shaking = state.sel.r === r && state.sel.c === c;
             const bg = given ? locked : here ? pt.active : word ? pt.activeWord : pt.card;
-            const ink = here
-              ? pt.onActive
-              : green
-                ? pt.good
-                : given
-                  ? pt.inkSoft
-                  : word
-                    ? pt.onWord
-                    : pt.ink;
+            // The cursor on a given square keeps the given's shade and ink, ringed in
+            // marigold, so the letter stays readable and the cursor still shows.
+            const ring = here && given;
+            const ink =
+              here && !given
+                ? pt.onActive
+                : green
+                  ? pt.good
+                  : given
+                    ? pt.inkSoft
+                    : word
+                      ? pt.onWord
+                      : pt.ink;
             return (
               <WaveScale key={c} wave={wave} at={r + c}>
                 <Pressable
@@ -98,6 +102,7 @@ export function DokuBoard({ state, side, onCell, celebrating = false }: DokuBoar
                   style={[
                     styles.cell,
                     { width: cell, height: cell, borderColor: pt.cellEdge, backgroundColor: bg },
+                    ring ? { borderWidth: 3, borderColor: pt.active } : null,
                   ]}>
                   <WaveFlash wave={wave} at={r + c} active={pt.active} word={pt.activeWord} />
                   <Animated.View
@@ -108,7 +113,7 @@ export function DokuBoard({ state, side, onCell, celebrating = false }: DokuBoar
                         style={[
                           styles.num,
                           {
-                            color: here ? pt.onActive : pt.inkSoft,
+                            color: here && !given ? pt.onActive : pt.inkSoft,
                             fontSize: cell * 0.17,
                           },
                         ]}>

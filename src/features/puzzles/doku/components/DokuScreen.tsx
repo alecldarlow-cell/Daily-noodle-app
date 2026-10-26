@@ -15,14 +15,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { FinishSheet, useFreshFinish } from '@/shared/finish-sheet';
 import { WIN_BURSTS, useWinBursts } from '@/shared/motion';
 import { PuzzleBar, ruleFor, StartCard, useStartStats } from '@/shared/start-card';
-import { useStoredRaw } from '@/shared/storage';
 import { FONT, usePuzzleTokens } from '@/shared/theme';
-import { fitBoard } from '@/shared/ui';
+import { fitBoard, pressable, useBoardFit } from '@/shared/ui';
 
 import type { PuzzleFile } from '../../types';
 import { MiniArt } from '../../mini/components/MiniGrids';
 import { useDokuGame } from '../hooks/useDokuGame';
-import { recapSub, STREAK_KEY, type DokuData } from '../model';
+import { recapSub, type DokuData } from '../model';
 import { DokuBank } from './DokuBank';
 import { DokuBoard } from './DokuBoard';
 import { SolvedGrid } from './DokuGrids';
@@ -33,15 +32,6 @@ function openNext(item: TodayItem | null) {
   if (!item) return back();
   const file = item.path.replace(/^reports\//, '').replace(/\.html$/, '');
   router.replace({ pathname: '/play/[type]/[file]', params: { type: item.type, file } });
-}
-
-function savedStreak(raw: string | null): number {
-  try {
-    const s = JSON.parse(raw ?? 'null') as { streak?: unknown } | null;
-    return (s && Number(s.streak)) || 0;
-  } catch {
-    return 0;
-  }
 }
 
 /** The Doku, played natively: start card, board and bank, finish sheet. */
@@ -55,7 +45,7 @@ export function DokuScreen({ file }: { file: PuzzleFile<DokuData> }) {
   const boardRef = useRef<ComponentRef<typeof View>>(null);
   useWinBursts(winning, WIN_BURSTS, boardRef);
   const stats = useStartStats('doku');
-  const streak = savedStreak(useStoredRaw(STREAK_KEY));
+  const fit = useBoardFit(fitBoard(win, 360, 420), 420);
   const n = dnNum(file.data.id).slice(1);
   const { state, dispatch, feed } = game;
 
@@ -106,22 +96,26 @@ export function DokuScreen({ file }: { file: PuzzleFile<DokuData> }) {
     );
 
   // Board, bank, message and Hints on one screen, as the page's app mode lays them out.
-  const side = fitBoard(win, 360, 420);
   return (
     <SafeAreaView style={[styles.fill, { backgroundColor: pt.paper }]} testID="doku-screen">
       <View style={styles.in}>
         <PuzzleBar
           name={`Doku ${n}`}
           sub={file.data.band}
-          streak={streak}
+          streak={stats.streak}
           clock={game.clock}
           onBack={back}
         />
-        <View ref={boardRef} collapsable={false} style={styles.board}>
+        <View
+          ref={boardRef}
+          collapsable={false}
+          style={styles.board}
+          onLayout={fit.onLayout}
+          testID="board-slot">
           <DokuBoard
             celebrating={winning}
             state={state}
-            side={side}
+            side={fit.side}
             onCell={(r, c) => dispatch({ t: 'cell', r, c })}
           />
         </View>
@@ -137,7 +131,7 @@ export function DokuScreen({ file }: { file: PuzzleFile<DokuData> }) {
             accessibilityRole="button"
             accessibilityState={{ checked: state.hints }}
             onPress={() => dispatch({ t: 'hints' })}
-            style={[styles.btn, { borderColor: pt.line, backgroundColor: pt.card }]}>
+            style={pressable([styles.btn, { borderColor: pt.line, backgroundColor: pt.card }])}>
             <Text style={[styles.btnText, { color: pt.ink }]}>
               {`Hints: ${state.hints ? 'on' : 'off'}`}
             </Text>
@@ -177,7 +171,7 @@ const styles = StyleSheet.create({
     width: '100%',
     alignSelf: 'center',
   },
-  board: { flex: 1, justifyContent: 'center' },
+  board: { flex: 1, justifyContent: 'center', minHeight: 0 },
   msg: { fontFamily: FONT.sans, fontSize: 13, textAlign: 'center', minHeight: 18 },
   controls: { flexDirection: 'row', gap: 6, justifyContent: 'center' },
   btn: {

@@ -1,6 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { FONT, usePuzzleTokens } from '@/shared/theme';
+import { pressable } from '@/shared/ui';
 
 /**
  * A link under the recap (finish.css .fin-link): "Play again (not recorded)", "Explore more
@@ -24,7 +25,7 @@ export function FinishLink({
       accessibilityRole={role}
       onPress={onPress}
       hitSlop={8}
-      style={styles.link}
+      style={pressable(styles.link)}
       testID={testID}>
       <Text style={[styles.linkText, { color: pt.actInk }]}>{label}</Text>
     </Pressable>

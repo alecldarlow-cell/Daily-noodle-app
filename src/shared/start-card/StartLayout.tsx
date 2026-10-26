@@ -3,7 +3,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { FONT, usePuzzleTokens } from '@/shared/theme';
-import { Chevron } from '@/shared/ui';
+import { Chevron, pressable } from '@/shared/ui';
 
 /** The colours a type can bring (Borders and Reckon keep their own pages' palettes). */
 export interface StartColors {
@@ -68,7 +68,7 @@ export function StartLayout(props: StartLayoutProps) {
             accessibilityLabel="Back to Puzzles"
             onPress={onBack}
             hitSlop={8}
-            style={styles.back}>
+            style={pressable(styles.back)}>
             <Text style={[styles.backText, { color: c.inkSoft }]}>← Puzzles</Text>
           </Pressable>
           {streak ? <Text style={[styles.streak, { color: c.inkSoft }]}>{streak}</Text> : null}
@@ -97,10 +97,7 @@ export function StartLayout(props: StartLayoutProps) {
             accessibilityRole="button"
             onPress={button.onPress}
             testID={button.testID}
-            style={({ pressed }) => [
-              styles.pill,
-              { backgroundColor: c.pill, opacity: pressed ? 0.85 : 1 },
-            ]}>
+            style={pressable([styles.pill, { backgroundColor: c.pill }])}>
             <Text style={[styles.pillText, { color: c.onPill }]}>{button.label}</Text>
           </Pressable>
         </View>
@@ -111,7 +108,12 @@ export function StartLayout(props: StartLayoutProps) {
               style={[styles.stat, i > 0 && [styles.statNext, { borderColor: c.line }]]}
               accessible
               accessibilityLabel={`${v} ${label}`}>
-              <Text maxFontSizeMultiplier={1.5} style={[styles.statVal, { color: c.ink }]}>
+              <Text
+                maxFontSizeMultiplier={1.5}
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.6}
+                style={[styles.statVal, { color: c.ink }]}>
                 {String(v)}
               </Text>
               <Text style={[styles.small, { color: c.inkSoft }]}>{label}</Text>
@@ -122,7 +124,7 @@ export function StartLayout(props: StartLayoutProps) {
           accessibilityRole="button"
           accessibilityState={{ expanded: how }}
           onPress={() => setHow((x) => !x)}
-          style={styles.howBar}>
+          style={pressable(styles.howBar)}>
           <Text style={[styles.howTitle, { color: c.ink }]}>How to play</Text>
           <Chevron color={c.inkSoft} dir={how ? 'up' : 'down'} />
         </Pressable>

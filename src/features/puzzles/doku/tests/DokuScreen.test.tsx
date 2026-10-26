@@ -60,7 +60,7 @@ describe('GIVEN a Doku not yet played', () => {
       await play();
       expect(screen.getByTestId('doku-board')).toBeOnTheScreen();
       expect(screen.getByText('Doku 97')).toBeOnTheScreen();
-      expect(screen.getByText('00:00')).toBeOnTheScreen();
+      expect(screen.getByText('0:00')).toBeOnTheScreen();
       expect(screen.getAllByRole('button', { name: /^Tile / })).toHaveLength(12);
       expect(screen.getByTestId('cell-0-1')).toHaveAccessibleName(/S, given$/);
       expect(screen.getByText('Hints: on')).toBeOnTheScreen();
@@ -178,12 +178,12 @@ describe('GIVEN the phone’s keyboard', () => {
       await act(async () => {
         jest.advanceTimersByTime(5000);
       });
-      expect(screen.getByText('00:00')).toBeOnTheScreen();
+      expect(screen.getByText('0:00')).toBeOnTheScreen();
       await press('cell-0-2');
       await act(async () => {
         jest.advanceTimersByTime(3000);
       });
-      expect(screen.getByText('00:03')).toBeOnTheScreen();
+      expect(screen.getByText('0:03')).toBeOnTheScreen();
     } finally {
       jest.useRealTimers();
     }

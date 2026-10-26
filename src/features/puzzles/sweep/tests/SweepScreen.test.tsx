@@ -52,7 +52,7 @@ describe('GIVEN a Sweep not yet played', () => {
       await playBtn();
       expect(screen.getByTestId('sweep-board')).toBeOnTheScreen();
       expect(screen.getByText('Sweep 94')).toBeOnTheScreen();
-      expect(screen.getByText('00:00')).toBeOnTheScreen();
+      expect(screen.getByText('0:00')).toBeOnTheScreen();
       expect(screen.getByTestId('sweep-msg')).toHaveTextContent(START_MSG);
       expect(sq(0)).toHaveAccessibleName('row 1, column 1, locked');
       expect(sq(START)).toHaveAccessibleName(/the safe start/);
@@ -146,12 +146,12 @@ describe('GIVEN a Sweep not yet played', () => {
       await act(async () => {
         jest.advanceTimersByTime(4000);
       });
-      expect(screen.getByText('00:00')).toBeOnTheScreen();
+      expect(screen.getByText('0:00')).toBeOnTheScreen();
       await tap(START);
       await act(async () => {
         jest.advanceTimersByTime(3000);
       });
-      expect(screen.getByText('00:03')).toBeOnTheScreen();
+      expect(screen.getByText('0:03')).toBeOnTheScreen();
     });
   });
 });

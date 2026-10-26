@@ -1,16 +1,16 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { FONT, usePuzzleTokens } from '@/shared/theme';
-import { Chevron } from '@/shared/ui';
+import { Chevron, pressable } from '@/shared/ui';
 
 interface PuzzleBarProps {
   /** "Mini 105" */
   name: string;
   /** The difficulty, "medium". */
   sub?: string;
-  /** The saved streak; the flame shows only once there is one. */
+  /** This type's streak as its start card shows it; the flame shows only once there is one. */
   streak: number;
-  /** The clock as the page shows it, "00:14". */
+  /** The clock as the player shows it, "0:14". */
   clock?: string;
   onBack: () => void;
 }
@@ -27,20 +27,24 @@ export function clockLabel(clock: string): string {
   return `Time, ${mins} minute${mins === 1 ? '' : 's'}`;
 }
 
-/** The slim bar over a board (engines/house.js): back, name and number, difficulty, streak, clock. */
+/**
+ * The slim bar over a board (engines/house.js): back, name and number, difficulty, streak,
+ * clock. The name is the board screen's heading for screen readers.
+ */
 export function PuzzleBar({ name, sub, streak, clock, onBack }: PuzzleBarProps) {
   const pt = usePuzzleTokens();
+  const shown = clock;
   return (
     <View style={styles.bar} testID="puzzle-bar">
       <Pressable
         accessibilityRole="button"
         accessibilityLabel="Back to Puzzles"
         onPress={onBack}
-        style={[styles.back, { borderColor: pt.lineSoft, backgroundColor: pt.card }]}>
+        style={pressable([styles.back, { borderColor: pt.lineSoft, backgroundColor: pt.card }])}>
         <Chevron color={pt.ink} dir="left" size={10} />
       </Pressable>
       <View style={styles.mid}>
-        <Text style={[styles.name, { color: pt.ink }]} numberOfLines={1}>
+        <Text accessibilityRole="header" style={[styles.name, { color: pt.ink }]} numberOfLines={1}>
           {name}
         </Text>
         {sub ? (
@@ -52,19 +56,19 @@ export function PuzzleBar({ name, sub, streak, clock, onBack }: PuzzleBarProps) 
       {streak > 0 ? (
         <Text
           style={[styles.streak, { color: pt.inkSoft }]}
-          accessibilityLabel={`Day streak ${streak}`}>
+          accessibilityLabel={`${streak}-day streak`}>
           {`🔥${streak}`}
         </Text>
       ) : null}
-      {clock !== undefined ? (
+      {shown !== undefined ? (
         <Text
           style={[styles.clock, { color: pt.ink }]}
           accessibilityRole="timer"
-          accessibilityLabel={clockLabel(clock)}
+          accessibilityLabel={clockLabel(shown)}
           accessibilityLiveRegion="none"
           maxFontSizeMultiplier={1.3}
           testID="puzzle-clock">
-          {clock}
+          {shown}
         </Text>
       ) : null}
     </View>

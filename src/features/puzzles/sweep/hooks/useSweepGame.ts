@@ -1,8 +1,9 @@
-import type { SaveStore } from '@noodle/core';
+import { dnTime, type SaveStore } from '@noodle/core';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { useHapticDiff } from '@/shared/haptics';
 import { announceFinish, usePuzzleVisit } from '@/shared/results';
+import { usePuzzleClock } from '@/shared/start-card';
 import { appStorage, saves as appSaves, type CachedStorage } from '@/shared/storage';
 
 import type { PuzzleFile } from '../../types';
@@ -64,15 +65,11 @@ export function useSweepGame(file: PuzzleFile<SweepData>, deps: Deps = {}) {
     opened.rec ? (opened.info ? 'finished' : 'play') : 'start',
   );
   const [info, setInfo] = useState<FinishInfo | null>(opened.info);
-  const [secs, setSecs] = useState(0);
   useHapticDiff(state, sweepFeel);
 
-  const running = state.started && !state.over;
-  useEffect(() => {
-    if (!running) return;
-    const h = setInterval(() => setSecs((s) => s + 1), 1000);
-    return () => clearInterval(h);
-  }, [running, state.round]);
+  // Ticks once a second while in play, back to zero each round; time with the app away
+  // never counts.
+  const { secs } = usePuzzleClock(state.started && !state.over, { now, reset: state.round });
 
   // Hint's mark fades after 2.4 s
   const mark = state.mark;
@@ -116,7 +113,6 @@ export function useSweepGame(file: PuzzleFile<SweepData>, deps: Deps = {}) {
   }, [start]);
   /** The sheet's "Play again (not recorded)": a fresh board, the clock back at zero. */
   const again = useCallback(() => {
-    setSecs(0);
     setInfo(null);
     setState((s) => apply(s, { t: 'again' }, { ranked: isRanked(store, now()) }));
     setPhase('play');
@@ -126,7 +122,8 @@ export function useSweepGame(file: PuzzleFile<SweepData>, deps: Deps = {}) {
     state,
     phase,
     info,
-    clock: timerText(state.over ? state.endSecs : state.started ? secs : 0),
+    // The bar's clock reads as Path's and the finish sheet's do, minutes unpadded ("0:03").
+    clock: dnTime(timerText(state.over ? state.endSecs : state.started ? secs : 0)),
     dispatch,
     play,
     again,
