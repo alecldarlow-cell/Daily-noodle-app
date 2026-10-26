@@ -433,7 +433,6 @@ below when it finishes.
   reloads per question (needs a phone to verify an injectJavaScript redraw). Needs the phone: VoiceOver on the
   four, Tangle on an SE-size phone, Borders at font scale 2.0, Link in dark mode.
 
-
 ### 26 Oct 2026 · Polish batch A: shell, Today, Archive ([#54](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/54))
 
 - Status bar from the scheme; tab bar and stack headers themed from tokens (green Android pill, Archivo labels);
