@@ -21,6 +21,7 @@ import { Chevron, pressable } from '@/shared/ui';
 
 import { useAnnounce } from '../../link/hooks/announce';
 import { boardTop, current, foundList, N, type Rect, type TangleEngine } from '../model';
+import { useTangleColors } from './colors';
 
 const GAP = 8;
 /** The largest the board grows (the page's `min(100%, 400px, …)`, kept at the app's 420). */
@@ -79,7 +80,7 @@ function Thread({ path, rects, color }: { path: number[]; rects: Rect[]; color: 
             backgroundColor: color,
             width: len,
             left: (x1 + x2) / 2 - len / 2,
-            top: (y1 + y2) / 2 - 3,
+            top: (y1 + y2) / 2 - 5,
             transform: [{ rotate: `${deg}deg` }],
           },
         ]}
@@ -98,6 +99,7 @@ function Thread({ path, rects, color }: { path: number[]; rects: Rect[]; color: 
  */
 export function TangleBoard({ engine, setRects, onHome }: TangleBoardProps) {
   const pt = usePuzzleTokens();
+  const tc = useTangleColors();
   const s = engine.s;
   const top = boardTop(engine);
   const cur = current(engine);
@@ -281,15 +283,15 @@ export function TangleBoard({ engine, setRects, onHome }: TangleBoardProps) {
                           top: r.top,
                           width: r.width,
                           height: r.height,
-                          backgroundColor: on ? pt.activeWord : pt.card,
-                          borderColor: last ? pt.active : on ? pt.active : pt.lineSoft,
+                          backgroundColor: last ? tc.thread : on ? tc.threadT : pt.card,
+                          borderColor: on ? tc.thread : pt.lineSoft,
                           borderWidth: last ? 3 : on ? 2 : 1,
                         },
                       ]}>
                       {hide ? null : (
                         <Text
                           maxFontSizeMultiplier={1.2}
-                          style={[styles.letter, { color: pt.ink }]}>
+                          style={[styles.letter, { color: last ? tc.onThread : pt.ink }]}>
                           {t === 'QU' ? 'Qu' : t}
                         </Text>
                       )}
@@ -297,7 +299,7 @@ export function TangleBoard({ engine, setRects, onHome }: TangleBoardProps) {
                   );
                 })
               : null}
-            <Thread path={s.path} rects={rects} color={pt.active} />
+            <Thread path={s.path} rects={rects} color={tc.thread} />
             {s.counting && s.count ? (
               <View style={styles.overlay} pointerEvents="none">
                 <Text style={[styles.count, { color: pt.ink }]} testID="tangle-count">
@@ -399,7 +401,8 @@ const styles = StyleSheet.create({
   board: { position: 'relative' },
   tile: { position: 'absolute', borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   letter: { fontSize: 32, fontFamily: FONT.display },
-  bar: { position: 'absolute', height: 6, borderRadius: 3, opacity: 0.8 },
+  // The page's polyline: 10 px wide, at half strength over the tiles.
+  bar: { position: 'absolute', height: 10, borderRadius: 5, opacity: 0.5 },
   overlay: { ...StyleSheet.absoluteFill, alignItems: 'center', justifyContent: 'center' },
   count: { fontSize: 88, fontFamily: FONT.displayHeavy },
   resume: { borderRadius: 999, paddingHorizontal: 28, paddingVertical: 12 },
