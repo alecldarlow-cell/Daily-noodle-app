@@ -1,5 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { useURL } from 'expo-linking';
+import { useLinkingURL } from 'expo-linking';
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet } from 'react-native';
@@ -13,7 +13,7 @@ import { completeLink } from '../../hooks/useAccount';
 /** Where the email's sign-in link lands (dailynoodle://auth): finish signing in, go to Account. */
 export function AuthLinkScreen({ client = authClient() }: { client?: SupabaseClient | null }) {
   const t = useTokens();
-  const url = useURL();
+  const url = useLinkingURL(); // the latest link, even one that arrived before this screen mounted
   const [error, setError] = useState<string | null>(null);
   useEffect(() => {
     if (!url) return;
