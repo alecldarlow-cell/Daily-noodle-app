@@ -373,3 +373,16 @@ below when it finishes.
   `tileLines`; the Sweep start pulse appears once and stops after the first dig. 810 tests pass.
 - **Left**: start cards say "Today’s Mini" on archive puzzles too (as the site's house.js does); Mini's Check
   buttons sit above the grid where the site puts them below.
+
+### 26 Oct 2026 — sign-in link stuck on "Signing in"
+
+- **Bug** (Alec, Pixel): tapping the email link opened the app's auth screen but the spinner never ended.
+  `AuthLinkScreen` read the link with expo-linking's `useURL()`, which only sees the launch URL or link events
+  after mount. With the app already open, the link arrives as a new intent and expo-router navigates to `/auth`
+  before the screen mounts, so the URL stayed null. Supabase's side was fine (`redirect_to=dailynoodle://auth`).
+- **Fix** ([#37](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/37)): `useLinkingURL()`, which reads
+  the latest link expo-linking tracks natively (updated on new intents). Shipped to preview over EAS Update.
+- **Process slip**: #37 was merged before its CI finished; CI then passed on the PR and on main, and
+  `npm run check` passed locally afterwards (810 tests). The `fix/auth-link-warm-start` branch needs deleting by
+  hand (the session couldn't).
+- **Left for Alec**: try the email link on the Pixel with the app already open, and again with it closed.
