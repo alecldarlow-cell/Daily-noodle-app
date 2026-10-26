@@ -49,15 +49,16 @@ describe('GIVEN a player who isn’t signed in', () => {
     expect(await screen.findByTestId('sync-email')).toBeOnTheScreen();
   });
 
-  it('THEN a refusal from Supabase is shown', async () => {
+  it('THEN a refusal from Supabase is shown in the house’s words, not Supabase’s', async () => {
     const { client } = fakeClient({ fail: 'Email rate limit exceeded' });
     await render(<SyncCard client={client} store={memoryStorage()} />);
     await flush();
     await act(async () => fireEvent.changeText(screen.getByTestId('sync-email'), 'a@b.co'));
     await act(async () => fireEvent.press(screen.getByTestId('sync-send')));
-    expect(await screen.findByTestId('sync-msg')).toHaveTextContent('Email rate limit exceeded', {
-      exact: false,
-    });
+    expect(await screen.findByTestId('sync-msg')).toHaveTextContent(
+      'Too many sign-in emails just now. Wait a minute, then try again.',
+    );
+    expect(screen.queryByText(/rate limit/)).toBeNull();
   });
 });
 

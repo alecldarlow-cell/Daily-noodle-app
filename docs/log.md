@@ -436,3 +436,19 @@ below when it finishes.
 - **Needs Alec**: Android Back on a non-Today tab now exits the app (trade-off of the fix); phone pass in light/dark
   and at 2.0 (list in the PR). Optional players follow-up: `router.dismiss()` instead of `router.back()` in the eight
   `*Screen.tsx` `back` helpers.
+
+### 26 Oct 2026 — Polish C: Leagues and Account ([#55](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/55))
+
+- Fixed:
+  - Settings' rename box now follows the league picked. Before this, Save could rename a league to another league's name.
+  - Pull to refresh reloads the boards, with a themed spinner.
+  - A failed board has Try again and tells offline apart from a server fault (`BoardError('offline')`).
+  - No raw Supabase text reaches players (`sayError`, `authMessage`).
+  - Account points to a league choice left pending by sync.
+  - Repeat taps into Leagues act again (an `n` param, and the route is cleared once read).
+  - The sign-in screen has Cancel and a 15 s give-up.
+  - Shared `Button`/`TextField` (44 pt, field edge 3:1), the app's fonts and 44 pt targets throughout.
+  - `keyboardShouldPersistTaps="handled"` on the shared `Screen`.
+- Tests proved: the rename test fails without the fix; refresh, offline/retry, repeat asks, the pending pointer, the auth timeout, button/field contrast, no `fontWeight` in either feature. `check` green.
+- Left: the offline invite still reads as "expired" (joining review); `/auth` header (router).
+- Needs Alec (phone): the keyboard taps on iOS's number pad; `setParams` clearing under NativeTabs (repeat "Bring my leagues here", reopen an invite after "Not now"); the fonts and spinner in dark mode.

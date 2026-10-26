@@ -97,6 +97,10 @@ export function Screen({
       {scroll ? (
         <ScrollView
           contentContainerStyle={styles.content}
+          // A tap on a button while the keyboard is up acts at once, rather than only
+          // closing the keyboard; on iOS the content moves up clear of the keyboard.
+          keyboardShouldPersistTaps="handled"
+          automaticallyAdjustKeyboardInsets
           refreshControl={
             onRefresh ? (
               <RefreshControl

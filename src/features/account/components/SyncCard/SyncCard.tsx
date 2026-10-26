@@ -1,19 +1,16 @@
+import { readBoard } from '@noodle/core';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { router } from 'expo-router';
 import { useState } from 'react';
-import {
-  ActivityIndicator,
-  Alert,
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
+import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { appStorage, type CachedStorage } from '@/shared/storage';
-import { useTokens } from '@/shared/theme';
+import { FONT, useTokens } from '@/shared/theme';
+import { Button, TextField } from '@/shared/ui';
 
 import { authClient } from '../../api/authClient';
+import { AccountError, sayAccountError } from '../../hooks/authErrors';
+import { tapId } from '../../hooks/tap';
 import {
   deleteSynced,
   lastSync,
@@ -54,6 +51,10 @@ export function SyncCard({
 
   if (account.kind === 'off') return null;
 
+  // A sync brought the account's league player, and this phone plays as someone else:
+  // the choice waits on Leagues (its "Which leagues should this app use?" card).
+  const waiting = account.kind === 'signed-in' && !!readBoard(store).pend;
+
   const act = async (fn: () => Promise<unknown>, done?: string) => {
     setBusy(true);
     setMsg(null);
@@ -61,10 +62,7 @@ export function SyncCard({
       await fn();
       if (done) setMsg({ text: done });
     } catch (e) {
-      setMsg({
-        text: e instanceof Error ? e.message : 'Something went wrong. Try again.',
-        bad: true,
-      });
+      setMsg({ text: sayAccountError(e), bad: true });
     } finally {
       setBusy(false);
       setTick((n) => n + 1);
@@ -74,7 +72,7 @@ export function SyncCard({
   const send = () =>
     act(async () => {
       const valid = await emailSchema.validate(email).catch((e: Error) => {
-        throw new Error(e.message);
+        throw new AccountError(e.message);
       });
       await sendLink(valid, client);
       setSentTo(valid);
@@ -102,29 +100,24 @@ export function SyncCard({
             free. Already have an account? Use the same email to sign in. No password: we email you
             a link.
           </Text>
-          <Text style={[styles.label, { color: t.ink }]} nativeID="sync-email-label">
-            Your email
-          </Text>
-          <TextInput
+          <TextField
+            label="Your email"
             testID="sync-email"
-            accessibilityLabel="Your email"
-            accessibilityLabelledBy="sync-email-label"
             value={email}
             onChangeText={setEmail}
             placeholder="you@example.com"
-            placeholderTextColor={t.faint}
             autoCapitalize="none"
             autoComplete="email"
+            autoCorrect={false}
             keyboardType="email-address"
             inputMode="email"
-            style={[
-              styles.input,
-              { color: t.ink, borderColor: t.muted, backgroundColor: t.canvas },
-            ]}
+            returnKeyType="send"
+            onSubmitEditing={() => void send()}
           />
           <Button
+            kind="go"
             label="Email me a sign-in link"
-            onPress={send}
+            onPress={() => void send()}
             disabled={busy}
             testID="sync-send"
           />
@@ -136,7 +129,7 @@ export function SyncCard({
           <Text style={[styles.p, { color: t.ink }]} testID="sync-sent">
             Check your email: we sent a sign-in link to {sentTo}. Open it on this phone.
           </Text>
-          <Button label="Use a different email" quiet onPress={() => setSentTo(null)} />
+          <Button label="Use a different email" onPress={() => setSentTo(null)} />
         </>
       ) : null}
 
@@ -150,23 +143,48 @@ export function SyncCard({
           </Text>
           <View style={styles.row}>
             <Button
+              kind="go"
               label="Sync now"
-              onPress={() => act(() => syncNow(store, client), 'Up to date.')}
+              onPress={() =>
+                void act(async () => {
+                  await syncNow(store, client);
+                  // Up to date, unless the sync left a choice waiting on Leagues.
+                  if (!readBoard(store).pend) setMsg({ text: 'Up to date.' });
+                })
+              }
               disabled={busy}
               testID="sync-now"
             />
             <Button
               label="Sign out"
-              quiet
-              onPress={() => act(() => signOut(client))}
+              onPress={() => void act(() => signOut(client))}
               disabled={busy}
               testID="sync-signout"
             />
           </View>
+          {waiting ? (
+            <View style={[styles.waiting, { backgroundColor: t.accentSoft }]} testID="sync-waiting">
+              <Text style={[styles.p, { color: t.ink }]}>
+                Your account plays in other leagues than this phone. Choose which to use on Leagues.
+              </Text>
+              <Button
+                kind="go"
+                label="Choose on Leagues"
+                testID="sync-choose"
+                onPress={() =>
+                  router.navigate({
+                    pathname: '/leagues',
+                    params: { go: 'home', n: tapId() },
+                  })
+                }
+              />
+            </View>
+          ) : null}
           <Pressable
             accessibilityRole="button"
             testID="sync-delete"
             disabled={busy}
+            style={styles.linkHit}
             onPress={() =>
               Alert.alert(
                 'Delete your synced copy?',
@@ -196,51 +214,13 @@ export function SyncCard({
   );
 }
 
-function Button({
-  label,
-  onPress,
-  disabled,
-  quiet,
-  testID,
-}: {
-  label: string;
-  onPress: () => void;
-  disabled?: boolean;
-  quiet?: boolean;
-  testID?: string;
-}) {
-  const t = useTokens();
-  return (
-    <Pressable
-      accessibilityRole="button"
-      onPress={onPress}
-      disabled={disabled}
-      testID={testID}
-      style={[
-        styles.btn,
-        quiet ? { borderWidth: 1.5, borderColor: t.ink } : { backgroundColor: t.accent },
-        disabled ? { opacity: 0.5 } : null,
-      ]}>
-      <Text style={[styles.btnText, { color: quiet ? t.ink : t.paper }]}>{label}</Text>
-    </Pressable>
-  );
-}
-
 const styles = StyleSheet.create({
   card: { marginTop: 18, padding: 16, borderWidth: 1, borderRadius: 12, gap: 10 },
-  h2: { fontSize: 19, fontWeight: '800' },
-  p: { fontSize: 15, lineHeight: 22 },
-  label: { fontSize: 14, fontWeight: '600', marginBottom: -4 },
-  small: { fontSize: 13 },
-  input: {
-    borderWidth: 1.5,
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 16,
-  },
+  h2: { fontFamily: FONT.displayHeavy, fontSize: 19 },
+  p: { fontFamily: FONT.body, fontSize: 15, lineHeight: 22 },
+  small: { fontFamily: FONT.body, fontSize: 13, lineHeight: 18 },
   row: { flexDirection: 'row', gap: 10, flexWrap: 'wrap' },
-  btn: { alignSelf: 'flex-start', borderRadius: 999, paddingHorizontal: 16, paddingVertical: 10 },
-  btnText: { fontSize: 15, fontWeight: '700' },
-  link: { fontSize: 14, fontWeight: '600', marginTop: 4 },
+  waiting: { padding: 12, borderRadius: 10, gap: 8 },
+  linkHit: { minHeight: 44, justifyContent: 'center', alignSelf: 'flex-start' },
+  link: { fontFamily: FONT.bodySemi, fontSize: 14 },
 });

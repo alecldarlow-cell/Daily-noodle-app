@@ -7,8 +7,8 @@
  *
  * Each question is an outline and four names, in the order the page stamped them at
  * build (`q.o`): nothing is shuffled on the page, so nothing is here. A right answer
- * scores 100 (50 after "Show on map") plus 10 for every right answer in a row before
- * it, up to 50 more; a wrong one scores nothing and ends the run. A country named
+ * scores 100 (50 after "Show on map"); a wrong one scores nothing (no bonus for answers
+ * in a row since 26 Oct 2026, as the site). A country named
  * right goes into the atlas Borderline keeps (`digi-borderline-v1`), read, changed
  * and written back so nothing else in it is touched.
  *
@@ -347,7 +347,7 @@ function answer(s: BordersState, host: Host, k: number) {
   const q = s.P.qs[cur.i]!;
   const ok = q.o[k] === q.n;
   cur.run = ok ? cur.run + 1 : 0;
-  const gain = ok ? (cur.hint ? 50 : 100) + Math.min(50, (cur.run - 1) * 10) : 0;
+  const gain = ok ? (cur.hint ? 50 : 100) : 0;
   cur.pts += gain;
   const isNew = ok && host.atlasAdd(q.n);
   cur.ans.push({ k, ok, h: !!cur.hint, nw: !!isNew });
@@ -517,7 +517,7 @@ export function homeView(s: BordersState, t: string, dayBefore: (d: string) => s
     ],
     status: c
       ? `Question ${Math.min(NQ, c.ans.length + 1)} of ${NQ}, ${c.pts} points so far.`
-      : 'Ten country outlines, easiest first. Name them from four; scored out of ten.',
+      : 'Ten country outlines, easiest first. Name them from four; 100 points each.',
     button: c ? 'Resume' : 'Play',
   };
 }

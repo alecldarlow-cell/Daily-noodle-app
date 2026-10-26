@@ -129,7 +129,7 @@ describe('GIVEN the save', () => {
 });
 
 describe('GIVEN a round being played', () => {
-  it('THEN right answers in a row add 10 each up to 50, a hint halves the base, a miss resets', () => {
+  it('THEN a right answer scores 100, 50 after a hint, a miss nothing, with no bonus for answers in a row', () => {
     const { h, host, store } = testHost();
     let s = apply(init(borders15, null, 0), { t: 'play' }, host);
     expect(quizView(s)).toMatchObject({
@@ -153,12 +153,13 @@ describe('GIVEN a round being played', () => {
       h.t += 1000;
       if (i < 9) s = apply(s, { t: 'next' }, host);
     }
-    expect(gains).toEqual([100, 110, 70, 130, 140, 150, 150, 0, 100, 110]);
+    // Alec, 26 Oct 2026 (site first, dailynoodle#35): the run bonus is gone.
+    expect(gains).toEqual([100, 100, 50, 100, 100, 100, 100, 0, 100, 100]);
     expect(s.cur!.ans[2]).toMatchObject({ ok: true, h: true, nw: true });
     expect(s.save.seenCoach).toBe(true);
     const v = quizView(s);
     expect(v.nextLabel).toBe('See result');
-    expect(v.plate).toEqual({ name: borders15.qs[9]!.n, line: 'New in your atlas. +110 points' });
+    expect(v.plate).toEqual({ name: borders15.qs[9]!.n, line: 'New in your atlas. +100 points' });
     expect(v.options.filter((o) => o.mark === 'right')).toHaveLength(1);
     expect(atlasCount(store.getItem(ATLAS_KEY))).toBe(9);
     s = apply(s, { t: 'next' }, host);

@@ -29,7 +29,10 @@ jest.mock('../api/feed');
 jest.mock('expo-router', () => ({
   router: { push: jest.fn(), navigate: jest.fn() },
   useLocalSearchParams: jest.fn(() => ({})),
+  useNavigation: () => mockNavigation,
 }));
+// The tab's own navigation: Leagues clears the route's ask once it has read it.
+const mockNavigation = { setParams: jest.fn() };
 
 const m = jest.mocked(api);
 const params = jest.mocked(useLocalSearchParams);
