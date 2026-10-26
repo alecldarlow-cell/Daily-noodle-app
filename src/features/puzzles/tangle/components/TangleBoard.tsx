@@ -19,10 +19,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { FONT, usePuzzleTokens } from '@/shared/theme';
 import { Chevron } from '@/shared/ui';
 
+import { useAnnounce } from '../../link/hooks/announce';
 import { boardTop, current, foundList, N, type Rect, type TangleEngine } from '../model';
 
 const GAP = 8;
-const GOLD = '#E0A800';
+/** The largest the board grows (the page's `min(100%, 400px, …)`, kept at the app's 420). */
+const MAX_SIDE = 420;
+const pressedStyle = { opacity: 0.75 };
 /**
  * Everything above the letters keeps one height for the whole round, so the board never
  * moves under a finger: the found words get their full room from the start (scrolling
@@ -47,6 +50,14 @@ interface TangleBoardProps {
   engine: TangleEngine;
   setRects: (r: Rect[]) => void;
   onHome: () => void;
+}
+
+/**
+ * The board's side: the room it is given, both ways, so a short phone keeps the bottom row
+ * on screen (the page caps it by the viewport's height too), and never over MAX_SIDE.
+ */
+export function boardSide(width: number, height: number): number {
+  return Math.max(0, Math.min(width, height, MAX_SIDE));
 }
 
 const centre = (r: Rect): [number, number] => [r.left + r.width / 2, r.top + r.height / 2];
@@ -99,7 +110,8 @@ export function TangleBoard({ engine, setRects, onHome }: TangleBoardProps) {
   const veil = s.paused && playing;
 
   const onLayout = (ev: LayoutChangeEvent) => {
-    const w = Math.min(ev.nativeEvent.layout.width, 420);
+    const { width, height } = ev.nativeEvent.layout;
+    const w = boardSide(width, height);
     setSide(w);
     setRects(tileRects(w));
   };
@@ -109,10 +121,17 @@ export function TangleBoard({ engine, setRects, onHome }: TangleBoardProps) {
   ];
   const toastOn = s.toast.cls.startsWith('on');
   const toastColor = s.toast.cls.includes('gold')
-    ? GOLD
+    ? pt.goldInk
     : s.toast.cls.includes('good')
       ? pt.good
       : pt.bad;
+  useAnnounce(toastOn ? s.toast.text : '', `${toastOn}|${s.toast.text}|${top.score}|${top.words}`);
+  /** A screen reader's double-tap on a tile: a tap there, as the page's tap-to-build has it. */
+  const tapTile = (i: number) => {
+    const [x, y] = centre(rects[i]!);
+    engine.down(x, y);
+    engine.up();
+  };
 
   return (
     <SafeAreaView style={[styles.fill, { backgroundColor: pt.paper }]} testID="tangle-board">
@@ -122,7 +141,12 @@ export function TangleBoard({ engine, setRects, onHome }: TangleBoardProps) {
             accessibilityRole="button"
             accessibilityLabel="Pause and go back"
             onPress={onHome}
-            style={[styles.iconBtn, { borderColor: pt.lineSoft, backgroundColor: pt.card }]}>
+            testID="tangle-back"
+            style={({ pressed }) => [
+              styles.iconBtn,
+              { borderColor: pt.lineSoft, backgroundColor: pt.card },
+              pressed && pressedStyle,
+            ]}>
             <Chevron color={pt.ink} dir="left" size={10} />
           </Pressable>
           <View style={styles.scorebox}>
@@ -146,10 +170,17 @@ export function TangleBoard({ engine, setRects, onHome }: TangleBoardProps) {
             ]}
           />
         </View>
-        <View style={[styles.pill, { backgroundColor: top.starGot ? GOLD : pt.card }]}>
+        <View
+          testID="tangle-pill"
+          style={[
+            styles.pill,
+            top.starGot
+              ? { backgroundColor: pt.goldTint, borderColor: pt.gold }
+              : { backgroundColor: pt.card, borderColor: pt.card },
+          ]}>
           <Text
             numberOfLines={1}
-            style={[styles.pillText, { color: top.starGot ? '#141726' : pt.inkSoft }]}>
+            style={[styles.pillText, { color: top.starGot ? pt.goldInk : pt.inkSoft }]}>
             {top.star}
           </Text>
         </View>
@@ -164,9 +195,12 @@ export function TangleBoard({ engine, setRects, onHome }: TangleBoardProps) {
                 {g.words.map((w) => (
                   <Text
                     key={w.w}
+                    testID={`tangle-word-${w.w}`}
                     style={[
                       styles.w,
-                      { color: pt.ink, backgroundColor: w.star ? GOLD : pt.card },
+                      w.star
+                        ? { color: pt.goldInk, backgroundColor: pt.goldTint, borderColor: pt.gold }
+                        : { color: pt.ink, backgroundColor: pt.card, borderColor: pt.card },
                       w.bonus && styles.bon,
                     ]}>
                     {w.w}
@@ -193,6 +227,7 @@ export function TangleBoard({ engine, setRects, onHome }: TangleBoardProps) {
             {toastOn ? (
               <Text
                 numberOfLines={1}
+                accessibilityLiveRegion="polite"
                 style={[styles.toast, { color: toastColor }]}
                 testID="tangle-toast">
                 {s.toast.text}
@@ -203,9 +238,6 @@ export function TangleBoard({ engine, setRects, onHome }: TangleBoardProps) {
         <View style={styles.boardWrap} onLayout={onLayout} testID="tangle-board-wrap">
           <View
             testID="tangle-grid"
-            accessible
-            accessibilityLabel={`Letters: ${engine.P.tiles.join(', ')}`}
-            accessibilityHint="Trace across neighbouring letters to make a word"
             style={[styles.board, { width: side, height: side }]}
             onStartShouldSetResponder={() => true}
             onMoveShouldSetResponder={() => true}
@@ -226,6 +258,24 @@ export function TangleBoard({ engine, setRects, onHome }: TangleBoardProps) {
                       key={i}
                       pointerEvents="none"
                       testID={`tangle-tile-${i}`}
+                      // Each tile is a button to a screen reader (the grid, one element,
+                      // could not be played): its letter, whether it is in the word, and a
+                      // double-tap that taps it, so a word is built and entered tile by tile.
+                      accessible={!hide}
+                      accessibilityElementsHidden={hide}
+                      importantForAccessibility={hide ? 'no-hide-descendants' : 'yes'}
+                      accessibilityRole="button"
+                      accessibilityLabel={t === 'QU' ? 'Qu' : t}
+                      accessibilityHint={
+                        last
+                          ? 'Double-tap again to enter the word'
+                          : 'Double-tap to add to the word'
+                      }
+                      accessibilityState={{ selected: on }}
+                      accessibilityActions={[{ name: 'activate' }]}
+                      onAccessibilityAction={(e) => {
+                        if (e.nativeEvent.actionName === 'activate') tapTile(i);
+                      }}
                       style={[
                         styles.tile,
                         {
@@ -262,7 +312,12 @@ export function TangleBoard({ engine, setRects, onHome }: TangleBoardProps) {
                 <Pressable
                   accessibilityRole="button"
                   onPress={() => engine.resume()}
-                  style={[styles.resume, { backgroundColor: pt.brand }]}>
+                  testID="tangle-resume"
+                  style={({ pressed }) => [
+                    styles.resume,
+                    { backgroundColor: pt.brand },
+                    pressed && pressedStyle,
+                  ]}>
                   <Text style={styles.resumeText}>Resume</Text>
                 </Pressable>
               </View>
@@ -307,7 +362,13 @@ const styles = StyleSheet.create({
   },
   timebar: { height: 4, borderRadius: 2, overflow: 'hidden' },
   timefill: { height: 4 },
-  pill: { alignSelf: 'flex-start', borderRadius: 999, paddingHorizontal: 12, paddingVertical: 5 },
+  pill: {
+    alignSelf: 'flex-start',
+    borderRadius: 999,
+    borderWidth: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+  },
   pillText: { fontSize: 13, fontFamily: FONT.sansSemi },
   list: { flexGrow: 0, flexShrink: 0, height: LIST_H },
   listIn: { gap: 6 },
@@ -318,8 +379,9 @@ const styles = StyleSheet.create({
     fontFamily: FONT.sans,
     fontSize: 14,
     paddingHorizontal: 7,
-    paddingVertical: 2,
+    paddingVertical: 1,
     borderRadius: 6,
+    borderWidth: 1,
     overflow: 'hidden',
   },
   bon: { fontStyle: 'italic' },

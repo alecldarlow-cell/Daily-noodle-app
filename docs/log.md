@@ -452,3 +452,14 @@ below when it finishes.
 - Tests proved: the rename test fails without the fix; refresh, offline/retry, repeat asks, the pending pointer, the auth timeout, button/field contrast, no `fontWeight` in either feature. `check` green.
 - Left: the offline invite still reads as "expired" (joining review); `/auth` header (router).
 - Needs Alec (phone): the keyboard taps on iOS's number pad; `setParams` clearing under NativeTabs (repeat "Bring my leagues here", reopen an invite after "Not now"); the fonts and spinner in dark mode.
+
+- **Polish B2: Link/Tangle/Borders/Reckon** (26 Oct, branch `polish/batch-b2-puzzles`, PR linked from the branch):
+  Link: an archive Link never played no longer says "· replay" / "Today's result is already in" (display only:
+  `shownLabel`/`shownMsg`; the model's `msg`/`label` and the replay are untouched), the bar's flame is Link's live
+  streak as on its start card, dark-mode board colours (g4 `#ECEEF4` on paper, soft red miss tint), one tile font
+  per board (link.js fitFont), mistakes-left read with its count. Tangle: board capped by height, gold tokens,
+  each tile a screen-reader button. Borders: text caps + scrolling column. Reckon: narrow top row, pip hitSlop,
+  score label with its number. All four: pressed state; iOS announcements for the feedback line.
+  Tests proved: each of these through the screens (GIVEN/WHEN/THEN), `check` green. Left: Borders map WebView still
+  reloads per question (needs a phone to verify an injectJavaScript redraw). Needs the phone: VoiceOver on the
+  four, Tangle on an SE-size phone, Borders at font scale 2.0, Link in dark mode.

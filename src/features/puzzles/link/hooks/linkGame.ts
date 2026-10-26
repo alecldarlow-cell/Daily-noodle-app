@@ -1,4 +1,4 @@
-import type { KV, SaveStore } from '@noodle/core';
+import { londonDay, type KV, type SaveStore } from '@noodle/core';
 
 import type { PuzzleFile } from '../../types';
 import { commitFinish, isRanked, reopenInfo, type Finished, type FinishInfo } from '../finishing';
@@ -50,6 +50,8 @@ export class LinkGame {
   state: LinkState;
   phase: Phase;
   info: FinishInfo | null;
+  /** The puzzle's day is before today's (London): an archive Link. Display only. */
+  readonly past: boolean;
   private clockAt: number | null = null;
   private frozen = 0;
   /** A reopened puzzle shows its saved time. */
@@ -70,6 +72,7 @@ export class LinkGame {
     this.clearT = deps.clearTimeout ?? ((t) => clearTimeout(t as ReturnType<typeof setTimeout>));
     const data = file.data;
     const rec = deps.saves.getDone(SAVE_KEY, data.id);
+    this.past = !!file.date && file.date < londonDay(deps.now());
     this.state = init(data, shuffle(allTiles(data), deps.random), {
       ranked: isRanked(deps.store, deps.now()),
       rec,
