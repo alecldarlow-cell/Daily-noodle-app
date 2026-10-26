@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Draws the app's icons and splash from the in-app "DP" monogram (src/shared/ui/Screen's
+ * Draws the app's icons and splash as "DN" (Daily Noodle) in the in-app monogram's style (src/shared/ui/Screen's
  * masthead: Archivo ExtraBold capitals, white on the house green, as the site's front-page
  * .mono): the letters' outlines are read straight from assets/fonts/Archivo-ExtraBold.ttf
  * and filled with a small anti-aliased rasteriser, and the PNGs written with Node's zlib.
@@ -10,13 +10,13 @@
  *   node scripts/make-icons.js --check  fails if any committed PNG differs from what it draws
  *
  * What it makes (app.json points at each):
- * - icon.png             1024 opaque square, DP on green (iOS rounds it; it must be opaque).
+ * - icon.png             1024 opaque square, DN on green (iOS rounds it; it must be opaque).
  * - play-store-icon.png  512 opaque square, the same (the Play listing's icon).
- * - android-icon-foreground.png / -monochrome.png  1024, DP alone on a clear layer, 40% of
+ * - android-icon-foreground.png / -monochrome.png  1024, DN alone on a clear layer, 40% of
  *   the canvas wide, well inside the adaptive icon's 66/108 safe circle; app.json gives the
  *   green as its background colour.
  * - splash-icon.png / splash-icon-dark.png  the masthead's monogram itself: a rounded green
- *   square (radius 4/30, as the masthead's) with white DP; in dark mode the dark theme's
+ *   square (radius 4/30, as the masthead's) with white DN; in dark mode the dark theme's
  *   brighter green with dark letters, as the masthead draws it there.
  */
 const fs = require('fs');
@@ -31,6 +31,8 @@ const GREEN = '#0E7A4B';
 const GREEN_DARK = '#4CC793';
 const WHITE = '#FFFFFF';
 const INK_DARK = '#0B0D12';
+/** The launcher's letters: "DN" for Daily Noodle (Alec, 26 Oct 2026), in the masthead's face. */
+const LETTERS = 'DN';
 /** The masthead's "DP": 17 pt with -1 pt between letters, so -1/17 em. */
 const TRACKING = -1 / 17;
 
@@ -164,11 +166,11 @@ function flatten(contour, steps = 24) {
   return out;
 }
 
-/** "DP" as polygons in em units (x right, y down, baseline at 0), and its ink box. */
+/** The letters (LETTERS) as polygons in em units (x right, y down, baseline at 0), and its ink box. */
 function monogram(font) {
   const polys = [];
   let x = 0;
-  for (const ch of 'DP') {
+  for (const ch of LETTERS) {
     const g = font.glyphId(ch.charCodeAt(0));
     for (const c of font.contours(g))
       polys.push(flatten(c).map(([px, py]) => [(x + px) / font.unitsPerEm, -py / font.unitsPerEm]));
@@ -355,7 +357,7 @@ function render() {
   ];
 }
 
-module.exports = { render, encodePng, readFont, monogram, cover, GREEN, GREEN_DARK };
+module.exports = { render, encodePng, readFont, monogram, cover, GREEN, GREEN_DARK, LETTERS };
 
 /** The pixels of a PNG this script wrote (8-bit RGB or RGBA, unfiltered rows), as RGBA bytes. */
 function decodePng(buf) {
