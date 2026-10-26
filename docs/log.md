@@ -415,9 +415,10 @@ below when it finishes.
   everywhere; boards wave the right squares; records tab end to end; Tangle heights constant through a round;
   sheet parts in light and dark; Link motion on miss, repeat, settle and landing. `check` green on every PR.
 - **Needs Alec**:
-  - **App icon** ([#43](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/43), open): DN inside Android's
-    safe zone, opaque iOS square, themed monochrome. Merge it just before the next EAS build: it changes the
-    fingerprint, so JS updates stop reaching the current install until the new build is on the phone.
+  - **App icon** ([#43](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/43), merged on Alec's go-ahead):
+    DN inside Android's safe zone, opaque iOS square, themed monochrome. It changed the fingerprint, so JS updates
+    no longer reach the current install: a new preview build (Release › Run workflow, Android) is needed.
   - On the Pixel (EAS Update, reopen twice): the celebration, Records, Tangle, the finish sheets, Link's motion.
-  - Say whether to add Tangle's "Play more boards in Yarn" link (would open the site, like Borderline) and the
-    Records extras on the daily boards.
+- **Small bits** ([#48](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/48), Alec's go-ahead): records
+  load with every board view: 👑 for last week's champion, "🏆 New league record" on the row, the "🏅 League record"
+  line under each daily board, tap a name for their card; Tangle's "Play more boards in Yarn".
