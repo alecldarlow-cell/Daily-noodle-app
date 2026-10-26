@@ -23,6 +23,14 @@
       },
       "predictiveBackGestureEnabled": false,
       "package": "uk.co.dailynoodle.app",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [{ "scheme": "https", "host": "dailynoodle.co.uk", "pathPrefix": "/join.html" }],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ],
       "permissions": ["android.permission.VIBRATE"],
       "blockedPermissions": [
         "android.permission.READ_EXTERNAL_STORAGE",
