@@ -1,14 +1,37 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Animated, Pressable, StyleSheet, Text, useColorScheme, View } from 'react-native';
 
 import { useRecapWidth } from '@/shared/finish-sheet';
-import { useWinWave, WaveFlash, WaveScale } from '@/shared/motion';
+import { useReduceMotion, useWinWave, WaveFlash, WaveScale } from '@/shared/motion';
 import { FONT, usePuzzleTokens } from '@/shared/theme';
 
 import { endMark, lines, N, type Cell, type PathState } from '../model';
+import { pathColors } from './colors';
 
-const COBALT = '#2E5BFF';
-const DEEP = '#1B3B9E';
-const GREEN = '#1F9E6B';
+/** How long a rejected square shakes (path.css .cell.shake, 0.3 s). */
+export const SHAKE_MS = 300;
+
+/**
+ * The rejected square's shake (path.css @keyframes shake: 4 px left, 4 px right), run
+ * each time the model counts another rejection. Still under Reduce motion.
+ */
+function useShake(n: number | undefined) {
+  const reduce = useReduceMotion();
+  const [v] = useState(() => new Animated.Value(0));
+  const last = useRef(n);
+  useEffect(() => {
+    if (n === last.current) return;
+    last.current = n;
+    if (reduce !== false) return;
+    v.setValue(0);
+    Animated.timing(v, { toValue: 1, duration: SHAKE_MS, useNativeDriver: true }).start();
+  }, [n, reduce, v]);
+  const dx = useMemo(
+    () => v.interpolate({ inputRange: [0, 0.25, 0.75, 1], outputRange: [0, -4, 4, 0] }),
+    [v],
+  );
+  return reduce === false ? dx : null;
+}
 
 /** A thread drawn as one rounded bar per step (every step is to a touching square). */
 function Thread({ cells, color, cs, w }: { cells: Cell[]; color: string; cs: number; w: number }) {
@@ -53,7 +76,11 @@ interface PathBoardProps {
  */
 export function PathBoard({ state, side, onCell, celebrating = false }: PathBoardProps) {
   const pt = usePuzzleTokens();
+  const pc = pathColors(useColorScheme() === 'dark');
   const wave = useWinWave(celebrating, 0);
+  const dx = useShake(state.shake?.n);
+  const shook = (r: number, c: number) =>
+    !!dx && !!state.shake && state.shake.r === r && state.shake.c === c;
   const cs = side / N;
   const l = lines(state);
   return (
@@ -73,34 +100,39 @@ export function PathBoard({ state, side, onCell, celebrating = false }: PathBoar
               const w = given ? null : wave;
               return (
                 <WaveScale key={c} wave={w} at={0}>
-                  <Pressable
-                    testID={`sq-${r}-${c}`}
-                    accessibilityRole="button"
-                    accessibilityLabel={`row ${r + 1}, column ${c + 1}, ${v ?? 'empty'}${given ? ', given' : ''}${m === 'active' ? ', active end' : ''}`}
-                    onPress={() => onCell(r, c)}
-                    style={[
-                      styles.cell,
-                      {
-                        width: cs,
-                        height: cs,
-                        borderColor: pt.cellEdge,
-                        backgroundColor: m === 'active' ? pt.active : given ? pt.lineSoft : pt.card,
-                      },
-                      m === 'endsel' ? { borderWidth: 2, borderColor: pt.active } : null,
-                    ]}>
-                    <WaveFlash wave={w} at={0} active={pt.active} word={pt.activeWord} />
-                  </Pressable>
+                  <Animated.View
+                    testID={shook(r, c) ? 'path-shake' : undefined}
+                    style={shook(r, c) && dx ? { transform: [{ translateX: dx }] } : null}>
+                    <Pressable
+                      testID={`sq-${r}-${c}`}
+                      accessibilityRole="button"
+                      accessibilityLabel={`row ${r + 1}, column ${c + 1}, ${v ?? 'empty'}${given ? ', given' : ''}${m === 'active' ? ', active end' : ''}`}
+                      onPress={() => onCell(r, c)}
+                      style={[
+                        styles.cell,
+                        {
+                          width: cs,
+                          height: cs,
+                          borderColor: pt.cellEdge,
+                          backgroundColor:
+                            m === 'active' ? pt.active : given ? pt.lineSoft : pt.card,
+                        },
+                        m === 'endsel' ? { borderWidth: 2, borderColor: pt.active } : null,
+                      ]}>
+                      <WaveFlash wave={w} at={0} active={pt.active} word={pt.activeWord} />
+                    </Pressable>
+                  </Animated.View>
                 </WaveScale>
               );
             })}
           </View>
         ))}
         {l.solved ? (
-          <Thread cells={l.low} color={GREEN} cs={cs} w={cs * 0.07} />
+          <Thread cells={l.low} color={pc.done} cs={cs} w={cs * 0.07} />
         ) : (
           <>
-            <Thread cells={l.low} color={COBALT} cs={cs} w={cs * 0.06} />
-            <Thread cells={l.high} color={DEEP} cs={cs} w={cs * 0.06} />
+            <Thread cells={l.low} color={pc.low} cs={cs} w={cs * 0.06} />
+            <Thread cells={l.high} color={pc.high} cs={cs} w={cs * 0.06} />
           </>
         )}
         {Array.from({ length: N }, (_, r) =>
@@ -110,10 +142,14 @@ export function PathBoard({ state, side, onCell, celebrating = false }: PathBoar
             const given = state.p.lockedSet.has(`${r},${c}`);
             const m = endMark(state, r, c);
             return (
-              <View
+              <Animated.View
                 key={`${r}-${c}`}
                 pointerEvents="none"
-                style={[styles.numBox, { left: c * cs, top: r * cs, width: cs, height: cs }]}>
+                style={[
+                  styles.numBox,
+                  { left: c * cs, top: r * cs, width: cs, height: cs },
+                  shook(r, c) && dx ? { transform: [{ translateX: dx }] } : null,
+                ]}>
                 <Text
                   maxFontSizeMultiplier={1.2}
                   style={[
@@ -126,7 +162,7 @@ export function PathBoard({ state, side, onCell, celebrating = false }: PathBoar
                   ]}>
                   {v}
                 </Text>
-              </View>
+              </Animated.View>
             );
           }),
         )}

@@ -1,8 +1,9 @@
-import type { SaveStore } from '@noodle/core';
+import { dnTime, type SaveStore } from '@noodle/core';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 
 import { useHapticDiff } from '@/shared/haptics';
 import { announceFinish, usePuzzleVisit } from '@/shared/results';
+import { usePuzzleClock } from '@/shared/start-card';
 import { appStorage, saves as appSaves, type CachedStorage } from '@/shared/storage';
 
 import type { PuzzleFile } from '../../types';
@@ -60,15 +61,10 @@ export function useDokuGame(file: PuzzleFile<DokuData>, deps: Deps = {}) {
   const [state, setState] = useState<DokuState>(() => opened?.state ?? init(file.data));
   const [phase, setPhase] = useState<Phase>(opened ? 'finished' : 'start');
   const [info, setInfo] = useState<FinishInfo | null>(opened?.info ?? null);
-  const [secs, setSecs] = useState(0);
   useHapticDiff(state, dokuFeel);
 
-  const running = state.started && !state.solved;
-  useEffect(() => {
-    if (!running) return;
-    const h = setInterval(() => setSecs((s) => s + 1), 1000);
-    return () => clearInterval(h);
-  }, [running]);
+  // Ticks once a second while in play; time with the app away never counts.
+  const { secs } = usePuzzleClock(state.started && !state.solved, { now });
 
   const finished = useRef(!!opened);
   useEffect(() => {
@@ -104,5 +100,15 @@ export function useDokuGame(file: PuzzleFile<DokuData>, deps: Deps = {}) {
   }, [start]);
   const clock = timerText(opened ? opened.secs : secs);
 
-  return { state, phase, info, clock, msg: message(state, clock), dispatch, feed, play };
+  // The message keeps the page's "00:14"; the bar's clock reads as Path's does ("0:14").
+  return {
+    state,
+    phase,
+    info,
+    clock: dnTime(clock),
+    msg: message(state, clock),
+    dispatch,
+    feed,
+    play,
+  };
 }

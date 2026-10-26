@@ -7,13 +7,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { FinishSheet, useFreshFinish } from '@/shared/finish-sheet';
 import { WIN_BURSTS, useWinBursts } from '@/shared/motion';
 import { PuzzleBar, ruleFor, StartCard, useStartStats } from '@/shared/start-card';
-import { useStoredRaw } from '@/shared/storage';
 import { usePuzzleTokens } from '@/shared/theme';
-import { fitBoard } from '@/shared/ui';
+import { fitBoard, useBoardFit } from '@/shared/ui';
 
 import type { PuzzleFile } from '../../types';
 import { useMiniGame } from '../hooks/useMiniGame';
-import { STREAK_KEY, type MiniData } from '../model';
+import type { MiniData } from '../model';
 import { ClueBar } from './ClueBar';
 import { MiniBoard } from './MiniBoard';
 import { MiniControls } from './MiniControls';
@@ -28,15 +27,6 @@ function openNext(item: TodayItem | null) {
   router.replace({ pathname: '/play/[type]/[file]', params: { type: item.type, file } });
 }
 
-function savedStreak(raw: string | null): number {
-  try {
-    const s = JSON.parse(raw ?? 'null') as { streak?: unknown } | null;
-    return (s && Number(s.streak)) || 0;
-  } catch {
-    return 0;
-  }
-}
-
 /** The Mini, played natively: start card, board, finish sheet. */
 export function MiniScreen({ file }: { file: PuzzleFile<MiniData> }) {
   const pt = usePuzzleTokens();
@@ -48,7 +38,7 @@ export function MiniScreen({ file }: { file: PuzzleFile<MiniData> }) {
   const boardRef = useRef<ComponentRef<typeof View>>(null);
   useWinBursts(winning, WIN_BURSTS, boardRef);
   const stats = useStartStats('mini');
-  const streak = savedStreak(useStoredRaw(STREAK_KEY));
+  const fit = useBoardFit(fitBoard(win, 400, 420), 420);
   const n = dnNum(file.data.id).slice(1);
   const { state, dispatch } = game;
 
@@ -91,22 +81,26 @@ export function MiniScreen({ file }: { file: PuzzleFile<MiniData> }) {
 
   // Board, clue bar, the checks and keyboard on one screen, in the page's order (.gridwrap,
   // .cluebar, .controls, .kb; Alec's call 25 Oct 2026 to match it).
-  const side = fitBoard(win, 400, 420);
   return (
     <SafeAreaView style={[styles.fill, { backgroundColor: pt.paper }]} testID="mini-screen">
       <View style={styles.in}>
         <PuzzleBar
           name={`Mini ${n}`}
           sub={file.data.band}
-          streak={streak}
+          streak={stats.streak}
           clock={game.clock}
           onBack={back}
         />
-        <View ref={boardRef} collapsable={false} style={styles.board}>
+        <View
+          ref={boardRef}
+          collapsable={false}
+          style={styles.board}
+          onLayout={fit.onLayout}
+          testID="board-slot">
           <MiniBoard
             celebrating={winning}
             state={state}
-            side={side}
+            side={fit.side}
             onCell={(r, c) => dispatch({ t: 'cell', r, c })}
           />
         </View>
@@ -141,5 +135,5 @@ const styles = StyleSheet.create({
     width: '100%',
     alignSelf: 'center',
   },
-  board: { flex: 1, justifyContent: 'center' },
+  board: { flex: 1, justifyContent: 'center', minHeight: 0 },
 });

@@ -1,7 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { FONT, usePuzzleTokens } from '@/shared/theme';
-import { Chevron } from '@/shared/ui';
+import { Chevron, pressable } from '@/shared/ui';
 
 interface ClueBarProps {
   bar: { label: string; clue: string } | null;
@@ -21,14 +21,14 @@ export function ClueBar({ bar, onPrev, onNext, onToggle }: ClueBarProps) {
         accessibilityRole="button"
         accessibilityLabel="Previous clue"
         onPress={onPrev}
-        style={[styles.arrow, box]}>
+        style={pressable([styles.arrow, box])}>
         <Chevron color={pt.ink} dir="left" />
       </Pressable>
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={`${bar ? `${bar.label}, ${bar.clue}. ` : ''}Tap to switch across and down`}
         onPress={onToggle}
-        style={[styles.bar, box]}
+        style={pressable([styles.bar, box])}
         testID="clue-bar">
         <Text style={[styles.text, { color: pt.ink }]}>
           {bar ? <Text style={[styles.label, { color: pt.brand }]}>{`${bar.label} `}</Text> : null}
@@ -39,7 +39,7 @@ export function ClueBar({ bar, onPrev, onNext, onToggle }: ClueBarProps) {
         accessibilityRole="button"
         accessibilityLabel="Next clue"
         onPress={onNext}
-        style={[styles.arrow, box]}>
+        style={pressable([styles.arrow, box])}>
         <Chevron color={pt.ink} />
       </Pressable>
     </View>

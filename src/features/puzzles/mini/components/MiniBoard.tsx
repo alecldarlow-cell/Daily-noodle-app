@@ -46,7 +46,18 @@ export function MiniBoard({ state, side, onCell, celebrating = false }: MiniBoar
             const mark = state.checked[r]![c];
             const letter = state.entries[r]![c] || '';
             const num = state.p.nums[r]![c];
-            const ink = here ? pt.onActive : word ? pt.onWord : pt.ink;
+            // On the marigold cursor the letter stays dark ink, checked or not (house.css
+            // .cell.active .ltr): green or red there would be unreadable. The red dot
+            // still marks a wrong letter.
+            const ink = here
+              ? pt.onActive
+              : mark === 'good'
+                ? pt.good
+                : mark === 'bad'
+                  ? pt.bad
+                  : word
+                    ? pt.onWord
+                    : pt.ink;
             return (
               <WaveScale key={c} wave={wave} at={r + c}>
                 <Pressable
@@ -84,7 +95,7 @@ export function MiniBoard({ state, side, onCell, celebrating = false }: MiniBoar
                       styles.ltr,
                       {
                         fontSize: cell * 0.46,
-                        color: mark === 'good' ? pt.good : mark === 'bad' ? pt.bad : ink,
+                        color: ink,
                       },
                     ]}>
                     {letter}

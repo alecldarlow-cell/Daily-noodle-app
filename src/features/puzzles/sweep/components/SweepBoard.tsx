@@ -84,6 +84,9 @@ export function SweepBoard({
                   ]}>
                   <WaveFlash wave={wave} at={r + c} active={pt.active} word={pt.activeWord} />
                   {!state.startDug && i === state.p.start ? <StartPulse color={pt.active} /> : null}
+                  {state.mark && state.mark.i === i && state.flagged.has(i) ? (
+                    <HintPulse n={state.mark.n} color={sc.hidden} />
+                  ) : null}
                   <Face state={state} i={i} size={cell} pt={pt} sc={sc} />
                 </Pressable>
               </WaveScale>
@@ -119,11 +122,15 @@ function look(s: SweepState, i: number, pt: PuzzleTokens, sc: SweepColors, dark:
           borderBottomWidth: 3,
           borderBottomColor: dark ? 'rgba(0,0,0,0.22)' : 'rgba(20,23,38,0.12)',
         };
+  // A flag Hint says is wrong is already marigold, so it gets a dark ring as well (sweep.css
+  // .cell.flag.hint's outline) and HintPulse flashes it.
   const ring = s.why.includes(i)
     ? { borderWidth: 3, borderColor: sc.why }
     : start
       ? { borderWidth: 3, borderColor: pt.active }
-      : null;
+      : marked && s.flagged.has(i)
+        ? { borderWidth: 3, borderColor: pt.onActive }
+        : null;
   return [{ backgroundColor: bg, borderColor: pt.cellEdge }, raised, ring];
 }
 
@@ -153,6 +160,35 @@ function StartPulse({ color }: { color: string }) {
           opacity: v.interpolate({ inputRange: [0, 1], outputRange: [0.25, 0.75] }),
         },
       ]}
+    />
+  );
+}
+
+/**
+ * Hint's pulse on a flag it says is wrong (sweep.css hintpulse: twice over 1.1 s), so the
+ * flag meant stands out from the others. Still under Reduce motion (the ring stays).
+ */
+function HintPulse({ n, color }: { n: number; color: string }) {
+  const reduce = useReduceMotion();
+  const [v] = useState(() => new Animated.Value(0));
+  useEffect(() => {
+    if (reduce !== false) return;
+    v.setValue(0);
+    const run = Animated.loop(
+      Animated.sequence([
+        Animated.timing(v, { toValue: 1, duration: 550, useNativeDriver: true }),
+        Animated.timing(v, { toValue: 0, duration: 550, useNativeDriver: true }),
+      ]),
+      { iterations: 2 },
+    );
+    run.start();
+    return () => run.stop();
+  }, [n, reduce, v]);
+  return (
+    <Animated.View
+      pointerEvents="none"
+      testID="sweep-hint-pulse"
+      style={[StyleSheet.absoluteFill, { backgroundColor: color, opacity: v }]}
     />
   );
 }

@@ -4,5 +4,7 @@ export { PuzzleRowSkeleton, SKELETON_PULSE_MS } from './PuzzleRow/PuzzleRowSkele
 export { PuzzleTile, tileCells } from './PuzzleTile/PuzzleTile';
 export { Note } from './Note/Note';
 export { fitBoard } from './fitBoard';
+export { useBoardFit } from './useBoardFit';
+export { PRESSED, pressable } from './pressed';
 export { Chevron, ShareGlyph } from './Glyph/Glyph';
 export { Button, FieldLabel, TextField, type ButtonKind } from './Button/Button';

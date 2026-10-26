@@ -1,8 +1,9 @@
-import type { SaveStore } from '@noodle/core';
+import { dnTime, type SaveStore } from '@noodle/core';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { useHapticDiff } from '@/shared/haptics';
 import { announceFinish, usePuzzleVisit } from '@/shared/results';
+import { usePuzzleClock } from '@/shared/start-card';
 import { appStorage, saves as appSaves, type CachedStorage } from '@/shared/storage';
 
 import type { PuzzleFile } from '../../types';
@@ -56,15 +57,10 @@ export function useMiniGame(file: PuzzleFile<MiniData>, deps: Deps = {}) {
   const [state, setState] = useState<MiniState>(() => opened?.state ?? init(file.data));
   const [phase, setPhase] = useState<Phase>(opened ? 'finished' : 'start');
   const [info, setInfo] = useState<FinishInfo | null>(opened?.info ?? null);
-  const [secs, setSecs] = useState(0);
   useHapticDiff(state, miniFeel);
 
-  const running = state.started && !state.solved;
-  useEffect(() => {
-    if (!running) return;
-    const h = setInterval(() => setSecs((s) => s + 1), 1000);
-    return () => clearInterval(h);
-  }, [running]);
+  // Ticks once a second while in play; time with the app away never counts.
+  const { secs } = usePuzzleClock(state.started && !state.solved, { now });
 
   const finished = useRef(!!opened);
   useEffect(() => {
@@ -94,7 +90,8 @@ export function useMiniGame(file: PuzzleFile<MiniData>, deps: Deps = {}) {
     phase,
     info,
     bar: clueBar(state),
-    clock: timerText(opened ? opened.secs : secs),
+    // The bar's clock reads as Path's and the finish sheet's do, minutes unpadded ("0:03").
+    clock: dnTime(timerText(opened ? opened.secs : secs)),
     dispatch,
     play,
   };
