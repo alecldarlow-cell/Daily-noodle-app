@@ -1,6 +1,7 @@
 import { useFonts } from 'expo-font';
-import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
+import { Stack, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
+import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
 import { useColorScheme } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -10,11 +11,21 @@ import { BoardLink, LeagueResults } from '@/features/leagues';
 import { BoardSlotProvider } from '@/shared/finish-sheet';
 import { ConfettiHost } from '@/shared/motion';
 import { QueryProvider } from '@/shared/query';
+import { navigationTheme, RouteError, stackScreenOptions, statusBarStyleFor } from '@/shared/shell';
 import { appStorage } from '@/shared/storage';
 import { FONT_FILES, tokensFor } from '@/shared/theme';
 import { VisitRecorder } from '@/shared/track';
 
 void SplashScreen.preventAutoHideAsync();
+
+/**
+ * The tabs sit under every other screen, even one opened cold from a link
+ * (dailynoodle://play/...), so a puzzle always has somewhere to go back to.
+ */
+export const unstable_settings = { anchor: '(tabs)' };
+
+/** If the root itself fails to render: the house error page, with Try again. */
+export { RouteError as ErrorBoundary };
 
 /**
  * Root: providers, and saves and the site's fonts loaded before the first screen, so results
@@ -46,10 +57,11 @@ export default function RootLayout() {
         <LeagueResults />
         <SyncRunner />
         <VisitRecorder />
-        <ThemeProvider value={scheme === 'dark' ? DarkTheme : DefaultTheme}>
+        {/* Dark icons in light mode, light in dark, over every screen and puzzle. */}
+        <StatusBar style={statusBarStyleFor(scheme)} />
+        <ThemeProvider value={navigationTheme(scheme)}>
           <BoardSlotProvider slot={BoardLink}>
-            <Stack
-              screenOptions={{ headerShown: false, contentStyle: { backgroundColor: t.canvas } }}>
+            <Stack screenOptions={stackScreenOptions(t)} unstable_screenErrorBoundary={RouteError}>
               <Stack.Screen name="(tabs)" />
               <Stack.Screen
                 name="play/[type]/[file]"
