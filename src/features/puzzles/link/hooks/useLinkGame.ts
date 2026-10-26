@@ -75,6 +75,7 @@ export function useLinkGame(file: PuzzleFile<LinkData>, deps: Deps = {}) {
     state: game.state,
     phase: game.phase,
     info: game.info,
+    past: game.past,
     clock: game.clock(),
     dispatch,
     play,

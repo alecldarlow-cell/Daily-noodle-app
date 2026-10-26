@@ -114,6 +114,8 @@ export const REVEAL_STEP_MS = 420;
 export const REPLAY_NOTE =
   "Today's result is already in — this is a replay, and nothing is recorded.";
 export const OUT_NOTE = "Out of mistakes — here's the rest";
+/** The board's note, in place of REPLAY_NOTE, for a past Link's first go when it won't count. */
+export const PAST_NOTE = "A past puzzle — this one won't change your streak.";
 
 // ---- the ship gate (engines/link.js validateLink, verbatim lists) ----
 
@@ -321,6 +323,24 @@ function restore(s: LinkState, rec: Record<string, unknown>): LinkState | null {
 /** "· replay" by the band: a second go at today's Link (never the first result or a reopen). */
 export function rankLabel(s: LinkState): boolean {
   return !s.ranked && (s.replayStarted || !s.hasRecord);
+}
+
+// ---- what the board shows (display only) ----
+//
+// The page says "Today's result is already in — this is a replay" on any Link opened once
+// today's streak entry is in, and marks it "· replay". For a past puzzle never finished
+// before, that is wrong on both counts: it is a first go, and today's result is not what
+// stops it counting. These two only reword the board; the state (`msg`, `label`) stays as
+// the page has it, so the differential replay still proves it, and nothing recorded changes.
+
+/** "· replay" by the band, as shown: not on a past puzzle's first go. */
+export function shownLabel(s: LinkState, past: boolean): boolean {
+  return s.label && !(past && !s.replayStarted);
+}
+
+/** The message line, as shown: a past puzzle that won't count says so instead of REPLAY_NOTE. */
+export function shownMsg(s: LinkState, past: boolean): { text: string; tone: Tone } {
+  return past && s.msg.text === REPLAY_NOTE ? { text: PAST_NOTE, tone: '' } : s.msg;
 }
 
 /** Apply one move; returns a new state (the old one is never changed). */
