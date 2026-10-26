@@ -3,7 +3,7 @@ import { BOARD_TYPE, dayBefore, type BoardTypeId } from '@noodle/core';
 
 import { shortDate } from '@/shared/time';
 
-import type { DayRow, OverallRow, PuzzleCard } from '../types';
+import type { DayRow, Outcome, OverallRow, PuzzleCard, RecordResult } from '../types';
 
 /** Invite links carry the link-preview version (board.html PREVIEW_V). */
 export const PREVIEW_V = '2';
@@ -41,8 +41,11 @@ export function mmss(s: number | null | undefined): string {
 
 const SCORED = new Set<BoardTypeId>(['tangle', 'borders', 'reckon']);
 
-/** A row's result: the big figure and the small line under it. */
-export function result(t: BoardTypeId, r: DayRow): { big: string; small: string } {
+/** A row's result: the big figure and the small line under it. Records carry no outcome: finished. */
+export function result(
+  t: BoardTypeId,
+  r: Pick<RecordResult, 'secs' | 'score' | 'mistakes'> & { outcome?: Outcome },
+): { big: string; small: string } {
   if (SCORED.has(t))
     return { big: `${r.score == null ? '–' : r.score} pts`, small: r.secs ? mmss(r.secs) : '' };
   if (r.outcome === 'failed')
@@ -52,6 +55,9 @@ export function result(t: BoardTypeId, r: DayRow): { big: string; small: string 
     t === 'link' ? (r.mistakes === 1 ? '1 mistake' : `${r.mistakes || 0} mistakes`) : '';
   return { big: mmss(r.secs), small };
 }
+
+/** "18 Oct", as the records write a day. */
+export const dayMonth = (iso: string) => shortDate(iso).split(' ').slice(1).join(' ');
 
 export const pts = (n: number) => `${n}${n === 1 ? ' pt' : ' pts'}`;
 

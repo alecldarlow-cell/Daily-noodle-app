@@ -34,18 +34,26 @@ import {
 } from '../hooks/boardText';
 import { shareMyLink } from '../hooks/useHandoff';
 import type { Flow, Notice } from '../hooks/useLeaguesFlow';
-import { useBoardData, useLeaveLeague, useOwnerAction, usePuzzleCards } from '../hooks/useLeagues';
+import {
+  useBoardData,
+  useBoardRecords,
+  useLeaveLeague,
+  useOwnerAction,
+  usePuzzleCards,
+} from '../hooks/useLeagues';
 import { useBackfill } from '../hooks/useResults';
 import { leagueNameSchema, firstError } from '../schemas';
 import type { BoardView, DayBoard, DayRow, NotYet, Overall, OverallRow } from '../types';
+import { RecordsView } from './Records';
 import { Acts, B, Btn, Card, Field, Msg, P, Sub } from './ui';
 
 const PILLS: { id: BoardView; emoji: string; name: string }[] = [
   { id: 'all', emoji: '🏆', name: 'All puzzles' },
+  { id: 'records', emoji: '🏅', name: 'Records' },
   ...BOARD_TYPES.map((t) => ({ id: t.id as BoardView, emoji: t.emoji, name: t.name })),
 ];
 const isView = (v: unknown): v is BoardView =>
-  v === 'all' || (typeof v === 'string' && v in BOARD_TYPE);
+  v === 'all' || v === 'records' || (typeof v === 'string' && v in BOARD_TYPE);
 
 /** "Later" on the PIN card, for the rest of the London day (the site's key). */
 const PIN_LATER = 'noodle-board-pinlater';
@@ -71,7 +79,18 @@ export function Board({ flow, league }: { flow: Flow; league: BoardLeague }) {
   const cards = usePuzzleCards();
   const feed = cards.isPending ? undefined : (cards.data ?? []);
   const { filling } = useBackfill(true, feed, s.pid);
-  const data = useBoardData(filling ? undefined : league.code, view, day);
+  const records = view === 'records';
+  const data = useBoardData(
+    filling || records ? undefined : league.code,
+    records ? 'all' : view,
+    day,
+  );
+  const rec = useBoardRecords(filling || !records ? undefined : league.code);
+  const shown = records ? rec : data;
+  // Settings' player list: the board's, or on Records every member there.
+  const roster = records
+    ? rec.data && { players: rec.data.players.map((p) => p.nick), members: rec.data.players.length }
+    : data.data && { players: data.data.players, members: data.data.members };
 
   const pick = (v: BoardView) => {
     setChosen(null);
@@ -111,12 +130,14 @@ export function Board({ flow, league }: { flow: Flow; league: BoardLeague }) {
 
       {filling ? (
         <Text style={[styles.loading, { color: t.faint }]}>Adding your earlier results…</Text>
-      ) : data.isPending ? (
+      ) : shown.isPending ? (
         <ActivityIndicator style={styles.spin} color={t.muted} />
-      ) : data.isError || !data.data ? (
+      ) : shown.isError || !shown.data ? (
         <Text style={[styles.nobody, { color: t.muted }]} testID="board-error">
-          Couldn’t load the board. {data.error instanceof Error ? data.error.message : ''}
+          Couldn’t load the board. {shown.error instanceof Error ? shown.error.message : ''}
         </Text>
+      ) : records ? (
+        <RecordsView key={league.code} league={league} d={rec.data!} />
       ) : view === 'all' ? (
         <OverallView
           league={league}
@@ -138,13 +159,8 @@ export function Board({ flow, league }: { flow: Flow; league: BoardLeague }) {
         />
       )}
 
-      {data.data ? (
-        <Settings
-          flow={flow}
-          league={league}
-          players={data.data.players}
-          members={data.data.members}
-        />
+      {roster ? (
+        <Settings flow={flow} league={league} players={roster.players} members={roster.members} />
       ) : null}
     </View>
   );
