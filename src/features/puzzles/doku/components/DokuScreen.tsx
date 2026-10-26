@@ -15,7 +15,7 @@ import { FinishSheet, useFreshFinish } from '@/shared/finish-sheet';
 import { WIN_BURSTS, useWinBursts } from '@/shared/motion';
 import { PuzzleBar, ruleFor, StartCard, useStartStats } from '@/shared/start-card';
 import { FONT, usePuzzleTokens } from '@/shared/theme';
-import { fitBoard, pressable, useBoardFit } from '@/shared/ui';
+import { BOARD_SLOT, fitBoard, pressable, useBoardFit } from '@/shared/ui';
 import { usePlayerExit } from '@/shared/shell';
 
 import type { PuzzleFile } from '../../types';
@@ -113,17 +113,21 @@ export function DokuScreen({ file }: { file: PuzzleFile<DokuData> }) {
           />
         </View>
         <DokuBank state={state} onTile={(id) => dispatch({ t: 'tile', id })} />
-        <Text
-          style={[styles.msg, { color: pt.inkSoft }]}
-          accessibilityLiveRegion="polite"
-          testID="doku-msg">
-          {game.msg}
-        </Text>
-        <View style={styles.controls}>
+        {/* The message and the Hints switch on one line under the bank, the switch at its
+            end, rather than a lone button floating under everything (the page groups Hints
+            with its other tools; the app has no others). */}
+        <View style={styles.foot}>
+          <Text
+            style={[styles.msg, { color: pt.inkSoft }]}
+            accessibilityLiveRegion="polite"
+            testID="doku-msg">
+            {game.msg}
+          </Text>
           <Pressable
             accessibilityRole="button"
             accessibilityState={{ checked: state.hints }}
             onPress={() => dispatch({ t: 'hints' })}
+            testID="doku-hints"
             style={pressable([styles.btn, { borderColor: pt.line, backgroundColor: pt.card }])}>
             <Text style={[styles.btnText, { color: pt.ink }]}>
               {`Hints: ${state.hints ? 'on' : 'off'}`}
@@ -164,9 +168,9 @@ const styles = StyleSheet.create({
     width: '100%',
     alignSelf: 'center',
   },
-  board: { flex: 1, justifyContent: 'center', minHeight: 0 },
-  msg: { fontFamily: FONT.sans, fontSize: 13, textAlign: 'center', minHeight: 18 },
-  controls: { flexDirection: 'row', gap: 6, justifyContent: 'center' },
+  board: BOARD_SLOT,
+  foot: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  msg: { flex: 1, fontFamily: FONT.sans, fontSize: 13, minHeight: 18 },
   btn: {
     minHeight: 44,
     borderWidth: 1.5,

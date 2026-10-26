@@ -6,7 +6,7 @@ import { FinishSheet, useFreshFinish } from '@/shared/finish-sheet';
 import { PATH_BURSTS, useWinBursts } from '@/shared/motion';
 import { PuzzleBar, ruleFor, StartCard, useStartStats } from '@/shared/start-card';
 import { FONT, usePuzzleTokens } from '@/shared/theme';
-import { fitBoard, pressable, useBoardFit } from '@/shared/ui';
+import { BOARD_SLOT, fitBoard, pressable, useBoardFit } from '@/shared/ui';
 import { usePlayerExit } from '@/shared/shell';
 
 import type { PuzzleFile } from '../../types';
@@ -128,7 +128,7 @@ const styles = StyleSheet.create({
     width: '100%',
     alignSelf: 'center',
   },
-  board: { flex: 1, justifyContent: 'center', minHeight: 0 },
+  board: BOARD_SLOT,
   msg: { fontFamily: FONT.sans, fontSize: 14, lineHeight: 19, textAlign: 'center', minHeight: 38 },
   controls: { flexDirection: 'row', justifyContent: 'center', gap: 8 },
   btn: {

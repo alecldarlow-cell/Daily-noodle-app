@@ -1,8 +1,17 @@
 import { useCallback, useState } from 'react';
-import type { LayoutChangeEvent } from 'react-native';
+import type { LayoutChangeEvent, ViewStyle } from 'react-native';
 
 /** The board's frame: 3 points of border each side (the grids' `side + 6`). */
 const FRAME = 6;
+
+/**
+ * The board's slot in a grid player (Mini, Doku, Sweep, Path): it takes the height left
+ * between the bar and the controls, so useBoardFit can size the board from it, and holds
+ * the board at its top. On a tall phone the board sits right under the bar and the spare
+ * height falls between it and the controls, which stay at the bottom for the thumbs; on a
+ * short phone or at a large font scale the slot is only as tall as the board needs.
+ */
+export const BOARD_SLOT: ViewStyle = { flex: 1, justifyContent: 'flex-start', minHeight: 0 };
 
 /**
  * The side of a square board from the space it actually has. `guess` (fitBoard's

@@ -13,7 +13,7 @@ import { FinishLink, FinishSheet, useFreshFinish } from '@/shared/finish-sheet';
 import { WIN_BURSTS, useWinBursts } from '@/shared/motion';
 import { PuzzleBar, ruleFor, StartCard, useStartStats } from '@/shared/start-card';
 import { FONT, usePuzzleTokens } from '@/shared/theme';
-import { fitBoard, pressable, useBoardFit } from '@/shared/ui';
+import { BOARD_SLOT, fitBoard, pressable, useBoardFit } from '@/shared/ui';
 import { useLondonDay } from '@/shared/time';
 import { usePlayerExit } from '@/shared/shell';
 
@@ -191,7 +191,7 @@ const styles = StyleSheet.create({
     width: '100%',
     alignSelf: 'center',
   },
-  board: { flex: 1, justifyContent: 'center', minHeight: 0 },
+  board: BOARD_SLOT,
   modes: { flexDirection: 'row', gap: 8 },
   mode: {
     flex: 1,
