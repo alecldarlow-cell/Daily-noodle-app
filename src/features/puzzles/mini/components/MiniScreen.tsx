@@ -89,7 +89,8 @@ export function MiniScreen({ file }: { file: PuzzleFile<MiniData> }) {
       />
     );
 
-  // Board, clue bar and keyboard on one screen, as the page's app mode lays them out.
+  // Board, clue bar, the checks and keyboard on one screen, in the page's order (.gridwrap,
+  // .cluebar, .controls, .kb; Alec's call 25 Oct 2026 to match it).
   const side = fitBoard(win, 400, 420);
   return (
     <SafeAreaView style={[styles.fill, { backgroundColor: pt.paper }]} testID="mini-screen">
@@ -100,11 +101,6 @@ export function MiniScreen({ file }: { file: PuzzleFile<MiniData> }) {
           streak={streak}
           clock={game.clock}
           onBack={back}
-        />
-        <MiniControls
-          onCheckWord={() => dispatch({ t: 'checkWord' })}
-          onCheckAll={() => dispatch({ t: 'checkAll' })}
-          onRevealWord={() => dispatch({ t: 'revealWord' })}
         />
         <View ref={boardRef} collapsable={false} style={styles.board}>
           <MiniBoard
@@ -119,6 +115,11 @@ export function MiniScreen({ file }: { file: PuzzleFile<MiniData> }) {
           onPrev={() => dispatch({ t: 'step', delta: -1 })}
           onNext={() => dispatch({ t: 'step', delta: 1 })}
           onToggle={() => dispatch({ t: 'bar' })}
+        />
+        <MiniControls
+          onCheckWord={() => dispatch({ t: 'checkWord' })}
+          onCheckAll={() => dispatch({ t: 'checkAll' })}
+          onRevealWord={() => dispatch({ t: 'revealWord' })}
         />
         <MiniKeyboard
           onKey={(ch) => dispatch({ t: 'key', ch })}

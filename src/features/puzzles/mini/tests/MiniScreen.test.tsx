@@ -64,6 +64,25 @@ describe('GIVEN a Mini not yet played', () => {
     });
   });
 
+  describe('WHEN the board is laid out', () => {
+    it('THEN it reads top to bottom as the page does: grid, clue bar, the checks, keyboard', async () => {
+      await renderWithProviders(<MiniScreen file={file105} />);
+      await fireEvent.press(screen.getByRole('button', { name: 'Play' }));
+      const order: string[] = [];
+      const walk = (n: unknown): void => {
+        if (!n || typeof n !== 'object') return;
+        if (Array.isArray(n)) return n.forEach(walk);
+        const node = n as { props?: { testID?: string }; children?: unknown };
+        const id = node.props?.testID;
+        if (id && ['mini-board', 'clue-bar', 'mini-controls', 'mini-keyboard'].includes(id))
+          order.push(id);
+        walk(node.children);
+      };
+      walk(screen.toJSON());
+      expect(order).toEqual(['mini-board', 'clue-bar', 'mini-controls', 'mini-keyboard']);
+    });
+  });
+
   describe('WHEN it is played to the end through the board and keyboard', () => {
     it('THEN the result and streak are saved, the finish announced once, and the sheet shows', async () => {
       await renderWithProviders(<MiniScreen file={file105} />);
