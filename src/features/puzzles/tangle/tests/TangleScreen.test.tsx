@@ -6,7 +6,7 @@ import { onFinish, type PuzzleFinish } from '@/shared/results';
 import { appStorage } from '@/shared/storage';
 import { mockSite, renderWithProviders } from '@/shared/testing';
 
-import { tileRects } from '../components/TangleBoard';
+import { LIST_H, tileRects, TOAST_H, WORD_H } from '../components/TangleBoard';
 import { TangleScreen } from '../components/TangleScreen';
 import { KEY } from '../model';
 import { findPath } from '../oracle';
@@ -172,5 +172,37 @@ describe('GIVEN a Tangle already played today', () => {
     expect(finishes).toEqual([]);
     await fireEvent.press(screen.getByText('← Puzzles'));
     expect(mockRouter.back).toHaveBeenCalled();
+  });
+});
+
+describe('GIVEN a Tangle round in play', () => {
+  describe('WHEN words are traced, found and toasted', () => {
+    it('THEN everything above the letters keeps one height, so the board never moves', async () => {
+      await renderWithProviders(<TangleScreen file={file19} />);
+      await fireEvent.press(screen.getByTestId('play-card'));
+      await layOut();
+      await run(3100);
+      const heights = () => ({
+        list: screen.getByTestId('tangle-list'),
+        cur: screen.getByTestId('tangle-cur'),
+      });
+      const before = heights();
+      expect(before.list).toHaveStyle({ height: LIST_H });
+      expect(before.cur).toHaveStyle({ height: WORD_H + TOAST_H });
+      expect(screen.queryByTestId('tangle-toast')).toBeNull();
+      // mid-trace: the word in progress shows
+      const p = findPath(tangle19, 'original')!;
+      const grid = screen.getByTestId('tangle-grid');
+      await fireEvent(grid, 'responderGrant', at(p[0]!));
+      await fireEvent(grid, 'responderMove', at(p[1]!));
+      expect(screen.getByTestId('tangle-cur')).toHaveStyle({ height: WORD_H + TOAST_H });
+      await fireEvent(grid, 'responderRelease', at(p[1]!));
+      // found: a toast and a word in the list
+      await trace('ago');
+      expect(screen.getByTestId('tangle-toast')).toBeOnTheScreen();
+      expect(screen.getByTestId('tangle-cur')).toHaveStyle({ height: WORD_H + TOAST_H });
+      expect(screen.getByTestId('tangle-list')).toHaveStyle({ height: LIST_H });
+      expect(screen.getByTestId('tangle-current')).toHaveProp('numberOfLines', 1);
+    });
   });
 });
