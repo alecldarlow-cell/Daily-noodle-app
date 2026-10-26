@@ -205,18 +205,27 @@ const after = (day: string, n: number) => {
   return d.toISOString().slice(0, 10);
 };
 
+/** Two other days' Tangle ids for the seeded saves, never `id` itself. */
+export function otherIds(id: string): [string, string] {
+  const ids = ['DP·TANG·0001', 'DP·TANG·0002', 'DP·TANG·0003'].filter((x) => x !== id);
+  return [ids[0]!, ids[1]!];
+}
+
 /** A variant with when the page opens and the saves it begins from. */
 export function scenario(data: TangleData, variant: Variant): Scenario {
   const date = data.date;
   const steps = moves(data, variant);
   const morning = (d: string) => Date.parse(`${d}T08:15:00Z`);
+  // "Some other day's" saves: two Tangles that are never the one under test (Tangle 1
+  // and 2 have data files since 26 Oct 2026, so the page can be one of them).
+  const [doneId, playingId] = otherIds(data.id);
   const other = {
     v: 1,
     days: {
-      'DP·TANG·0001': { state: 'done', found: ['ago', 'air'], left: 0, score: 2 },
-      'DP·TANG·0002': { state: 'playing', found: ['fig'], left: 41.3, score: 1 },
+      [doneId]: { state: 'done', found: ['ago', 'air'], left: 0, score: 2 },
+      [playingId]: { state: 'playing', found: ['fig'], left: 41.3, score: 1 },
     },
-    done: { 'DP·TANG·0001': { o: 'played', s: 2, w: 2, st: false, d: days(date, 30) } },
+    done: { [doneId]: { o: 'played', s: 2, w: 2, st: false, d: days(date, 30) } },
     streak: { last: null as string | null, n: 0, best: 4 },
     best: 31,
     snd: false,
