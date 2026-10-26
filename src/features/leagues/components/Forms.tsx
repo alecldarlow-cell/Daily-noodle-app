@@ -2,11 +2,11 @@
 import type { BoardPending } from '@noodle/core';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { useTokens } from '@/shared/theme';
+import { FONT, useTokens } from '@/shared/theme';
+import { FieldLabel } from '@/shared/ui';
 
-import { BoardError } from '../api/errors';
+import { BoardError, isOffline, SaidError } from '../api/errors';
 import { useBoardState } from '../hooks/boardStore';
-import { useImportLink } from '../hooks/useHandoff';
 import { useForm } from '../hooks/useForm';
 import type { Flow } from '../hooks/useLeaguesFlow';
 import {
@@ -19,14 +19,14 @@ import {
 } from '../hooks/useLeagues';
 import {
   claimSchema,
-  joinSchema,
+  codeSchema,
   nicknameSchema,
   optionalPinSchema,
   pinSchema,
   startSchema,
 } from '../schemas';
 import { object } from 'yup';
-import { Acts, B, Btn, Card, Field, Msg, P, PinField, TextLink } from './ui';
+import { Acts, Btn, Card, Field, Msg, P, PinField, TextLink } from './ui';
 
 const PIN_HINT =
   'Lets you join as yourself from another phone or app later. Optional, and you can set it later.';
@@ -52,10 +52,6 @@ export function Intro({ flow }: { flow: Flow }) {
         <Btn kind="go" label="Start a league" onPress={() => flow.setView({ k: 'start' })} />
         <Btn label="Join with a code" onPress={() => flow.setView({ k: 'code' })} />
       </Acts>
-      <TextLink
-        label="Already in a league on another browser or app?"
-        onPress={() => flow.setView({ k: 'claim' })}
-      />
     </Card>
   );
 }
@@ -107,12 +103,19 @@ export function StartForm({ flow }: { flow: Flow }) {
   );
 }
 
+/**
+ * A code (or a pasted invite link) typed in: it opens that league's invite, as tapping the
+ * link does, so the player sees the league before joining and can pick their name if
+ * they're already in it.
+ */
 export function CodeForm({ flow }: { flow: Flow }) {
-  const join = useJoinLeague();
-  const f = useForm({ code: '', nick: '', pin: '' }, joinSchema);
+  const f = useForm({ code: '' }, object({ code: codeSchema }));
   return (
     <Card title="Join a league" testID="code-form">
-      <P>Ask someone in the league for its link or 8-letter code.</P>
+      <P>
+        Ask someone in the league for its link or 8-letter code. Already in the league somewhere
+        else? Enter its code too, then pick your name.
+      </P>
       <Field
         label="League code"
         autoCapitalize="characters"
@@ -121,24 +124,14 @@ export function CodeForm({ flow }: { flow: Flow }) {
         value={f.values.code}
         onChangeText={f.set('code')}
       />
-      <Field
-        label="Your nickname"
-        maxLength={16}
-        value={f.values.nick}
-        onChangeText={f.set('nick')}
-      />
-      <PinField hint={PIN_HINT} value={f.values.pin} onChangeText={f.set('pin')} />
       <Msg text={f.msg} />
       <Acts>
         <Btn
           kind="go"
-          label="Join"
-          disabled={f.busy}
+          label="Next"
           onPress={() =>
             f.submit(async (v) => {
-              await join.mutateAsync({ code: v.code, nick: v.nick, pin: v.pin || undefined });
-              flow.setNotice({ k: 'joined' });
-              flow.home();
+              flow.setView({ k: 'invite', code: v.code, typed: true });
             })
           }
         />
@@ -149,14 +142,44 @@ export function CodeForm({ flow }: { flow: Flow }) {
 }
 
 /** Opened from a league's invite link: join it, or pick your name if you're already in it. */
-export function InviteForm({ flow, code }: { flow: Flow; code: string }) {
+export function InviteForm({ flow, code, typed }: { flow: Flow; code: string; typed?: boolean }) {
+  const t = useTokens();
   const peek = usePeek(code);
   const join = useJoinLeague();
   const f = useForm(
     { nick: '', pin: '' },
     object({ nick: nicknameSchema, pin: optionalPinSchema }),
   );
-  if (peek.isPending) return <ActivityIndicator style={styles.spin} />;
+  if (peek.isPending)
+    return (
+      <ActivityIndicator
+        style={styles.spin}
+        color={t.muted}
+        accessibilityLabel="Loading the invite"
+      />
+    );
+  if (peek.isError && isOffline(peek.error)) {
+    return (
+      <Card title="Couldn’t reach the leagues" testID="invite-offline">
+        <P>Check your connection and try again. The invite still works.</P>
+        <Acts>
+          <Btn kind="go" label="Try again" onPress={() => void peek.refetch()} />
+          <Btn label="Back" onPress={flow.home} />
+        </Acts>
+      </Card>
+    );
+  }
+  if ((peek.isError || !peek.data) && typed) {
+    return (
+      <Card title="No league has that code" testID="invite-no-code">
+        <P>Check the code and try again, or ask someone in the league for its link.</P>
+        <Acts>
+          <Btn kind="go" label="Try again" onPress={() => flow.setView({ k: 'code' })} />
+          <Btn label="Back" onPress={flow.back} />
+        </Acts>
+      </Card>
+    );
+  }
   if (peek.isError || !peek.data) {
     return (
       <Card title="That link has expired" testID="invite-expired">
@@ -193,7 +216,7 @@ export function InviteForm({ flow, code }: { flow: Flow; code: string }) {
                 await join.mutateAsync({ code, nick: v.nick, pin: v.pin || undefined });
               } catch (e) {
                 if (e instanceof BoardError && e.code === 'nick_taken')
-                  throw new Error(
+                  throw new SaidError(
                     `${e.message} If that’s you, tap “Already in ${info.name}?” below.`,
                   );
                 throw e;
@@ -203,7 +226,7 @@ export function InviteForm({ flow, code }: { flow: Flow; code: string }) {
             })
           }
         />
-        {flow.inAny ? <Btn label="Not now" onPress={flow.home} /> : null}
+        <Btn label={flow.inAny ? 'Not now' : 'Back'} onPress={flow.home} />
       </Acts>
       {info.members ? (
         <TextLink
@@ -258,7 +281,7 @@ export function ClaimForm({
       )}
       {names ? (
         <View>
-          <Text style={[styles.label, { color: t.faint }]}>Your nickname</Text>
+          <FieldLabel>Your nickname</FieldLabel>
           <View style={styles.names} accessibilityRole="radiogroup">
             {names.map((n) => {
               const on = f.values.nick === n;
@@ -271,11 +294,17 @@ export function ClaimForm({
                   style={[
                     styles.name,
                     {
-                      borderColor: on ? t.accent : t.hair,
+                      borderColor: on ? t.accent : t.muted,
                       backgroundColor: on ? t.accentSoft : t.paper,
                     },
                   ]}>
-                  <Text style={{ color: t.ink, fontWeight: on ? '700' : '500' }}>{n}</Text>
+                  <Text
+                    style={[
+                      styles.nameText,
+                      { color: t.ink, fontFamily: on ? FONT.bodyBold : FONT.body },
+                    ]}>
+                    {n}
+                  </Text>
                 </Pressable>
               );
             })}
@@ -317,10 +346,6 @@ export function ClaimForm({
         />
         <Btn label="Back" onPress={() => flow.setView(back ?? { k: 'home' })} />
       </Acts>
-      <TextLink
-        label="Have a personal link instead?"
-        onPress={() => flow.setView({ k: 'paste' })}
-      />
     </Card>
   );
 }
@@ -356,45 +381,7 @@ export function PinForm({ flow, fresh }: { flow: Flow; fresh: boolean }) {
   );
 }
 
-export function PasteForm({ flow }: { flow: Flow }) {
-  const bring = useImportLink();
-  const f = useForm({ key: '' }, object({}));
-  return (
-    <Card title="Bring your leagues here" testID="paste-form">
-      <P>
-        Where you joined, open the board’s League settings and tap <B>Send me my link</B>. Copy that
-        link and paste it below.
-      </P>
-      <Field
-        label="Your link"
-        autoCapitalize="none"
-        autoCorrect={false}
-        autoComplete="off"
-        spellCheck={false}
-        value={f.values.key}
-        onChangeText={f.set('key')}
-      />
-      <Msg text={f.msg} />
-      <Acts>
-        <Btn
-          kind="go"
-          label="Bring them here"
-          disabled={f.busy}
-          onPress={() =>
-            f.submit(async (v) => {
-              const r = await bring.mutateAsync(v.key);
-              if (r.kind === 'moved') flow.setNotice({ k: 'moved' });
-              flow.home();
-            })
-          }
-        />
-        <Btn label="Back" onPress={flow.back} />
-      </Acts>
-    </Card>
-  );
-}
-
-/** This install plays as someone else, and a link or claim brought another player: ask. */
+/** This install plays as someone else, and a claim or the account brought another player: ask. */
 export function PendCard({ flow, pend }: { flow: Flow; pend: BoardPending }) {
   const s = useBoardState();
   const settle = useSettlePending();
@@ -410,12 +397,12 @@ export function PendCard({ flow, pend }: { flow: Flow; pend: BoardPending }) {
   return (
     <Card title="Which leagues should this app use?" testID="pend-card">
       <P>Here you play in {names(s.leagues || [])}.</P>
-      <P>Your link is for {names(pend.leagues || [])}.</P>
-      <P>Results and streaks from the link have been added here either way.</P>
+      <P>Your other player is in {names(pend.leagues || [])}.</P>
+      <P>Results and streaks have been added here either way.</P>
       <Acts>
         <Btn
           kind="go"
-          label="Use my link"
+          label="Use those leagues"
           disabled={settle.isPending}
           onPress={() => choose(true)}
         />
@@ -434,19 +421,19 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 23,
     fontSize: 12.5,
-    fontWeight: '700',
+    fontFamily: FONT.bodyBold,
     overflow: 'hidden',
   },
-  stepText: { flex: 1, fontSize: 15, lineHeight: 21 },
+  stepText: { flex: 1, fontFamily: FONT.body, fontSize: 15, lineHeight: 21 },
   spin: { marginTop: 40 },
-  label: {
-    fontSize: 12,
-    fontWeight: '600',
-    letterSpacing: 0.7,
-    textTransform: 'uppercase',
-    marginTop: 6,
-    marginBottom: 5,
+  names: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 6 },
+  name: {
+    minHeight: 44,
+    justifyContent: 'center',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 999,
+    borderWidth: 1.5,
   },
-  names: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  name: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 999, borderWidth: 1 },
+  nameText: { fontSize: 15 },
 });

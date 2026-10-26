@@ -1,11 +1,11 @@
 import type { Session, SupabaseClient } from '@supabase/supabase-js';
 import { useEffect, useState } from 'react';
-import { Linking } from 'react-native';
 
 import { appStorage, type CachedStorage } from '@/shared/storage';
 
 import { authClient } from '../api/authClient';
 import { syncApi } from '../api/syncApi';
+import { AccountError, authMessage } from './authErrors';
 import { readAuthLink } from './authLink';
 import { LAST_SYNC_KEY, runSync } from './syncEngine';
 
@@ -38,33 +38,36 @@ export function useAccount(client: SupabaseClient | null = authClient()): Accoun
   return state;
 }
 
-/** Send the sign-in link. Throws Supabase's message when it refuses. */
+/** Send the sign-in link. Throws the house's words for why when Supabase refuses. */
 export async function sendLink(
   email: string,
   client: SupabaseClient | null = authClient(),
 ): Promise<void> {
-  if (!client) throw new Error('Sign-in isn’t available in this build.');
+  if (!client) throw new AccountError('Sign-in isn’t available in this build.');
   const { error } = await client.auth.signInWithOtp({
     email,
     options: { emailRedirectTo: redirectUrl() },
   });
-  if (error) throw new Error(error.message);
+  if (error) throw new AccountError(authMessage(error.message));
 }
 
-/** Finish signing in from the link the email opened. Returns an error message, or null. */
+/**
+ * Finish signing in from the link the email opened. Returns the house's words for what
+ * went wrong (never Supabase's own text), or null.
+ */
 export async function completeLink(
   url: string,
   client: SupabaseClient | null = authClient(),
 ): Promise<string | null> {
   const link = readAuthLink(url);
   if (!link) return 'That link isn’t a sign-in link.';
-  if (!link.ok) return link.error;
+  if (!link.ok) return authMessage(link.error);
   if (!client) return 'Sign-in isn’t available in this build.';
   const { error } = await client.auth.setSession({
     access_token: link.access_token,
     refresh_token: link.refresh_token,
   });
-  return error ? error.message : null;
+  return error ? authMessage(error.message) : null;
 }
 
 /** Sync now, when signed in. Resolves false when not signed in or sync is off. */
@@ -99,13 +102,4 @@ export function lastSync(store: CachedStorage = appStorage): number | null {
   } catch {
     return null;
   }
-}
-
-/** Open links that arrive while the app is running (the email's link). */
-export function useIncomingLinks(onUrl: (url: string) => void): void {
-  useEffect(() => {
-    void Linking.getInitialURL().then((u) => u && onUrl(u));
-    const sub = Linking.addEventListener('url', (e) => onUrl(e.url));
-    return () => sub.remove();
-  }, [onUrl]);
 }

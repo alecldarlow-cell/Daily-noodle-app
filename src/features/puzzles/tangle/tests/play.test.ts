@@ -1,7 +1,16 @@
 import { londonDay } from '@noodle/core';
 
 import type { Rect } from '../model';
-import { findPath, LOAD_MS, moves, scenario, shortest, VARIANTS, type OracleMove } from '../oracle';
+import {
+  findPath,
+  LOAD_MS,
+  moves,
+  otherIds,
+  scenario,
+  shortest,
+  VARIANTS,
+  type OracleMove,
+} from '../oracle';
 import { FakeClock, simulate, type Gesture } from '../simulate';
 import { tangle19 } from './fixtures';
 
@@ -108,5 +117,23 @@ describe('GIVEN the native half of the replay', () => {
   it('THEN it refuses to run without the gestures its moves need', () => {
     const sc = scenario(tangle19, 'words');
     expect(() => simulate(tangle19, sc, [])).toThrow(/fewer gestures/);
+  });
+});
+
+describe('GIVEN the replay seeds some other days’ Tangle saves', () => {
+  describe('WHEN the page under test is Tangle 1, 2 or a later one', () => {
+    it('THEN the seeded days are never the page’s own, so it always opens fresh', () => {
+      expect(otherIds('DP·TANG·0001')).toEqual(['DP·TANG·0002', 'DP·TANG·0003']);
+      expect(otherIds('DP·TANG·0002')).toEqual(['DP·TANG·0001', 'DP·TANG·0003']);
+      expect(otherIds('DP·TANG·0019')).toEqual(['DP·TANG·0001', 'DP·TANG·0002']);
+      for (const v of VARIANTS) {
+        const seed = scenario({ ...tangle19, id: 'DP·TANG·0001' }, v).seed as
+          | Record<string, { days?: Record<string, unknown>; done?: Record<string, unknown> }>
+          | undefined;
+        const save = seed?.['digi-tangle-v1'];
+        expect(save?.days?.['DP·TANG·0001']).toBeUndefined();
+        expect(save?.done?.['DP·TANG·0001']).toBeUndefined();
+      }
+    });
   });
 });

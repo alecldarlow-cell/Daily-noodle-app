@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import {
@@ -14,8 +14,22 @@ import {
 import { FONT } from '@/shared/theme';
 import { Chevron } from '@/shared/ui';
 
+import { useAnnounce } from '../../link/hooks/announce';
 import type { ReckonColors } from './colors';
 import { ReckonSlider } from './ReckonSlider';
+
+/** Under this width the pack chip keeps only its colour; its name stays for screen readers. */
+export const NARROW = 360;
+/** The top row's text grows with the phone's text size no further than this. */
+const TOP_CAP = 1.2;
+const pressedStyle = { opacity: 0.75 };
+/** The pips are 10 pt bars: their touch reaches 17 pt above and below (44 pt in all). */
+export const PIP_SLOP = { top: 17, bottom: 17, left: 3, right: 3 };
+
+/** What a screen reader hears when a guess is scored (or a scored question is shown). */
+export function verdictLine(fb: { verdict: string; pts: string | number; line: string }): string {
+  return `${fb.verdict} ${fb.pts}. ${fb.line}`;
+}
 
 /** − and +: a tap steps once; held, they repeat every 75 ms after 380 ms (the page's). */
 function useHold(d: -1 | 1, dispatch: (m: Move) => void) {
@@ -71,6 +85,9 @@ export function ReckonPlay({ state, c, dispatch }: Props) {
     } else setDrag(fr);
   };
   const fb = v.feedback;
+  const narrow = useWindowDimensions().width < NARROW;
+  const said = fb ? verdictLine(fb) : '';
+  useAnnounce(said, `${v.qn}|${said}`);
   return (
     <SafeAreaView style={[styles.fill, { backgroundColor: c.bg }]} testID="reckon-play">
       <View style={styles.pw}>
@@ -80,18 +97,37 @@ export function ReckonPlay({ state, c, dispatch }: Props) {
             accessibilityLabel="Pause"
             testID="reckon-pause"
             disabled={v.pauseHidden}
+            accessibilityElementsHidden={v.pauseHidden}
+            importantForAccessibility={v.pauseHidden ? 'no-hide-descendants' : 'auto'}
             onPress={() => dispatch({ t: 'pause' })}
-            style={[styles.ib, { borderColor: c.ink, opacity: v.pauseHidden ? 0 : 1 }]}>
+            style={({ pressed }) => [
+              styles.ib,
+              { borderColor: c.ink, opacity: v.pauseHidden ? 0 : 1 },
+              pressed && pressedStyle,
+            ]}>
             <View style={styles.bars}>
               <View style={[styles.bar, { backgroundColor: c.ink }]} />
               <View style={[styles.bar, { backgroundColor: c.ink }]} />
             </View>
           </Pressable>
-          <View style={[styles.chip, { backgroundColor: v.chip.colour }]}>
-            <Text style={styles.chipText} numberOfLines={1}>
-              {v.chip.name}
-            </Text>
-          </View>
+          {narrow ? (
+            <View
+              style={[styles.chipDot, { backgroundColor: v.chip.colour }]}
+              accessible
+              accessibilityLabel={v.chip.name}
+              testID="reckon-chip"
+            />
+          ) : (
+            <View style={[styles.chip, { backgroundColor: v.chip.colour }]} testID="reckon-chip">
+              <Text
+                style={styles.chipText}
+                numberOfLines={1}
+                maxFontSizeMultiplier={TOP_CAP}
+                testID="reckon-chip-name">
+                {v.chip.name}
+              </Text>
+            </View>
+          )}
           <View style={styles.qnav}>
             <Pressable
               accessibilityRole="button"
@@ -99,10 +135,17 @@ export function ReckonPlay({ state, c, dispatch }: Props) {
               testID="reckon-prev"
               disabled={v.prevDisabled}
               onPress={() => dispatch({ t: 'nav', d: -1 })}
-              style={[styles.navb, v.prevDisabled && styles.off]}>
+              style={({ pressed }) => [
+                styles.navb,
+                v.prevDisabled && styles.off,
+                pressed && pressedStyle,
+              ]}>
               <Chevron color={c.ink} dir="left" />
             </Pressable>
-            <Text style={[styles.qn, { color: c.ink }]} testID="reckon-qn">
+            <Text
+              style={[styles.qn, { color: c.ink }]}
+              maxFontSizeMultiplier={TOP_CAP}
+              testID="reckon-qn">
               {v.qn}
             </Text>
             <Pressable
@@ -111,13 +154,18 @@ export function ReckonPlay({ state, c, dispatch }: Props) {
               testID="reckon-fwd"
               disabled={v.fwdDisabled}
               onPress={() => dispatch({ t: 'nav', d: 1 })}
-              style={[styles.navb, v.fwdDisabled && styles.off]}>
+              style={({ pressed }) => [
+                styles.navb,
+                v.fwdDisabled && styles.off,
+                pressed && pressedStyle,
+              ]}>
               <Chevron color={c.ink} />
             </Pressable>
           </View>
           <Text
-            style={[styles.sc, { color: c.ink }]}
-            accessibilityLabel="Points so far"
+            style={[styles.sc, narrow && styles.scNarrow, { color: c.ink }]}
+            maxFontSizeMultiplier={TOP_CAP}
+            accessibilityLabel={`${v.score} points so far`}
             testID="reckon-score">
             {v.score}
           </Text>
@@ -130,12 +178,14 @@ export function ReckonPlay({ state, c, dispatch }: Props) {
               accessibilityLabel={`Question ${p.k + 1}`}
               testID={`reckon-pip-${p.k}`}
               disabled={p.disabled}
+              hitSlop={PIP_SLOP}
               onPress={() => dispatch({ t: 'pip', k: p.k })}
-              style={[
+              style={({ pressed }) => [
                 styles.pip,
                 { backgroundColor: p.zone == null ? c.line : c.zones[p.zone] },
                 p.live && { borderColor: c.tom, borderWidth: 2 },
                 p.view && { borderColor: c.ink, borderWidth: 2 },
+                pressed && pressedStyle,
               ]}
             />
           ))}
@@ -235,7 +285,7 @@ export function ReckonPlay({ state, c, dispatch }: Props) {
               accessibilityLabel="Smaller"
               testID="reckon-minus"
               {...minus}
-              style={[styles.nb, { borderColor: c.ink }]}>
+              style={({ pressed }) => [styles.nb, { borderColor: c.ink }, pressed && pressedStyle]}>
               <Text style={[styles.nbt, { color: c.ink }]}>−</Text>
             </Pressable>
           ) : null}
@@ -243,7 +293,11 @@ export function ReckonPlay({ state, c, dispatch }: Props) {
             accessibilityRole="button"
             testID="reckon-act"
             onPress={() => dispatch({ t: 'act' })}
-            style={[styles.act, { backgroundColor: v.guessing ? c.tom : c.ink }]}>
+            style={({ pressed }) => [
+              styles.act,
+              { backgroundColor: v.guessing ? c.tom : c.ink },
+              pressed && pressedStyle,
+            ]}>
             <Text style={[styles.actt, { color: v.guessing ? c.onTom : c.bg }]}>{v.action}</Text>
           </Pressable>
           {v.guessing ? (
@@ -252,7 +306,7 @@ export function ReckonPlay({ state, c, dispatch }: Props) {
               accessibilityLabel="Bigger"
               testID="reckon-plus"
               {...plus}
-              style={[styles.nb, { borderColor: c.ink }]}>
+              style={({ pressed }) => [styles.nb, { borderColor: c.ink }, pressed && pressedStyle]}>
               <Text style={[styles.nbt, { color: c.ink }]}>+</Text>
             </Pressable>
           ) : null}
@@ -271,14 +325,22 @@ export function ReckonPlay({ state, c, dispatch }: Props) {
               accessibilityRole="button"
               testID="reckon-resume"
               onPress={() => dispatch({ t: 'resume' })}
-              style={[styles.act, { backgroundColor: c.tom }]}>
+              style={({ pressed }) => [
+                styles.act,
+                { backgroundColor: c.tom },
+                pressed && pressedStyle,
+              ]}>
               <Text style={[styles.actt, { color: c.onTom }]}>Resume</Text>
             </Pressable>
             <Pressable
               accessibilityRole="button"
               testID="reckon-quit"
               onPress={() => dispatch({ t: 'quit' })}
-              style={[styles.wide, { borderColor: c.ink }]}>
+              style={({ pressed }) => [
+                styles.wide,
+                { borderColor: c.ink },
+                pressed && pressedStyle,
+              ]}>
               <Text style={[styles.nbtSmall, { color: c.ink }]}>Back to start</Text>
             </Pressable>
           </View>
@@ -294,7 +356,7 @@ const styles = StyleSheet.create({
   top: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 8,
     paddingHorizontal: 16,
     minHeight: 56,
   },
@@ -309,13 +371,23 @@ const styles = StyleSheet.create({
   bars: { flexDirection: 'row', gap: 4 },
   bar: { width: 4, height: 14, borderRadius: 1 },
   chip: { borderRadius: 999, paddingHorizontal: 12, paddingVertical: 5, flexShrink: 1 },
+  chipDot: { width: 22, height: 22, borderRadius: 11, flexShrink: 0 },
   chipText: { color: '#FFFFFF', fontFamily: FONT.sansSemi, fontSize: 14 },
   qnav: { flexDirection: 'row', alignItems: 'center', marginLeft: 'auto' },
-  navb: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
+  // reckon.css .navb: 44 pt to touch, overlapping the number by 6 pt a side to save room.
+  navb: {
+    width: 44,
+    height: 44,
+    marginHorizontal: -6,
+    zIndex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   navt: { fontFamily: FONT.sans, fontSize: 26 },
   off: { opacity: 0.25 },
   qn: { minWidth: 38, textAlign: 'center', fontVariant: ['tabular-nums'] },
   sc: { minWidth: 56, textAlign: 'right', fontFamily: FONT.serif, fontSize: 32 },
+  scNarrow: { minWidth: 44, fontSize: 28 },
   pips: { flexDirection: 'row', gap: 6, paddingHorizontal: 16, marginTop: 4 },
   pip: { flex: 1, height: 10, borderRadius: 5 },
   mid: { padding: 16, gap: 14, flexGrow: 1 },

@@ -33,7 +33,7 @@ export const leagueNameSchema = cleanText(2, 30, MESSAGES.bad_name!);
  */
 export function codeFrom(input: unknown): string {
   const s = String(input ?? '').trim();
-  const m = /[?&]join=([^&#\s]*)/i.exec(s);
+  const m = /(?:[?&]join=|join\.html\?(?:[^#\s]*&)?c=)([^&#\s]*)/i.exec(s);
   let raw = m ? m[1]! : s;
   try {
     raw = decodeURIComponent(raw);

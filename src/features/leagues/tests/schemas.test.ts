@@ -41,6 +41,10 @@ describe('GIVEN the league forms’ checks (the server’s limits)', () => {
       expect(codeFrom('Join Family: https://dailynoodle.co.uk/board.html?join=WXYZ2345&v=2')).toBe(
         'WXYZ2345',
       );
+      expect(codeFrom('https://dailynoodle.co.uk/join.html?c=abcd2345')).toBe('ABCD2345');
+      expect(codeFrom('Join Family: https://dailynoodle.co.uk/join.html?x=1&c=WXYZ2345')).toBe(
+        'WXYZ2345',
+      );
       expect(codeFrom('?join=%41BCD')).toBe('ABCD');
       expect(codeFrom('?join=%E0')).toBe('E0');
       expect(firstError(joinSchema, { code: 'AB', nick: 'Alec', pin: '' })).toBe(

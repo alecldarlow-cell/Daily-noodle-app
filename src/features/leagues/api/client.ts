@@ -15,12 +15,15 @@ export type Rpc = <T>(fn: string, args: Record<string, unknown>) => Promise<T>;
 export function rpcOver(client: SupabaseClient | null): Rpc {
   return async <T>(fn: string, args: Record<string, unknown>): Promise<T> => {
     if (!client) throw new BoardError('not_configured');
-    let res: { data: unknown; error: { message?: string } | null };
+    let res: { data: unknown; error: { message?: string } | null; status?: number };
     try {
       res = await client.rpc(fn, args);
     } catch {
       throw new BoardError('error');
     }
+    // No HTTP status: the request never got an answer (postgrest-js reports a failed
+    // fetch as status 0), so it's the connection rather than the server refusing.
+    if (res.error && !res.status) throw new BoardError('offline');
     // A raised exception's text is its reason (`raise exception 'no_league'`).
     if (res.error) throw new BoardError(res.error.message || 'error');
     return res.data as T;

@@ -18,6 +18,7 @@ import { useLondonDay } from '@/shared/time';
 import { boardMoment } from '../api/board';
 import { getPid, useBoardState } from '../hooks/boardStore';
 import { momentLine } from '../hooks/boardText';
+import { leaguesParams } from '../hooks/useLeaguesFlow';
 import { onSubmission, submissionOf } from '../hooks/submissions';
 
 export function BoardLink({ path, onTag }: BoardSlotProps) {
@@ -59,11 +60,12 @@ function MemberLink({
     if (record) onTag('🏆');
   }, [record, onTag]);
 
-  // Back down to the tabs (not a second copy pushed over the puzzle), on Leagues.
+  // Back down to the tabs (not a second copy pushed over the puzzle), on Leagues; a fresh
+  // `n` each tap, so it opens this board even if Leagues was last asked for the same one.
   const open = () =>
     router.dismissTo({
       pathname: '/leagues',
-      params: pdate ? { p: typeId, d: pdate } : { p: typeId },
+      params: leaguesParams({ p: typeId, d: pdate }),
     });
   return (
     <View style={styles.slot} testID="board-slot">

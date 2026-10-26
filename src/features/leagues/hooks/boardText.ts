@@ -5,11 +5,20 @@ import { shortDate } from '@/shared/time';
 
 import type { DayRow, Outcome, OverallRow, PuzzleCard, RecordResult } from '../types';
 
-/** Invite links carry the link-preview version (board.html PREVIEW_V). */
+/** Board links carry the link-preview version (board.html PREVIEW_V). */
 export const PREVIEW_V = '2';
 
-export function inviteLink(code: string): string {
+/** A league's board on the website, as leaderboard shares link it (board.html's invite link). */
+export function boardLink(code: string): string {
   return `https://dailynoodle.co.uk/board.html?join=${encodeURIComponent(code)}&v=${PREVIEW_V}`;
+}
+
+/**
+ * The app's invite link (site SITE.md › App links): Android opens it in the app; a browser goes
+ * on from join.html to board.html?join=CODE&v=2, as the website's own invite.
+ */
+export function inviteLink(code: string): string {
+  return `https://dailynoodle.co.uk/join.html?c=${encodeURIComponent(code)}`;
 }
 
 export function inviteText(name: string): string {
@@ -101,7 +110,7 @@ export function shareDay(
   }
   if (ranked.length > 5) lines.push(`+${ranked.length - 5} more`);
   lines.push(`${league.name} leaderboard:`);
-  return `${lines.join('\n')}\n${inviteLink(league.code)}&p=${t}&d=${date}`;
+  return `${lines.join('\n')}\n${boardLink(league.code)}&p=${t}&d=${date}`;
 }
 
 /** "Share leaderboard" for All puzzles. */
@@ -115,7 +124,7 @@ export function shareAll(
     lines.push(`${MEDAL[r.rank] ?? `${r.rank}.`} ${r.nick} ${pts(r.points)} (${r.completed}/8)`);
   if (day.length > 5) lines.push(`+${day.length - 5} more`);
   lines.push(`${league.name} leaderboard:`);
-  return `${lines.join('\n')}\n${inviteLink(league.code)}&p=all&d=${date}`;
+  return `${lines.join('\n')}\n${boardLink(league.code)}&p=all&d=${date}`;
 }
 
 /**

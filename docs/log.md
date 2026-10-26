@@ -449,3 +449,65 @@ below when it finishes.
 - Needs Alec:
   - Decide that tall-phone layout.
   - Phone checks: background pause, TalkBack/VoiceOver on a finish, font scale 2.0, dark mode.
+
+- **Polish B2: Link/Tangle/Borders/Reckon** (26 Oct, branch `polish/batch-b2-puzzles`, PR linked from the branch):
+  Link: an archive Link never played no longer says "· replay" / "Today's result is already in" (display only:
+  `shownLabel`/`shownMsg`; the model's `msg`/`label` and the replay are untouched), the bar's flame is Link's live
+  streak as on its start card, dark-mode board colours (g4 `#ECEEF4` on paper, soft red miss tint), one tile font
+  per board (link.js fitFont), mistakes-left read with its count. Tangle: board capped by height, gold tokens,
+  each tile a screen-reader button. Borders: text caps + scrolling column. Reckon: narrow top row, pip hitSlop,
+  score label with its number. All four: pressed state; iOS announcements for the feedback line.
+  Tests proved: each of these through the screens (GIVEN/WHEN/THEN), `check` green. Left: Borders map WebView still
+  reloads per question (needs a phone to verify an injectJavaScript redraw). Needs the phone: VoiceOver on the
+  four, Tangle on an SE-size phone, Borders at font scale 2.0, Link in dark mode.
+
+### 26 Oct 2026 · Polish batch A: shell, Today, Archive ([#54](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/54))
+
+- Status bar from the scheme; tab bar and stack headers themed from tokens (green Android pill, Archivo labels);
+  light puzzle paper = house canvas `#FCFCFB` (Alec's call), light `sheet` `#F1F0EC` so cards still show; masthead
+  and PuzzleRow hold at font scale 2.0; 44–48 pt targets (chips, Done switch, Note buttons); real pull-to-refresh
+  state + themed spinner on Today and Archive; skeleton rows; site `.note` look; "No connection" only when offline.
+- Back-to-Today bug: a second Back after a puzzle closed fell through to the tabs (`backBehavior` 'initialRoute').
+  Now 'none' (test reproduces it on the old value); tabs anchored under every screen; +not-found and error boundary.
+- Tests proved: router flows via `renderRouter` (Archive → puzzle → Back ×2, cold deep link, not-found, crash/retry),
+  tokens, large-text layout maths, skeleton motion/reduce-motion, refresh spinner lifecycle. `check` green locally.
+- **Needs Alec**: Android Back on a non-Today tab now exits the app (trade-off of the fix); phone pass in light/dark
+  and at 2.0 (list in the PR). Optional players follow-up: `router.dismiss()` instead of `router.back()` in the eight
+  `*Screen.tsx` `back` helpers.
+
+### 26 Oct 2026 — Polish C: Leagues and Account ([#55](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/55))
+
+- Fixed:
+  - Settings' rename box now follows the league picked. Before this, Save could rename a league to another league's name.
+  - Pull to refresh reloads the boards, with a themed spinner.
+  - A failed board has Try again and tells offline apart from a server fault (`BoardError('offline')`).
+  - No raw Supabase text reaches players (`sayError`, `authMessage`).
+  - Account points to a league choice left pending by sync.
+  - Repeat taps into Leagues act again (an `n` param, and the route is cleared once read).
+  - The sign-in screen has Cancel and a 15 s give-up.
+  - Shared `Button`/`TextField` (44 pt, field edge 3:1), the app's fonts and 44 pt targets throughout.
+  - `keyboardShouldPersistTaps="handled"` on the shared `Screen`.
+- Tests proved: the rename test fails without the fix; refresh, offline/retry, repeat asks, the pending pointer, the auth timeout, button/field contrast, no `fontWeight` in either feature. `check` green.
+- Left: the offline invite still reads as "expired" (joining review); `/auth` header (router).
+- Needs Alec (phone): the keyboard taps on iOS's number pad; `setParams` clearing under NativeTabs (repeat "Bring my leagues here", reopen an invite after "Not now"); the fonts and spinner in dark mode.
+
+### 26 Oct 2026 — League joining: App Links and one way in ([#58](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/58), this PR; site [dailynoodle#37](https://github.com/alecldarlow-cell/dailynoodle/pull/37))
+
+- Why: the league-joining review (Alec's go-ahead, 26 Oct). Six ways in became three: join (a link or a code, through
+  one invite screen), "Already in X? Pick your name" with the PIN, and sign-in sync.
+- **App Links** (#58, merged): invites are `https://dailynoodle.co.uk/join.html?c=CODE`. Android opens them in the app
+  (`app.json` intentFilters, verified by the site's `/.well-known/assetlinks.json`, which is live with the EAS key's
+  SHA-256); `+native-intent` → `systemPath()` → `/leagues?join=`. Never board.html (it carries the website's sign-in
+  links). Browsers go on from join.html to `board.html?join=CODE&v=2`. Leaderboard shares keep board.html.
+- **One way in** (this PR):
+  - A typed code opens the invite screen (peek first): league name, "Already in X? Pick your name", and "No league has that code".
+  - An invite that can't be fetched says "Couldn't reach the leagues" + Try again, not "expired". Back is there for players in no league too.
+  - The personal link is gone from the app: PasteForm, "Send me my link" / "Paste a link", `?go=paste` (now just opens Leagues), `useHandoff`. `importMove` stays for sync.
+  - Intro: no separate claim link. Account: "I have a league PIN", with sign-in as the way to bring leagues across.
+  - After joining (sync builds): "Sign in on Account".
+- Tests proved: the systemPath/decide rules (auth, board and other-host links untouched), the intent filter is exactly join.html, the join journeys above, offline vs. expired, the claim pending choice both ways. Changed on purpose: the invite share text, the Account button's label, PendCard's wording. `check` green.
+- Left:
+  - Play's app-signing fingerprint goes into assetlinks.json after the first Play upload (site PR).
+  - Switching the website's own invites to join.html (Alec: later).
+  - iOS universal links, with an iOS build.
+- Needs Alec: a new native build for App Links. On the phone: `adb shell pm get-app-links uk.co.dailynoodle.app` shows verified; tapping a join.html invite in WhatsApp opens the app on the invite.

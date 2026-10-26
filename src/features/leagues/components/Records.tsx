@@ -3,7 +3,7 @@ import { BOARD_TYPES, type BoardLeague, type BoardTypeId } from '@noodle/core';
 import { Fragment, type ReactNode } from 'react';
 import { Pressable, Share, StyleSheet, Text, View } from 'react-native';
 
-import { useTokens } from '@/shared/theme';
+import { FONT, useTokens } from '@/shared/theme';
 
 import { dayMonth, inviteLink, inviteText, result } from '../hooks/boardText';
 import {
@@ -280,20 +280,25 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     minHeight: 52,
   },
-  rk: { width: 34, textAlign: 'center', fontSize: 17, fontWeight: '800' },
+  rk: { fontFamily: FONT.displayHeavy, width: 34, textAlign: 'center', fontSize: 17 },
   who: { flex: 1, minWidth: 0 },
-  title: { fontSize: 16, fontWeight: '600' },
-  line: { fontSize: 12.5, marginTop: 1 },
-  nk: { fontWeight: '600', textDecorationLine: 'underline' },
-  you: { fontSize: 10.5, fontWeight: '700', letterSpacing: 0.7 },
-  res: { fontSize: 17, fontWeight: '700', textAlign: 'right', fontVariant: ['tabular-nums'] },
-  resSmall: { fontSize: 12, textAlign: 'right' },
-  empty: { marginTop: 10, fontSize: 14.5 },
-  how: { marginTop: 14, fontSize: 13 },
-  cardName: { fontSize: 26, fontWeight: '800', marginTop: 14 },
-  champ: { fontSize: 14.5, marginTop: 4 },
+  title: { fontFamily: FONT.bodySemi, fontSize: 16 },
+  line: { fontFamily: FONT.body, fontSize: 12.5, marginTop: 1 },
+  nk: { fontFamily: FONT.bodySemi, textDecorationLine: 'underline' },
+  you: { fontFamily: FONT.bodyBold, fontSize: 11, letterSpacing: 0.7 },
+  res: {
+    fontFamily: FONT.display,
+    fontSize: 17,
+    textAlign: 'right',
+    fontVariant: ['tabular-nums'],
+  },
+  resSmall: { fontFamily: FONT.body, fontSize: 12, textAlign: 'right' },
+  empty: { fontFamily: FONT.body, marginTop: 10, fontSize: 14.5 },
+  how: { fontFamily: FONT.body, marginTop: 14, fontSize: 13 },
+  cardName: { fontFamily: FONT.displayHeavy, fontSize: 26, marginTop: 14 },
+  champ: { fontFamily: FONT.body, fontSize: 14.5, marginTop: 4 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', marginTop: 12, gap: 8 },
   cell: { width: '48%', flexGrow: 1, borderWidth: 1, borderRadius: 10, padding: 10 },
-  cellBig: { fontSize: 22, fontWeight: '800', fontVariant: ['tabular-nums'] },
-  cellName: { fontSize: 12.5, marginTop: 2 },
+  cellBig: { fontFamily: FONT.displayHeavy, fontSize: 22, fontVariant: ['tabular-nums'] },
+  cellName: { fontFamily: FONT.body, fontSize: 12.5, marginTop: 2 },
 });

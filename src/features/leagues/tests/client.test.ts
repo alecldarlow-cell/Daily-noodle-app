@@ -1,5 +1,5 @@
 import { boardClient, rpc, rpcOver } from '../api/client';
-import { BoardError } from '../api/errors';
+import { BoardError, isOffline, SaidError, sayError } from '../api/errors';
 
 /** A Supabase client whose requests go to a fake server, never the network. */
 function fakeServer(
@@ -52,11 +52,28 @@ describe('GIVEN the board functions behind Supabase’s rpc', () => {
   });
 
   describe('WHEN there is no connection', () => {
-    it('THEN the message is the site’s “Something went wrong”', async () => {
+    it('THEN it is told apart from a refusal, and says to check the connection', async () => {
       const s = fakeServer(() => new TypeError('Network request failed'));
-      await expect(s.call('board_mine', {})).rejects.toMatchObject({
-        message: 'Something went wrong. Please try again.',
+      const e = await s.call('board_mine', {}).catch((x: unknown) => x);
+      expect(e).toMatchObject({
+        code: 'offline',
+        message: 'Couldn’t reach the leagues. Check your connection and try again.',
       });
+      expect(isOffline(e)).toBe(true);
+      expect(sayError(e)).toBe('Couldn’t reach the leagues. Check your connection and try again.');
+    });
+  });
+
+  describe('WHEN the server answers with an error it has no words for', () => {
+    it('THEN the player sees “Something went wrong”, never the server’s text', async () => {
+      const s = fakeServer(() => ({ status: 500, body: { message: 'internal: relation x' } }));
+      const e = await s.call('board_mine', {}).catch((x: unknown) => x);
+      expect(isOffline(e)).toBe(false);
+      expect(sayError(e)).toBe('Something went wrong. Please try again.');
+      expect(sayError(new Error('TypeError: undefined is not a function'))).toBe(
+        'Something went wrong. Please try again.',
+      );
+      expect(sayError(new SaidError('Our own words.'))).toBe('Our own words.');
     });
   });
 
