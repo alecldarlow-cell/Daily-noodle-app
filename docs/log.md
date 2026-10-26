@@ -532,6 +532,46 @@ below when it finishes.
   - iOS universal links, with an iOS build.
 - Needs Alec: a new native build for App Links. On the phone: `adb shell pm get-app-links uk.co.dailynoodle.app` shows verified; tapping a join.html invite in WhatsApp opens the app on the invite.
 
+### 26 Oct 2026 — refinement session: review, batches, builds, Play closed test
+
+- **Review:** five code-audit agents (app shell, shared chrome, both puzzle groups, Leagues/Account), plus a phone pass in dark, light and font scale 2.0 on old archive puzzles. Notes are outside the repo, in Claude's side-session notes.
+- **Alec's calls:**
+  - Past days' heading: kept #50's rule. App #35 was closed.
+  - Mini's Check buttons sit below the clue bar ([#36](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/36)).
+  - The flame shows that puzzle type's streak.
+  - Borders: points everywhere, no run bonus (site [dailynoodle#35](https://github.com/alecldarlow-cell/dailynoodle/pull/35), app [#56](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/56)).
+  - Warm paper in light mode; Tangle in the site's blue; save mid-puzzle progress; boards top-aligned on tall phones.
+  - Icon: green **DN** ([#63](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/63)), after a DP version.
+  - Version 0.2.0 ([#62](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/62)).
+- **Merged:**
+  - Polish C [#55](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/55), A [#54](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/54), B2 [#53](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/53), B1 [#57](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/57), D [#61](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/61).
+  - Tangle replay seed fix [#59](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/59). The seeded "other day" was Tangle 1, which now has a data file.
+  - Site [dailynoodle#36](https://github.com/alecldarlow-cell/dailynoodle/pull/36) (another session): data files for Tangle 1–9 and Borders 1–2.
+  - League joining (another session): #58 and #60, site #37.
+- **Proved on the phone** (preview build `8bd9988f`, installed over adb):
+  - the green pill tabs;
+  - `pm get-app-links`: dailynoodle.co.uk verified, and a `join.html` link opens the app;
+  - Back from an archive board returns to Archive with its filters;
+  - Mini 94 reopened with its letters and 0:10;
+  - boards sit under the top bar.
+
+  The launcher showed DP then; DN came after.
+
+- **Play:**
+  - New phone screenshots in `store/screenshots/new/` (untracked), saved as a store-listing draft. They show a real old-Mini-92 solve: 2:59, no checks; it now counts in Alec's played stats.
+  - Closed testing – Alpha: United Kingdom; testers are the Google Group `dailynoodle-testers@googlegroups.com` (anyone can join, owner-only posting and member list).
+  - The account is personal, so production needs 12 opted-in testers for 14 days.
+- **Ops notes:**
+  - `gh` isn't installed. PRs and merges go through the REST API with the git credential.
+  - The Release workflow only queues EAS builds. Expo's free queue took about 2 hours this afternoon.
+  - A stray jest process from a finished agent locked `node_modules` (EPERM on `npm ci`); stopping it fixed that.
+- **Left:**
+  - Borders cards still say "out of ten" / "Scored 5/10": the site's blurb and the app's result line.
+  - Upload the DN 0.2.0 build (production EAS `2b29e8d6…`) to the closed track. It's over 10 MB, so Alec drags it in.
+  - Send everything for review.
+  - Add Play's app-signing SHA-256 to assetlinks.json.
+  - Share the group link in WhatsApp once the release is live.
+
 ### 26 Oct 2026 — Borders rows say points (this PR; site [dailynoodle#38](https://github.com/alecldarlow-cell/dailynoodle/pull/38))
 
 - Why: Borders scores in points since 26 Oct (100 a right answer, 50 with Show on map, no run bonus; site #35, app #56), but a phone check found "Scored 5/10" on the Today/Archive rows and "Your score is out of ten" in the Borders blurb.
