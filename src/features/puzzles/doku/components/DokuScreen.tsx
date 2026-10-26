@@ -1,5 +1,4 @@
-import { dnNum, type TodayItem } from '@noodle/core';
-import { router } from 'expo-router';
+import { dnNum } from '@noodle/core';
 import { useEffect, useRef, type ComponentRef } from 'react';
 import {
   Pressable,
@@ -17,6 +16,7 @@ import { WIN_BURSTS, useWinBursts } from '@/shared/motion';
 import { PuzzleBar, ruleFor, StartCard, useStartStats } from '@/shared/start-card';
 import { FONT, usePuzzleTokens } from '@/shared/theme';
 import { fitBoard, pressable, useBoardFit } from '@/shared/ui';
+import { usePlayerExit } from '@/shared/shell';
 
 import type { PuzzleFile } from '../../types';
 import { MiniArt } from '../../mini/components/MiniGrids';
@@ -26,16 +26,9 @@ import { DokuBank } from './DokuBank';
 import { DokuBoard } from './DokuBoard';
 import { SolvedGrid } from './DokuGrids';
 
-const back = () => (router.canGoBack() ? router.back() : router.replace('/'));
-
-function openNext(item: TodayItem | null) {
-  if (!item) return back();
-  const file = item.path.replace(/^reports\//, '').replace(/\.html$/, '');
-  router.replace({ pathname: '/play/[type]/[file]', params: { type: item.type, file } });
-}
-
 /** The Doku, played natively: start card, board and bank, finish sheet. */
 export function DokuScreen({ file }: { file: PuzzleFile<DokuData> }) {
+  const { back, next: openNext } = usePlayerExit();
   const pt = usePuzzleTokens();
   const win = useWindowDimensions();
   const game = useDokuGame(file);

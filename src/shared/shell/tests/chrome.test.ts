@@ -75,8 +75,8 @@ describe('GIVEN the phone’s colour scheme', () => {
       expect(FONT.sansSemi).toMatch(/^Archivo-/);
     });
 
-    it('THEN the tabs never act on Back themselves', () => {
-      expect(p.backBehavior).toBe('none');
+    it('THEN Back keeps the tabs’ default (a non-first tab goes to Today first)', () => {
+      expect('backBehavior' in p).toBe(false);
     });
   });
 });

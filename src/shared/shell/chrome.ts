@@ -61,15 +61,13 @@ export function stackScreenOptions(t: Tokens) {
  * The native tab bar in the house colours: muted until chosen, then ink, with the brand's
  * soft green for Android's active pill (Material's default is lavender) and a hairline ripple.
  *
- * `backBehavior: 'none'`: a Back that arrives after a puzzle has already closed (a second tap
- * on its Back while the screen slides away) used to fall through to the tab bar, whose
- * default is to return to the first tab, so a puzzle opened from Archive could land on Today.
- * With 'none' the tabs never act on Back, so it can only close the screen on top.
+ * Back is the tabs' default: on Archive, Leagues or Account it goes to Today first, then out
+ * of the app. A late second Back as a puzzle closes can't reach it: the players swallow it
+ * (usePlayerExit), so a puzzle opened from Archive still lands on Archive.
  */
 export function tabBarProps(t: Tokens) {
   const label = { fontFamily: FONT.sansSemi };
   return {
-    backBehavior: 'none',
     backgroundColor: t.canvas,
     iconColor: { default: t.muted, selected: t.accent },
     labelStyle: {

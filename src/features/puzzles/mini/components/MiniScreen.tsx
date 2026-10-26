@@ -1,5 +1,4 @@
-import { dnNum, type TodayItem } from '@noodle/core';
-import { router } from 'expo-router';
+import { dnNum } from '@noodle/core';
 import { useRef, type ComponentRef } from 'react';
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -9,6 +8,7 @@ import { WIN_BURSTS, useWinBursts } from '@/shared/motion';
 import { PuzzleBar, ruleFor, StartCard, useStartStats } from '@/shared/start-card';
 import { usePuzzleTokens } from '@/shared/theme';
 import { fitBoard, useBoardFit } from '@/shared/ui';
+import { usePlayerExit } from '@/shared/shell';
 
 import type { PuzzleFile } from '../../types';
 import { useMiniGame } from '../hooks/useMiniGame';
@@ -19,16 +19,9 @@ import { MiniControls } from './MiniControls';
 import { MiniArt, SolvedGrid } from './MiniGrids';
 import { MiniKeyboard } from './MiniKeyboard';
 
-const back = () => (router.canGoBack() ? router.back() : router.replace('/'));
-
-function openNext(item: TodayItem | null) {
-  if (!item) return back();
-  const file = item.path.replace(/^reports\//, '').replace(/\.html$/, '');
-  router.replace({ pathname: '/play/[type]/[file]', params: { type: item.type, file } });
-}
-
 /** The Mini, played natively: start card, board, finish sheet. */
 export function MiniScreen({ file }: { file: PuzzleFile<MiniData> }) {
+  const { back, next: openNext } = usePlayerExit();
   const pt = usePuzzleTokens();
   const win = useWindowDimensions();
   const game = useMiniGame(file);

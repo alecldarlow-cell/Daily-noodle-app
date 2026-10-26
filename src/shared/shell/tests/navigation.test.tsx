@@ -1,11 +1,11 @@
 import { router, Stack } from 'expo-router';
 import { NativeTabs } from 'expo-router/native-tabs';
 import { act, fireEvent, renderRouter, screen } from 'expo-router/testing-library';
-import { Text } from 'react-native';
+import { Pressable, Text } from 'react-native';
 
 import { tokensFor } from '@/shared/theme';
 
-import { NotFound, RouteError, stackScreenOptions, tabBarProps } from '..';
+import { NotFound, RouteError, stackScreenOptions, tabBarProps, usePlayerExit } from '..';
 
 /*
  * The app's route tree in miniature, laid out with the same settings as src/app's layouts
@@ -36,9 +36,17 @@ function Tabs() {
 }
 
 let crash = false;
+/** A player in miniature: its bar's Back is the players' own (usePlayerExit). */
+let lastBack: () => void = () => undefined;
 function Play() {
+  const { back } = usePlayerExit();
+  lastBack = back;
   if (crash) throw new Error('boom');
-  return <Text>play</Text>;
+  return (
+    <Pressable accessibilityRole="button" accessibilityLabel="Back" onPress={back}>
+      <Text>play</Text>
+    </Pressable>
+  );
 }
 
 const routes = {
@@ -49,6 +57,8 @@ const routes = {
   'play/[type]/[file]': Play,
   '+not-found': NotFound,
 };
+
+const pressBack = () => fireEvent.press(screen.getByRole('button', { name: 'Back' }));
 
 const openPuzzle = () =>
   act(() => router.push({ pathname: '/play/[type]/[file]', params: { type: 'mini', file: 'a' } }));
@@ -68,7 +78,7 @@ describe('GIVEN an old puzzle opened from the Archive tab', () => {
       await act(() => router.navigate('/archive'));
       await openPuzzle();
       expect(r.getPathname()).toBe('/play/mini/a');
-      await act(() => router.back());
+      await pressBack();
       expect(r.getPathname()).toBe('/archive');
     });
   });
@@ -78,10 +88,27 @@ describe('GIVEN an old puzzle opened from the Archive tab', () => {
       const r = await renderRouter(routes);
       await act(() => router.navigate('/archive'));
       await openPuzzle();
-      await act(() => router.back());
-      await act(() => router.back());
+      // Both taps reach the screen before it has gone (as while it slides away).
+      const back = lastBack;
+      await act(() => {
+        back();
+        back();
+      });
       expect(r.getPathname()).toBe('/archive');
       expect(screen.getByText('archive')).toBeOnTheScreen();
+    });
+  });
+
+  describe('WHEN the puzzle has closed and Back is pressed again on the Archive tab', () => {
+    it('THEN the tabs do their usual Back: Archive goes to Today first', async () => {
+      const r = await renderRouter(routes);
+      await act(() => router.navigate('/archive'));
+      await openPuzzle();
+      await pressBack();
+      expect(r.getPathname()).toBe('/archive');
+      await act(() => router.back());
+      expect(r.getPathname()).toBe('/');
+      expect(screen.getByText('today')).toBeOnTheScreen();
     });
   });
 
@@ -93,7 +120,7 @@ describe('GIVEN an old puzzle opened from the Archive tab', () => {
       await act(() =>
         router.replace({ pathname: '/play/[type]/[file]', params: { type: 'mini', file: 'b' } }),
       );
-      await act(() => router.back());
+      await pressBack();
       expect(r.getPathname()).toBe('/archive');
     });
   });
@@ -105,7 +132,7 @@ describe('GIVEN a puzzle opened cold from a link', () => {
       const r = await renderRouter(routes, { initialUrl: '/play/mini/a' });
       expect(r.getPathname()).toBe('/play/mini/a');
       expect(router.canGoBack()).toBe(true);
-      await act(() => router.back());
+      await pressBack();
       expect(r.getPathname()).toBe('/');
     });
   });
@@ -146,6 +173,18 @@ describe('GIVEN a screen that crashes', () => {
       crash = false;
       await fireEvent.press(screen.getByRole('button', { name: 'Try again' }));
       expect(await screen.findByText('play')).toBeOnTheScreen();
+    });
+  });
+});
+
+describe('GIVEN the Leagues-style case: a non-first tab with nothing open', () => {
+  describe('WHEN Back is pressed', () => {
+    it('THEN it goes to Today rather than leaving the app', async () => {
+      const r = await renderRouter(routes);
+      await act(() => router.navigate('/archive'));
+      expect(router.canGoBack()).toBe(true);
+      await act(() => router.back());
+      expect(r.getPathname()).toBe('/');
     });
   });
 });
