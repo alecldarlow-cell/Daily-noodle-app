@@ -1,6 +1,8 @@
 import { acceptToday, londonDay } from '@noodle/core';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 
+import { isConnectionError } from '@/shared/net';
+import { useManualRefresh } from '@/shared/query';
 import { appStorage, type CachedStorage } from '@/shared/storage';
 import { useLondonDay } from '@/shared/time';
 import { TODAY_CACHE_KEY, cachedToday, fetchToday } from '@/shared/today';
@@ -25,7 +27,9 @@ export const NEARLY_RETRY_MS = [60_000, 300_000, 900_000] as const;
  * Today's puzzles. A list is used only when it is dated today in London (the finish
  * sheet's rule), so yesterday's puzzles are never shown as today's.
  */
-export function useToday(store: CachedStorage = appStorage): TodayStatus & { refresh: () => void } {
+export function useToday(
+  store: CachedStorage = appStorage,
+): TodayStatus & { refresh: () => void; refreshing: boolean } {
   const day = useLondonDay();
   const qc = useQueryClient();
   const q = useQuery({
@@ -45,13 +49,16 @@ export function useToday(store: CachedStorage = appStorage): TodayStatus & { ref
   });
   // Try again asks the site now. With no list yet, React Query would sit out a pending
   // retry's wait, so cancel that attempt first.
-  const refresh = () => {
-    void qc.cancelQueries({ queryKey: ['today', day] }).then(() => q.refetch());
-  };
+  // Pull-to-refresh spins until this fetch's first answer, not through its retries.
+  const { refresh, refreshing } = useManualRefresh(q, () =>
+    qc.cancelQueries({ queryKey: ['today', day] }).then(() => q.refetch()),
+  );
+  const out = { refresh, refreshing };
   // Say what's wrong at the first failure; retries carry on quietly behind it.
   const why = q.error ?? q.failureReason;
-  if (q.data) return { kind: 'ready', list: q.data, stale: !!why, refresh };
-  if (why instanceof NotTodayYet) return { kind: 'nearly', refresh };
-  if (why) return { kind: 'offline', refresh };
-  return { kind: 'loading', refresh };
+  if (q.data) return { kind: 'ready', list: q.data, stale: !!why, ...out };
+  if (why instanceof NotTodayYet) return { kind: 'nearly', ...out };
+  // "No connection" only when the phone looks offline; a bad answer from the site isn't that.
+  if (why) return { kind: isConnectionError(why) ? 'offline' : 'failed', ...out };
+  return { kind: 'loading', ...out };
 }

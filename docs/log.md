@@ -423,6 +423,20 @@ below when it finishes.
   load with every board view: 👑 for last week's champion, "🏆 New league record" on the row, the "🏅 League record"
   line under each daily board, tap a name for their card; Tangle's "Play more boards in Yarn".
 
+### 26 Oct 2026 · Polish batch A: shell, Today, Archive ([#54](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/54))
+
+- Status bar from the scheme; tab bar and stack headers themed from tokens (green Android pill, Archivo labels);
+  light puzzle paper = house canvas `#FCFCFB` (Alec's call), light `sheet` `#F1F0EC` so cards still show; masthead
+  and PuzzleRow hold at font scale 2.0; 44–48 pt targets (chips, Done switch, Note buttons); real pull-to-refresh
+  state + themed spinner on Today and Archive; skeleton rows; site `.note` look; "No connection" only when offline.
+- Back-to-Today bug: a second Back after a puzzle closed fell through to the tabs (`backBehavior` 'initialRoute').
+  Now 'none' (test reproduces it on the old value); tabs anchored under every screen; +not-found and error boundary.
+- Tests proved: router flows via `renderRouter` (Archive → puzzle → Back ×2, cold deep link, not-found, crash/retry),
+  tokens, large-text layout maths, skeleton motion/reduce-motion, refresh spinner lifecycle. `check` green locally.
+- **Needs Alec**: Android Back on a non-Today tab now exits the app (trade-off of the fix); phone pass in light/dark
+  and at 2.0 (list in the PR). Optional players follow-up: `router.dismiss()` instead of `router.back()` in the eight
+  `*Screen.tsx` `back` helpers.
+
 ### 26 Oct 2026 — Polish C: Leagues and Account ([#55](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/55))
 
 - Fixed:

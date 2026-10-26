@@ -44,8 +44,12 @@ export interface PuzzleTokens {
   goldInk: string;
 }
 
+// Light paper is the house canvas (front.css --canvas), not house.css's cool #EDEEF2: Alec's
+// call (26 Oct 2026), so a puzzle sits on the same warm off-white as Today and Archive. White
+// on that is too faint to read as a card, so the start card and share card (`sheet`) take a
+// warm shade a step darker; the boards' white `card` cells keep their ruled edges.
 const light: PuzzleTokens = {
-  paper: '#EDEEF2',
+  paper: '#FCFCFB',
   card: '#FFFFFF',
   ink: '#141726',
   inkSoft: '#5A5F73',
@@ -61,7 +65,7 @@ const light: PuzzleTokens = {
   bad: '#E4483B',
   brand: '#2E5BFF',
   actInk: '#1B3B9E',
-  sheet: '#FFFFFF',
+  sheet: '#F1F0EC',
   rule: '#C6CAD6',
   hair: '#DCDFE7',
   onBrand: '#FFFFFF',

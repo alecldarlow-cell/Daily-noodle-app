@@ -23,3 +23,15 @@ export async function getJson<T = unknown>(path: string, timeoutMs = 15_000): Pr
     clearTimeout(timer);
   }
 }
+
+/**
+ * Whether a failed load looks like the phone being offline, rather than the site answering
+ * badly: fetch's own network failure (React Native's "Network request failed" TypeError) or
+ * our time limit running out. A server error or a broken file is not "No connection".
+ * Without a network-status library (not an approved dependency) this is the best the app can tell.
+ */
+export function isConnectionError(e: unknown): boolean {
+  if (e instanceof HttpError) return false;
+  if (e instanceof Error && e.name === 'AbortError') return true;
+  return e instanceof TypeError && /network|fetch|internet|offline/i.test(e.message);
+}

@@ -1,13 +1,14 @@
 import { NativeTabs } from 'expo-router/native-tabs';
 import { useColorScheme } from 'react-native';
 
+import { tabBarProps } from '@/shared/shell';
 import { tokensFor } from '@/shared/theme';
 
 export default function TabsLayout() {
   const scheme = useColorScheme();
   const t = tokensFor(scheme);
   return (
-    <NativeTabs backgroundColor={t.canvas} labelStyle={{ selected: { color: t.ink } }}>
+    <NativeTabs {...tabBarProps(t)}>
       <NativeTabs.Trigger name="index">
         <NativeTabs.Trigger.Label>Today</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon sf="square.grid.2x2" md="grid_view" />
