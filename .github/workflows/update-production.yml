@@ -1,0 +1,51 @@
+name: Update production
+
+# Publishes an EAS Update to the "production" channel, so Play (and later App Store) builds
+# get JavaScript-only fixes over the air. Only by hand: "Run workflow" on main. Nothing
+# publishes to production on a merge; Alec chooses when.
+#
+# Runs on Linux like the preview update in release.yml: runtime versions use the native
+# fingerprint, and a fingerprint computed on Windows differs from the Linux one EAS builds
+# get, so an update published from a Windows PC never reaches the Play build (26 Oct 2026).
+on:
+  workflow_dispatch:
+    inputs:
+      message:
+        description: Update message (blank = the commit's first line)
+        type: string
+        default: ''
+
+concurrency:
+  group: update-production
+  cancel-in-progress: false
+
+env:
+  EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+  EAS: npx --yes eas-cli@25.3.0
+
+jobs:
+  update:
+    name: update
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Stop unless on main with EXPO_TOKEN
+        if: github.ref != 'refs/heads/main' || env.EXPO_TOKEN == ''
+        run: |
+          echo "::error::Run this from main, with the EXPO_TOKEN repository secret set (docs/install.md)."
+          exit 1
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Publish an update to production builds
+        # Same as release.yml's preview update: export the profile's env (eas update doesn't
+        # read eas.json's), and pass the message through an env var so quotes can't break it.
+        env:
+          MESSAGE: ${{ inputs.message }}
+        run: |
+          eval "$(node scripts/eas-profile-env.js production)"
+          [ -n "$MESSAGE" ] || MESSAGE="$(git log -1 --format=%s)"
+          $EAS update --channel production --environment production --message "$MESSAGE" --non-interactive
