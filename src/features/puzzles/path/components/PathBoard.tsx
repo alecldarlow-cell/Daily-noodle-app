@@ -1,5 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { useRecapWidth } from '@/shared/finish-sheet';
+import { useWinWave, WaveFlash, WaveScale } from '@/shared/motion';
 import { FONT, usePuzzleTokens } from '@/shared/theme';
 
 import { endMark, lines, N, type Cell, type PathState } from '../model';
@@ -20,6 +22,7 @@ function Thread({ cells, color, cs, w }: { cells: Cell[]; color: string; cs: num
       <View
         key={k}
         pointerEvents="none"
+        testID="thread-bar"
         style={{
           position: 'absolute',
           left: x,
@@ -39,6 +42,8 @@ interface PathBoardProps {
   state: PathState;
   side: number;
   onCell: (r: number, c: number) => void;
+  /** A fresh solve: every open square pulses at once, as path.css does. */
+  celebrating?: boolean;
 }
 
 /**
@@ -46,8 +51,9 @@ interface PathBoardProps {
  * active end marigold and the other end ringed, the thread from 1 in cobalt and the
  * thread from 36 in deep blue, one green thread once it is complete.
  */
-export function PathBoard({ state, side, onCell }: PathBoardProps) {
+export function PathBoard({ state, side, onCell, celebrating = false }: PathBoardProps) {
   const pt = usePuzzleTokens();
+  const wave = useWinWave(celebrating, 0);
   const cs = side / N;
   const l = lines(state);
   return (
@@ -64,24 +70,27 @@ export function PathBoard({ state, side, onCell }: PathBoardProps) {
               const v = state.cellValue[r]![c];
               const given = state.p.lockedSet.has(`${r},${c}`);
               const m = endMark(state, r, c);
+              const w = given ? null : wave;
               return (
-                <Pressable
-                  key={c}
-                  testID={`sq-${r}-${c}`}
-                  accessibilityRole="button"
-                  accessibilityLabel={`row ${r + 1}, column ${c + 1}, ${v ?? 'empty'}${given ? ', given' : ''}${m === 'active' ? ', active end' : ''}`}
-                  onPress={() => onCell(r, c)}
-                  style={[
-                    styles.cell,
-                    {
-                      width: cs,
-                      height: cs,
-                      borderColor: pt.cellEdge,
-                      backgroundColor: m === 'active' ? pt.active : given ? pt.lineSoft : pt.card,
-                    },
-                    m === 'endsel' ? { borderWidth: 2, borderColor: pt.active } : null,
-                  ]}
-                />
+                <WaveScale key={c} wave={w} at={0}>
+                  <Pressable
+                    testID={`sq-${r}-${c}`}
+                    accessibilityRole="button"
+                    accessibilityLabel={`row ${r + 1}, column ${c + 1}, ${v ?? 'empty'}${given ? ', given' : ''}${m === 'active' ? ', active end' : ''}`}
+                    onPress={() => onCell(r, c)}
+                    style={[
+                      styles.cell,
+                      {
+                        width: cs,
+                        height: cs,
+                        borderColor: pt.cellEdge,
+                        backgroundColor: m === 'active' ? pt.active : given ? pt.lineSoft : pt.card,
+                      },
+                      m === 'endsel' ? { borderWidth: 2, borderColor: pt.active } : null,
+                    ]}>
+                    <WaveFlash wave={w} at={0} active={pt.active} word={pt.activeWord} />
+                  </Pressable>
+                </WaveScale>
               );
             })}
           </View>
@@ -126,28 +135,49 @@ export function PathBoard({ state, side, onCell }: PathBoardProps) {
   );
 }
 
-/** The finish sheet's thread: every number, the givens shaded. */
+/** Each number's square, 1 to 36, from the solution grid. */
+export function threadCells(solution: number[][]): Cell[] {
+  const at: Cell[] = [];
+  solution.forEach((row, r) => row.forEach((v, c) => (at[v - 1] = [r, c])));
+  return at.filter(Boolean);
+}
+
+/**
+ * The finish sheet's thread (.fin-path): every number in a round pill, the givens tinted,
+ * and the blue line through 1 to 36 beneath them, at the site's size.
+ */
 export function PathRecap({ state }: { state: PathState }) {
   const pt = usePuzzleTokens();
+  const w = useRecapWidth();
+  const cs = (w - 4) / N;
+  const sol = state.p.solution;
   return (
-    <View style={[styles.recap, { backgroundColor: pt.line }]} testID="path-recap">
-      {state.p.solution.map((row, r) => (
+    <View
+      style={[styles.recap, { width: w, borderColor: pt.line, backgroundColor: pt.card }]}
+      testID="path-recap">
+      <View style={StyleSheet.absoluteFill} testID="path-recap-thread">
+        <View style={styles.threadLayer}>
+          <Thread cells={threadCells(sol)} color={pt.brand} cs={cs} w={5} />
+        </View>
+      </View>
+      {sol.map((row, r) => (
         <View key={r} style={styles.row}>
-          {row.map((v, c) => (
-            <View
-              key={c}
-              style={[
-                styles.small,
-                {
-                  backgroundColor: state.p.lockedSet.has(`${r},${c}`) ? pt.lineSoft : pt.card,
-                  borderColor: pt.cellEdge,
-                },
-              ]}>
-              <Text maxFontSizeMultiplier={1.2} style={[styles.smallText, { color: pt.ink }]}>
-                {v}
-              </Text>
-            </View>
-          ))}
+          {row.map((v, c) => {
+            const given = state.p.lockedSet.has(`${r},${c}`);
+            return (
+              <View
+                key={c}
+                style={[styles.recapCell, { width: cs, height: cs, borderColor: pt.rule }]}>
+                <View
+                  testID={given ? `path-given-${v}` : undefined}
+                  style={[styles.pill, { backgroundColor: given ? pt.brandTint : pt.card }]}>
+                  <Text maxFontSizeMultiplier={1.2} style={[styles.pillText, { color: pt.ink }]}>
+                    {v}
+                  </Text>
+                </View>
+              </View>
+            );
+          })}
         </View>
       ))}
     </View>
@@ -184,15 +214,18 @@ const styles = StyleSheet.create({
   cell: { borderWidth: StyleSheet.hairlineWidth },
   numBox: { position: 'absolute', alignItems: 'center', justifyContent: 'center' },
   num: { fontFamily: FONT.display, borderRadius: 4, paddingHorizontal: 3, overflow: 'hidden' },
-  recap: { alignSelf: 'flex-start', padding: 2, borderRadius: 8 },
-  small: {
-    width: 40,
-    height: 40,
-    borderWidth: StyleSheet.hairlineWidth,
+  recap: { alignSelf: 'flex-start', borderWidth: 2, borderRadius: 6, overflow: 'hidden' },
+  threadLayer: { flex: 1, opacity: 0.5 },
+  recapCell: { borderWidth: 0.5, alignItems: 'center', justifyContent: 'center' },
+  pill: {
+    minWidth: 26,
+    height: 26,
+    borderRadius: 13,
+    paddingHorizontal: 3,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  smallText: { fontSize: 15, fontFamily: FONT.display },
+  pillText: { fontSize: 15, fontFamily: FONT.display },
   art: { width: 120, height: 120, borderRadius: 8, padding: 4, gap: 2 },
   artRow: { flexDirection: 'row', gap: 2 },
   artSq: { width: 16.5, height: 16.5, borderRadius: 2 },

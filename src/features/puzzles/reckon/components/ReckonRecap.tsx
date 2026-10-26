@@ -1,6 +1,7 @@
 import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { FONT } from '@/shared/theme';
+import { FinishLink } from '@/shared/finish-sheet';
+import { FONT, usePuzzleTokens } from '@/shared/theme';
 
 import type { FinishInfo } from '../finishing';
 import type { ReckonColors } from './colors';
@@ -17,6 +18,7 @@ export function ReckonRecap({
   c: ReckonColors;
   onRow: (k: number) => void;
 }) {
+  const pt = usePuzzleTokens();
   return (
     <View style={styles.wrap}>
       {info.rows.map((r, k) => (
@@ -25,20 +27,23 @@ export function ReckonRecap({
           accessibilityRole="button"
           testID={`reckon-row-${k}`}
           onPress={() => onRow(k)}
-          style={[styles.row, { borderColor: c.line }]}>
+          style={[styles.row, { borderColor: pt.hair }]}>
           <View style={styles.text}>
-            <Text style={[styles.rq, { color: c.ink }]}>{r.q}</Text>
-            <Text style={[styles.ra, { color: c.ink2 }]}>{r.line}</Text>
+            <Text style={[styles.rq, { color: pt.ink }]}>{r.q}</Text>
+            <Text style={[styles.ra, { color: pt.sheetSoft }]}>{r.line}</Text>
           </View>
-          <Text style={[styles.rp, { backgroundColor: c.zones[r.z], color: c.onZ }]}>{r.pts}</Text>
+          <Text
+            testID={`reckon-pts-${k}`}
+            style={[styles.rp, { backgroundColor: c.zones[r.z], color: c.onZ }]}>
+            {r.pts}
+          </Text>
         </Pressable>
       ))}
-      <Pressable
-        accessibilityRole="link"
+      <FinishLink
+        role="link"
+        label="Play more in Ballpark"
         onPress={() => void Linking.openURL(BALLPARK)}
-        style={styles.link}>
-        <Text style={[styles.linkText, { color: c.ink }]}>Play more in Ballpark</Text>
-      </Pressable>
+      />
     </View>
   );
 }
@@ -48,22 +53,22 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 14,
     paddingVertical: 12,
-    borderTopWidth: StyleSheet.hairlineWidth,
+    borderBottomWidth: 1,
     minHeight: 44,
   },
   text: { flex: 1, gap: 3 },
-  rq: { fontFamily: FONT.sans, fontSize: 15, lineHeight: 20 },
-  ra: { fontFamily: FONT.sans, fontSize: 13 },
+  rq: { fontFamily: FONT.sansSemi, fontSize: 15, lineHeight: 20 },
+  ra: { fontFamily: FONT.sans, fontSize: 13.5 },
   rp: {
-    minWidth: 44,
+    minWidth: 50,
     textAlign: 'center',
-    borderRadius: 999,
-    paddingVertical: 4,
-    fontFamily: FONT.displayHeavy,
+    borderRadius: 9,
+    paddingVertical: 5,
+    paddingHorizontal: 8,
+    fontSize: 15,
+    fontFamily: FONT.display,
     overflow: 'hidden',
   },
-  link: { minHeight: 44, justifyContent: 'center', marginTop: 8 },
-  linkText: { fontSize: 15, fontFamily: FONT.sansSemi, textDecorationLine: 'underline' },
 });

@@ -3,7 +3,7 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { StartLayout } from '@/shared/start-card';
 import { FONT } from '@/shared/theme';
-import { longDate } from '@/shared/time';
+import { dayHead, longDate } from '@/shared/time';
 
 import { homeView, serial, type ReckonState } from '../model';
 import type { ReckonColors } from './colors';
@@ -62,7 +62,7 @@ export function ReckonHome({ state, today, c, onPlay, onBack }: Props) {
       dateLine={`No. ${serial(state.P.id)}, ${longDate(state.P.date)}`}
       streak={h.streak || undefined}
       art={<Art c={c} />}
-      head="Today’s ten"
+      head={dayHead('ten', state.P.date, today)}
       status={h.status}
       statusTestID="reckon-status"
       button={{ label: h.button, onPress: onPlay, testID: 'reckon-play-button' }}

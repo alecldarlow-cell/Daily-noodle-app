@@ -9,10 +9,10 @@ import { router } from 'expo-router';
 
 import { FinishSheet } from '@/shared/finish-sheet';
 import { usePuzzleVisit } from '@/shared/results';
-import { useLondonDay } from '@/shared/time';
+import { dayHead, useLondonDay } from '@/shared/time';
 
 import type { PuzzleFile } from '../../types';
-import { noteText, sheetInfo } from '../finishing';
+import { sheetInfo } from '../finishing';
 import { useTangleGame } from '../hooks/useTangleGame';
 import { homeCard, type TangleData } from '../model';
 import { TangleBoard } from './TangleBoard';
@@ -25,6 +25,15 @@ function openNext(item: TodayItem | null) {
   if (!item) return back();
   const file = item.path.replace(/^reports\//, '').replace(/\.html$/, '');
   router.replace({ pathname: '/play/[type]/[file]', params: { type: item.type, file } });
+}
+
+/**
+ * The home card with its heading naming the puzzle's day: the model keeps the page's
+ * "Today’s Tangle" (the differential replay checks it against tangle.js); the screen
+ * says "Yesterday’s Tangle" or "From the archive" on an older board.
+ */
+export function dayCard<C extends { head: string }>(card: C, date: string, today: string): C {
+  return card.head === 'Today’s Tangle' ? { ...card, head: dayHead('Tangle', date, today) } : card;
 }
 
 /** Tangle, played natively: its home card, the round, the result. */
@@ -49,11 +58,11 @@ export function TangleScreen({ file }: { file: PuzzleFile<TangleData> }) {
         date={engine.P.date}
         title={f.title}
         hero={`${f.hero.score} ${f.hero.word}`}
-        note={noteText(f.note)}
+        note={f.note}
         share={f.share}
         stats={f.stats}
         recap={{
-          title: 'Today’s words',
+          title: dayHead('words', file.date, day, 'The words'),
           node: <TangleRecap r={f.recap} />,
         }}
         onBack={back}
@@ -64,7 +73,7 @@ export function TangleScreen({ file }: { file: PuzzleFile<TangleData> }) {
 
   return (
     <TangleHome
-      card={homeCard(engine, day)}
+      card={dayCard(homeCard(engine, day), file.date, day)}
       onPlay={() => {
         start();
         engine.playCard();

@@ -1,5 +1,6 @@
 import type { TodayItem } from '@noodle/core';
 import { router } from 'expo-router';
+import { useRef, type ComponentRef } from 'react';
 import {
   Pressable,
   StyleSheet,
@@ -10,7 +11,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { FinishSheet, useFreshFinish } from '@/shared/finish-sheet';
+import { FinishLink, FinishSheet, useFreshFinish } from '@/shared/finish-sheet';
+import { WIN_BURSTS, useWinBursts } from '@/shared/motion';
 import { PuzzleBar, ruleFor, StartCard, useStartStats } from '@/shared/start-card';
 import { useStoredRaw } from '@/shared/storage';
 import { FONT, usePuzzleTokens } from '@/shared/theme';
@@ -68,6 +70,10 @@ export function SweepScreen({ file }: { file: PuzzleFile<SweepData> }) {
   const win = useWindowDimensions();
   const game = useSweepGame(file);
   const fresh = useFreshFinish(game.phase === 'finished');
+  // A fresh win, between the last move and the sheet: the board's wave and the confetti.
+  const winning = game.phase === 'play' && !!game.info && game.state.won;
+  const boardRef = useRef<ComponentRef<typeof View>>(null);
+  useWinBursts(winning, WIN_BURSTS, boardRef);
   const stats = useStartStats('sweep');
   const streak = savedStreak(useStoredRaw(STREAK_KEY));
   const n = file.n ?? '';
@@ -107,9 +113,7 @@ export function SweepScreen({ file }: { file: PuzzleFile<SweepData> }) {
         recap={{ title: 'The board', node: <SweepRecap state={state} /> }}
         after={
           game.info.again ? (
-            <Pressable accessibilityRole="button" onPress={game.again} hitSlop={8}>
-              <Text style={[styles.again, { color: pt.inkSoft }]}>Play again (not recorded)</Text>
-            </Pressable>
+            <FinishLink label="Play again (not recorded)" onPress={game.again} />
           ) : undefined
         }
         onBack={back}
@@ -146,8 +150,9 @@ export function SweepScreen({ file }: { file: PuzzleFile<SweepData> }) {
           clock={game.clock}
           onBack={back}
         />
-        <View style={styles.board}>
+        <View ref={boardRef} collapsable={false} style={styles.board}>
           <SweepBoard
+            celebrating={winning}
             state={state}
             side={side}
             dark={dark}
@@ -230,5 +235,4 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
   },
   btnText: { fontSize: 14, fontFamily: FONT.sansMedium },
-  again: { fontFamily: FONT.sans, fontSize: 15, textDecorationLine: 'underline' },
 });

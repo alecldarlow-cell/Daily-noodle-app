@@ -33,6 +33,11 @@ export interface PuzzleTokens {
   onBrand: string;
   /** A found word or given number on the finish sheet (finish.css --f-actT). */
   brandTint: string;
+  /** The finish sheet's soft ink and its red (finish.css --f-ink2, --f-bad): a shade apart from the boards'. */
+  sheetSoft: string;
+  sheetBad: string;
+  /** A given square on a recap grid (finish.css --f-cellAlt). */
+  cellAlt: string;
   /** Tangle's longest word (finish.css --f-gold, --f-goldT, --f-goldInk). */
   gold: string;
   goldTint: string;
@@ -64,6 +69,9 @@ const light: PuzzleTokens = {
   gold: '#E0A100',
   goldTint: '#FFEFB8',
   goldInk: '#5C4300',
+  sheetSoft: '#545A6E',
+  sheetBad: '#C2362B',
+  cellAlt: '#DCDFE7',
 };
 
 const dark: PuzzleTokens = {
@@ -91,6 +99,9 @@ const dark: PuzzleTokens = {
   gold: '#F2BE2E',
   goldTint: '#3B3010',
   goldInk: '#FFE08A',
+  sheetSoft: '#A6ABBD',
+  sheetBad: '#FF7A6E',
+  cellAlt: '#1E2230',
 };
 
 export function puzzleTokensFor(scheme: string | null | undefined): PuzzleTokens {

@@ -1,7 +1,7 @@
 /* A league's boards: league picker, puzzle pills, day bar, rows, actions and settings (board.html). */
 import { BOARD_TYPE, BOARD_TYPES, type BoardLeague, type BoardTypeId } from '@noodle/core';
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { createContext, useContext, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -20,6 +20,7 @@ import { shortDate, useLondonDay } from '@/shared/time';
 import { hasPin, setCurrent, setLastType, useBoardState } from '../hooks/boardStore';
 import {
   addDays,
+  dayMonth,
   dayName,
   inviteLink,
   inviteText,
@@ -34,18 +35,33 @@ import {
 } from '../hooks/boardText';
 import { shareMyLink } from '../hooks/useHandoff';
 import type { Flow, Notice } from '../hooks/useLeaguesFlow';
-import { useBoardData, useLeaveLeague, useOwnerAction, usePuzzleCards } from '../hooks/useLeagues';
+import {
+  useBoardData,
+  useBoardRecords,
+  useLeaveLeague,
+  useOwnerAction,
+  usePuzzleCards,
+} from '../hooks/useLeagues';
 import { useBackfill } from '../hooks/useResults';
 import { leagueNameSchema, firstError } from '../schemas';
-import type { BoardView, DayBoard, DayRow, NotYet, Overall, OverallRow } from '../types';
+import type { BoardView, DayBoard, DayRow, NotYet, Overall, OverallRow, Records } from '../types';
+import { RecordsView } from './Records';
 import { Acts, B, Btn, Card, Field, Msg, P, Sub } from './ui';
 
 const PILLS: { id: BoardView; emoji: string; name: string }[] = [
   { id: 'all', emoji: '🏆', name: 'All puzzles' },
+  { id: 'records', emoji: '🏅', name: 'Records' },
   ...BOARD_TYPES.map((t) => ({ id: t.id as BoardView, emoji: t.emoji, name: t.name })),
 ];
 const isView = (v: unknown): v is BoardView =>
-  v === 'all' || (typeof v === 'string' && v in BOARD_TYPE);
+  v === 'all' || v === 'records' || (typeof v === 'string' && v in BOARD_TYPE);
+
+/**
+ * The league's records, read alongside every view as the site does (loadRecords): for 👑
+ * after last week's champion, "🏆 New league record" on a row, the record line under a
+ * day's board, and a name's card on a tap. Absent until they load, or if they can't.
+ */
+const RecordsCtx = createContext<{ recs?: Records; open?: (nick: string) => void }>({});
 
 /** "Later" on the PIN card, for the rest of the London day (the site's key). */
 const PIN_LATER = 'noodle-board-pinlater';
@@ -71,7 +87,24 @@ export function Board({ flow, league }: { flow: Flow; league: BoardLeague }) {
   const cards = usePuzzleCards();
   const feed = cards.isPending ? undefined : (cards.data ?? []);
   const { filling } = useBackfill(true, feed, s.pid);
-  const data = useBoardData(filling ? undefined : league.code, view, day);
+  const records = view === 'records';
+  const data = useBoardData(
+    filling || records ? undefined : league.code,
+    records ? 'all' : view,
+    day,
+  );
+  const rec = useBoardRecords(filling ? undefined : league.code);
+  // A name tapped on any board opens its card on Records (board.html renderCard).
+  const [card, setCard] = useState<string | null>(null);
+  const openCard = (nick: string) => {
+    setCard(nick);
+    pick('records');
+  };
+  const shown = records ? rec : data;
+  // Settings' player list: the board's, or on Records every member there.
+  const roster = records
+    ? rec.data && { players: rec.data.players.map((p) => p.nick), members: rec.data.players.length }
+    : data.data && { players: data.data.players, members: data.data.members };
 
   const pick = (v: BoardView) => {
     setChosen(null);
@@ -79,74 +112,82 @@ export function Board({ flow, league }: { flow: Flow; league: BoardLeague }) {
   };
 
   return (
-    <View testID="league-board">
-      <LeagueBar flow={flow} league={league} leagues={s.leagues || []} />
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.pills}>
-        {PILLS.map((p) => {
-          const on = p.id === view;
-          return (
-            <Pressable
-              key={p.id}
-              accessibilityRole="button"
-              accessibilityState={{ selected: on }}
-              accessibilityLabel={p.name}
-              testID={`pill-${p.id}`}
-              onPress={() => pick(p.id)}
-              style={[
-                styles.pill,
-                { borderColor: on ? t.ink : t.hair, backgroundColor: on ? t.ink : t.paper },
-              ]}>
-              <Text style={[styles.pillText, { color: on ? t.canvas : t.ink }]}>
-                {p.emoji} {p.name}
-              </Text>
-            </Pressable>
-          );
-        })}
-      </ScrollView>
+    <RecordsCtx.Provider value={{ recs: rec.data, open: rec.data ? openCard : undefined }}>
+      <View testID="league-board">
+        <LeagueBar flow={flow} league={league} leagues={s.leagues || []} />
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.pills}>
+          {PILLS.map((p) => {
+            const on = p.id === view;
+            return (
+              <Pressable
+                key={p.id}
+                accessibilityRole="button"
+                accessibilityState={{ selected: on }}
+                accessibilityLabel={p.name}
+                testID={`pill-${p.id}`}
+                onPress={() => {
+                  setCard(null);
+                  pick(p.id);
+                }}
+                style={[
+                  styles.pill,
+                  { borderColor: on ? t.ink : t.hair, backgroundColor: on ? t.ink : t.paper },
+                ]}>
+                <Text style={[styles.pillText, { color: on ? t.canvas : t.ink }]}>
+                  {p.emoji} {p.name}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
 
-      <TopCard flow={flow} league={league} />
+        <TopCard flow={flow} league={league} />
 
-      {filling ? (
-        <Text style={[styles.loading, { color: t.faint }]}>Adding your earlier results…</Text>
-      ) : data.isPending ? (
-        <ActivityIndicator style={styles.spin} color={t.muted} />
-      ) : data.isError || !data.data ? (
-        <Text style={[styles.nobody, { color: t.muted }]} testID="board-error">
-          Couldn’t load the board. {data.error instanceof Error ? data.error.message : ''}
-        </Text>
-      ) : view === 'all' ? (
-        <OverallView
-          league={league}
-          d={data.data as Overall}
-          date={day}
-          today={today}
-          setDate={setDate}
-        />
-      ) : (
-        <DayView
-          league={league}
-          type={view}
-          d={data.data as DayBoard}
-          date={day}
-          today={today}
-          setDate={setDate}
-          headline={puzzleOn(cards.data, view, day)?.headline ?? null}
-          path={puzzleOn(cards.data, view, day)?.path ?? null}
-        />
-      )}
+        {filling ? (
+          <Text style={[styles.loading, { color: t.faint }]}>Adding your earlier results…</Text>
+        ) : shown.isPending ? (
+          <ActivityIndicator style={styles.spin} color={t.muted} />
+        ) : shown.isError || !shown.data ? (
+          <Text style={[styles.nobody, { color: t.muted }]} testID="board-error">
+            Couldn’t load the board. {shown.error instanceof Error ? shown.error.message : ''}
+          </Text>
+        ) : records ? (
+          <RecordsView
+            key={league.code}
+            league={league}
+            d={rec.data!}
+            card={card}
+            setCard={setCard}
+          />
+        ) : view === 'all' ? (
+          <OverallView
+            league={league}
+            d={data.data as Overall}
+            date={day}
+            today={today}
+            setDate={setDate}
+          />
+        ) : (
+          <DayView
+            league={league}
+            type={view}
+            d={data.data as DayBoard}
+            date={day}
+            today={today}
+            setDate={setDate}
+            headline={puzzleOn(cards.data, view, day)?.headline ?? null}
+            path={puzzleOn(cards.data, view, day)?.path ?? null}
+          />
+        )}
 
-      {data.data ? (
-        <Settings
-          flow={flow}
-          league={league}
-          players={data.data.players}
-          members={data.data.members}
-        />
-      ) : null}
-    </View>
+        {roster ? (
+          <Settings flow={flow} league={league} players={roster.players} members={roster.members} />
+        ) : null}
+      </View>
+    </RecordsCtx.Provider>
   );
 }
 
@@ -337,6 +378,7 @@ function Row({
   small,
   streak,
   dim,
+  record,
 }: {
   rank: string;
   nick: string;
@@ -345,19 +387,40 @@ function Row({
   small?: string;
   streak?: number;
   dim?: boolean;
+  /** This result is the league's record (set on the day shown). */
+  record?: boolean;
 }) {
   const t = useTokens();
+  const { recs, open } = useContext(RecordsCtx);
+  const crown = !!recs?.crown?.includes(nick);
+  const label = `${rank} ${nick}${me ? ' (you)' : ''}${crown ? ', last week’s champion' : ''}, ${big}${small ? `, ${small}` : ''}${record ? ', new league record' : ''}`;
+  const style = [
+    styles.row,
+    { borderBottomColor: t.hair },
+    me && { backgroundColor: t.accentSoft },
+  ];
+  const Box = open ? Pressable : View;
   return (
-    <View
+    <Box
       accessible
-      accessibilityLabel={`${rank} ${nick}${me ? ' (you)' : ''}, ${big}${small ? `, ${small}` : ''}`}
-      style={[styles.row, { borderBottomColor: t.hair }, me && { backgroundColor: t.accentSoft }]}>
+      accessibilityRole={open ? 'button' : undefined}
+      accessibilityLabel={label}
+      accessibilityHint={open ? 'Shows their card' : undefined}
+      onPress={open ? () => open(nick) : undefined}
+      testID={`row-${nick}`}
+      style={style}>
       <Text style={[styles.rk, { color: t.muted }]}>{rank}</Text>
       <View style={styles.who}>
         <Text numberOfLines={1} style={[styles.nick, { color: dim ? t.muted : t.ink }]}>
           {nick}
+          {crown ? ' 👑' : ''}
           {me ? <Text style={[styles.you, { color: t.accent }]}> YOU</Text> : null}
         </Text>
+        {record ? (
+          <Text style={[styles.st, { color: t.faint }]} testID={`new-record-${nick}`}>
+            🏆 New league record
+          </Text>
+        ) : null}
         {streak && streak > 1 ? (
           <Text style={[styles.st, { color: t.faint }]}>🔥 {streak}-day streak</Text>
         ) : null}
@@ -366,7 +429,7 @@ function Row({
         <Text style={[styles.res, { color: dim ? t.muted : t.ink }]}>{big}</Text>
         {small ? <Text style={[styles.resSmall, { color: t.faint }]}>{small}</Text> : null}
       </View>
-    </View>
+    </Box>
   );
 }
 
@@ -405,6 +468,9 @@ function DayView({
   const t = useTokens();
   const T = BOARD_TYPE[type];
   const played = [...d.ranked, ...d.unranked].some((r) => r.me);
+  const { recs } = useContext(RecordsCtx);
+  const R = recs?.records?.[type];
+  const rec = R ? result(type, R) : null;
   const row = (r: DayRow, dim: boolean) => {
     const res = result(type, r);
     return (
@@ -417,6 +483,7 @@ function DayView({
         small={res.small}
         streak={r.streak}
         dim={dim}
+        record={!dim && !!R && R.nick === r.nick && R.date === date}
       />
     );
   };
@@ -451,6 +518,13 @@ function DayView({
         </View>
       )}
       <NotYetList rows={d.not_yet} />
+      {R && rec ? (
+        <Text style={[styles.reline, { color: t.muted }]} testID="record-line">
+          {'🏅 League record '}
+          <Text style={[styles.relineBold, { color: t.ink }]}>{rec.big}</Text>
+          {`${rec.small ? ` (${rec.small})` : ''} · ${R.nick} · ${dayMonth(R.date)}`}
+        </Text>
+      ) : null}
       <Acts>
         {d.ranked.length ? (
           <Btn
@@ -798,6 +872,8 @@ const styles = StyleSheet.create({
   resSmall: { fontSize: 12, textAlign: 'right' },
   notyet: { marginTop: 6, fontSize: 14.5 },
   how: { marginTop: 14, fontSize: 13 },
+  reline: { marginTop: 12, fontSize: 14 },
+  relineBold: { fontWeight: '700' },
   settings: { marginTop: 26, borderTopWidth: 1, paddingTop: 12 },
   summary: { fontSize: 14.5, fontWeight: '600', paddingVertical: 4 },
   code: { fontWeight: '800', letterSpacing: 1.6 },

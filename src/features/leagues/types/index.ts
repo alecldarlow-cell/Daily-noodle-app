@@ -70,8 +70,46 @@ export interface Moment {
   records: LeagueRef[] | null;
 }
 
-/** What the board shows: one puzzle, or all eight. */
-export type BoardView = BoardTypeId | 'all';
+/** A result as records keep it (board_records): when it was set and the figures that rank it. */
+export interface RecordResult {
+  date: string;
+  secs: number | null;
+  score?: number | null;
+  mistakes: number | null;
+}
+
+/** A league's best result ever on one puzzle, and who holds it. */
+export interface LeagueRecord extends RecordResult {
+  nick: string;
+  me: boolean;
+}
+
+/** A member's honours, bests and per-puzzle streaks (board_records players[], by joining order). */
+export interface RecordsPlayer {
+  nick: string;
+  me: boolean;
+  completed: number;
+  wins: number;
+  titles: number;
+  perfect: number;
+  sweeps: number;
+  longest: number;
+  current: number;
+  bests: Partial<Record<BoardTypeId, RecordResult>>;
+  streaks: Partial<Record<BoardTypeId, number>>;
+}
+
+/** board_records (2026-10-25-board-records.sql): records, honours and last week's champion. */
+export interface Records {
+  records: Partial<Record<BoardTypeId, LeagueRecord>>;
+  players: RecordsPlayer[];
+  crown: string[];
+  crown_week: string | null;
+  today: string;
+}
+
+/** What the board shows: one puzzle, all eight, or the league's records. */
+export type BoardView = BoardTypeId | 'all' | 'records';
 
 /** A puzzle card, from the site's feed-lite.json. */
 export interface PuzzleCard {

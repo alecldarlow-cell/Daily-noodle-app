@@ -1,10 +1,15 @@
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
+
+import { FinishLink } from '@/shared/finish-sheet';
 
 import { FONT, usePuzzleTokens } from '@/shared/theme';
 import { Chevron } from '@/shared/ui';
 
 import type { recap } from '../model';
+
+/** Yarn: Tangle's game in Noodle Games, as Ballpark is Reckon's and Borderline Borders' (tangle.js). */
+export const YARN = 'https://dailynoodle.co.uk/reports/2026-10-24-quiz-yarn.html';
 
 /**
  * The sheet's recap (finish.css's Tangle word bank): the meter, a key, every common word
@@ -57,8 +62,9 @@ export function TangleRecap({ r }: { r: ReturnType<typeof recap> }) {
                   style={[
                     styles.w,
                     w.got && { backgroundColor: w.star ? pt.goldTint : pt.brandTint },
-                    !w.got && { borderWidth: 1.5, borderColor: pt.rule },
-                    w.star && { borderWidth: 2, borderColor: pt.gold },
+                    // every chip keeps a 2 pt edge (transparent when found), so found, missed and
+                    // starred chips are one size, as the site's inset rings
+                    { borderColor: w.star ? pt.gold : w.got ? 'transparent' : pt.rule },
                   ]}>
                   {w.star ? <Text style={[styles.star, { color: pt.gold }]}>★</Text> : null}
                   <Text
@@ -69,7 +75,11 @@ export function TangleRecap({ r }: { r: ReturnType<typeof recap> }) {
                     ]}>
                     {w.w.toUpperCase()}
                   </Text>
-                  <Text style={[styles.sup, { color: w.star ? pt.goldInk : pt.actInk }]}>
+                  <Text
+                    style={[
+                      styles.sup,
+                      { color: w.star && !w.got ? pt.goldInk : w.got ? pt.actInk : pt.sheetSoft },
+                    ]}>
                     {String(w.pts)}
                   </Text>
                 </View>
@@ -101,6 +111,11 @@ export function TangleRecap({ r }: { r: ReturnType<typeof recap> }) {
           <Text style={[styles.rareList, { color: pt.inkSoft }]}>{r.rareList.toUpperCase()}</Text>
         ) : null}
       </View>
+      <FinishLink
+        role="link"
+        label="Play more boards in Yarn"
+        onPress={() => void Linking.openURL(YARN)}
+      />
     </View>
   );
 }
@@ -122,9 +137,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    paddingHorizontal: 9,
-    paddingVertical: 6,
+    paddingHorizontal: 7,
+    paddingVertical: 4,
     borderRadius: 8,
+    borderWidth: 2,
   },
   wText: { fontSize: 15, lineHeight: 17, fontFamily: FONT.sansSemi, letterSpacing: 0.5 },
   wMiss: { fontFamily: FONT.sansMedium },

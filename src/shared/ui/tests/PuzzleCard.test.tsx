@@ -130,3 +130,23 @@ describe('GIVEN a page', () => {
     });
   });
 });
+
+describe('GIVEN a row with a long day and result beside How to play', () => {
+  it('THEN when and result stay on one line, shrinking to fit rather than breaking', async () => {
+    await render(
+      <PuzzleRow
+        testID="row"
+        type="doku"
+        title="Doku 104"
+        when="Yesterday"
+        played={{ done: true, lost: false, text: 'Solved in 1:20' }}
+        onPress={() => undefined}
+        onHowTo={() => undefined}
+      />,
+    );
+    const meta = screen.getByTestId('row-meta');
+    expect(meta).toHaveTextContent('Yesterday · Solved in 1:20');
+    expect(meta.props.numberOfLines).toBe(1);
+    expect(meta.props.adjustsFontSizeToFit).toBe(true);
+  });
+});

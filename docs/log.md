@@ -373,3 +373,52 @@ below when it finishes.
   `tileLines`; the Sweep start pulse appears once and stops after the first dig. 810 tests pass.
 - **Left**: start cards say "Today’s Mini" on archive puzzles too (as the site's house.js does); Mini's Check
   buttons sit above the grid where the site puts them below.
+
+### 26 Oct 2026 — sign-in link stuck on "Signing in"
+
+- **Bug** (Alec, Pixel): tapping the email link opened the app's auth screen but the spinner never ended.
+  `AuthLinkScreen` read the link with expo-linking's `useURL()`, which only sees the launch URL or link events
+  after mount. With the app already open, the link arrives as a new intent and expo-router navigates to `/auth`
+  before the screen mounts, so the URL stayed null. Supabase's side was fine (`redirect_to=dailynoodle://auth`).
+- **Fix** ([#37](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/37)): `useLinkingURL()`, which reads
+  the latest link expo-linking tracks natively (updated on new intents). Shipped to preview over EAS Update.
+- **Process slip**: #37 was merged before its CI finished; CI then passed on the PR and on main, and
+  `npm run check` passed locally afterwards (810 tests). The `fix/auth-link-warm-start` branch needs deleting by
+  hand (the session couldn't).
+- **Left for Alec**: try the email link on the Pixel with the app already open, and again with it closed.
+
+### 26 Oct 2026 — polish from Alec's Pixel test (celebration, records, finish sheets)
+
+- **Win celebration** ([#39](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/39)): the site's board
+  wave (Mini/Doku/Sweep diagonal, Path all at once) and confetti at the site's moments, from a root layer so it
+  carries on over the sheet; fresh wins only, nothing under reduced motion; built-in Animated, no new dependency.
+  Bursts trimmed to 150/60 (site 200/80). #39 was merged before its CI finished; CI then passed.
+- **Archive** ([#40](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/40)): find-by-number box removed
+  (Alec's call).
+- **Leagues Records pill** ([#41](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/41)): `board_records`
+  — league records, honours, players, player cards, `?p=records`. LeaguesScreen.test's "unknown puzzle" example
+  was `?p=records`; now `?p=crossword` (same intent). Not ported yet: the daily board's "🏅 League record" line,
+  "🏆 New league record" on a row, 👑 after names on the daily/All boards.
+- **Tangle** ([#42](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/42)): letter board no longer moves
+  (fixed-height word list, word line and toast line).
+- **Finish sheets** ([#44](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/44),
+  [#45](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/45)), from a side-by-side review against
+  finish.js/finish.css: Link squares/bands/marks (drawn ✓ ✕: the bundled fonts have no ✓ ✕ ⚑ ★), dark-mode group 4,
+  one `FinishLink` style, bold note runs (Tangle, Reckon), sheet colours; `RecapGrid` at the site's 300 wide for
+  Mini/Doku/Sweep, Path's thread line and pills, Sweep drawn flags, Reckon badges, equal Tangle chips, Borders
+  recap palette. Dropped: no-wrap emoji in the share line (would make the shown line differ from the sent one).
+- **Link in play** ([#46](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/46)): miss wobble + red,
+  spent pip flash, the settle (tiles turn one by one, fly to the band's row), band landing swell; timed to the
+  model's SETTLE_MS, so the model and replay are untouched.
+- **Sign-in link fix** (morning, [#37](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/37)) is logged above.
+- Tests proved: confetti physics against the site's per-frame loop; burst timing/aim/cancel; reduced motion off
+  everywhere; boards wave the right squares; records tab end to end; Tangle heights constant through a round;
+  sheet parts in light and dark; Link motion on miss, repeat, settle and landing. `check` green on every PR.
+- **Needs Alec**:
+  - **App icon** ([#43](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/43), merged on Alec's go-ahead):
+    DN inside Android's safe zone, opaque iOS square, themed monochrome. It changed the fingerprint, so JS updates
+    no longer reach the current install: a new preview build (Release › Run workflow, Android) is needed.
+  - On the Pixel (EAS Update, reopen twice): the celebration, Records, Tangle, the finish sheets, Link's motion.
+- **Small bits** ([#48](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/48), Alec's go-ahead): records
+  load with every board view: 👑 for last week's champion, "🏆 New league record" on the row, the "🏅 League record"
+  line under each daily board, tap a name for their card; Tangle's "Play more boards in Yarn".

@@ -1,10 +1,11 @@
 import type { TodayItem } from '@noodle/core';
 import { router } from 'expo-router';
-import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Linking, StyleSheet, View } from 'react-native';
 
-import { FinishSheet, useFreshFinish } from '@/shared/finish-sheet';
+import { FinishLink, FinishSheet, useFreshFinish } from '@/shared/finish-sheet';
+import { dayHead } from '@/shared/time';
 import { usePuzzleVisit } from '@/shared/results';
-import { FONT } from '@/shared/theme';
+import { usePuzzleTokens } from '@/shared/theme';
 
 import type { PuzzleFile } from '../../types';
 import type { FinishInfo } from '../finishing';
@@ -28,20 +29,21 @@ function openNext(item: TodayItem | null) {
 
 /** "Today's ten", easiest first: each outline with its name, the misses crossed. */
 function Recap({ info, c }: { info: FinishInfo; c: BordersColors }) {
+  const pt = usePuzzleTokens();
+  const sheet = { tile: pt.sheet, fill: pt.brandTint, ink: pt.ink, soft: pt.sheetSoft };
   return (
     <View>
       <Picture
-        html={tilesHtml(info.tiles, c)}
+        html={tilesHtml(info.tiles, c, sheet)}
         style={styles.tiles}
         label={info.tiles.map((t) => `${t.caption}${t.ok ? '' : ', missed'}`).join('; ')}
         testID="borders-recap"
       />
-      <Pressable
-        accessibilityRole="link"
+      <FinishLink
+        role="link"
+        label="Explore more outlines in Borderline"
         onPress={() => void Linking.openURL(BORDERLINE)}
-        style={styles.link}>
-        <Text style={[styles.linkText, { color: c.ink }]}>Explore more outlines in Borderline</Text>
-      </Pressable>
+      />
     </View>
   );
 }
@@ -77,7 +79,11 @@ export function BordersScreen({
           { value: info.streak, label: 'day streak' },
           { value: info.best, label: 'best score' },
         ]}
-        recap={{ title: 'Today’s ten', sub: 'Easiest first', node: <Recap info={info} c={c} /> }}
+        recap={{
+          title: dayHead('ten', file.date, today, 'The ten'),
+          sub: 'Easiest first',
+          node: <Recap info={info} c={c} />,
+        }}
         onBack={back}
         onNext={openNext}
       />
@@ -99,6 +105,4 @@ export function BordersScreen({
 
 const styles = StyleSheet.create({
   tiles: { aspectRatio: 5 / 2.6 },
-  link: { minHeight: 44, justifyContent: 'center', marginTop: 8 },
-  linkText: { fontSize: 15, fontFamily: FONT.sansSemi, textDecorationLine: 'underline' },
 });

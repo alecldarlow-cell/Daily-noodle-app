@@ -53,12 +53,48 @@ describe('GIVEN the site’s archive list', () => {
     });
   });
 
-  describe('WHEN a number is searched that no puzzle has', () => {
-    it('THEN it says none match', async () => {
+  describe('WHEN it opens', () => {
+    it('THEN there is no find-by-number box: the type chips are the only filter', async () => {
       await renderWithProviders(<ArchiveScreen />);
       await waitFor(() => expect(screen.getByText('October 2026')).toBeOnTheScreen());
-      await fireEvent.changeText(screen.getByLabelText('Find by number'), '777');
-      expect(screen.getByTestId('archive-empty')).toBeOnTheScreen();
+      expect(screen.queryByLabelText('Find by number')).toBeNull();
+      expect(screen.queryByPlaceholderText('Find by number')).toBeNull();
+    });
+  });
+
+  describe('WHEN Done, Not done or All is picked, with a type chip too', () => {
+    it('THEN the list keeps only the puzzles that match both, and says so when none do', async () => {
+      appStorage.setItem(
+        'digi-mini-v1',
+        JSON.stringify({ v: 1, done: { 'DP·MINI·0105': { s: 87, d: '2026-10-24' } } }),
+      );
+      await renderWithProviders(<ArchiveScreen />);
+      await waitFor(() => expect(screen.getByTestId('archive-DP·MINI·0105')).toBeOnTheScreen());
+      expect(screen.getByTestId('status-all')).toBeSelected();
+
+      await fireEvent.press(screen.getByTestId('status-done'));
+      expect(screen.getByTestId('archive-DP·MINI·0105')).toBeOnTheScreen();
+      expect(screen.queryByTestId('archive-DP·MINI·0010')).toBeNull();
+      expect(screen.queryByTestId('archive-DP·PATH·0050')).toBeNull();
+
+      await fireEvent.press(screen.getByTestId('status-todo'));
+      expect(screen.queryByTestId('archive-DP·MINI·0105')).toBeNull();
+      expect(screen.getByTestId('archive-DP·MINI·0010')).toBeOnTheScreen();
+      expect(screen.getByTestId('archive-DP·PATH·0050')).toBeOnTheScreen();
+
+      // both filters together: Minis not yet done
+      await fireEvent.press(screen.getByRole('button', { name: 'Mini' }));
+      expect(screen.getByTestId('archive-DP·MINI·0010')).toBeOnTheScreen();
+      expect(screen.queryByTestId('archive-DP·PATH·0050')).toBeNull();
+      expect(screen.queryByTestId('archive-DP·MINI·0105')).toBeNull();
+
+      // Paths done: none yet
+      await fireEvent.press(screen.getByRole('button', { name: 'Path' }));
+      await fireEvent.press(screen.getByTestId('status-done'));
+      expect(screen.getByTestId('archive-empty')).toHaveTextContent('Nothing finished here yet');
+
+      await fireEvent.press(screen.getByTestId('status-all'));
+      expect(screen.getByTestId('archive-DP·PATH·0050')).toBeOnTheScreen();
     });
   });
 
@@ -99,4 +135,17 @@ describe('GIVEN no connection', () => {
     await fireEvent.press(screen.getByRole('button', { name: 'Try again' }));
     await waitFor(() => expect(site.mock.calls.length).toBeGreaterThan(n));
   }, 20_000);
+});
+
+describe('GIVEN the Archive’s two filters', () => {
+  beforeEach(() => mockSite({ 'feed-lite.json': FEED_LITE }));
+  it('THEN the type chips come first and the done switch sits under them', async () => {
+    await renderWithProviders(<ArchiveScreen />);
+    await waitFor(() => expect(screen.getByText('October 2026')).toBeOnTheScreen());
+    const chips = screen.getByTestId('archive-chips');
+    const status = screen.getByTestId('archive-status');
+    const kids = chips.parent!.children as unknown[];
+    expect(kids.indexOf(chips)).toBeGreaterThanOrEqual(0);
+    expect(kids.indexOf(chips)).toBeLessThan(kids.indexOf(status));
+  });
 });

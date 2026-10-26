@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Animated, Pressable, StyleSheet, Text, useColorScheme, View } from 'react-native';
 
-import { useReduceMotion } from '@/shared/motion';
+import { Flag, Mark, RecapCell, RecapGrid, RecapText } from '@/shared/finish-sheet';
+import { useReduceMotion, useWinWave, WaveFlash, WaveScale } from '@/shared/motion';
 import { FONT, usePuzzleTokens, type PuzzleTokens } from '@/shared/theme';
 
 import { LONG_PRESS_MS, N, overCount, recapCell, type SweepState } from '../model';
@@ -13,6 +14,8 @@ interface SweepBoardProps {
   dark: boolean;
   onTap: (i: number) => void;
   onPress: (i: number) => void;
+  /** A fresh win: play the win's wave across the squares. */
+  celebrating?: boolean;
 }
 
 const FLAG = '⚑';
@@ -42,8 +45,16 @@ function squareLabel(s: SweepState, i: number): string {
  * and the numbers its line talks about, ringed. Tap digs (or flags in Flag mode);
  * a long press flags.
  */
-export function SweepBoard({ state, side, dark, onTap, onPress }: SweepBoardProps) {
+export function SweepBoard({
+  state,
+  side,
+  dark,
+  onTap,
+  onPress,
+  celebrating = false,
+}: SweepBoardProps) {
   const pt = usePuzzleTokens();
+  const wave = useWinWave(celebrating, 2 * (N - 1));
   const sc = sweepColors(dark);
   const cell = side / N;
   return (
@@ -58,18 +69,24 @@ export function SweepBoard({ state, side, dark, onTap, onPress }: SweepBoardProp
           {Array.from({ length: N }, (_, c) => {
             const i = r * N + c;
             return (
-              <Pressable
-                key={c}
-                testID={`sq-${i}`}
-                accessibilityRole="button"
-                accessibilityLabel={label(state, i)}
-                delayLongPress={LONG_PRESS_MS}
-                onPress={() => onTap(i)}
-                onLongPress={() => onPress(i)}
-                style={[styles.cell, { width: cell, height: cell }, look(state, i, pt, sc, dark)]}>
-                {!state.startDug && i === state.p.start ? <StartPulse color={pt.active} /> : null}
-                <Face state={state} i={i} size={cell} pt={pt} sc={sc} />
-              </Pressable>
+              <WaveScale key={c} wave={wave} at={r + c}>
+                <Pressable
+                  testID={`sq-${i}`}
+                  accessibilityRole="button"
+                  accessibilityLabel={label(state, i)}
+                  delayLongPress={LONG_PRESS_MS}
+                  onPress={() => onTap(i)}
+                  onLongPress={() => onPress(i)}
+                  style={[
+                    styles.cell,
+                    { width: cell, height: cell },
+                    look(state, i, pt, sc, dark),
+                  ]}>
+                  <WaveFlash wave={wave} at={r + c} active={pt.active} word={pt.activeWord} />
+                  {!state.startDug && i === state.p.start ? <StartPulse color={pt.active} /> : null}
+                  <Face state={state} i={i} size={cell} pt={pt} sc={sc} />
+                </Pressable>
+              </WaveScale>
             );
           })}
         </View>
@@ -185,37 +202,42 @@ function Face({
   return null;
 }
 
-/** The finish sheet's board: every mine flagged (or the one hit), every number. */
+/**
+ * The finish sheet's board (.fin-grid g6 sw): every mine flagged on gold (or the one hit, pale
+ * red with a cross), every number in the sheet's colours: 1 the link ink, 2 green, 3 up red.
+ */
 export function SweepRecap({ state }: { state: SweepState }) {
   const pt = usePuzzleTokens();
-  const sc = sweepColors(useColorScheme() === 'dark');
+  const numColor = (v: number) => (v === 1 ? pt.actInk : v === 2 ? pt.good : pt.sheetBad);
   return (
-    <View style={[styles.recap, { backgroundColor: pt.line }]} testID="sweep-recap">
-      {Array.from({ length: N }, (_, r) => (
-        <View key={r} style={styles.row}>
-          {Array.from({ length: N }, (_, c) => {
-            const k = recapCell(state, r * N + c);
-            return (
-              <View
-                key={c}
-                style={[
-                  styles.small,
-                  { backgroundColor: k === 'boom' ? pt.bad : pt.card, borderColor: pt.cellEdge },
-                ]}>
-                <Text
-                  maxFontSizeMultiplier={1.2}
-                  style={[
-                    styles.smallText,
-                    { color: k === 'flag' ? sc.flag : k === 'boom' ? '#fff' : sc.n[k] || pt.ink },
-                  ]}>
-                  {k === 'flag' ? FLAG : k === 'boom' ? '✕' : k || ''}
-                </Text>
-              </View>
-            );
-          })}
-        </View>
-      ))}
-    </View>
+    <RecapGrid
+      n={N}
+      testID="sweep-recap"
+      cell={(r, c, size) => {
+        const k = recapCell(state, r * N + c);
+        if (k === 'flag')
+          return (
+            <RecapCell size={size} bg={pt.goldTint} testID="recap-mine" label="mine">
+              <Flag size={size} color={pt.goldInk} />
+            </RecapCell>
+          );
+        if (k === 'boom')
+          return (
+            <RecapCell size={size} bg="#FFD9D4" testID="recap-boom" label="the mine you hit">
+              <Mark kind="cross" size={size * 0.4} color={pt.sheetBad} />
+            </RecapCell>
+          );
+        return (
+          <RecapCell size={size}>
+            {k ? (
+              <RecapText size={18} color={numColor(k)}>
+                {k}
+              </RecapText>
+            ) : null}
+          </RecapCell>
+        );
+      }}
+    />
   );
 }
 
@@ -256,15 +278,6 @@ const styles = StyleSheet.create({
   num: { fontFamily: FONT.display, fontVariant: ['tabular-nums'] },
   over: { textDecorationLine: 'line-through' },
   glyph: { fontFamily: FONT.display },
-  recap: { alignSelf: 'flex-start', padding: 2, borderRadius: 8 },
-  small: {
-    width: 40,
-    height: 40,
-    borderWidth: StyleSheet.hairlineWidth,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  smallText: { fontSize: 17, fontFamily: FONT.display },
   art: { width: 120, height: 120, borderRadius: 8, padding: 4, gap: 2 },
   artRow: { flexDirection: 'row', gap: 2 },
   artSq: { width: 16.5, height: 16.5, borderRadius: 2 },

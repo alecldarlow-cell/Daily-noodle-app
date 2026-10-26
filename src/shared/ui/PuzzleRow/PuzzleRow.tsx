@@ -85,18 +85,27 @@ export function PuzzleRow({
             </Text>
           ) : null}
           <View style={[styles.meta, onHowTo ? styles.metaRoom : null]}>
-            {meta.map((m, i) => (
-              <Text key={i} style={styles.metaItem}>
-                {i > 0 ? <Text style={{ color: t.hair }}>{'·  '}</Text> : null}
-                <Text
-                  style={[
-                    { color: m === result ? resultColour : t.faint },
-                    m === result && !(played?.done && played.lost) ? styles.resultText : null,
-                  ]}>
-                  {m}
+            {/* One line: "Yesterday · Solved in 1:20" shrinks a touch to fit beside How to play
+                rather than breaking in two (seen at a large text size on a Pixel). */}
+            <Text
+              style={styles.metaItem}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.75}
+              testID={testID ? `${testID}-meta` : undefined}>
+              {meta.map((m, i) => (
+                <Text key={i}>
+                  {i > 0 ? <Text style={{ color: t.hair }}>{'  ·  '}</Text> : null}
+                  <Text
+                    style={[
+                      { color: m === result ? resultColour : t.faint },
+                      m === result && !(played?.done && played.lost) ? styles.resultText : null,
+                    ]}>
+                    {m}
+                  </Text>
                 </Text>
-              </Text>
-            ))}
+              ))}
+            </Text>
           </View>
         </View>
       </Pressable>
@@ -134,16 +143,9 @@ const styles = StyleSheet.create({
   body: { flex: 1 },
   title: { fontFamily: FONT.display, fontSize: 19, lineHeight: 23, letterSpacing: -0.19 },
   detail: { fontFamily: FONT.body, fontSize: 14, lineHeight: 20, marginTop: 7 },
-  meta: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    alignItems: 'center',
-    columnGap: 7,
-    marginTop: 9,
-    minHeight: 24,
-  },
+  meta: { flexDirection: 'row', alignItems: 'center', marginTop: 9, minHeight: 24 },
   metaRoom: { paddingRight: 88 },
-  metaItem: { fontFamily: FONT.bodySemi, fontSize: 12 },
+  metaItem: { flexShrink: 1, fontFamily: FONT.bodySemi, fontSize: 12 },
   resultText: { fontFamily: FONT.bodyBold },
   howTo: {
     position: 'absolute',

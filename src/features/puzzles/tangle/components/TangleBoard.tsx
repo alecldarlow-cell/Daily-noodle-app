@@ -23,6 +23,14 @@ import { boardTop, current, foundList, N, type Rect, type TangleEngine } from '.
 
 const GAP = 8;
 const GOLD = '#E0A800';
+/**
+ * Everything above the letters keeps one height for the whole round, so the board never
+ * moves under a finger: the found words get their full room from the start (scrolling
+ * inside it), and the traced word and its toast each have a line of their own.
+ */
+export const LIST_H = 150;
+export const WORD_H = 32;
+export const TOAST_H = 20;
 
 /** The tiles' rectangles for a square board `side` wide, in the board's own coordinates. */
 export function tileRects(side: number): Rect[] {
@@ -139,7 +147,9 @@ export function TangleBoard({ engine, setRects, onHome }: TangleBoardProps) {
           />
         </View>
         <View style={[styles.pill, { backgroundColor: top.starGot ? GOLD : pt.card }]}>
-          <Text style={[styles.pillText, { color: top.starGot ? '#141726' : pt.inkSoft }]}>
+          <Text
+            numberOfLines={1}
+            style={[styles.pillText, { color: top.starGot ? '#141726' : pt.inkSoft }]}>
             {top.star}
           </Text>
         </View>
@@ -166,8 +176,11 @@ export function TangleBoard({ engine, setRects, onHome }: TangleBoardProps) {
             </View>
           ))}
         </ScrollView>
-        <View style={styles.cur}>
+        <View style={styles.cur} testID="tangle-cur">
           <Text
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.6}
             style={[
               styles.curWord,
               { color: cur.idle ? pt.inkSoft : pt.ink },
@@ -176,11 +189,16 @@ export function TangleBoard({ engine, setRects, onHome }: TangleBoardProps) {
             testID="tangle-current">
             {cur.idle ? cur.text : cur.text.toUpperCase()}
           </Text>
-          {toastOn ? (
-            <Text style={[styles.toast, { color: toastColor }]} testID="tangle-toast">
-              {s.toast.text}
-            </Text>
-          ) : null}
+          <View style={styles.toastSlot}>
+            {toastOn ? (
+              <Text
+                numberOfLines={1}
+                style={[styles.toast, { color: toastColor }]}
+                testID="tangle-toast">
+                {s.toast.text}
+              </Text>
+            ) : null}
+          </View>
         </View>
         <View style={styles.boardWrap} onLayout={onLayout} testID="tangle-board-wrap">
           <View
@@ -291,7 +309,7 @@ const styles = StyleSheet.create({
   timefill: { height: 4 },
   pill: { alignSelf: 'flex-start', borderRadius: 999, paddingHorizontal: 12, paddingVertical: 5 },
   pillText: { fontSize: 13, fontFamily: FONT.sansSemi },
-  list: { flexGrow: 0, maxHeight: 150 },
+  list: { flexGrow: 0, flexShrink: 0, height: LIST_H },
   listIn: { gap: 6 },
   grp: { gap: 4 },
   grpHead: { flexDirection: 'row', justifyContent: 'space-between' },
@@ -305,9 +323,21 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   bon: { fontStyle: 'italic' },
-  cur: { minHeight: 34, alignItems: 'center', justifyContent: 'center' },
-  curWord: { fontSize: 22, fontFamily: FONT.display, letterSpacing: 1 },
+  cur: {
+    height: WORD_H + TOAST_H,
+    flexShrink: 0,
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+  },
+  curWord: {
+    height: WORD_H,
+    lineHeight: WORD_H,
+    fontSize: 22,
+    fontFamily: FONT.display,
+    letterSpacing: 1,
+  },
   idle: { fontSize: 14, fontFamily: FONT.sans, letterSpacing: 0 },
+  toastSlot: { height: TOAST_H, justifyContent: 'center' },
   toast: { fontSize: 14, fontFamily: FONT.display },
   boardWrap: { flex: 1, alignItems: 'center', justifyContent: 'flex-start' },
   board: { position: 'relative' },
