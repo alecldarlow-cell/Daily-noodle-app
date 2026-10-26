@@ -1,6 +1,8 @@
 import { dayBefore } from '@noodle/core';
 import { StyleSheet, View } from 'react-native';
 
+import { dayHead } from '@/shared/time';
+
 import { StartLayout } from '@/shared/start-card';
 
 import { homeView, serial, type BordersState } from '../model';
@@ -34,7 +36,7 @@ export function BordersHome({ state, today, c, onPlay, onBack }: Props) {
       dateLine={`No. ${serial(state.P.id)}, ${homeDate(state.P.date)}`}
       streak={streak >= 1 ? `${streak}-day streak` : undefined}
       art={<Picture html={worldHtml(c)} style={styles.world} />}
-      head="Today’s ten"
+      head={dayHead('ten', state.P.date, today)}
       status={h.status}
       statusTestID="borders-status"
       button={{ label: h.button, onPress: onPlay, testID: 'borders-play-button' }}

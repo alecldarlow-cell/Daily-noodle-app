@@ -16,24 +16,55 @@ import { FONT, useTokens } from '@/shared/theme';
 import { relDay, useLondonDay } from '@/shared/time';
 import { Note, PuzzleRow, Screen } from '@/shared/ui';
 
-import { groupArchive } from '../../hooks/groupArchive';
+import { groupArchive, type DoneFilter } from '../../hooks/groupArchive';
 import { useArchive } from '../../hooks/useArchive';
 import type { ArchiveItem } from '../../types';
 
 const NO_ITEMS: ArchiveItem[] = [];
 
-/** Every released puzzle, by month, newest first; filter by type. */
+const STATUS: { id: DoneFilter; label: string }[] = [
+  { id: 'all', label: 'All' },
+  { id: 'todo', label: 'Not done' },
+  { id: 'done', label: 'Done' },
+];
+
+/** Every released puzzle, by month, newest first; filter by done or not, and by type. */
 export function ArchiveScreen() {
   const t = useTokens();
   const day = useLondonDay();
   const q = useArchive();
   const [type, setType] = useState<PuzzleType | null>(null);
+  const [status, setStatus] = useState<DoneFilter>('all');
   const items = q.data?.items ?? NO_ITEMS;
-  const sections = useMemo(() => groupArchive(items, type), [items, type]);
   const { byId } = usePlayed(items, day);
+  // Finished, won or lost, counts as done; started but unfinished does not (as the cards' ✓).
+  const finished = useMemo(() => new Set(Object.keys(byId).filter((id) => byId[id]?.done)), [byId]);
+  const sections = useMemo(
+    () => groupArchive(items, type, status, finished),
+    [items, type, status, finished],
+  );
 
   return (
     <Screen title="Archive" testID="archive-screen" scroll={false}>
+      <View
+        style={[styles.seg, { borderColor: t.hair, backgroundColor: t.paper }]}
+        testID="archive-status">
+        {STATUS.map((s) => {
+          const on = s.id === status;
+          return (
+            <Pressable
+              key={s.id}
+              accessibilityRole="button"
+              accessibilityState={{ selected: on }}
+              accessibilityLabel={`Show ${s.label === 'All' ? 'all puzzles' : s.label.toLowerCase()}`}
+              testID={`status-${s.id}`}
+              onPress={() => setStatus(s.id)}
+              style={[styles.segBtn, on && { backgroundColor: t.accentSoft }]}>
+              <Text style={[styles.chipText, { color: on ? t.accent : t.muted }]}>{s.label}</Text>
+            </Pressable>
+          );
+        })}
+      </View>
       <ScrollView
         horizontal
         testID="archive-chips"
@@ -70,7 +101,16 @@ export function ArchiveScreen() {
         />
       ) : null}
       {q.data && sections.length === 0 ? (
-        <Note testID="archive-empty" title="No puzzles match" />
+        <Note
+          testID="archive-empty"
+          title={
+            status === 'done'
+              ? 'Nothing finished here yet'
+              : status === 'todo'
+                ? 'All done here'
+                : 'No puzzles match'
+          }
+        />
       ) : null}
       <SectionList
         sections={sections}
@@ -115,6 +155,17 @@ const styles = StyleSheet.create({
   // squeezed this row, clipping the chip labels (seen at 115% font size on a Pixel 10 Pro).
   chips: { flexGrow: 0, flexShrink: 0, marginBottom: 10 },
   chipsRow: { gap: 6 },
+  // a three-way switch above the type chips: All, Not done, Done
+  seg: {
+    flexDirection: 'row',
+    alignSelf: 'flex-start',
+    borderWidth: 1,
+    borderRadius: 999,
+    padding: 3,
+    gap: 2,
+    marginBottom: 8,
+  },
+  segBtn: { borderRadius: 999, paddingHorizontal: 14, paddingVertical: 6, minHeight: 32 },
   // front.css .chip: 12.5 px semibold, 6 × 12 padding, a hairline; the chosen one in the accent.
   chip: { borderWidth: 1, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6 },
   chipText: { fontFamily: FONT.bodySemi, fontSize: 12.5 },

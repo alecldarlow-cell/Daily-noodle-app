@@ -3,6 +3,7 @@ import { router } from 'expo-router';
 import { Linking, StyleSheet, View } from 'react-native';
 
 import { FinishLink, FinishSheet, useFreshFinish } from '@/shared/finish-sheet';
+import { dayHead } from '@/shared/time';
 import { usePuzzleVisit } from '@/shared/results';
 import { usePuzzleTokens } from '@/shared/theme';
 
@@ -78,7 +79,11 @@ export function BordersScreen({
           { value: info.streak, label: 'day streak' },
           { value: info.best, label: 'best score' },
         ]}
-        recap={{ title: 'Today’s ten', sub: 'Easiest first', node: <Recap info={info} c={c} /> }}
+        recap={{
+          title: dayHead('ten', file.date, today, 'The ten'),
+          sub: 'Easiest first',
+          node: <Recap info={info} c={c} />,
+        }}
         onBack={back}
         onNext={openNext}
       />

@@ -6,6 +6,8 @@ import { mockSite, renderWithProviders } from '@/shared/testing';
 
 import { clockLabel, PuzzleBar } from '../PuzzleBar';
 import { StartCard } from '../StartCard';
+import { londonDay } from '@noodle/core';
+import { dayHead } from '@/shared/time';
 
 const noop = () => undefined;
 beforeEach(() => mockSite({}));
@@ -48,7 +50,9 @@ describe('GIVEN the start card with large text', () => {
       />,
     );
     expect(screen.getByRole('header', { name: 'Mini' }).props.maxFontSizeMultiplier).toBe(1.4);
-    expect(screen.getByText('Today’s Mini').props.maxFontSizeMultiplier).toBe(1.4);
+    expect(
+      screen.getByText(dayHead('Mini', '2026-10-24', londonDay())).props.maxFontSizeMultiplier,
+    ).toBe(1.4);
     expect(screen.getByLabelText('12 Minis played')).toBeOnTheScreen();
     expect(screen.getByLabelText('4 day streak')).toBeOnTheScreen();
     expect(screen.getByRole('link', { name: 'Back to Puzzles' })).toBeOnTheScreen();
