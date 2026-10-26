@@ -12,7 +12,7 @@ import { usePuzzleVisit } from '@/shared/results';
 import { useLondonDay } from '@/shared/time';
 
 import type { PuzzleFile } from '../../types';
-import { noteText, sheetInfo } from '../finishing';
+import { sheetInfo } from '../finishing';
 import { useTangleGame } from '../hooks/useTangleGame';
 import { homeCard, type TangleData } from '../model';
 import { TangleBoard } from './TangleBoard';
@@ -49,7 +49,7 @@ export function TangleScreen({ file }: { file: PuzzleFile<TangleData> }) {
         date={engine.P.date}
         title={f.title}
         hero={`${f.hero.score} ${f.hero.word}`}
-        note={noteText(f.note)}
+        note={f.note}
         share={f.share}
         stats={f.stats}
         recap={{

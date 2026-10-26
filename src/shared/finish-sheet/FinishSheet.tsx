@@ -9,6 +9,7 @@ import { longDate } from '@/shared/time';
 import { Chevron, ShareGlyph } from '@/shared/ui';
 
 import { tagged, useBoardSlot } from './boardSlot';
+import type { NoteParts } from './FinishParts';
 import { clockLine, splitHero } from './rules';
 import { useFinishData } from './useFinishData';
 
@@ -24,8 +25,11 @@ export interface FinishSheetProps {
   hero: string;
   /** Drawn in place of `hero` when the result is a picture (Link's guess squares, Tangle's score). */
   heroNode?: ReactNode;
-  /** One line of comment ("No checks, no reveals."); none on a reopened puzzle. */
-  note?: string;
+  /**
+   * One line of comment ("No checks, no reveals."); none on a reopened puzzle. With a bold
+   * run where the site's note has <strong> (Tangle's longest word, Reckon's bullseyes).
+   */
+  note?: string | NoteParts;
   /** The share line, without the short link. */
   share: string;
   stats: { value: string | number; label: string }[];
@@ -66,6 +70,7 @@ export function FinishSheet(props: FinishSheetProps) {
   const url = shortLink(type);
   const line = clockLine(TYPE_LABEL[type], secs, run);
   const [heroVal, heroUnit] = splitHero(hero);
+  const soft = pt.sheetSoft;
   const onShare = () => {
     void Share.share({ message: `${shareText}\n${url}` }).catch(() => undefined);
   };
@@ -78,9 +83,9 @@ export function FinishSheet(props: FinishSheetProps) {
           onPress={onBack}
           hitSlop={8}
           style={styles.back}>
-          <Text style={[styles.backText, { color: pt.inkSoft }]}>← Puzzles</Text>
+          <Text style={[styles.backText, { color: soft }]}>← Puzzles</Text>
         </Pressable>
-        <Text style={[styles.kick, { color: pt.inkSoft }]}>
+        <Text style={[styles.kick, { color: soft }]}>
           {`${TYPE_LABEL[type]} ${n}, ${longDate(date)}`}
         </Text>
         <Entrance play={celebrate} testID="finish-entrance">
@@ -105,14 +110,24 @@ export function FinishSheet(props: FinishSheetProps) {
               style={[styles.hero, { color: pt.ink }]}>
               {heroVal}
               {heroUnit ? (
-                <Text style={[styles.heroUnit, { color: pt.inkSoft }]}>{` ${heroUnit}`}</Text>
+                <Text style={[styles.heroUnit, { color: soft }]}>{` ${heroUnit}`}</Text>
               ) : null}
             </Text>
           )}
         </Entrance>
         {note ? (
           <Entrance play={celebrate} delay={180}>
-            <Text style={[styles.note, { color: pt.inkSoft }]}>{note}</Text>
+            <Text style={[styles.note, { color: soft }]} testID="finish-note">
+              {typeof note === 'string' ? (
+                note
+              ) : (
+                <>
+                  {note.before}
+                  <Text style={[styles.strong, { color: pt.ink }]}>{note.bold}</Text>
+                  {note.after}
+                </>
+              )}
+            </Text>
           </Entrance>
         ) : null}
 
@@ -121,7 +136,7 @@ export function FinishSheet(props: FinishSheetProps) {
             <Text style={[styles.shareText, { color: pt.ink }]} testID="finish-share-text">
               {shareText}
             </Text>
-            <Text style={[styles.shareUrl, { color: pt.inkSoft }]}>{url}</Text>
+            <Text style={[styles.shareUrl, { color: soft }]}>{url}</Text>
           </View>
           <Pressable
             accessibilityRole="button"
@@ -145,7 +160,7 @@ export function FinishSheet(props: FinishSheetProps) {
               <Text maxFontSizeMultiplier={1.5} style={[styles.statVal, { color: pt.ink }]}>
                 {String(s.value)}
               </Text>
-              <Text style={[styles.small, { color: pt.inkSoft }]}>{s.label}</Text>
+              <Text style={[styles.small, { color: soft }]}>{s.label}</Text>
             </View>
           ))}
         </View>
@@ -161,23 +176,23 @@ export function FinishSheet(props: FinishSheetProps) {
           testID="finish-next">
           <View style={styles.fill}>
             <Text style={[styles.nextMain, { color: pt.ink }]}>{next.main}</Text>
-            <Text style={[styles.small, { color: pt.inkSoft }]}>{next.sub}</Text>
+            <Text style={[styles.nextSub, { color: soft }]}>{next.sub}</Text>
           </View>
-          <Chevron color={pt.inkSoft} />
+          <Chevron color={soft} />
         </Pressable>
         {boardSlot ? (
           <View>{boardSlot}</View>
         ) : renderSlot && path ? (
           <View>{renderSlot({ path, type, date, onTag: setTag })}</View>
         ) : null}
-        <Text style={[styles.clock, { color: pt.inkSoft }]} testID="finish-clock">
+        <Text style={[styles.clock, { color: soft }]} testID="finish-clock">
           {line.lead}
-          {line.bold ? <Text style={styles.bold}>{line.bold}</Text> : null}
+          {line.bold ? <Text style={[styles.bold, { color: pt.ink }]}>{line.bold}</Text> : null}
           {line.after}
           {line.run >= 2 ? (
             <>
               {' You’ve played every day for '}
-              <Text style={styles.bold}>{`${line.run} days`}</Text>.
+              <Text style={[styles.bold, { color: pt.ink }]}>{`${line.run} days`}</Text>.
             </>
           ) : null}
         </Text>
@@ -189,7 +204,7 @@ export function FinishSheet(props: FinishSheetProps) {
                 {recap.title}
               </Text>
               {recap.sub ? (
-                <Text style={[styles.recapSub, { color: pt.inkSoft }]}>{recap.sub}</Text>
+                <Text style={[styles.recapSub, { color: soft }]}>{recap.sub}</Text>
               ) : null}
             </View>
             {recap.node}
@@ -217,10 +232,10 @@ const styles = StyleSheet.create({
   kick: { fontSize: 19, lineHeight: 25, fontFamily: FONT.serifItalic, marginTop: 6 },
   title: {
     fontSize: 44,
-    lineHeight: 48,
+    lineHeight: 46,
     fontFamily: FONT.serif,
     letterSpacing: -0.4,
-    marginTop: 4,
+    marginTop: 6,
   },
   hero: {
     fontSize: 112,
@@ -232,6 +247,7 @@ const styles = StyleSheet.create({
   heroUnit: { fontSize: 30, fontFamily: FONT.serif, letterSpacing: 0 },
   heroNode: { marginTop: 14, marginBottom: 4 },
   note: { fontSize: 16, lineHeight: 23, marginTop: 10, fontFamily: FONT.sans },
+  strong: { fontFamily: FONT.sansSemi },
   shareCard: {
     marginTop: 22,
     borderRadius: 16,
@@ -269,10 +285,11 @@ const styles = StyleSheet.create({
     paddingRight: 4,
   },
   nextMain: { fontSize: 17, fontFamily: FONT.sansSemi },
+  nextSub: { fontSize: 14, fontFamily: FONT.sans, marginTop: 3 },
   clock: { fontSize: 14, lineHeight: 21, marginTop: 12, fontFamily: FONT.sans },
   bold: { fontFamily: FONT.sansSemi },
   recap: { marginTop: 30, paddingTop: 18, borderTopWidth: 1, gap: 14 },
   recapTitle: { fontSize: 28, lineHeight: 32, fontFamily: FONT.serif },
   recapSub: { fontSize: 14, fontFamily: FONT.sans, marginTop: 6 },
-  after: { marginTop: 22 },
+  after: { marginTop: 10 },
 });

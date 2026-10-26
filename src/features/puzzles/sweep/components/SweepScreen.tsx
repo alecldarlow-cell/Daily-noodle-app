@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { FinishSheet, useFreshFinish } from '@/shared/finish-sheet';
+import { FinishLink, FinishSheet, useFreshFinish } from '@/shared/finish-sheet';
 import { WIN_BURSTS, useWinBursts } from '@/shared/motion';
 import { PuzzleBar, ruleFor, StartCard, useStartStats } from '@/shared/start-card';
 import { useStoredRaw } from '@/shared/storage';
@@ -113,9 +113,7 @@ export function SweepScreen({ file }: { file: PuzzleFile<SweepData> }) {
         recap={{ title: 'The board', node: <SweepRecap state={state} /> }}
         after={
           game.info.again ? (
-            <Pressable accessibilityRole="button" onPress={game.again} hitSlop={8}>
-              <Text style={[styles.again, { color: pt.inkSoft }]}>Play again (not recorded)</Text>
-            </Pressable>
+            <FinishLink label="Play again (not recorded)" onPress={game.again} />
           ) : undefined
         }
         onBack={back}
@@ -237,5 +235,4 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
   },
   btnText: { fontSize: 14, fontFamily: FONT.sansMedium },
-  again: { fontFamily: FONT.sans, fontSize: 15, textDecorationLine: 'underline' },
 });

@@ -1,10 +1,9 @@
 import type { TodayItem } from '@noodle/core';
 import { router } from 'expo-router';
-import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Linking, StyleSheet, View } from 'react-native';
 
-import { FinishSheet, useFreshFinish } from '@/shared/finish-sheet';
+import { FinishLink, FinishSheet, useFreshFinish } from '@/shared/finish-sheet';
 import { usePuzzleVisit } from '@/shared/results';
-import { FONT } from '@/shared/theme';
 
 import type { PuzzleFile } from '../../types';
 import type { FinishInfo } from '../finishing';
@@ -36,12 +35,11 @@ function Recap({ info, c }: { info: FinishInfo; c: BordersColors }) {
         label={info.tiles.map((t) => `${t.caption}${t.ok ? '' : ', missed'}`).join('; ')}
         testID="borders-recap"
       />
-      <Pressable
-        accessibilityRole="link"
+      <FinishLink
+        role="link"
+        label="Explore more outlines in Borderline"
         onPress={() => void Linking.openURL(BORDERLINE)}
-        style={styles.link}>
-        <Text style={[styles.linkText, { color: c.ink }]}>Explore more outlines in Borderline</Text>
-      </Pressable>
+      />
     </View>
   );
 }
@@ -99,6 +97,4 @@ export function BordersScreen({
 
 const styles = StyleSheet.create({
   tiles: { aspectRatio: 5 / 2.6 },
-  link: { minHeight: 44, justifyContent: 'center', marginTop: 8 },
-  linkText: { fontSize: 15, fontFamily: FONT.sansSemi, textDecorationLine: 'underline' },
 });
