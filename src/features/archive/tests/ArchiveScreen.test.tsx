@@ -53,12 +53,12 @@ describe('GIVEN the site’s archive list', () => {
     });
   });
 
-  describe('WHEN a number is searched that no puzzle has', () => {
-    it('THEN it says none match', async () => {
+  describe('WHEN it opens', () => {
+    it('THEN there is no find-by-number box: the type chips are the only filter', async () => {
       await renderWithProviders(<ArchiveScreen />);
       await waitFor(() => expect(screen.getByText('October 2026')).toBeOnTheScreen());
-      await fireEvent.changeText(screen.getByLabelText('Find by number'), '777');
-      expect(screen.getByTestId('archive-empty')).toBeOnTheScreen();
+      expect(screen.queryByLabelText('Find by number')).toBeNull();
+      expect(screen.queryByPlaceholderText('Find by number')).toBeNull();
     });
   });
 
