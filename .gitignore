@@ -45,3 +45,7 @@ example
 
 # tests
 coverage/
+
+# Play: full-size screenshot originals and downloaded builds stay local
+/store/screenshots/raw/
+/store/release-*/
