@@ -107,7 +107,7 @@ describe('GIVEN a player in a league', () => {
     it('THEN Invite shares the league’s link', async () => {
       await openRecords();
       await fireEvent.press(screen.getByRole('button', { name: 'Invite people' }));
-      expect(shared[0]).toContain('board.html?join=ABCD2345');
+      expect(shared[0]).toContain('join.html?c=ABCD2345');
     });
   });
 

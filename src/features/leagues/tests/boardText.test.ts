@@ -1,5 +1,6 @@
 import {
   dayName,
+  boardLink,
   inviteLink,
   mmss,
   puzzleOn,
@@ -91,7 +92,8 @@ describe('GIVEN results on a board', () => {
     ).toBe(
       '🏆 All puzzles · Sat 24 Oct\n🥇 Ma 1 pt (1/8)\nF leaderboard:\nhttps://dailynoodle.co.uk/board.html?join=C&v=2&p=all&d=2026-10-24',
     );
-    expect(inviteLink('AB CD')).toBe('https://dailynoodle.co.uk/board.html?join=AB%20CD&v=2');
+    expect(inviteLink('AB CD')).toBe('https://dailynoodle.co.uk/join.html?c=AB%20CD');
+    expect(boardLink('AB CD')).toBe('https://dailynoodle.co.uk/board.html?join=AB%20CD&v=2');
   });
 
   it('THEN a day’s puzzle is found among the site’s cards', () => {

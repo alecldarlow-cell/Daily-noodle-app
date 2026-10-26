@@ -124,7 +124,7 @@ describe('GIVEN someone in no league', () => {
         within(screen.getByTestId('notice-created')).getByRole('button', { name: 'Invite people' }),
       );
       expect(shared).toEqual([
-        'Join Noodle family on Noodle Puzzles: tap the link, pick a nickname, and your results go on our daily leaderboards.\nhttps://dailynoodle.co.uk/board.html?join=NEWC2345&v=2',
+        'Join Noodle family on Noodle Puzzles: tap the link, pick a nickname, and your results go on our daily leaderboards.\nhttps://dailynoodle.co.uk/join.html?c=NEWC2345',
       ]);
     });
 
