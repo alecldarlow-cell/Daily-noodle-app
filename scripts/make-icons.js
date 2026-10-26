@@ -7,6 +7,7 @@
  * No dependencies, so it runs anywhere Node does:
  *
  *   node scripts/make-icons.js          writes the PNGs into assets/images
+ *   node scripts/make-icons.js --check  fails if any committed PNG differs from what it draws
  *
  * What it makes (app.json points at each):
  * - icon.png             1024 opaque square, DP on green (iOS rounds it; it must be opaque).
@@ -257,22 +258,22 @@ function paint(size, layers, bg) {
   const px = new Float32Array(size * size * 4);
   if (bg) {
     const [r, g, b] = rgb(bg);
-    for (let i = 0; i < size * size; i++) px.set([r, g, b, 1], i * 4);
+    for (let i = 0; i < size * size; i++) {
+      px[i * 4] = r;
+      px[i * 4 + 1] = g;
+      px[i * 4 + 2] = b;
+      px[i * 4 + 3] = 1;
+    }
   }
   for (const { polys, colour } of layers) {
     const cov = cover(polys, size);
-    const [r, g, b] = rgb(colour);
+    const c = rgb(colour);
     for (let i = 0; i < size * size; i++) {
       const a = Math.min(1, cov[i]);
       if (a <= 0) continue;
       const da = px[i * 4 + 3];
       const oa = a + da * (1 - a);
-      for (const [k, c] of [
-        [0, r],
-        [1, g],
-        [2, b],
-      ])
-        px[i * 4 + k] = (c * a + px[i * 4 + k] * da * (1 - a)) / oa;
+      for (let k = 0; k < 3; k++) px[i * 4 + k] = (c[k] * a + px[i * 4 + k] * da * (1 - a)) / oa;
       px[i * 4 + 3] = oa;
     }
   }
@@ -356,10 +357,55 @@ function render() {
 
 module.exports = { render, encodePng, readFont, monogram, cover, GREEN, GREEN_DARK };
 
-if (require.main === module) {
+/** The pixels of a PNG this script wrote (8-bit RGB or RGBA, unfiltered rows), as RGBA bytes. */
+function decodePng(buf) {
+  const w = buf.readUInt32BE(16);
+  const ch = buf[25] === 6 ? 4 : 3;
+  const parts = [];
+  for (let at = 8; at < buf.length; ) {
+    const len = buf.readUInt32BE(at);
+    if (buf.toString('latin1', at + 4, at + 8) === 'IDAT')
+      parts.push(buf.subarray(at + 8, at + 8 + len));
+    at += 12 + len;
+  }
+  const raw = zlib.inflateSync(Buffer.concat(parts));
+  const out = Buffer.alloc(w * w * 4, 255);
+  for (let y = 0; y < w; y++) {
+    const row = y * (w * ch + 1);
+    if (raw[row] !== 0) return null;
+    for (let x = 0; x < w; x++)
+      for (let k = 0; k < ch; k++) out[(y * w + x) * 4 + k] = raw[row + 1 + x * ch + k];
+  }
+  return { w, out };
+}
+
+/** The images in assets/images that differ from what render() draws (by pixel, not byte). */
+function stale() {
+  const bad = [];
   for (const { file, size, alpha, px } of render()) {
-    const out = path.join(ROOT, 'assets/images', file);
-    fs.writeFileSync(out, encodePng(px, size, alpha));
-    console.log(`wrote ${path.relative(ROOT, out)}`);
+    const f = path.join(ROOT, 'assets/images', file);
+    const got = fs.existsSync(f) ? decodePng(fs.readFileSync(f)) : null;
+    const want = decodePng(encodePng(px, size, alpha));
+    if (!got || got.w !== size || !got.out.equals(want.out)) bad.push(file);
+  }
+  return bad;
+}
+
+module.exports.stale = stale;
+
+if (require.main === module) {
+  if (process.argv.includes('--check')) {
+    const bad = stale();
+    if (bad.length) {
+      console.error(`Out of date (run node scripts/make-icons.js): ${bad.join(', ')}`);
+      process.exit(1);
+    }
+    console.log('icons up to date');
+  } else {
+    for (const { file, size, alpha, px } of render()) {
+      const out = path.join(ROOT, 'assets/images', file);
+      fs.writeFileSync(out, encodePng(px, size, alpha));
+      console.log(`wrote ${path.relative(ROOT, out)}`);
+    }
   }
 }

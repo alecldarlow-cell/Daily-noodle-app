@@ -15,8 +15,7 @@ let hook: {
   result: { current: ReturnType<typeof usePuzzleClock> };
   rerender: (p: Props) => Promise<void> | void;
 };
-const useClock = (q: Props) =>
-  usePuzzleClock(q.running, { reset: q.reset, initial: q.initial });
+const useClock = (q: Props) => usePuzzleClock(q.running, { reset: q.reset, initial: q.initial });
 const mount = async (p: Props) => {
   hook = (await renderHook(useClock, {
     initialProps: p,

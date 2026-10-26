@@ -2,14 +2,14 @@ import appJson from '../../app.json';
 import { tokensFor } from '../../src/shared/theme/tokens';
 
 declare const __dirname: string;
+declare const process: { execPath: string };
 /* eslint-disable @typescript-eslint/no-require-imports */
 const { readFileSync } = require('fs') as { readFileSync: (p: string) => Uint8Array };
 const { inflateSync } = require('zlib') as { inflateSync: (b: Uint8Array) => Uint8Array };
-const icons = require('../make-icons') as {
-  render: () => { file: string; size: number; alpha: boolean; px: Float32Array }[];
-  GREEN: string;
-  GREEN_DARK: string;
+const { execFileSync } = require('child_process') as {
+  execFileSync: (cmd: string, args: string[], o: { encoding: 'utf8' }) => string;
 };
+const icons = require('../make-icons') as { GREEN: string; GREEN_DARK: string };
 /* eslint-enable @typescript-eslint/no-require-imports */
 
 const read = (rel: string) => readFileSync(`${__dirname}/../../${rel.replace(/^\.\//, '')}`);
@@ -58,19 +58,30 @@ function pixels(rel: string) {
 const hex = ([r, g, b]: number[]) =>
   '#' + [r, g, b].map((n) => n!.toString(16).padStart(2, '0').toUpperCase()).join('');
 
-/** The box round every pixel that `isInk` picks. */
-function inkBox(p: ReturnType<typeof pixels>, isInk: (px: number[]) => boolean) {
+/** The box round every pixel that `isInk` picks (given its red, green, blue and alpha). */
+function inkBox(
+  p: ReturnType<typeof pixels>,
+  isInk: (r: number, g: number, b: number, a: number) => boolean,
+) {
   let [x0, y0, x1, y1] = [p.w, p.h, -1, -1];
+  const o = p.out;
   for (let y = 0; y < p.h; y++)
-    for (let x = 0; x < p.w; x++)
-      if (isInk(p.at(x, y))) {
-        x0 = Math.min(x0, x);
-        x1 = Math.max(x1, x);
-        y0 = Math.min(y0, y);
-        y1 = Math.max(y1, y);
-      }
+    for (let x = 0; x < p.w; x++) {
+      const i = (y * p.w + x) * 4;
+      if (!isInk(o[i]!, o[i + 1]!, o[i + 2]!, o[i + 3]!)) continue;
+      if (x < x0) x0 = x;
+      if (x > x1) x1 = x;
+      if (y < y0) y0 = y;
+      if (y > y1) y1 = y;
+    }
   return { x0, y0, x1, y1 };
 }
+
+const rgbOf = (h: string) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+const isColour = (h: string) => {
+  const [R, G, B] = rgbOf(h);
+  return (r: number, g: number, b: number, a: number) => a > 0 && r === R && g === G && b === B;
+};
 
 const GREEN = tokensFor('light').accent;
 
@@ -93,7 +104,7 @@ describe('GIVEN the app icon', () => {
     it('THEN every letter pixel is inside the 66/108 safe circle, so no launcher mask clips it', () => {
       const p = pixels(appJson.expo.android.adaptiveIcon.foregroundImage);
       expect(p.at(0, 0)[3]).toBe(0);
-      const box = inkBox(p, (px) => px[3]! > 0);
+      const box = inkBox(p, (_r, _g, _b, a) => a > 0);
       const r = (1024 * 33) / 108;
       for (const [x, y] of [
         [box.x0, box.y0],
@@ -121,15 +132,14 @@ describe('GIVEN the app icon', () => {
         const p = pixels(f);
         expect(hex(p.at(0, 0))).toBe(GREEN);
         expect(hex(p.at(p.w - 1, p.h - 1))).toBe(GREEN);
-        const box = inkBox(p, (px) => hex(px) !== GREEN);
+        const green = isColour(GREEN);
+        const box = inkBox(p, (r, g, b, a) => !green(r, g, b, a));
         // DP is wider than tall, centred, and white at its heart (the D's stem).
         expect(box.x1 - box.x0).toBeGreaterThan((box.y1 - box.y0) * 1.5);
         expect(Math.abs((box.x0 + box.x1) / 2 - p.w / 2)).toBeLessThan(2);
         expect(hex(p.at(box.x0 + 8, Math.round((box.y0 + box.y1) / 2)))).toBe('#FFFFFF');
-        let blue = 0;
-        for (let i = 0; i < p.out.length; i += 4)
-          if (hex([p.out[i]!, p.out[i + 1]!, p.out[i + 2]!]) === '#1C46C2') blue++;
-        expect(blue).toBe(0);
+        const blue = inkBox(p, isColour('#1C46C2'));
+        expect(blue.x1).toBe(-1);
       }
     });
   });
@@ -147,24 +157,19 @@ describe('GIVEN the splash', () => {
     expect(hex(light.at(256, 40))).toBe(GREEN);
     expect(hex(dark.at(256, 40))).toBe(tokensFor('dark').accent);
     // Light: white letters; dark: the dark theme's ink on its brighter green (onAccent).
-    const lb = inkBox(light, (px) => px[3]! > 0 && hex(px) === '#FFFFFF');
+    const lb = inkBox(light, isColour('#FFFFFF'));
     expect(lb.x1 - lb.x0).toBeGreaterThan(256);
-    const db = inkBox(dark, (px) => px[3]! > 0 && hex(px) === tokensFor('dark').onAccent);
+    const db = inkBox(dark, isColour(tokensFor('dark').onAccent));
     expect(db.x1 - db.x0).toBeGreaterThan(256);
   });
 });
 
 describe('GIVEN scripts/make-icons.js', () => {
   it('THEN the committed images are exactly what it draws (rerun it after changing the mark)', () => {
-    for (const { file, size, alpha, px } of icons.render()) {
-      const p = pixels(`assets/images/${file}`);
-      expect([p.w, p.h]).toEqual([size, size]);
-      let diff = 0;
-      for (let i = 0; i < size * size * 4; i++) {
-        const want = i % 4 === 3 ? (alpha ? Math.round(px[i]! * 255) : 255) : Math.round(px[i]!);
-        if (p.out[i] !== want) diff++;
-      }
-      expect({ file, diff }).toEqual({ file, diff: 0 });
-    }
+    // In plain Node: the rasteriser is far slower under Jest's transform.
+    const out = execFileSync(process.execPath, [`${__dirname}/../make-icons.js`, '--check'], {
+      encoding: 'utf8',
+    });
+    expect(out).toContain('icons up to date');
   });
 });
