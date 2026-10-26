@@ -571,3 +571,12 @@ below when it finishes.
   - Send everything for review.
   - Add Play's app-signing SHA-256 to assetlinks.json.
   - Share the group link in WhatsApp once the release is live.
+
+### 26 Oct 2026 — Borders rows say points (this PR; site [dailynoodle#38](https://github.com/alecldarlow-cell/dailynoodle/pull/38))
+
+- Why: Borders scores in points since 26 Oct (100 a right answer, 50 with Show on map, no run bonus; site #35, app #56), but a phone check found "Scored 5/10" on the Today/Archive rows and "Your score is out of ten" in the Borders blurb.
+- Site (#38, merged): every Borders file's standfirst now ends "100 points for each right answer." (past and forthcoming; the generator copies the newest file, so future days follow). Played cards on Puzzles show "650 points · 7/10".
+- App (this PR): `@noodle/core` `resultText('borders')` matches: "650 points · 7/10", "Scored 7/10" only for a save with no points. Re-vendored the site at `cca96754` (only Borders' result line changed). The blurb comes from the site's feed, so it needs no app change.
+- Tests proved: the four Borders wordings (`played.test.ts`); the Today row reads "Borders 20, 650 points · 7/10" (fails on the old wording); the differential test against the new front.js. `check` green (1152 tests, 98.76% lines).
+- Left: nothing.
+- Needs Alec: nothing (JS-only; reaches phones with the next build or update).
