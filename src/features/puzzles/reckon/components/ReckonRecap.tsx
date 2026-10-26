@@ -1,5 +1,7 @@
 import { Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { FinishLink } from '@/shared/finish-sheet';
+
 import { FONT } from '@/shared/theme';
 
 import type { FinishInfo } from '../finishing';
@@ -33,12 +35,11 @@ export function ReckonRecap({
           <Text style={[styles.rp, { backgroundColor: c.zones[r.z], color: c.onZ }]}>{r.pts}</Text>
         </Pressable>
       ))}
-      <Pressable
-        accessibilityRole="link"
+      <FinishLink
+        role="link"
+        label="Play more in Ballpark"
         onPress={() => void Linking.openURL(BALLPARK)}
-        style={styles.link}>
-        <Text style={[styles.linkText, { color: c.ink }]}>Play more in Ballpark</Text>
-      </Pressable>
+      />
     </View>
   );
 }
@@ -64,6 +65,4 @@ const styles = StyleSheet.create({
     fontFamily: FONT.displayHeavy,
     overflow: 'hidden',
   },
-  link: { minHeight: 44, justifyContent: 'center', marginTop: 8 },
-  linkText: { fontSize: 15, fontFamily: FONT.sansSemi, textDecorationLine: 'underline' },
 });

@@ -1,7 +1,7 @@
 import type { TodayItem } from '@noodle/core';
 import { router } from 'expo-router';
 
-import { FinishSheet, useFreshFinish } from '@/shared/finish-sheet';
+import { boldLead, FinishSheet, useFreshFinish } from '@/shared/finish-sheet';
 import { usePuzzleVisit } from '@/shared/results';
 
 import type { PuzzleFile } from '../../types';
@@ -44,7 +44,7 @@ export function ReckonScreen({
         date={file.data.date}
         title="Reckoned"
         hero={`${info.points} pts`}
-        note={info.note}
+        note={info.note ? boldLead(info.note) : undefined}
         share={info.share}
         stats={[
           { value: info.time, label: 'time' },

@@ -1,4 +1,6 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, useColorScheme, View } from 'react-native';
+
+import { FinishLink, Mark } from '@/shared/finish-sheet';
 
 import { FONT, usePuzzleTokens } from '@/shared/theme';
 
@@ -14,6 +16,24 @@ export const ON_GROUP = { 1: '#FFFFFF', 2: '#FFFFFF', 3: '#141726', 4: '#FFFFFF'
   number,
   string
 >;
+
+/**
+ * The finish sheet's group colours (finish.css --f-g1…--f-g4 and .fin-g*): the sheet's own
+ * green, and group 4 turned light in dark mode so it shows on the dark sheet; the text and
+ * marks on each in the colour that reads on it.
+ */
+export function useSheetGroups() {
+  const dark = useColorScheme() === 'dark';
+  const bg = dark ? '#11131A' : '#EDEEF2';
+  const fill: Record<number, string> = {
+    1: '#157A52',
+    2: '#2E5BFF',
+    3: '#FFD54A',
+    4: dark ? '#ECEEF4' : '#141726',
+  };
+  const on: Record<number, string> = { 1: '#FFFFFF', 2: '#FFFFFF', 3: '#141726', 4: bg };
+  return { fill, on };
+}
 
 /** The start card's picture: four rows of tiles, three of the second row held (house.js art). */
 export function LinkArt() {
@@ -44,9 +64,13 @@ export function LinkArt() {
   );
 }
 
-/** The sheet's hero: one square per guess, the group's colour with a tick, or a cross. */
+/**
+ * The sheet's hero (finish.css .fin-guess): one 44 pt square per guess, the group's colour
+ * with a drawn tick, or a miss as a red ring with a red cross.
+ */
 export function GuessSquares({ squares, names }: { squares: number[]; names: string[] }) {
   const pt = usePuzzleTokens();
+  const g = useSheetGroups();
   return (
     <View
       style={styles.squares}
@@ -56,25 +80,32 @@ export function GuessSquares({ squares, names }: { squares: number[]; names: str
       {squares.map((r, i) => (
         <View
           key={i}
-          style={[styles.square, { backgroundColor: r ? GROUP[r] : pt.bad }]}
+          style={[
+            styles.square,
+            r
+              ? { backgroundColor: g.fill[r] }
+              : { borderWidth: 2, borderColor: pt.sheetBad, backgroundColor: 'transparent' },
+          ]}
           testID={r ? `guess-g${r}` : 'guess-x'}>
-          <Text style={[styles.mark, { color: r ? ON_GROUP[r] : '#FFFFFF' }]}>{r ? '✓' : '✕'}</Text>
+          <Mark kind={r ? 'tick' : 'cross'} color={r ? g.on[r]! : pt.sheetBad} />
         </View>
       ))}
     </View>
   );
 }
 
-/** The sheet's recap: every group, easiest to hardest. */
+/** The sheet's recap (finish.css .fin-bands): every group, easiest to hardest; the members lead. */
 export function GroupBands({ groups }: { groups: LinkGroup[] }) {
+  const g = useSheetGroups();
   return (
     <View style={styles.bands} testID="link-recap">
-      {groups.map((g) => (
-        <View key={g.rank} style={[styles.recapBand, { backgroundColor: GROUP[g.rank] }]}>
-          <Text style={[styles.recapName, { color: ON_GROUP[g.rank] }]}>{g.name}</Text>
-          <Text style={[styles.recapMembers, { color: ON_GROUP[g.rank] }]}>
-            {g.members.join(', ')}
-          </Text>
+      {groups.map((x) => (
+        <View
+          key={x.rank}
+          style={[styles.recapBand, { backgroundColor: g.fill[x.rank] }]}
+          testID={`band-recap-${x.rank}`}>
+          <Text style={[styles.recapName, { color: g.on[x.rank] }]}>{x.name}</Text>
+          <Text style={[styles.recapMembers, { color: g.on[x.rank] }]}>{x.members.join(', ')}</Text>
         </View>
       ))}
     </View>
@@ -83,31 +114,23 @@ export function GroupBands({ groups }: { groups: LinkGroup[] }) {
 
 /** "Play again (not recorded)" under a lost result. */
 export function PlayAgain({ onPress }: { onPress: () => void }) {
-  const pt = usePuzzleTokens();
-  return (
-    <Pressable accessibilityRole="button" onPress={onPress} hitSlop={8} style={styles.again}>
-      <Text style={[styles.againText, { color: pt.brand }]}>Play again (not recorded)</Text>
-    </Pressable>
-  );
+  return <FinishLink label="Play again (not recorded)" onPress={onPress} />;
 }
 
 const styles = StyleSheet.create({
   art: { width: 132, height: 132, gap: 4, padding: 6 },
   artRow: { flexDirection: 'row', gap: 4 },
   artTile: { width: 26, height: 26, borderRadius: 5, borderWidth: 2 },
-  squares: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  squares: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   square: {
-    width: 40,
-    height: 40,
-    borderRadius: 8,
+    width: 44,
+    height: 44,
+    borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  mark: { fontSize: 20, fontFamily: FONT.displayHeavy },
-  bands: { gap: 8 },
-  recapBand: { borderRadius: 11, padding: 12, gap: 2 },
-  recapName: { fontSize: 15, fontFamily: FONT.display },
-  recapMembers: { fontFamily: FONT.sans, fontSize: 14 },
-  again: { minHeight: 44, justifyContent: 'center', alignSelf: 'flex-start' },
-  againText: { fontSize: 16, fontFamily: FONT.sansSemi, textDecorationLine: 'underline' },
+  bands: { gap: 6 },
+  recapBand: { borderRadius: 10, paddingVertical: 10, paddingHorizontal: 14 },
+  recapName: { fontSize: 13, fontFamily: FONT.sansSemi },
+  recapMembers: { fontSize: 15, fontFamily: FONT.display, letterSpacing: 0.3, marginTop: 2 },
 });
