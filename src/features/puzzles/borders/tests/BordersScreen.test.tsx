@@ -70,7 +70,7 @@ describe('GIVEN a Borders not yet played', () => {
     expect(screen.getByText('No. 15, Monday, 19 October')).toBeOnTheScreen();
     expect(
       screen.getByText(
-        'Ten country outlines, easiest first. Name them from four; scored out of ten.',
+        'Ten country outlines, easiest first. Name them from four; 100 points each.',
       ),
     ).toBeOnTheScreen();
     await fireEvent.press(screen.getByText('How to play'));
