@@ -125,11 +125,11 @@ describe('GIVEN the sign-in screen is waiting', () => {
 });
 
 describe('GIVEN the Account tab', () => {
-  describe('WHEN “Bring my leagues here” is tapped twice (Back on Leagues in between)', () => {
+  describe('WHEN “I have a league PIN” is tapped twice (Back on Leagues in between)', () => {
     it('THEN each tap is a new ask for Leagues', async () => {
       await render(<AccountScreen />);
-      await fireEvent.press(screen.getByRole('button', { name: 'Bring my leagues here' }));
-      await fireEvent.press(screen.getByRole('button', { name: 'Bring my leagues here' }));
+      await fireEvent.press(screen.getByRole('button', { name: 'I have a league PIN' }));
+      await fireEvent.press(screen.getByRole('button', { name: 'I have a league PIN' }));
       const asks = jest
         .mocked(router.navigate)
         .mock.calls.map(

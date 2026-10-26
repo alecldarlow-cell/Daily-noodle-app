@@ -61,6 +61,11 @@ export function decide(url: string, current: string): NavDecision {
     }
     return { kind: 'leagues', params };
   }
+  // The app's invite link (SITE.md › App links): the league's invite, as board.html?join=.
+  if (p === '/join.html') {
+    const c = u.searchParams.get('c');
+    return { kind: 'leagues', params: c ? { join: c } : {} };
+  }
   if (p.endsWith('.html')) return { kind: 'external' };
   return { kind: 'allow' };
 }
@@ -68,4 +73,22 @@ export function decide(url: string, current: string): NavDecision {
 /** The live page for a puzzle file, tagged as opened from the app. */
 export function pageUrl(file: string): string {
   return `${SITE}/reports/${encodeURIComponent(file)}.html?via=app`;
+}
+
+/**
+ * Where the app goes for a link the phone hands it (expo-router's +native-intent).
+ * Android opens the site's invite links, https://dailynoodle.co.uk/join.html?c=CODE, in the
+ * app (app.json intentFilters); they go to that league's invite on the Leagues tab. Anything
+ * else (dailynoodle://auth, the app's own routes) is left to the router as it came.
+ */
+export function systemPath(path: string): string {
+  let u: URL;
+  try {
+    u = new URL(path, SITE);
+  } catch {
+    return path;
+  }
+  if (u.origin !== SITE || u.pathname !== '/join.html') return path;
+  const c = (u.searchParams.get('c') ?? '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+  return /^[A-Z0-9]{4,12}$/.test(c) ? `/leagues?join=${c}` : '/leagues';
 }

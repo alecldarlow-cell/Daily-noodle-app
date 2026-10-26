@@ -5,9 +5,8 @@ import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-nati
 import { FONT, useTokens } from '@/shared/theme';
 import { FieldLabel } from '@/shared/ui';
 
-import { BoardError, SaidError } from '../api/errors';
+import { BoardError, isOffline, SaidError } from '../api/errors';
 import { useBoardState } from '../hooks/boardStore';
-import { useImportLink } from '../hooks/useHandoff';
 import { useForm } from '../hooks/useForm';
 import type { Flow } from '../hooks/useLeaguesFlow';
 import {
@@ -20,14 +19,14 @@ import {
 } from '../hooks/useLeagues';
 import {
   claimSchema,
-  joinSchema,
+  codeSchema,
   nicknameSchema,
   optionalPinSchema,
   pinSchema,
   startSchema,
 } from '../schemas';
 import { object } from 'yup';
-import { Acts, B, Btn, Card, Field, Msg, P, PinField, TextLink } from './ui';
+import { Acts, Btn, Card, Field, Msg, P, PinField, TextLink } from './ui';
 
 const PIN_HINT =
   'Lets you join as yourself from another phone or app later. Optional, and you can set it later.';
@@ -53,10 +52,6 @@ export function Intro({ flow }: { flow: Flow }) {
         <Btn kind="go" label="Start a league" onPress={() => flow.setView({ k: 'start' })} />
         <Btn label="Join with a code" onPress={() => flow.setView({ k: 'code' })} />
       </Acts>
-      <TextLink
-        label="Already in a league on another browser or app?"
-        onPress={() => flow.setView({ k: 'claim' })}
-      />
     </Card>
   );
 }
@@ -108,12 +103,19 @@ export function StartForm({ flow }: { flow: Flow }) {
   );
 }
 
+/**
+ * A code (or a pasted invite link) typed in: it opens that league's invite, as tapping the
+ * link does, so the player sees the league before joining and can pick their name if
+ * they're already in it.
+ */
 export function CodeForm({ flow }: { flow: Flow }) {
-  const join = useJoinLeague();
-  const f = useForm({ code: '', nick: '', pin: '' }, joinSchema);
+  const f = useForm({ code: '' }, object({ code: codeSchema }));
   return (
     <Card title="Join a league" testID="code-form">
-      <P>Ask someone in the league for its link or 8-letter code.</P>
+      <P>
+        Ask someone in the league for its link or 8-letter code. Already in the league somewhere
+        else? Enter its code too, then pick your name.
+      </P>
       <Field
         label="League code"
         autoCapitalize="characters"
@@ -122,24 +124,14 @@ export function CodeForm({ flow }: { flow: Flow }) {
         value={f.values.code}
         onChangeText={f.set('code')}
       />
-      <Field
-        label="Your nickname"
-        maxLength={16}
-        value={f.values.nick}
-        onChangeText={f.set('nick')}
-      />
-      <PinField hint={PIN_HINT} value={f.values.pin} onChangeText={f.set('pin')} />
       <Msg text={f.msg} />
       <Acts>
         <Btn
           kind="go"
-          label="Join"
-          disabled={f.busy}
+          label="Next"
           onPress={() =>
             f.submit(async (v) => {
-              await join.mutateAsync({ code: v.code, nick: v.nick, pin: v.pin || undefined });
-              flow.setNotice({ k: 'joined' });
-              flow.home();
+              flow.setView({ k: 'invite', code: v.code, typed: true });
             })
           }
         />
@@ -150,7 +142,7 @@ export function CodeForm({ flow }: { flow: Flow }) {
 }
 
 /** Opened from a league's invite link: join it, or pick your name if you're already in it. */
-export function InviteForm({ flow, code }: { flow: Flow; code: string }) {
+export function InviteForm({ flow, code, typed }: { flow: Flow; code: string; typed?: boolean }) {
   const t = useTokens();
   const peek = usePeek(code);
   const join = useJoinLeague();
@@ -166,6 +158,28 @@ export function InviteForm({ flow, code }: { flow: Flow; code: string }) {
         accessibilityLabel="Loading the invite"
       />
     );
+  if (peek.isError && isOffline(peek.error)) {
+    return (
+      <Card title="Couldn’t reach the leagues" testID="invite-offline">
+        <P>Check your connection and try again. The invite still works.</P>
+        <Acts>
+          <Btn kind="go" label="Try again" onPress={() => void peek.refetch()} />
+          <Btn label="Back" onPress={flow.home} />
+        </Acts>
+      </Card>
+    );
+  }
+  if ((peek.isError || !peek.data) && typed) {
+    return (
+      <Card title="No league has that code" testID="invite-no-code">
+        <P>Check the code and try again, or ask someone in the league for its link.</P>
+        <Acts>
+          <Btn kind="go" label="Try again" onPress={() => flow.setView({ k: 'code' })} />
+          <Btn label="Back" onPress={flow.back} />
+        </Acts>
+      </Card>
+    );
+  }
   if (peek.isError || !peek.data) {
     return (
       <Card title="That link has expired" testID="invite-expired">
@@ -212,7 +226,7 @@ export function InviteForm({ flow, code }: { flow: Flow; code: string }) {
             })
           }
         />
-        {flow.inAny ? <Btn label="Not now" onPress={flow.home} /> : null}
+        <Btn label={flow.inAny ? 'Not now' : 'Back'} onPress={flow.home} />
       </Acts>
       {info.members ? (
         <TextLink
@@ -332,10 +346,6 @@ export function ClaimForm({
         />
         <Btn label="Back" onPress={() => flow.setView(back ?? { k: 'home' })} />
       </Acts>
-      <TextLink
-        label="Have a personal link instead?"
-        onPress={() => flow.setView({ k: 'paste' })}
-      />
     </Card>
   );
 }
@@ -371,45 +381,7 @@ export function PinForm({ flow, fresh }: { flow: Flow; fresh: boolean }) {
   );
 }
 
-export function PasteForm({ flow }: { flow: Flow }) {
-  const bring = useImportLink();
-  const f = useForm({ key: '' }, object({}));
-  return (
-    <Card title="Bring your leagues here" testID="paste-form">
-      <P>
-        Where you joined, open the board’s League settings and tap <B>Send me my link</B>. Copy that
-        link and paste it below.
-      </P>
-      <Field
-        label="Your link"
-        autoCapitalize="none"
-        autoCorrect={false}
-        autoComplete="off"
-        spellCheck={false}
-        value={f.values.key}
-        onChangeText={f.set('key')}
-      />
-      <Msg text={f.msg} />
-      <Acts>
-        <Btn
-          kind="go"
-          label="Bring them here"
-          disabled={f.busy}
-          onPress={() =>
-            f.submit(async (v) => {
-              const r = await bring.mutateAsync(v.key);
-              if (r.kind === 'moved') flow.setNotice({ k: 'moved' });
-              flow.home();
-            })
-          }
-        />
-        <Btn label="Back" onPress={flow.back} />
-      </Acts>
-    </Card>
-  );
-}
-
-/** This install plays as someone else, and a link or claim brought another player: ask. */
+/** This install plays as someone else, and a claim or the account brought another player: ask. */
 export function PendCard({ flow, pend }: { flow: Flow; pend: BoardPending }) {
   const s = useBoardState();
   const settle = useSettlePending();
@@ -425,12 +397,12 @@ export function PendCard({ flow, pend }: { flow: Flow; pend: BoardPending }) {
   return (
     <Card title="Which leagues should this app use?" testID="pend-card">
       <P>Here you play in {names(s.leagues || [])}.</P>
-      <P>Your link is for {names(pend.leagues || [])}.</P>
-      <P>Results and streaks from the link have been added here either way.</P>
+      <P>Your other player is in {names(pend.leagues || [])}.</P>
+      <P>Results and streaks have been added here either way.</P>
       <Acts>
         <Btn
           kind="go"
-          label="Use my link"
+          label="Use those leagues"
           disabled={settle.isPending}
           onPress={() => choose(true)}
         />

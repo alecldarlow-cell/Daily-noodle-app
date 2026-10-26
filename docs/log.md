@@ -423,6 +423,44 @@ below when it finishes.
   load with every board view: 👑 for last week's champion, "🏆 New league record" on the row, the "🏅 League record"
   line under each daily board, tap a name for their card; Tangle's "Play more boards in Yarn".
 
+### 26 Oct 2026, polish batch B1 (Mini, Doku, Sweep, Path, shared chrome)
+
+- [#57](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/57) (not merged):
+  - A Sweep from a past day says "A past puzzle — this one won't change your streak." in place of the site's "Today's result is already in — this is a replay". This changes only the text on screen; the model and the replay are untouched.
+  - The bar's flame now shows each type's live streak, the same number as its start card.
+  - The bar clocks all read "0:03".
+  - The clock pauses while the app is in the background (shared `usePuzzleClock`).
+  - Path shakes the square and buzzes on a rejected tap.
+  - New shared helper `pressable()` in `@/shared/ui` gives every in-scope button a pressed look.
+  - Contrast fixes on Mini, Doku, Path and Sweep.
+  - Shared chrome: stat numbers stay on one line, the Share pill stacks under the share line at large text, the board bar's name is a heading, and a fresh finish is announced and focused for screen readers.
+  - Boards are now sized from the space they actually get (`useBoardFit`).
+- Tests proved:
+  - Archive wording and the flame against a lapsed or live streak.
+  - The clock pauses on background and on iOS's inactive state (AppState mocked).
+  - Pressed looks on every in-scope button.
+  - Mini, Doku and Path colours in light and dark, including contrast ratios.
+  - Path shake and buzz, and the Sweep wrong-flag ring and pulse.
+  - Boards shrink to fit a measured slot.
+  - The finish announcement and focus.
+  - `check` is green (916 tests, 98.31% lines).
+- Left:
+  - The gap above the board on tall phones. The board is as wide as the screen allows and stays centred in a taller space; closing the gap means changing the layout.
+- Needs Alec:
+  - Decide that tall-phone layout.
+  - Phone checks: background pause, TalkBack/VoiceOver on a finish, font scale 2.0, dark mode.
+
+- **Polish B2: Link/Tangle/Borders/Reckon** (26 Oct, branch `polish/batch-b2-puzzles`, PR linked from the branch):
+  Link: an archive Link never played no longer says "· replay" / "Today's result is already in" (display only:
+  `shownLabel`/`shownMsg`; the model's `msg`/`label` and the replay are untouched), the bar's flame is Link's live
+  streak as on its start card, dark-mode board colours (g4 `#ECEEF4` on paper, soft red miss tint), one tile font
+  per board (link.js fitFont), mistakes-left read with its count. Tangle: board capped by height, gold tokens,
+  each tile a screen-reader button. Borders: text caps + scrolling column. Reckon: narrow top row, pip hitSlop,
+  score label with its number. All four: pressed state; iOS announcements for the feedback line.
+  Tests proved: each of these through the screens (GIVEN/WHEN/THEN), `check` green. Left: Borders map WebView still
+  reloads per question (needs a phone to verify an injectJavaScript redraw). Needs the phone: VoiceOver on the
+  four, Tangle on an SE-size phone, Borders at font scale 2.0, Link in dark mode.
+
 ### 26 Oct 2026 · Polish batch A: shell, Today, Archive ([#54](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/54))
 
 - Status bar from the scheme; tab bar and stack headers themed from tokens (green Android pill, Archivo labels);
@@ -453,44 +491,6 @@ below when it finishes.
 - Left: the offline invite still reads as "expired" (joining review); `/auth` header (router).
 - Needs Alec (phone): the keyboard taps on iOS's number pad; `setParams` clearing under NativeTabs (repeat "Bring my leagues here", reopen an invite after "Not now"); the fonts and spinner in dark mode.
 
-- **Polish B2: Link/Tangle/Borders/Reckon** (26 Oct, branch `polish/batch-b2-puzzles`, PR linked from the branch):
-  Link: an archive Link never played no longer says "· replay" / "Today's result is already in" (display only:
-  `shownLabel`/`shownMsg`; the model's `msg`/`label` and the replay are untouched), the bar's flame is Link's live
-  streak as on its start card, dark-mode board colours (g4 `#ECEEF4` on paper, soft red miss tint), one tile font
-  per board (link.js fitFont), mistakes-left read with its count. Tangle: board capped by height, gold tokens,
-  each tile a screen-reader button. Borders: text caps + scrolling column. Reckon: narrow top row, pip hitSlop,
-  score label with its number. All four: pressed state; iOS announcements for the feedback line.
-  Tests proved: each of these through the screens (GIVEN/WHEN/THEN), `check` green. Left: Borders map WebView still
-  reloads per question (needs a phone to verify an injectJavaScript redraw). Needs the phone: VoiceOver on the
-  four, Tangle on an SE-size phone, Borders at font scale 2.0, Link in dark mode.
-
-### 26 Oct 2026, polish batch B1 (Mini, Doku, Sweep, Path, shared chrome)
-
-- [#57](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/57) (not merged):
-  - A Sweep from a past day says "A past puzzle — this one won't change your streak." in place of the site's "Today's result is already in — this is a replay". This changes only the text on screen; the model and the replay are untouched.
-  - The bar's flame now shows each type's live streak, the same number as its start card.
-  - The bar clocks all read "0:03".
-  - The clock pauses while the app is in the background (shared `usePuzzleClock`).
-  - Path shakes the square and buzzes on a rejected tap.
-  - New shared helper `pressable()` in `@/shared/ui` gives every in-scope button a pressed look.
-  - Contrast fixes on Mini, Doku, Path and Sweep.
-  - Shared chrome: stat numbers stay on one line, the Share pill stacks under the share line at large text, the board bar's name is a heading, and a fresh finish is announced and focused for screen readers.
-  - Boards are now sized from the space they actually get (`useBoardFit`).
-- Tests proved:
-  - Archive wording and the flame against a lapsed or live streak.
-  - The clock pauses on background and on iOS's inactive state (AppState mocked).
-  - Pressed looks on every in-scope button.
-  - Mini, Doku and Path colours in light and dark, including contrast ratios.
-  - Path shake and buzz, and the Sweep wrong-flag ring and pulse.
-  - Boards shrink to fit a measured slot.
-  - The finish announcement and focus.
-  - `check` is green (916 tests, 98.31% lines).
-- Left:
-  - The gap above the board on tall phones. The board is as wide as the screen allows and stays centred in a taller space; closing the gap means changing the layout.
-- Needs Alec:
-  - Decide that tall-phone layout.
-  - Phone checks: background pause, TalkBack/VoiceOver on a finish, font scale 2.0, dark mode.
-
 ### 26 Oct 2026, polish batch D (brand, saved progress, Tangle, tall phones, Back, small fixes)
 
 - [#61](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/61) (not merged; stacked on #54, #53, #57):
@@ -510,3 +510,24 @@ below when it finishes.
   - Date labels are unchanged: they already follow the site cards' `relTime` rule.
   - The Today card could show "In progress" for a kept round. The site shows it only for Tangle, Borders and Reckon.
 - Needs Alec: a native build for the icon and splash, then the phone checks listed in the PR.
+
+### 26 Oct 2026 — League joining: App Links and one way in ([#58](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/58), this PR; site [dailynoodle#37](https://github.com/alecldarlow-cell/dailynoodle/pull/37))
+
+- Why: the league-joining review (Alec's go-ahead, 26 Oct). Six ways in became three: join (a link or a code, through
+  one invite screen), "Already in X? Pick your name" with the PIN, and sign-in sync.
+- **App Links** (#58, merged): invites are `https://dailynoodle.co.uk/join.html?c=CODE`. Android opens them in the app
+  (`app.json` intentFilters, verified by the site's `/.well-known/assetlinks.json`, which is live with the EAS key's
+  SHA-256); `+native-intent` → `systemPath()` → `/leagues?join=`. Never board.html (it carries the website's sign-in
+  links). Browsers go on from join.html to `board.html?join=CODE&v=2`. Leaderboard shares keep board.html.
+- **One way in** (this PR):
+  - A typed code opens the invite screen (peek first): league name, "Already in X? Pick your name", and "No league has that code".
+  - An invite that can't be fetched says "Couldn't reach the leagues" + Try again, not "expired". Back is there for players in no league too.
+  - The personal link is gone from the app: PasteForm, "Send me my link" / "Paste a link", `?go=paste` (now just opens Leagues), `useHandoff`. `importMove` stays for sync.
+  - Intro: no separate claim link. Account: "I have a league PIN", with sign-in as the way to bring leagues across.
+  - After joining (sync builds): "Sign in on Account".
+- Tests proved: the systemPath/decide rules (auth, board and other-host links untouched), the intent filter is exactly join.html, the join journeys above, offline vs. expired, the claim pending choice both ways. Changed on purpose: the invite share text, the Account button's label, PendCard's wording. `check` green.
+- Left:
+  - Play's app-signing fingerprint goes into assetlinks.json after the first Play upload (site PR).
+  - Switching the website's own invites to join.html (Alec: later).
+  - iOS universal links, with an iOS build.
+- Needs Alec: a new native build for App Links. On the phone: `adb shell pm get-app-links uk.co.dailynoodle.app` shows verified; tapping a join.html invite in WhatsApp opens the app on the invite.

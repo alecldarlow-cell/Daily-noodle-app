@@ -1,9 +1,10 @@
-import { b64urlEncode, londonDay } from '@noodle/core';
+import { londonDay } from '@noodle/core';
 import { act, fireEvent, screen, waitFor, within } from '@testing-library/react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Alert, Share } from 'react-native';
 
 import { QueryProvider } from '@/shared/query';
+import { BUILD_ENV } from '@/shared/env';
 import { appStorage } from '@/shared/storage';
 import { renderWithProviders } from '@/shared/testing';
 
@@ -35,6 +36,8 @@ jest.mock('expo-router', () => ({
 const mockNavigation = { setParams: jest.fn() };
 
 const m = jest.mocked(api);
+const env = BUILD_ENV as Record<string, string | undefined>;
+const SYNC = env.EXPO_PUBLIC_SYNC;
 const params = jest.mocked(useLocalSearchParams);
 const today = londonDay();
 const MINI_PATH = `reports/${today}-crossword-mini-0105.html`;
@@ -68,6 +71,7 @@ beforeEach(() => {
 });
 
 afterEach(async () => {
+  env.EXPO_PUBLIC_SYNC = SYNC;
   await act(async () => {
     await new Promise((r) => setTimeout(r, 60));
   });
@@ -85,15 +89,15 @@ function inFamily(extra: Record<string, unknown> = {}) {
 
 describe('GIVEN someone in no league', () => {
   describe('WHEN Leagues opens', () => {
-    it('THEN it invites them to start or join one, or bring a league from elsewhere', async () => {
+    it('THEN it invites them to start a league or join one with a code', async () => {
       await renderWithProviders(<LeaguesScreen />);
       expect(
         screen.getByRole('header', { name: 'Daily leaderboards for your group' }),
       ).toBeOnTheScreen();
       expect(screen.getByRole('button', { name: 'Start a league' })).toBeOnTheScreen();
       expect(screen.getByRole('button', { name: 'Join with a code' })).toBeOnTheScreen();
-      await press('Already in a league on another browser or app?');
-      expect(screen.getByRole('header', { name: 'Already in a league?' })).toBeOnTheScreen();
+      // Someone already in a league joins with its code too, then picks their name.
+      expect(screen.queryByText(/Already in a league/)).toBeNull();
       // No board id yet, so nothing to ask the server.
       expect(m.boardMine).not.toHaveBeenCalled();
     });
@@ -124,7 +128,7 @@ describe('GIVEN someone in no league', () => {
         within(screen.getByTestId('notice-created')).getByRole('button', { name: 'Invite people' }),
       );
       expect(shared).toEqual([
-        'Join Noodle family on Noodle Puzzles: tap the link, pick a nickname, and your results go on our daily leaderboards.\nhttps://dailynoodle.co.uk/board.html?join=NEWC2345&v=2',
+        'Join Noodle family on Noodle Puzzles: tap the link, pick a nickname, and your results go on our daily leaderboards.\nhttps://dailynoodle.co.uk/join.html?c=NEWC2345',
       ]);
     });
 
@@ -152,19 +156,94 @@ describe('GIVEN someone in no league', () => {
   });
 
   describe('WHEN they join with an invite link pasted as the code', () => {
-    it('THEN they join that league and the board says so', async () => {
+    it('THEN the league’s invite opens, as the link would, and they join from it', async () => {
+      m.boardPeek.mockResolvedValue({ name: 'Family', members: 3, players: ['Ma', 'Jo', 'Bo'] });
       m.boardJoin.mockResolvedValue({ code: FAMILY.code, name: 'Family' });
       m.boardMine.mockResolvedValue([mineRow({ ...FAMILY, owner: false })]);
       await renderWithProviders(<LeaguesScreen />);
       await press('Join with a code');
-      await type('League code', 'https://dailynoodle.co.uk/board.html?join=abcd2345&v=2');
+      await type('League code', 'https://dailynoodle.co.uk/join.html?c=abcd2345');
+      await press('Next');
+      await waitFor(() =>
+        expect(screen.getByRole('header', { name: 'Join Family' })).toBeOnTheScreen(),
+      );
+      expect(m.boardPeek).toHaveBeenCalledWith('ABCD2345');
+      expect(
+        screen.getByRole('button', { name: 'Already in Family? Pick your name' }),
+      ).toBeOnTheScreen();
       await type('Your nickname', 'Alec');
-      await press('Join');
+      await press('Join league');
       await waitFor(() =>
         expect(screen.getByRole('header', { name: 'You’re in Family' })).toBeOnTheScreen(),
       );
       expect(m.boardJoin).toHaveBeenCalledWith(board().pid, 'ABCD2345', 'Alec');
       expect(m.boardPinSet).not.toHaveBeenCalled();
+    });
+
+    it('THEN a code that isn’t one is caught before anything is asked', async () => {
+      await renderWithProviders(<LeaguesScreen />);
+      await press('Join with a code');
+      await type('League code', 'AB');
+      await press('Next');
+      expect(
+        screen.getByText('Enter the league’s code, or paste its invite link.'),
+      ).toBeOnTheScreen();
+      expect(m.boardPeek).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('WHEN the code they type belongs to no league', () => {
+    it('THEN it says so, and Try again goes back to the code', async () => {
+      m.boardPeek.mockRejectedValue(new BoardError('no_league'));
+      await renderWithProviders(<LeaguesScreen />);
+      await press('Join with a code');
+      await type('League code', 'WXYZ2345');
+      await press('Next');
+      await waitFor(() =>
+        expect(screen.getByRole('header', { name: 'No league has that code' })).toBeOnTheScreen(),
+      );
+      await press('Try again');
+      expect(screen.getByRole('header', { name: 'Join a league' })).toBeOnTheScreen();
+    });
+  });
+
+  describe('WHEN they join while sign-in is in the build', () => {
+    it('THEN the board offers signing in, for playing on another phone too', async () => {
+      env.EXPO_PUBLIC_SYNC = '1';
+      params.mockReturnValue({ join: 'abcd2345' });
+      m.boardPeek.mockResolvedValue({ name: 'Family', members: 3, players: ['Ma', 'Jo', 'Bo'] });
+      m.boardJoin.mockResolvedValue({ code: FAMILY.code, name: 'Family' });
+      m.boardMine.mockResolvedValue([mineRow({ ...FAMILY, owner: false })]);
+      await renderWithProviders(<LeaguesScreen />);
+      await waitFor(() =>
+        expect(screen.getByRole('header', { name: 'Join Family' })).toBeOnTheScreen(),
+      );
+      await type('Your nickname', 'Alec');
+      await press('Join league');
+      await waitFor(() =>
+        expect(screen.getByRole('header', { name: 'You’re in Family' })).toBeOnTheScreen(),
+      );
+      await press('Sign in on Account');
+      expect(router.navigate).toHaveBeenCalledWith('/account');
+      expect(screen.queryByTestId('notice-joined')).toBeNull();
+    });
+
+    it('THEN without sign-in in the build, the card doesn’t mention it', async () => {
+      env.EXPO_PUBLIC_SYNC = undefined;
+      params.mockReturnValue({ join: 'abcd2345' });
+      m.boardPeek.mockResolvedValue({ name: 'Family', members: 3, players: ['Ma', 'Jo', 'Bo'] });
+      m.boardJoin.mockResolvedValue({ code: FAMILY.code, name: 'Family' });
+      m.boardMine.mockResolvedValue([mineRow({ ...FAMILY, owner: false })]);
+      await renderWithProviders(<LeaguesScreen />);
+      await waitFor(() =>
+        expect(screen.getByRole('header', { name: 'Join Family' })).toBeOnTheScreen(),
+      );
+      await type('Your nickname', 'Alec');
+      await press('Join league');
+      await waitFor(() =>
+        expect(screen.getByRole('header', { name: 'You’re in Family' })).toBeOnTheScreen(),
+      );
+      expect(screen.queryByRole('button', { name: 'Sign in on Account' })).toBeNull();
     });
   });
 });
@@ -282,7 +361,7 @@ describe('GIVEN an invite link opened in the app (?join=)', () => {
   });
 
   describe('WHEN this install already plays in a league as someone else', () => {
-    it('THEN it asks which leagues to use, and “Use my link” switches player', async () => {
+    it('THEN it asks which leagues to use, and “Use those leagues” switches player', async () => {
       inFamily();
       setBoard({
         pid: PID,
@@ -312,14 +391,44 @@ describe('GIVEN an invite link opened in the app (?join=)', () => {
         ).toBeOnTheScreen(),
       );
       expect(screen.getByText('Here you play in Work as Alec.')).toBeOnTheScreen();
-      expect(screen.getByText('Your link is for Family as Ma.')).toBeOnTheScreen();
+      expect(screen.getByText('Your other player is in Family as Ma.')).toBeOnTheScreen();
       expect(board().pid).toBe(PID);
       m.boardMine.mockResolvedValue([mineRow({ ...FAMILY, nick: 'Ma', owner: false })]);
-      await press('Use my link');
+      await press('Use those leagues');
       await waitFor(() => expect(board().pid).toBe(OTHER));
       await waitFor(() =>
         expect(screen.getByRole('header', { name: 'Your leagues are here now' })).toBeOnTheScreen(),
       );
+    });
+  });
+
+  describe('WHEN the invite can’t be fetched (no signal)', () => {
+    it('THEN it says so, not “expired”, and Try again fetches it', async () => {
+      m.boardPeek.mockRejectedValueOnce(new BoardError('offline'));
+      await renderWithProviders(<LeaguesScreen />);
+      await waitFor(() =>
+        expect(
+          screen.getByRole('header', { name: 'Couldn’t reach the leagues' }),
+        ).toBeOnTheScreen(),
+      );
+      expect(screen.queryByText('That link has expired')).toBeNull();
+      await press('Try again');
+      await waitFor(() =>
+        expect(screen.getByRole('header', { name: 'Join Family' })).toBeOnTheScreen(),
+      );
+    });
+  });
+
+  describe('WHEN someone in no league would rather not join', () => {
+    it('THEN Back takes them to the intro', async () => {
+      await renderWithProviders(<LeaguesScreen />);
+      await waitFor(() =>
+        expect(screen.getByRole('header', { name: 'Join Family' })).toBeOnTheScreen(),
+      );
+      await press('Back');
+      expect(
+        screen.getByRole('header', { name: 'Daily leaderboards for your group' }),
+      ).toBeOnTheScreen();
     });
   });
 
@@ -505,13 +614,13 @@ describe('GIVEN a player in a league', () => {
       await waitFor(() => expect(screen.getByText('You’re not in that league.')).toBeOnTheScreen());
     });
 
-    it('THEN “Send me my link” shares a personal link carrying their saves and board', async () => {
+    it('THEN “Play somewhere else too?” points to the PIN and sign-in, not a personal link', async () => {
+      env.EXPO_PUBLIC_SYNC = '1';
       await openSettings();
-      appStorage.setItem('digi-mini-v1', JSON.stringify({ v: 1, done: {} }));
-      await press('Send me my link');
-      expect(shared[0]).toMatch(
-        /^My Daily Noodle link\. .*not for sharing\.\)\nhttps:\/\/dailynoodle\.co\.uk\/board\.html#dnmove=/,
-      );
+      expect(screen.getByText(/pick your nickname and enter your PIN/)).toBeOnTheScreen();
+      expect(screen.getByText(/sign in on Account with your email/)).toBeOnTheScreen();
+      expect(screen.queryByRole('button', { name: 'Send me my link' })).toBeNull();
+      expect(screen.queryByRole('button', { name: 'Paste a link' })).toBeNull();
     });
 
     it('THEN a bad league name is caught before it’s sent', async () => {
@@ -524,79 +633,24 @@ describe('GIVEN a player in a league', () => {
   });
 });
 
-describe('GIVEN a personal link from another browser', () => {
-  const link = (d: Record<string, string>, b: unknown) =>
-    `https://dailynoodle.co.uk/board.html#dnmove=${b64urlEncode(JSON.stringify({ v: 1, d, b, h: '' }))}`;
-
-  describe('WHEN it’s pasted into an install in no league', () => {
-    it('THEN its results merge in (first result kept), its player is adopted, and the board says so', async () => {
-      appStorage.setItem(
-        'digi-mini-v1',
-        JSON.stringify({ v: 1, done: { 'DP·MINI·0105': { s: 50, d: today } } }),
-      );
-      m.boardMine.mockResolvedValue([mineRow({ ...FAMILY, owner: false })]);
-      params.mockReturnValue({ go: 'paste' });
-      await renderWithProviders(<LeaguesScreen />);
-      await type(
-        'Your link',
-        link(
-          {
-            'digi-mini-v1': JSON.stringify({
-              v: 1,
-              done: { 'DP·MINI·0105': { s: 99 }, 'DP·MINI·0104': { s: 70 } },
-            }),
-          },
-          {
-            pid: OTHER,
-            cur: 'ABCD2345',
-            leagues: [{ code: 'ABCD2345', name: 'Family', nick: 'Alec', owner: false }],
-          },
-        ),
-      );
-      await press('Bring them here');
-      await waitFor(() =>
-        expect(screen.getByRole('header', { name: 'Your leagues are here now' })).toBeOnTheScreen(),
-      );
-      expect(JSON.parse(appStorage.getItem('digi-mini-v1')!).done).toEqual({
-        'DP·MINI·0104': { s: 70 },
-        'DP·MINI·0105': { s: 50, d: today },
-      });
-      expect(board()).toMatchObject({ pid: OTHER, cur: 'ABCD2345' });
-      expect(board().moved).toBeUndefined();
-    });
-  });
-
-  describe('WHEN what’s pasted isn’t one', () => {
-    it('THEN it says so', async () => {
-      params.mockReturnValue({ go: 'paste' });
-      await renderWithProviders(<LeaguesScreen />);
-      await type('Your link', 'https://dailynoodle.co.uk/board.html?join=ABCD2345');
-      await press('Bring them here');
-      await waitFor(() =>
-        expect(
-          screen.getByText('That doesn’t look like your link. Copy the whole link and try again.'),
-        ).toBeOnTheScreen(),
-      );
-    });
-  });
-
-  describe('WHEN this install plays as someone else', () => {
-    it('THEN it asks, and “Keep this one” keeps this player', async () => {
+describe('GIVEN a claim that brings another player to an install already in a league', () => {
+  describe('WHEN they choose to keep this one', () => {
+    it('THEN this install keeps its player and the choice goes', async () => {
       inFamily();
-      params.mockReturnValue({ go: 'paste' });
+      params.mockReturnValue({ go: 'claim' });
+      m.boardClaim.mockResolvedValue({
+        ok: true,
+        player: OTHER,
+        code: 'WORK2345',
+        name: 'Work',
+        nick: 'Ma',
+        needs_pin: false,
+      });
       await renderWithProviders(<LeaguesScreen />);
-      await type(
-        'Your link',
-        link(
-          {},
-          {
-            pid: OTHER,
-            cur: 'WORK2345',
-            leagues: [{ code: 'WORK2345', name: 'Work', nick: 'Ma', owner: false }],
-          },
-        ),
-      );
-      await press('Bring them here');
+      await type('League code', 'WORK2345');
+      await type('Your nickname', 'Ma');
+      await type('Your PIN', '4321');
+      await press('Play as me here');
       await waitFor(() =>
         expect(
           screen.getByRole('header', { name: 'Which leagues should this app use?' }),
@@ -615,8 +669,7 @@ describe('GIVEN shortcuts into Leagues', () => {
     params.mockReturnValue({ go: 'claim' });
     const r = await renderWithProviders(<LeaguesScreen />);
     expect(screen.getByRole('header', { name: 'Already in a league?' })).toBeOnTheScreen();
-    await press('Have a personal link instead?');
-    expect(screen.getByRole('header', { name: 'Bring your leagues here' })).toBeOnTheScreen();
+    expect(screen.queryByText('Have a personal link instead?')).toBeNull();
     params.mockReturnValue({ go: 'start' });
     const again = () =>
       r.rerender(
@@ -630,6 +683,14 @@ describe('GIVEN shortcuts into Leagues', () => {
     await again();
     expect(screen.getByRole('header', { name: 'Join a league' })).toBeOnTheScreen();
     await press('Back');
+    expect(
+      screen.getByRole('header', { name: 'Daily leaderboards for your group' }),
+    ).toBeOnTheScreen();
+  });
+
+  it('THEN the old personal-link shortcut (?go=paste) just opens Leagues', async () => {
+    params.mockReturnValue({ go: 'paste' });
+    await renderWithProviders(<LeaguesScreen />);
     expect(
       screen.getByRole('header', { name: 'Daily leaderboards for your group' }),
     ).toBeOnTheScreen();

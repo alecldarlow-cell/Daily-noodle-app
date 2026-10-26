@@ -13,6 +13,7 @@ import {
   View,
 } from 'react-native';
 
+import { BUILD_ENV } from '@/shared/env';
 import { appStorage, useStoredRaw } from '@/shared/storage';
 import { FONT, useTokens } from '@/shared/theme';
 import { shortDate, useLondonDay } from '@/shared/time';
@@ -34,7 +35,6 @@ import {
   weekDays,
   weekLabel,
 } from '../hooks/boardText';
-import { shareMyLink } from '../hooks/useHandoff';
 import type { Flow, Notice } from '../hooks/useLeaguesFlow';
 import {
   useBoardData,
@@ -48,6 +48,9 @@ import { leagueNameSchema, firstError } from '../schemas';
 import type { BoardView, DayBoard, DayRow, NotYet, Overall, OverallRow, Records } from '../types';
 import { RecordsView } from './Records';
 import { Acts, B, Btn, Card, Field, Msg, P, Sub } from './ui';
+
+/** Sign-in sync is in this build: then joining points to it, for playing on another phone. */
+const syncOn = (): boolean => BUILD_ENV.EXPO_PUBLIC_SYNC === '1';
 
 const PILLS: { id: BoardView; emoji: string; name: string }[] = [
   { id: 'all', emoji: '🏆', name: 'All puzzles' },
@@ -317,14 +320,28 @@ function TopCard({ flow, league }: { flow: Flow; league: BoardLeague }) {
             onPress={() => (done(), flow.setView({ k: 'start', from: 'joined' }))}
           />
         </Acts>
+        {syncOn() ? (
+          <>
+            <P>
+              Playing on another phone or on the website too? Sign in with your email and your
+              leagues come with you.
+            </P>
+            <Acts>
+              <Btn
+                label="Sign in on Account"
+                onPress={() => (done(), router.navigate('/account'))}
+              />
+            </Acts>
+          </>
+        ) : null}
       </Card>
     );
   if (n?.k === 'moved')
     return (
       <Card title="Your leagues are here now" testID="notice-moved">
         <P>
-          Results and streaks from your link have been added to this app, and puzzles you finish
-          here go on the board as {league.nick}.
+          Results and streaks from your other player have been added to this app, and puzzles you
+          finish here go on the board as {league.nick}.
         </P>
       </Card>
     );
@@ -736,14 +753,11 @@ function Settings({
             Your leagues are kept in this app. Where else you play, open the league’s invite link,
             tap <B>Already in this league?</B>, pick your nickname and enter your PIN.
           </P>
-          <P fine>
-            Or send yourself your personal link, which also brings your streaks. It’s your key, so
-            don’t post it in a group.
-          </P>
-          <Acts>
-            <Btn label="Send me my link" onPress={() => void shareMyLink()} />
-            <Btn label="Paste a link" onPress={() => flow.setView({ k: 'paste' })} />
-          </Acts>
+          {syncOn() ? (
+            <P fine>
+              Or sign in on Account with your email, and your leagues and streaks follow you.
+            </P>
+          ) : null}
           {league.owner ? (
             <>
               <Sub>League name</Sub>
