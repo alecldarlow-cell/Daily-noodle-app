@@ -1,13 +1,13 @@
 import type { PuzzleType } from '@noodle/core';
 import { router } from 'expo-router';
 import { useMemo } from 'react';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
 import { useFeedLite, type FeedItem } from '@/shared/feed';
 import { usePlayed } from '@/shared/played';
 import { FONT, useTokens } from '@/shared/theme';
 import { shortDate, useLondonDay } from '@/shared/time';
-import { Note, PuzzleRow, Screen } from '@/shared/ui';
+import { Note, PuzzleRow, PuzzleRowSkeleton, Screen } from '@/shared/ui';
 
 import { useToday } from '../../hooks/useToday';
 
@@ -39,14 +39,23 @@ export function TodayScreen() {
   const played = items.filter((it) => byId[it.id]?.done).length;
 
   return (
-    <Screen title="Today" subtitle={shortDate(day)} testID="today-screen" onRefresh={refresh}>
+    <Screen
+      title="Today"
+      subtitle={shortDate(day)}
+      testID="today-screen"
+      onRefresh={refresh}
+      refreshing={status.refreshing}>
       {status.kind === 'ready' ? (
         <View style={styles.countRow}>
           <Text style={[styles.count, { color: t.faint }]} testID="today-count">
             {items.length} puzzles{played ? ` · ${played} played` : ''}
           </Text>
           {run >= 2 ? (
-            <View style={[styles.run, { backgroundColor: t.accentSoft }]} testID="run-chip">
+            <View
+              accessible
+              accessibilityLabel={`${run}-day streak`}
+              style={[styles.run, { backgroundColor: t.accentSoft }]}
+              testID="run-chip">
               <Text style={[styles.runText, { color: t.accent }]}>
                 🔥 <Text style={styles.bold}>{run}-day</Text> streak
               </Text>
@@ -55,9 +64,7 @@ export function TodayScreen() {
         </View>
       ) : null}
 
-      {status.kind === 'loading' ? (
-        <ActivityIndicator style={styles.spinner} color={t.muted} />
-      ) : null}
+      {status.kind === 'loading' ? <PuzzleRowSkeleton rows={6} testID="today-loading" /> : null}
 
       {status.kind === 'nearly' ? (
         <View style={styles.note}>
@@ -76,6 +83,17 @@ export function TodayScreen() {
             testID="today-offline"
             title="No connection"
             body="Today’s puzzles will appear as soon as you’re back online."
+            action={{ label: 'Try again', onPress: refresh }}
+          />
+        </View>
+      ) : null}
+
+      {status.kind === 'failed' ? (
+        <View style={styles.note}>
+          <Note
+            testID="today-failed"
+            title="Couldn’t load today’s puzzles"
+            body="Something went wrong at our end. Try again in a moment."
             action={{ label: 'Try again', onPress: refresh }}
           />
         </View>
@@ -132,6 +150,5 @@ const styles = StyleSheet.create({
   run: { borderRadius: 999, paddingLeft: 8, paddingRight: 10, paddingVertical: 4 },
   runText: { fontFamily: FONT.bodySemi, fontSize: 12.5 },
   bold: { fontFamily: FONT.bodyBold },
-  spinner: { marginTop: 40 },
   note: { marginTop: 16 },
 });

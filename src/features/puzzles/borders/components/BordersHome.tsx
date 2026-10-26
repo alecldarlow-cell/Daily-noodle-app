@@ -12,7 +12,7 @@ import { worldHtml } from './drawing';
 import { Picture } from './Picture';
 
 const HOW = [
-  'Ten country outlines, easiest first. Pick the country from four names: 100 points for each right answer, and 10 more for every one in a row, up to 50.',
+  'Ten country outlines, easiest first. Pick the country from four names: 100 points for each right answer, up to 1,000.',
   'Stuck? Show on map puts the outline on a world map, for half points. Every country you name goes into your atlas in Borderline.',
 ];
 

@@ -1,5 +1,6 @@
 import type { PlayedState, PuzzleType } from '@noodle/core';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useState } from 'react';
+import { Pressable, StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
 
 import { FONT, useTokens } from '@/shared/theme';
 
@@ -23,6 +24,24 @@ interface PuzzleRowProps {
   testID?: string;
 }
 
+/** Space kept between the meta line and "How to play". */
+const HOWTO_GAP = 8;
+/** Narrower than this beside "How to play", the meta line drops onto its own line instead. */
+export const META_MIN_WIDTH = 120;
+
+/**
+ * Where "How to play" goes (it is the card's sibling, laid over its corner, so it never opens
+ * the puzzle): beside the meta line with exactly its own width kept clear, or, when that
+ * would leave the meta line too narrow (large text), on a line of its own under it. Before
+ * the first layout, a fixed 88 pt is kept, as before.
+ */
+export function howToRoom(bodyWidth: number, howToWidth: number, howToHeight: number) {
+  if (!bodyWidth || !howToWidth) return { paddingRight: 88 };
+  const room = howToWidth + HOWTO_GAP;
+  if (bodyWidth - room >= META_MIN_WIDTH) return { paddingRight: room };
+  return { paddingBottom: Math.max(24, howToHeight) + 4 };
+}
+
 /**
  * One puzzle as the site's front-page card (front.css `.card`, front.js `card`): the
  * 96 pt preview tile with a played mark on its corner, the headline, the standfirst, and
@@ -41,6 +60,13 @@ export function PuzzleRow({
   testID,
 }: PuzzleRowProps) {
   const t = useTokens();
+  const [bodyW, setBodyW] = useState(0);
+  const [howTo, setHowTo] = useState({ w: 0, h: 0 });
+  const onBody = (e: LayoutChangeEvent) => setBodyW(e.nativeEvent.layout.width);
+  const onHowToLayout = (e: LayoutChangeEvent) => {
+    const { width: w, height: h } = e.nativeEvent.layout;
+    setHowTo((o) => (o.w === w && o.h === h ? o : { w, h }));
+  };
   const result = played?.done ? played.text : played ? 'In progress' : null;
   const label = [title, result ?? when].filter(Boolean).join(', ');
   const meta = [when, result ?? read].filter((s): s is string => !!s);
@@ -70,21 +96,25 @@ export function PuzzleRow({
                 { borderColor: t.canvas, backgroundColor: played.done ? t.accent : t.play },
               ]}>
               {played.done ? (
-                <Text style={[styles.tick, { color: t.onAccent }]}>✓</Text>
+                <Text maxFontSizeMultiplier={1} style={[styles.tick, { color: t.onAccent }]}>
+                  ✓
+                </Text>
               ) : (
                 <View style={[styles.dot, { backgroundColor: t.onPlay }]} />
               )}
             </View>
           ) : null}
         </View>
-        <View style={styles.body}>
+        <View style={styles.body} onLayout={onBody} testID={testID ? `${testID}-body` : undefined}>
           <Text style={[styles.title, { color: t.ink }]}>{title}</Text>
           {detail ? (
             <Text numberOfLines={3} style={[styles.detail, { color: t.muted }]}>
               {detail}
             </Text>
           ) : null}
-          <View style={[styles.meta, onHowTo ? styles.metaRoom : null]}>
+          <View
+            style={[styles.meta, onHowTo ? howToRoom(bodyW, howTo.w, howTo.h) : null]}
+            testID={testID ? `${testID}-metarow` : undefined}>
             {/* One line: "Yesterday · Solved in 1:20" shrinks a touch to fit beside How to play
                 rather than breaking in two (seen at a large text size on a Pixel). */}
             <Text
@@ -115,6 +145,7 @@ export function PuzzleRow({
           accessibilityLabel={`How to play ${title.replace(/\s*\d+$/, '')}`}
           onPress={onHowTo}
           hitSlop={10}
+          onLayout={onHowToLayout}
           testID={testID ? `${testID}-howto` : undefined}
           style={styles.howTo}>
           <Text style={[styles.howToText, { color: t.muted }]}>How to play</Text>
@@ -144,7 +175,6 @@ const styles = StyleSheet.create({
   title: { fontFamily: FONT.display, fontSize: 19, lineHeight: 23, letterSpacing: -0.19 },
   detail: { fontFamily: FONT.body, fontSize: 14, lineHeight: 20, marginTop: 7 },
   meta: { flexDirection: 'row', alignItems: 'center', marginTop: 9, minHeight: 24 },
-  metaRoom: { paddingRight: 88 },
   metaItem: { flexShrink: 1, fontFamily: FONT.bodySemi, fontSize: 12 },
   resultText: { fontFamily: FONT.bodyBold },
   howTo: {

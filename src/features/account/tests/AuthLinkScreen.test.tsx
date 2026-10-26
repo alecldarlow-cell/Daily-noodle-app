@@ -23,11 +23,14 @@ describe('GIVEN the email’s sign-in link opens the app', () => {
   it.each([
     [
       'dailynoodle://auth#error=access_denied&error_description=Email+link+is+invalid+or+has+expired',
-      'Email link is invalid or has expired',
+      'That sign-in link has expired or was already used.',
     ],
-    ['dailynoodle://auth#access_token=bad&refresh_token=R', 'Invalid token'],
+    [
+      'dailynoodle://auth#access_token=bad&refresh_token=R',
+      'That sign-in link has expired or was already used.',
+    ],
     ['dailynoodle://somewhere', 'isn’t a sign-in link'],
-  ])('THEN a bad link (%s) says why', async (url, why) => {
+  ])('THEN a bad link (%s) says why, in the house’s words', async (url, why) => {
     mockUrl = url;
     const { client } = fakeClient();
     await render(<AuthLinkScreen client={client} />);

@@ -1,1 +1,1 @@
-export { SITE, HttpError, getJson } from './http';
+export { SITE, HttpError, getJson, isConnectionError } from './http';

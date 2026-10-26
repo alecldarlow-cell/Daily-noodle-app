@@ -1,4 +1,4 @@
-import { decide, pageUrl, typeOfFile } from '../navigation';
+import { decide, pageUrl, systemPath, typeOfFile } from '../navigation';
 
 const CUR = '2026-10-24-crossword-mini-0105';
 const S = 'https://dailynoodle.co.uk';
@@ -53,5 +53,46 @@ describe('GIVEN puzzle file names', () => {
   });
   it('THEN the page address is tagged as the app', () => {
     expect(pageUrl(CUR)).toBe(`${S}/reports/${CUR}.html?via=app`);
+  });
+});
+
+describe('GIVEN an invite link to join.html (SITE.md › App links)', () => {
+  describe('WHEN a page inside the app links to it', () => {
+    it('THEN the Leagues tab opens that invite, as board.html?join= does', () => {
+      expect(decide(`${S}/join.html?c=ABCD2345`, CUR)).toEqual({
+        kind: 'leagues',
+        params: { join: 'ABCD2345' },
+      });
+      expect(decide(`${S}/join.html`, CUR)).toEqual({ kind: 'leagues', params: {} });
+    });
+  });
+
+  describe('WHEN the phone opens it in the app (an Android App Link)', () => {
+    it('THEN it goes to that league’s invite, the code tidied', () => {
+      expect(systemPath(`${S}/join.html?c=ABCD2345`)).toBe('/leagues?join=ABCD2345');
+      expect(systemPath(`${S}/join.html?c=abcd-2345&x=1`)).toBe('/leagues?join=ABCD2345');
+      // expo-router may hand over the path alone.
+      expect(systemPath('/join.html?c=WXYZ2345')).toBe('/leagues?join=WXYZ2345');
+    });
+    it('THEN a missing or broken code opens Leagues', () => {
+      expect(systemPath(`${S}/join.html`)).toBe('/leagues');
+      expect(systemPath(`${S}/join.html?c=AB`)).toBe('/leagues');
+      expect(systemPath(`${S}/join.html?c=${'A'.repeat(13)}`)).toBe('/leagues');
+    });
+  });
+
+  describe('WHEN any other link reaches the app', () => {
+    it('THEN it is left to the router unchanged', () => {
+      for (const path of [
+        'dailynoodle://auth#access_token=x&refresh_token=y',
+        'dailynoodle://leagues?join=ABCD2345',
+        '/leagues?go=claim',
+        `${S}/board.html?join=ABCD2345`,
+        `${S}/board.html#access_token=x`,
+        'https://example.com/join.html?c=ABCD2345',
+        'http://[broken',
+      ])
+        expect(systemPath(path)).toBe(path);
+    });
   });
 });

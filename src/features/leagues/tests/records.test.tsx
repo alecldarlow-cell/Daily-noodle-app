@@ -26,6 +26,7 @@ jest.mock('../api/feed');
 jest.mock('expo-router', () => ({
   router: { push: jest.fn(), navigate: jest.fn() },
   useLocalSearchParams: jest.fn(() => ({})),
+  useNavigation: () => ({ setParams: jest.fn() }),
 }));
 
 const m = jest.mocked(api);
@@ -106,7 +107,7 @@ describe('GIVEN a player in a league', () => {
     it('THEN Invite shares the league’s link', async () => {
       await openRecords();
       await fireEvent.press(screen.getByRole('button', { name: 'Invite people' }));
-      expect(shared[0]).toContain('board.html?join=ABCD2345');
+      expect(shared[0]).toContain('join.html?c=ABCD2345');
     });
   });
 

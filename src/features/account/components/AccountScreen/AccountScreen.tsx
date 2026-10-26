@@ -2,12 +2,14 @@ import { router } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { buildLine } from '@/shared/build';
-import { useTokens } from '@/shared/theme';
-import { Screen } from '@/shared/ui';
+import { FONT, useTokens } from '@/shared/theme';
+import { Button, Screen } from '@/shared/ui';
 
+import { syncEnabled } from '../../api/authClient';
+import { tapId } from '../../hooks/tap';
 import { SyncCard } from '../SyncCard/SyncCard';
 
-/** Account: sign-in arrives with WP7. For now, the way in for someone who already plays. */
+/** Account: optional sign-in, and the way in for someone who already plays elsewhere. */
 export function AccountScreen() {
   const t = useTokens();
   return (
@@ -18,16 +20,22 @@ export function AccountScreen() {
           Already a player?
         </Text>
         <Text style={[styles.p, { color: t.muted }]}>
-          In a league on another browser or app? Play as yourself here too, with your league’s
-          invite link and your PIN, or your personal link.
+          {syncEnabled()
+            ? 'In a league on another phone or the website? Sign in above with the same email there and here, and your leagues come with you. Or play as yourself with your league’s code and PIN.'
+            : 'In a league on another phone or the website? Play as yourself here too, with your league’s code and PIN.'}
         </Text>
-        <Pressable
-          accessibilityRole="button"
+        <Button
+          kind={syncEnabled() ? 'plain' : 'go'}
+          label="I have a league PIN"
           testID="account-claim"
-          onPress={() => router.navigate({ pathname: '/leagues', params: { go: 'claim' } })}
-          style={[styles.btn, { backgroundColor: t.accent }]}>
-          <Text style={[styles.btnText, { color: t.paper }]}>Bring my leagues here</Text>
-        </Pressable>
+          // A fresh `n` each tap, so Leagues opens the form again after its Back.
+          onPress={() =>
+            router.navigate({
+              pathname: '/leagues',
+              params: { go: 'claim', n: tapId() },
+            })
+          }
+        />
       </View>
       <Pressable
         accessibilityRole="link"
@@ -46,19 +54,10 @@ export function AccountScreen() {
 }
 
 const styles = StyleSheet.create({
-  body: { fontSize: 17, lineHeight: 26 },
   card: { marginTop: 18, padding: 16, borderWidth: 1, borderRadius: 12, gap: 8 },
-  h2: { fontSize: 19, fontWeight: '800' },
-  p: { fontSize: 15, lineHeight: 22 },
-  btn: {
-    alignSelf: 'flex-start',
-    marginTop: 6,
-    borderRadius: 999,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-  },
-  btnText: { fontSize: 15, fontWeight: '700' },
-  link: { marginTop: 24, alignSelf: 'flex-start', paddingVertical: 6 },
-  linkText: { fontSize: 15, fontWeight: '600', textDecorationLine: 'underline' },
-  build: { marginTop: 12, fontSize: 13 },
+  h2: { fontFamily: FONT.displayHeavy, fontSize: 19 },
+  p: { fontFamily: FONT.body, fontSize: 15, lineHeight: 22, marginBottom: 6 },
+  link: { marginTop: 24, alignSelf: 'flex-start', minHeight: 44, justifyContent: 'center' },
+  linkText: { fontFamily: FONT.bodySemi, fontSize: 15, textDecorationLine: 'underline' },
+  build: { fontFamily: FONT.body, marginTop: 12, fontSize: 13 },
 });

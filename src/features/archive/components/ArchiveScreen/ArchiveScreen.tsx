@@ -2,8 +2,8 @@ import { PUZZLE_TYPES, TYPE_LABEL, type PuzzleType } from '@noodle/core';
 import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
 import {
-  ActivityIndicator,
   Pressable,
+  RefreshControl,
   ScrollView,
   SectionList,
   StyleSheet,
@@ -11,10 +11,12 @@ import {
   View,
 } from 'react-native';
 
+import { isConnectionError } from '@/shared/net';
 import { usePlayed } from '@/shared/played';
+import { useManualRefresh } from '@/shared/query';
 import { FONT, useTokens } from '@/shared/theme';
 import { relDay, useLondonDay } from '@/shared/time';
-import { Note, PuzzleRow, Screen } from '@/shared/ui';
+import { Note, PuzzleRow, PuzzleRowSkeleton, refreshColors, Screen } from '@/shared/ui';
 
 import { groupArchive, type DoneFilter } from '../../hooks/groupArchive';
 import { useArchive } from '../../hooks/useArchive';
@@ -43,6 +45,8 @@ export function ArchiveScreen() {
     () => groupArchive(items, type, status, finished),
     [items, type, status, finished],
   );
+  const { refresh, refreshing } = useManualRefresh(q, () => q.refetch());
+  const offline = isConnectionError(q.error);
 
   return (
     <Screen title="Archive" testID="archive-screen" scroll={false}>
@@ -61,13 +65,17 @@ export function ArchiveScreen() {
               accessibilityRole="button"
               accessibilityState={{ selected: on }}
               onPress={() => setType(ty)}
-              style={[
-                styles.chip,
-                on
-                  ? { borderColor: t.accent, backgroundColor: t.accentSoft }
-                  : { borderColor: t.hair, backgroundColor: t.paper },
-              ]}>
-              <Text style={[styles.chipText, { color: on ? t.accent : t.muted }]}>{label}</Text>
+              testID={`chip-${ty ?? 'all'}`}
+              style={styles.chipHit}>
+              <View
+                style={[
+                  styles.chip,
+                  on
+                    ? { borderColor: t.accent, backgroundColor: t.accentSoft }
+                    : { borderColor: t.hair, backgroundColor: t.paper },
+                ]}>
+                <Text style={[styles.chipText, { color: on ? t.accent : t.muted }]}>{label}</Text>
+              </View>
             </Pressable>
           );
         })}
@@ -91,13 +99,17 @@ export function ArchiveScreen() {
           );
         })}
       </View>
-      {!q.data && q.isPending ? <ActivityIndicator style={styles.spinner} color={t.muted} /> : null}
+      {!q.data && q.isPending ? <PuzzleRowSkeleton testID="archive-loading" /> : null}
       {!q.data && q.isError ? (
         <Note
-          testID="archive-offline"
-          title="No connection"
-          body="The archive will load when you’re back online."
-          action={{ label: 'Try again', onPress: () => void q.refetch() }}
+          testID={offline ? 'archive-offline' : 'archive-failed'}
+          title={offline ? 'No connection' : 'Couldn’t load the archive'}
+          body={
+            offline
+              ? 'The archive will load when you’re back online.'
+              : 'Something went wrong at our end. Try again in a moment.'
+          }
+          action={{ label: 'Try again', onPress: refresh }}
         />
       ) : null}
       {q.data && sections.length === 0 ? (
@@ -116,6 +128,14 @@ export function ArchiveScreen() {
         sections={sections}
         keyExtractor={(it) => it.path}
         stickySectionHeadersEnabled={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={refresh}
+            testID="archive-refresh"
+            {...refreshColors(t)}
+          />
+        }
         initialNumToRender={20}
         renderSectionHeader={({ section }) => (
           <Text accessibilityRole="header" style={[styles.month, { color: t.faint }]}>
@@ -153,8 +173,13 @@ export function ArchiveScreen() {
 const styles = StyleSheet.create({
   // flexShrink 0: the list below takes the rest of the column, and on Android it otherwise
   // squeezed this row, clipping the chip labels (seen at 115% font size on a Pixel 10 Pro).
-  chips: { flexGrow: 0, flexShrink: 0, marginBottom: 8 },
-  chipsRow: { gap: 6 },
+  // Out to the screen's edges (the page has a 16 pt gutter), so the last chip slides off the
+  // edge rather than being cut in mid-air.
+  chips: { flexGrow: 0, flexShrink: 0, marginHorizontal: -16, marginTop: -8 },
+  chipsRow: { gap: 6, paddingHorizontal: 16 },
+  // A 46 pt press area round the site-sized ~30 pt chip (front.css .chip), so it is easy to hit;
+  // the -8 margin above keeps the chip where it was.
+  chipHit: { paddingVertical: 8, justifyContent: 'center' },
   // a three-way switch under the type chips: All, Not done, Done
   seg: {
     flexDirection: 'row',
@@ -165,11 +190,17 @@ const styles = StyleSheet.create({
     gap: 2,
     marginBottom: 10,
   },
-  segBtn: { borderRadius: 999, paddingHorizontal: 14, paddingVertical: 6, minHeight: 32 },
+  // 40 pt buttons in a 3 pt-padded, bordered pill: 48 pt to tap, Material's minimum.
+  segBtn: {
+    borderRadius: 999,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    minHeight: 40,
+    justifyContent: 'center',
+  },
   // front.css .chip: 12.5 px semibold, 6 × 12 padding, a hairline; the chosen one in the accent.
   chip: { borderWidth: 1, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6 },
   chipText: { fontFamily: FONT.bodySemi, fontSize: 12.5 },
-  spinner: { marginTop: 40 },
   // front.css .count: the list's small uppercase label.
   month: {
     fontFamily: FONT.bodySemi,
