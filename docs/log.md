@@ -580,3 +580,10 @@ below when it finishes.
 - Tests proved: the four Borders wordings (`played.test.ts`); the Today row reads "Borders 20, 650 points · 7/10" (fails on the old wording); the differential test against the new front.js. `check` green (1152 tests, 98.76% lines).
 - Left: nothing.
 - Needs Alec: nothing (JS-only; reaches phones with the next build or update).
+
+### 26 Oct 2026 — Production updates from CI (this PR)
+
+- Why: an update published by hand from Alec's Windows PC (`eas update --channel production`, commit 5bb9ccf) got runtime `d75928f0…`, but the Play build (EAS `2b29e8d6`, versionCode 5) has `fa92e2c3…`, so it never reached the Play build. Fingerprints computed on Windows differ from Linux ones.
+- New `.github/workflows/update-production.yml` ("Update production"): "Run workflow" on main publishes an EAS Update to the production channel from Linux, with the production profile's env, the same way release.yml publishes preview. It never runs on a merge. The message defaults to the commit's first line.
+- Tests proved (`scripts/tests/release-workflows.test.ts`): the workflow has only a manual trigger (fails if a push trigger is added), stops off main, publishes to production with the production env from ubuntu, and uses release.yml's eas-cli pin; release.yml's automatic update still goes to preview only.
+- `check` green (1158 tests, 98.76% lines).
