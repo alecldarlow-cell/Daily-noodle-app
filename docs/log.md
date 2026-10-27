@@ -587,3 +587,11 @@ below when it finishes.
 - New `.github/workflows/update-production.yml` ("Update production"): "Run workflow" on main publishes an EAS Update to the production channel from Linux, with the production profile's env, the same way release.yml publishes preview. It never runs on a merge. The message defaults to the commit's first line.
 - Tests proved (`scripts/tests/release-workflows.test.ts`): the workflow has only a manual trigger (fails if a push trigger is added), stops off main, publishes to production with the production env from ubuntu, and uses release.yml's eas-cli pin; release.yml's automatic update still goes to preview only.
 - `check` green (1158 tests, 98.76% lines).
+
+### 27 Oct 2026 — Mini keyboard bottom row collapsed on older Pixels (this PR)
+
+- **Bug** (tester via Alec, older non-flagship Pixel; tracker AF-009): the Mini's bottom keyboard row (Z–M and ⌫) drew as thin bars, so those letters and Delete couldn't be pressed.
+- **Cause**: every key was `flex: 1` with `maxWidth: 40` (⌫ `flex: 1.5`, `maxWidth: 64`). Reproduced in Yoga 3.2.1 (scratch, not a repo dependency): when the keyboard slot is 367–372 pt, just under the bottom row's natural 372 pt, Yoga collapses every key in that row to its 2 pt border. The slot is the window less 24 pt, so phones about 391–396 pt wide (Pixel 4a/5 class, 393 pt) hit it; the top two rows never do.
+- **Fix**: `keyWidths(width)` sets every letter key to one explicit width (the widest that fits ten keys, up to 40) and ⌫ to 1.5 keys (up to 64), from the keyboard's measured width (`onLayout`), estimated from the window on the first frame. No flex sizing left in the keyboard. Keys are now the same width on every row.
+- **Tests proved** (`keyboard.test.tsx`): from 250 to 560 pt every row fits and no key is under 21 pt; at a 368.7 pt slot keys are 33 and ⌫ 50; after measuring, all 26 letters and ⌫ take those widths and still type. Checked separately in Yoga: fixed widths give no collapsed key and no overflowing row anywhere from 250 to 560 pt. `check` green (1163 tests).
+- **Ship**: JS only; published to production with the Update production workflow after merge.
