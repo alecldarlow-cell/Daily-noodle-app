@@ -1,0 +1,5 @@
+# Play: full-size screenshot originals and downloaded builds stay local.
+# Kept here, not in the root .gitignore: the root one feeds the native fingerprint
+# (runtime version), so editing it cuts Play builds off from EAS Updates.
+/screenshots/raw/
+/release-*/
