@@ -595,3 +595,12 @@ below when it finishes.
 - **Fix**: `keyWidths(width)` sets every letter key to one explicit width (the widest that fits ten keys, up to 40) and ⌫ to 1.5 keys (up to 64), from the keyboard's measured width (`onLayout`), estimated from the window on the first frame. No flex sizing left in the keyboard. Keys are now the same width on every row.
 - **Tests proved** (`keyboard.test.tsx`): from 250 to 560 pt every row fits and no key is under 21 pt; at a 368.7 pt slot keys are 33 and ⌫ 50; after measuring, all 26 letters and ⌫ take those widths and still type. Checked separately in Yoga: fixed widths give no collapsed key and no overflowing row anywhere from 250 to 560 pt. `check` green (1163 tests).
 - **Ship**: JS only; published to production with the Update production workflow after merge.
+
+### 27 Oct 2026 — production updates weren't reaching the Play build (this PR)
+
+- **Found while shipping #68**: main's Android fingerprint was `d75928f0…`; the Play build (0.2.0, versionCode 5, EAS `2b29e8d6`) is `fa92e2c3…`, the fingerprint of the DN icon commit 66127a6. Linux and Windows give the same `d75928f0…`, so the 26 Oct note blaming Windows fingerprints was wrong.
+- **Cause**: 36c015f ("keep the four Play screenshots") added two ignore rules to the root `.gitignore`, which @expo/fingerprint hashes (`bareGitIgnore`). From then on every production update (the 26 Oct 19:25 run, and #68's this morning) went to a runtime no store build has.
+- **Fix**: root `.gitignore` restored to its 66127a6 content; the two rules moved to `store/.gitignore` (checked: still ignored). Android fingerprint back to `fa92e2c3…`.
+- **Guard**: `store/runtime.json` records the Play build's runtime; `scripts/tests/runtime.test.ts` fingerprints the checkout (≈1.5 s) and fails on any mismatch, so a native change can't silently cut Play phones off from updates. Proved: passes with the fix, fails with the old `.gitignore`. After a new store build, update `store/runtime.json`.
+- `check` green (1164 tests).
+- **Ship**: Update production run after merge, which also carries #66 (Borders points) and #68 (Mini keyboard) to Play phones.

@@ -1,0 +1,5 @@
+{
+  "note": "The native fingerprint (EAS runtime version) of the build testers have from Google Play. EAS Updates reach a phone only when they match it. Change this only after shipping a new store build, to that build's runtime version.",
+  "android": "fa92e2c3cc1c411a5fd4485c64bb5fa2efadc12b",
+  "build": "0.2.0, versionCode 5, EAS build 2b29e8d6"
+}
