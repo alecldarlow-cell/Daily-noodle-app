@@ -604,3 +604,11 @@ below when it finishes.
 - **Guard**: `store/runtime.json` records the Play build's runtime; `scripts/tests/runtime.test.ts` fingerprints the checkout (≈1.5 s) and fails on any mismatch, so a native change can't silently cut Play phones off from updates. Proved: passes with the fix, fails with the old `.gitignore`. After a new store build, update `store/runtime.json`.
 - `check` green (1164 tests).
 - **Ship**: Update production run after merge, which also carries #66 (Borders points) and #68 (Mini keyboard) to Play phones.
+
+### 27 Oct 2026 — Doku: the bank is the keyboard (this PR)
+
+- **Feedback** (testers via Alec, tracker AF-014): tapping an empty (yellow) square brought the phone's keyboard up, which covered the letter bank, so players lost sight of which letters were left and had to close the keyboard to check.
+- **Change** (screen only; the replay-proved model is untouched): the hidden TextInput is gone, so the phone's keyboard never opens. Where the model says the page would have the keyboard up (`state.kbd`, after a tap on an empty square), a bank tile sends the model a `key` move with its letter: it goes into the yellow square and the next tap fills the next empty square of the word, as typing did. Otherwise a tile tap is the page's `tile` move (pick up, then tap a square). Moves are the model's own, so play still replays identically.
+- **Tests proved** (`DokuScreen.test.tsx`, replacing the phone-keyboard test): no text input exists after a square tap; square then tiles fill and run on with nothing left in the hand; tapping a placed letter sends it back; tile-then-square still works. The first two fail on the old screen. `check` green (1166 tests).
+- **Not done**: a hardware keyboard no longer types into Doku (it went through the hidden input). The website on phones still raises the keyboard; same fix there is a site change if wanted.
+- **Ship**: JS only; production update after merge.

@@ -151,22 +151,43 @@ describe('GIVEN a Doku not yet played', () => {
   });
 });
 
-describe('GIVEN the phone’s keyboard', () => {
-  it('THEN a tapped square takes typed letters from the bank, space turns, delete sends back', async () => {
+describe('GIVEN the bank as the keyboard (the phone’s keyboard covered it)', () => {
+  const tiles = () => screen.getAllByRole('button', { name: /^Tile / });
+
+  it('THEN the phone’s keyboard never comes up: there is no text input at all', async () => {
     await renderWithProviders(<DokuScreen file={file97} />);
     await play();
     await press('cell-2-2');
-    const keys = screen.getByTestId('doku-keys', { includeHiddenElements: true });
-    await fireEvent.changeText(keys, 'n');
+    expect(screen.queryByTestId('doku-keys', { includeHiddenElements: true })).toBeNull();
+    expect(screen.getByTestId('doku-bank')).toBeOnTheScreen();
+  });
+
+  it('THEN after a tap on an empty square, bank tiles type into it and run on, as typing did', async () => {
+    await renderWithProviders(<DokuScreen file={file97} />);
+    await play();
+    await press('cell-2-2');
+    await fireEvent.press(tileFor('N'));
     expect(screen.getByTestId('cell-2-2')).toHaveAccessibleName(/N$/);
-    expect(screen.getAllByRole('button', { name: /^Tile / })).toHaveLength(11);
-    await fireEvent(keys, 'keyPress', { nativeEvent: { key: 'a' } }); // letters come by changeText
-    await fireEvent(keys, 'keyPress', { nativeEvent: { key: 'Backspace' } });
+    expect(tiles()).toHaveLength(11);
+    // The next tile goes straight onto the board too, not into the hand.
+    await fireEvent.press(tiles()[0]!);
+    expect(tiles()).toHaveLength(10);
+    expect(tiles().every((t) => !t.props.accessibilityState?.selected)).toBe(true);
+    // A tap on a placed letter still sends it back, and ends the typing.
+    await press('cell-2-2');
     expect(screen.getByTestId('cell-2-2')).toHaveAccessibleName(/empty$/);
-    await fireEvent.changeText(keys, ' 1');
-    expect(screen.getAllByRole('button', { name: /^Tile / })).toHaveLength(12);
-    await fireEvent.changeText(keys, 'q'); // not in the bank: the square shakes, nothing moves
-    expect(screen.getAllByRole('button', { name: /^Tile / })).toHaveLength(12);
+    expect(tiles()).toHaveLength(11);
+  });
+
+  it('THEN with no square tapped first, a tile is picked up and a square puts it down, as on the page', async () => {
+    await renderWithProviders(<DokuScreen file={file97} />);
+    await play();
+    await fireEvent.press(tileFor('N'));
+    expect(tileFor('N')).toHaveProp('accessibilityState', { selected: true });
+    expect(tiles()).toHaveLength(12);
+    await press('cell-2-2');
+    expect(screen.getByTestId('cell-2-2')).toHaveAccessibleName(/N$/);
+    expect(tiles()).toHaveLength(11);
   });
 
   it('THEN the clock waits for the first tile, then ticks each second', async () => {

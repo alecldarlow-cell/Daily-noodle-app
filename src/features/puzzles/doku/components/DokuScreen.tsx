@@ -1,14 +1,6 @@
 import { dnNum } from '@noodle/core';
-import { useEffect, useRef, type ComponentRef } from 'react';
-import {
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  useWindowDimensions,
-  View,
-  type TextInputInstance,
-} from 'react-native';
+import { useRef, type ComponentRef } from 'react';
+import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { FinishSheet, useFreshFinish } from '@/shared/finish-sheet';
@@ -40,16 +32,18 @@ export function DokuScreen({ file }: { file: PuzzleFile<DokuData> }) {
   const stats = useStartStats('doku');
   const fit = useBoardFit(fitBoard(win, 360, 420), 420);
   const n = dnNum(file.data.id).slice(1);
-  const { state, dispatch, feed } = game;
+  const { state, dispatch } = game;
 
-  // The page's hidden input: a tap on an empty square brings the phone's keyboard up,
-  // a tap anywhere else on the board or a tile takes it down.
-  const input = useRef<TextInputInstance>(null);
-  const kbd = state.kbd && !state.solved && game.phase === 'play';
-  useEffect(() => {
-    if (kbd) input.current?.focus();
-    else input.current?.blur();
-  }, [kbd, state]);
+  // The bank is the keyboard. Where the page brings the phone's keyboard up (a tap on an
+  // empty square: state.kbd), it covered the bank, so players lost sight of their letters.
+  // Here the keyboard stays down and a bank tile types its letter into the yellow square
+  // instead, then the next, as typing would. Otherwise a tile tap picks the tile up, as on
+  // the page (then a tap on a square puts it down).
+  const onTile = (id: string) => {
+    const t = state.tiles.find((x) => x.id === id && !x.at);
+    if (t && state.kbd && !state.selTile) dispatch({ t: 'key', ch: t.ch });
+    else dispatch({ t: 'tile', id });
+  };
 
   if (game.phase === 'start')
     return (
@@ -112,7 +106,7 @@ export function DokuScreen({ file }: { file: PuzzleFile<DokuData> }) {
             onCell={(r, c) => dispatch({ t: 'cell', r, c })}
           />
         </View>
-        <DokuBank state={state} onTile={(id) => dispatch({ t: 'tile', id })} />
+        <DokuBank state={state} onTile={onTile} />
         {/* The message and the Hints switch on one line under the bank, the switch at its
             end, rather than a lone button floating under everything (the page groups Hints
             with its other tools; the app has no others). */}
@@ -134,24 +128,6 @@ export function DokuScreen({ file }: { file: PuzzleFile<DokuData> }) {
             </Text>
           </Pressable>
         </View>
-        <TextInput
-          ref={input}
-          testID="doku-keys"
-          value=""
-          onChangeText={feed}
-          onKeyPress={(e) => {
-            if (e.nativeEvent.key === 'Backspace') dispatch({ t: 'del' });
-          }}
-          autoCapitalize="characters"
-          autoCorrect={false}
-          autoComplete="off"
-          spellCheck={false}
-          caretHidden
-          importantForAutofill="no"
-          accessibilityElementsHidden
-          importantForAccessibility="no-hide-descendants"
-          style={styles.hidden}
-        />
       </View>
     </SafeAreaView>
   );
@@ -179,5 +155,4 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   btnText: { fontSize: 13, fontFamily: FONT.sansMedium },
-  hidden: { position: 'absolute', top: 0, left: '50%', width: 1, height: 1, opacity: 0 },
 });
