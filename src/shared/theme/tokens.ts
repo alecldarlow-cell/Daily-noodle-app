@@ -16,6 +16,14 @@ export interface Tokens {
   play: string;
   onPlay: string;
   bad: string;
+  /** A soft tint of `bad`: the fill of a tonal destructive button. */
+  badSoft: string;
+  /**
+   * The Daily Noodle mark (the launcher icon's green tile and white DN): the same in both
+   * schemes, as the icon is.
+   */
+  brand: string;
+  onBrand: string;
   startedInk: string;
   /** Text and marks on an accent fill (the played tick). */
   onAccent: string;
@@ -37,6 +45,9 @@ const light: Tokens = {
   play: '#FFD54A',
   onPlay: '#15171C',
   bad: '#B3261E',
+  badSoft: '#FBEAE8',
+  brand: '#0F7A4E',
+  onBrand: '#FFFFFF',
   startedInk: '#7A5A00',
   onAccent: '#FFFFFF',
   tileFrame: '#15171C',
@@ -56,6 +67,9 @@ const dark: Tokens = {
   play: '#FFD54A',
   onPlay: '#15171C',
   bad: '#FF7A6E',
+  badSoft: '#3A2024',
+  brand: '#0F7A4E',
+  onBrand: '#FFFFFF',
   startedInk: '#FFD54A',
   onAccent: '#0B0D12',
   tileFrame: '#050608',

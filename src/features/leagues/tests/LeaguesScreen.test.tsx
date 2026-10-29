@@ -1,10 +1,11 @@
 import { londonDay } from '@noodle/core';
 import { act, fireEvent, screen, waitFor, within } from '@testing-library/react-native';
 import { router, useLocalSearchParams } from 'expo-router';
-import { Alert, Share } from 'react-native';
+import { Alert, Share, StyleSheet } from 'react-native';
 
 import { QueryProvider } from '@/shared/query';
 import { BUILD_ENV } from '@/shared/env';
+import { tokensFor } from '@/shared/theme';
 import { appStorage } from '@/shared/storage';
 import { renderWithProviders } from '@/shared/testing';
 
@@ -792,6 +793,51 @@ describe('GIVEN Leagues opened on a puzzle’s board (?p=&d=, as board.html)', (
       );
       await waitFor(() => expect(screen.getByTestId('day-board')).toBeOnTheScreen());
       expect(m.boardDay).toHaveBeenCalledWith(PID, 'ABCD2345', 'path', earlier);
+    });
+  });
+});
+
+describe('GIVEN the button rule on Leagues (AF-019)', () => {
+  describe('WHEN a player taps Share leaderboard and the share sheet takes a moment', () => {
+    it('THEN the button shows a spinner and takes no second tap until the sheet is up', async () => {
+      inFamily();
+      let open: () => void = () => undefined;
+      jest.mocked(Share.share).mockImplementation(
+        (c) =>
+          new Promise((r) => {
+            open = () => {
+              shared.push((c as { message: string }).message);
+              r({ action: 'sharedAction', activityType: undefined });
+            };
+          }),
+      );
+      await renderWithProviders(<LeaguesScreen />);
+      await waitFor(() => expect(screen.getByTestId('overall-board')).toBeOnTheScreen());
+      const btn = screen.getByRole('button', { name: 'Share leaderboard' });
+      await fireEvent.press(btn);
+      expect(screen.getByTestId('button-spinner')).toBeOnTheScreen();
+      expect(btn).toBeDisabled();
+      await fireEvent.press(btn);
+      expect(Share.share).toHaveBeenCalledTimes(1);
+      await act(async () => open());
+      expect(screen.queryByTestId('button-spinner')).toBeNull();
+      expect(shared).toHaveLength(1);
+    });
+  });
+
+  describe('WHEN the league settings show Leave league', () => {
+    it('THEN it is a red tonal button, never the filled accent', async () => {
+      inFamily();
+      await renderWithProviders(<LeaguesScreen />);
+      await waitFor(() => expect(screen.getByTestId('overall-board')).toBeOnTheScreen());
+      await press('⚙︎ League settings');
+      const t = tokensFor('light');
+      const leave = StyleSheet.flatten(
+        screen.getByRole('button', { name: 'Leave league' }).props.style,
+      );
+      expect(leave.backgroundColor).toBe(t.badSoft);
+      expect(leave.minHeight).toBeGreaterThanOrEqual(48);
+      expect(StyleSheet.flatten(screen.getByText('Leave league').props.style).color).toBe(t.bad);
     });
   });
 });
