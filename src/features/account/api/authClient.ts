@@ -5,6 +5,7 @@
  * be live and Supabase Auth must allow the app's link first; see the site's SITE.md).
  */
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { AppState, type AppStateStatus } from 'react-native';
 
 import { BUILD_ENV } from '@/shared/env';
 
@@ -21,6 +22,26 @@ export function syncEnabled(
 }
 
 let client: SupabaseClient | null | undefined;
+
+type AutoRefresh = Pick<SupabaseClient['auth'], 'startAutoRefresh' | 'stopAutoRefresh'>;
+
+/**
+ * Hardening G3, as Supabase's React Native guide does: off a browser, supabase-js can't
+ * tell when the app is in front, so the sign-in token would keep refreshing in the
+ * background. Refresh runs only while the app is active: started now if it is, then
+ * started on each return to the front and stopped on leaving it. Returns the unsubscribe.
+ */
+export function refreshWhileActive(
+  auth: AutoRefresh,
+  appState: Pick<typeof AppState, 'currentState' | 'addEventListener'> = AppState,
+): () => void {
+  const apply = (s: AppStateStatus | string | null | undefined) => {
+    void (s === 'active' ? auth.startAutoRefresh() : auth.stopAutoRefresh()).catch(() => {});
+  };
+  apply(appState.currentState);
+  const sub = appState.addEventListener('change', apply);
+  return () => sub.remove();
+}
 
 /** The signed-in client, made on first use; null when sync is off in this build. */
 export function authClient(): SupabaseClient | null {
@@ -39,6 +60,8 @@ export function authClient(): SupabaseClient | null {
         },
       )
     : null;
+  // Once, for the app's one client (never unsubscribed: it lives as long as the app).
+  if (client) refreshWhileActive(client.auth);
   return client;
 }
 
