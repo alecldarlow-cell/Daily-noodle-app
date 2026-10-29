@@ -100,10 +100,42 @@ describe('GIVEN a puzzle card', () => {
   });
 
   describe('WHEN it is in progress', () => {
-    it('THEN it says so and the tile carries a dot, not a tick', async () => {
+    it('THEN it says Continue (AF-020) and the tile carries a dot, not a tick', async () => {
       await render(<PuzzleRow {...base} played={{ done: false }} onPress={jest.fn()} />);
-      expect(screen.getByText('In progress')).toBeOnTheScreen();
+      expect(screen.getByText('Continue')).toBeOnTheScreen();
+      expect(screen.queryByText('In progress')).toBeNull();
       expect(screen.getByTestId('c-mark')).not.toHaveTextContent('✓');
+      expect(screen.getByRole('button', { name: 'Mini 106, Continue' })).toBeOnTheScreen();
+    });
+
+    it('THEN its round’s time shows after Continue, keeping the day', async () => {
+      await render(
+        <PuzzleRow {...base} played={{ done: false }} roundTime="4:05" onPress={jest.fn()} />,
+      );
+      expect(screen.getByTestId('c-meta')).toHaveTextContent('Today  ·  Continue  ·  4:05');
+      expect(screen.getByRole('button', { name: 'Mini 106, Continue, 4:05' })).toBeOnTheScreen();
+    });
+  });
+
+  describe('WHEN it is finished and a stale round time is passed', () => {
+    it('THEN only the result shows', async () => {
+      await render(
+        <PuzzleRow
+          {...base}
+          played={{ done: true, lost: false, text: 'Solved in 1:27' }}
+          roundTime="4:05"
+          onPress={jest.fn()}
+        />,
+      );
+      expect(screen.getByTestId('c-meta')).toHaveTextContent('Today  ·  Solved in 1:27');
+    });
+  });
+
+  describe('WHEN the phone is offline and the puzzle is downloaded', () => {
+    it('THEN the meta line says Downloaded, and so does its label', async () => {
+      await render(<PuzzleRow {...base} played={null} kept onPress={jest.fn()} />);
+      expect(screen.getByTestId('c-meta')).toHaveTextContent('Today  ·  ~3 min  ·  Downloaded');
+      expect(screen.getByRole('button', { name: 'Mini 106, Today, downloaded' })).toBeOnTheScreen();
     });
   });
 

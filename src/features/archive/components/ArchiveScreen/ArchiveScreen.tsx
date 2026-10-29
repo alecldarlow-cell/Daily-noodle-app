@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 
 import { isConnectionError } from '@/shared/net';
-import { usePlayed } from '@/shared/played';
+import { openPuzzle, useKept, usePlayed } from '@/shared/played';
 import { useManualRefresh } from '@/shared/query';
 import { FONT, useTokens } from '@/shared/theme';
 import { relDay, useLondonDay } from '@/shared/time';
@@ -30,7 +30,7 @@ const STATUS: { id: DoneFilter; label: string }[] = [
   { id: 'done', label: 'Done' },
 ];
 
-/** Every released puzzle, by month, newest first; filter by type, then by done or not. */
+/** Every released puzzle before today, by month, newest first; filter by type, then by done or not. */
 export function ArchiveScreen() {
   const t = useTokens();
   const day = useLondonDay();
@@ -38,18 +38,35 @@ export function ArchiveScreen() {
   const [type, setType] = useState<PuzzleType | null>(null);
   const [status, setStatus] = useState<DoneFilter>('all');
   const items = q.data?.items ?? NO_ITEMS;
-  const { byId } = usePlayed(items, day);
+  const { byId, rounds, held } = usePlayed(items, day);
   // Finished, won or lost, counts as done; started but unfinished does not (as the cards' ✓).
   const finished = useMemo(() => new Set(Object.keys(byId).filter((id) => byId[id]?.done)), [byId]);
   const sections = useMemo(
-    () => groupArchive(items, type, status, finished),
-    [items, type, status, finished],
+    () => groupArchive(items, type, status, finished, day),
+    [items, type, status, finished, day],
   );
   const { refresh, refreshing } = useManualRefresh(q, () => q.refetch());
   const offline = isConnectionError(q.error);
+  const paths = useMemo(() => items.map((it) => it.path), [items]);
+  const kept = useKept(paths, offline && !!q.data);
+  const byIdItem = useMemo(() => {
+    const m: Record<string, ArchiveItem> = {};
+    for (const it of items) m[it.id] = it;
+    return m;
+  }, [items]);
 
   return (
     <Screen title="Archive" testID="archive-screen" scroll={false}>
+      <Pressable
+        accessibilityRole="link"
+        accessibilityLabel="Today’s puzzles are on the Today tab"
+        onPress={() => router.navigate('/')}
+        testID="archive-to-today"
+        style={({ pressed }) => [styles.toToday, { opacity: pressed ? 0.6 : 1 }]}>
+        <Text style={[styles.toTodayText, { color: t.muted }]}>
+          Today’s puzzles are on the Today tab ›
+        </Text>
+      </Pressable>
       <ScrollView
         horizontal
         testID="archive-chips"
@@ -99,6 +116,14 @@ export function ArchiveScreen() {
           );
         })}
       </View>
+      {q.data && offline ? (
+        <Note
+          testID="archive-offline-kept"
+          title="You’re offline"
+          body="Puzzles you’ve opened before still work; pull down or tap Try again when you’re back online."
+          action={{ label: 'Try again', onPress: refresh }}
+        />
+      ) : null}
       {!q.data && q.isPending ? <PuzzleRowSkeleton testID="archive-loading" /> : null}
       {!q.data && q.isError ? (
         <Note
@@ -106,7 +131,7 @@ export function ArchiveScreen() {
           title={offline ? 'No connection' : 'Couldn’t load the archive'}
           body={
             offline
-              ? 'The archive will load when you’re back online.'
+              ? 'You’re offline, and the archive hasn’t downloaded yet. Pull down or tap Try again when you’re back online.'
               : 'Something went wrong at our end. Try again in a moment.'
           }
           action={{ label: 'Try again', onPress: refresh }}
@@ -152,16 +177,17 @@ export function ArchiveScreen() {
             when={relDay(item.date, day)}
             read={item.read}
             played={byId[item.id] ?? null}
+            roundTime={rounds[item.id]?.time}
+            kept={kept.has(item.path)}
             onHowTo={() => router.push({ pathname: '/how-to-play', params: { type: item.type } })}
-            onPress={() =>
-              router.push({
-                pathname: '/play/[type]/[file]',
-                params: {
-                  type: item.type,
-                  file: item.path.replace(/^reports\//, '').replace(/\.html$/, ''),
-                },
-              })
-            }
+            onPress={() => {
+              const other = held(item.type, item.id);
+              const o = other ? byIdItem[other] : undefined;
+              openPuzzle(
+                { type: item.type, name: item.headline, path: item.path },
+                other ? { name: o?.headline, path: o?.path } : null,
+              );
+            }}
           />
         )}
         ListFooterComponent={<View style={styles.footer} />}
@@ -171,6 +197,9 @@ export function ArchiveScreen() {
 }
 
 const styles = StyleSheet.create({
+  // A quiet text link, 44 pt to tap, above the filters (AF-030).
+  toToday: { alignSelf: 'flex-start', minHeight: 44, justifyContent: 'center', marginTop: -10 },
+  toTodayText: { fontFamily: FONT.bodySemi, fontSize: 13 },
   // flexShrink 0: the list below takes the rest of the column, and on Android it otherwise
   // squeezed this row, clipping the chip labels (seen at 115% font size on a Pixel 10 Pro).
   // Out to the screen's edges (the page has a 16 pt gutter), so the last chip slides off the

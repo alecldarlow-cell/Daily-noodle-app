@@ -7,6 +7,8 @@ import type { ArchiveItem, ArchiveSection } from '../types';
 /**
  * The archive as month sections, newest first: only `type` when given, and only the
  * puzzles you've finished (`done`) or not (`todo`) when asked, by the ids in `finished`.
+ * Given `before` (today's London day), only puzzles dated before it: today's set is on the
+ * Today tab, so the archive starts from yesterday (AF-030).
  */
 export type DoneFilter = 'all' | 'todo' | 'done';
 
@@ -15,8 +17,10 @@ export function groupArchive(
   type: PuzzleType | null,
   status: DoneFilter = 'all',
   finished: ReadonlySet<string> = new Set(),
+  before?: string,
 ): ArchiveSection[] {
   const kept = items
+    .filter((it) => !before || it.date < before)
     .filter((it) => !type || it.type === type)
     .filter((it) => status === 'all' || (status === 'done') === finished.has(it.id))
     .slice()
