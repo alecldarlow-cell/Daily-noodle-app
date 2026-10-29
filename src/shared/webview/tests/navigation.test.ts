@@ -87,12 +87,47 @@ describe('GIVEN an invite link to join.html (SITE.md › App links)', () => {
         'dailynoodle://auth#access_token=x&refresh_token=y',
         'dailynoodle://leagues?join=ABCD2345',
         '/leagues?go=claim',
-        `${S}/board.html?join=ABCD2345`,
+        `${S}/board.html`,
+        `${S}/board.html?p=mini&d=2026-10-24`,
         `${S}/board.html#access_token=x`,
+        `${S}/board.html?join=ABCD2345#access_token=x&refresh_token=y`,
+        `${S}/board.html?code=abc123&join=ABCD2345`,
+        `${S}/board.html?join=ABCD2345#dnmove=xyz`,
+        `${S}/games.html`,
+        `${S}/minis`,
+        `${S}/mini/extra`,
         'https://example.com/join.html?c=ABCD2345',
+        'https://example.com/mini',
         'http://[broken',
       ])
         expect(systemPath(path)).toBe(path);
+    });
+  });
+});
+
+describe('GIVEN a shared link to a league board (board.html?join=CODE, AF-010)', () => {
+  describe('WHEN it reaches the app', () => {
+    it('THEN it opens that league’s invite, as join.html does', () => {
+      expect(systemPath(`${S}/board.html?join=ABCD2345`)).toBe('/leagues?join=ABCD2345');
+      expect(systemPath(`${S}/board.html?join=abcd-2345&v=2`)).toBe('/leagues?join=ABCD2345');
+      expect(systemPath('/board.html?join=WXYZ2345')).toBe('/leagues?join=WXYZ2345');
+    });
+    it('THEN a broken code is left alone', () => {
+      expect(systemPath(`${S}/board.html?join=AB`)).toBe(`${S}/board.html?join=AB`);
+    });
+  });
+});
+
+describe('GIVEN a shared result’s short link (dailynoodle.co.uk/<type>, AF-010)', () => {
+  const TYPES = ['mini', 'doku', 'sweep', 'path', 'link', 'tangle', 'borders', 'reckon'];
+  describe('WHEN it reaches the app, in any form the site serves', () => {
+    it('THEN Today opens on today’s puzzle of that type', () => {
+      for (const t of TYPES) {
+        expect(systemPath(`${S}/${t}`)).toBe(`/?open=${t}`);
+        expect(systemPath(`${S}/${t}/`)).toBe(`/?open=${t}`);
+        expect(systemPath(`${S}/${t}/index.html?via=share`)).toBe(`/?open=${t}`);
+        expect(systemPath(`/${t}`)).toBe(`/?open=${t}`);
+      }
     });
   });
 });

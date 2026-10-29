@@ -1,6 +1,6 @@
 import type { PuzzleType } from '@noodle/core';
 import { router } from 'expo-router';
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { useFeedLite, type FeedItem } from '@/shared/feed';
@@ -29,8 +29,13 @@ export function openHowTo(type: PuzzleType): void {
  * Today's eight puzzles, in the daily set's order, as the site's cards: each with its
  * preview tile and standfirst from feed-lite (just the name until that list arrives),
  * and your results so far.
+ *
+ * `open`: a shared link to a type (dailynoodle.co.uk/mini, AF-010) asks for today's puzzle
+ * of that type. It opens as soon as today's list is here, as a tap on its card would
+ * (asking first if another puzzle of the type holds its kept round), and `onOpened` is
+ * told so the request is used once.
  */
-export function TodayScreen() {
+export function TodayScreen({ open, onOpened }: { open?: PuzzleType; onOpened?: () => void } = {}) {
   const t = useTokens();
   const day = useLondonDay();
   const status = useToday();
@@ -54,6 +59,25 @@ export function TodayScreen() {
     const i = items.find((x) => x.id === id);
     return i ? { name: i.name, path: i.path } : {};
   };
+
+  const play = (it: (typeof items)[number], title: string) => {
+    const other = held(it.type, it.id);
+    openPuzzle({ type: it.type, name: title, path: it.path }, other ? named(other) : null);
+  };
+  // A link's request, once today's list is here.
+  const asked = useRef<PuzzleType | null>(null);
+  useEffect(() => {
+    if (!open) {
+      asked.current = null;
+      return;
+    }
+    if (asked.current === open || status.kind !== 'ready') return;
+    const it = items.find((x) => x.type === open);
+    if (!it) return;
+    asked.current = open;
+    onOpened?.();
+    play(it, cards[it.id]?.headline ?? it.name);
+  });
 
   return (
     <Screen
@@ -144,13 +168,7 @@ export function TodayScreen() {
             roundTime={rounds[it.id]?.time}
             kept={kept.has(it.path)}
             onHowTo={() => openHowTo(it.type)}
-            onPress={() => {
-              const other = held(it.type, it.id);
-              openPuzzle(
-                { type: it.type, name: title, path: it.path },
-                other ? named(other) : null,
-              );
-            }}
+            onPress={() => play(it, title)}
           />
         );
       })}

@@ -29,6 +29,37 @@
           "autoVerify": true,
           "data": [{ "scheme": "https", "host": "dailynoodle.co.uk", "pathPrefix": "/join.html" }],
           "category": ["BROWSABLE", "DEFAULT"]
+        },
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            { "scheme": "https", "host": "dailynoodle.co.uk", "path": "/mini" },
+            { "scheme": "https", "host": "dailynoodle.co.uk", "path": "/mini/" },
+            { "scheme": "https", "host": "dailynoodle.co.uk", "path": "/mini/index.html" },
+            { "scheme": "https", "host": "dailynoodle.co.uk", "path": "/doku" },
+            { "scheme": "https", "host": "dailynoodle.co.uk", "path": "/doku/" },
+            { "scheme": "https", "host": "dailynoodle.co.uk", "path": "/doku/index.html" },
+            { "scheme": "https", "host": "dailynoodle.co.uk", "path": "/sweep" },
+            { "scheme": "https", "host": "dailynoodle.co.uk", "path": "/sweep/" },
+            { "scheme": "https", "host": "dailynoodle.co.uk", "path": "/sweep/index.html" },
+            { "scheme": "https", "host": "dailynoodle.co.uk", "path": "/path" },
+            { "scheme": "https", "host": "dailynoodle.co.uk", "path": "/path/" },
+            { "scheme": "https", "host": "dailynoodle.co.uk", "path": "/path/index.html" },
+            { "scheme": "https", "host": "dailynoodle.co.uk", "path": "/link" },
+            { "scheme": "https", "host": "dailynoodle.co.uk", "path": "/link/" },
+            { "scheme": "https", "host": "dailynoodle.co.uk", "path": "/link/index.html" },
+            { "scheme": "https", "host": "dailynoodle.co.uk", "path": "/tangle" },
+            { "scheme": "https", "host": "dailynoodle.co.uk", "path": "/tangle/" },
+            { "scheme": "https", "host": "dailynoodle.co.uk", "path": "/tangle/index.html" },
+            { "scheme": "https", "host": "dailynoodle.co.uk", "path": "/borders" },
+            { "scheme": "https", "host": "dailynoodle.co.uk", "path": "/borders/" },
+            { "scheme": "https", "host": "dailynoodle.co.uk", "path": "/borders/index.html" },
+            { "scheme": "https", "host": "dailynoodle.co.uk", "path": "/reckon" },
+            { "scheme": "https", "host": "dailynoodle.co.uk", "path": "/reckon/" },
+            { "scheme": "https", "host": "dailynoodle.co.uk", "path": "/reckon/index.html" }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
         }
       ],
       "permissions": ["android.permission.VIBRATE"],
