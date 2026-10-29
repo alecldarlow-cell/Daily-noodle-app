@@ -15,6 +15,10 @@ module.exports = {
     // AsyncStorage's own in-memory mock (its docs' recommended Jest setup).
     '^@react-native-async-storage/async-storage$':
       '<rootDir>/node_modules/@react-native-async-storage/async-storage/jest/async-storage-mock.js',
+    // NetInfo's own Jest mock (its docs' recommended setup; ADR-008): the real module needs
+    // its native side and fails outside a phone.
+    '^@react-native-community/netinfo$':
+      '<rootDir>/node_modules/@react-native-community/netinfo/jest/netinfo-mock.js',
   },
   collectCoverageFrom: [
     'src/**/*.{ts,tsx}',

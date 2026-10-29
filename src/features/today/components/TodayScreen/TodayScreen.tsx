@@ -13,9 +13,12 @@ import { useToday } from '../../hooks/useToday';
 
 const NO_ITEMS: never[] = [];
 
-/** What works offline, said once (AF-023): no promise of reloading by itself. */
+/**
+ * What works offline, said once (AF-023). The rest does load by itself when the connection
+ * returns (R6: React Query follows the phone's network status), so no tap is asked for.
+ */
 export const OFFLINE_BODY =
-  'Puzzles you’ve opened before still work; pull down or tap Try again when you’re back online.';
+  'Puzzles you’ve opened before still work; the rest load when you’re back online.';
 
 /** Opens the site's how-to-play guide at a type. */
 export function openHowTo(type: PuzzleType): void {

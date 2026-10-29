@@ -3,10 +3,15 @@ import { QueryClient } from '@tanstack/react-query';
 import { render } from '@testing-library/react-native';
 import type { ReactElement } from 'react';
 
-import { QueryProvider } from '@/shared/query';
+import { NETWORK_DEFAULTS, QueryProvider } from '@/shared/query';
 
 export function testQueryClient(): QueryClient {
-  return new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: Infinity } } });
+  return new QueryClient({
+    defaultOptions: {
+      queries: { ...NETWORK_DEFAULTS.queries, retry: false, gcTime: Infinity },
+      mutations: NETWORK_DEFAULTS.mutations,
+    },
+  });
 }
 
 export async function renderWithProviders(
