@@ -612,3 +612,122 @@ below when it finishes.
 - **Tests proved** (`DokuScreen.test.tsx`, replacing the phone-keyboard test): no text input exists after a square tap; square then tiles fill and run on with nothing left in the hand; tapping a placed letter sends it back; tile-then-square still works. The first two fail on the old screen. `check` green (1166 tests).
 - **Not done**: a hardware keyboard no longer types into Doku (it went through the hidden input). The website on phones still raises the keyboard; same fix there is a site change if wanted.
 - **Ship**: JS only; production update after merge.
+
+### 29 Oct 2026 — unattended run: Release A (coordinator)
+
+- **Scope** agreed with Alec on 28 Oct (plan › "Unattended run"): H1–H4 and the tracker's agreed proposals, as two releases. Three lane agents in worktrees opened eight app PRs; the coordinator merged them one at a time, each re-checked on top of the previous merge: #73, #72, #76, #77, #71, #74, #75, #78. Entries for each follow.
+- **Website blocked:** this run could read `dailynoodle` but not push to it (the repo wasn't in the session's sources, and there was no tool to attach it). So everything website-first waits: S1 sync and A9 (R3, R4), S2 and A10 (Link timer R10, AF-028, Link's part of AF-029), S3 and A5 (finish sheet AF-019, AF-015, AF-022), S4 (AF-016 Borders map, AF-026 Path wording), AF-027 Tangle flash, AF-031 Mini typing, and the site's copy of AF-001, AF-004, AF-017 and AF-025. No live database change was made.
+- **CI notes:**
+  - #76 went red after #72 was merged into it: its new double-tap test looked the Try again button up again after the first press, and under coverage the screen had already switched to its loading view. The fix (beabde4) presses the same button twice in one act. It still proves one request.
+  - #75's first `check` failed with an unreadable log; it passed twice locally in CI mode and on the one re-run.
+  - The first Release run after #77 failed at its new gate: it checked out #76's merge commit, which has no `scripts/ci-gate.js` yet. It is a one-off at the switch to `workflow_run`. The next run (for #77's own commit) passed.
+- **Fingerprint:** main `9db5eed` still matches `store/runtime.json` (runtime test green).
+- **Release A publish:** this session's safety check refused the Update production dispatch, so it needs Alec's go-ahead or his own Run workflow. Status and the published commit are recorded in the next entry.
+- **Needs Alec:**
+  - G2: account deletion is a request emailed to contact@dailynoodle.co.uk, and nothing deletes the auth user automatically. Will he delete it by hand, and is that mailbox watched?
+  - If the saves can never be read, the app offers only Try again (deliberately no "continue without saves"). OK?
+  - Update production now waits up to 15 min for the commit's CI and refuses a red one. OK?
+  - "Replace your round?" (AF-020) asks before replacing a kept round, rather than keeping both. OK?
+  - Attach `dailynoodle` with push access for the next run.
+
+### 29 Oct 2026 — H1 Safe saves (R1, R2) ([#73](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/73))
+
+- **Why:** code review findings.
+  - R1: a failed disk write was only logged and `flush()` still resolved, so a result could show as saved and be lost when the app closed.
+  - R2: a failed read at launch was treated as an empty store, so the next save overwrote old history.
+- **Change, R1:** failed writes stay queued (latest value per key). They retry after 2/5/15/30 s, on every later write, and when the app is put away. A quiet "Couldn't save, retrying" line shows while a critical key is unsaved, and `flush()` rejects. Results, streaks, rounds in progress and league identity are critical; caches are dropped on failure. Keys unchanged.
+- **Change, R2:**
+  - Hydration is all-or-nothing, and a throw or a partial read commits nothing.
+  - No disk write happens before a successful read, and the disk wins over any earlier in-memory write.
+  - A "Couldn't load your saves" screen with Try again replaces running on empty.
+- **Tests proved:**
+  - Fault injection: failed result and streak writes show the notice; when storage comes back the retry succeeds; a relaunch the next day keeps the original result and date.
+  - Failed and partial launch reads followed by finishes: old results, `digi.aid`, the league board and streaks all survive.
+  - The load-failure screen retries into the app.
+  - `check` green (1177 tests, 98.7% lines); runtime fingerprint unchanged.
+- **Left:** none of this has been seen on a real phone yet (the H5 device pass). If the saves can never be read, the player has only Try again and a relaunch; there is no "continue without saves", on purpose.
+- **Needs Alec:** nothing (JS only; ships with the next update).
+
+### 29 Oct 2026: Button rule and Daily Noodle header ([#72](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/72); tracker AF-019 rule, AF-002)
+
+- **What:** the shared Button has filled, tonal and text variants. Every one is at least 48 × 48 with a pressed look. Destructive buttons are red and never filled. There is a loading spinner, automatic for promise-returning presses such as Share. The text field is 48 tall. Leagues and Account usages move to variants; Leave and Close league are red tonal. The masthead swaps DP/NoodlePuzzles for a code-drawn green DN mark and "Daily Noodle".
+- **Why:** the AF-019 app-wide button rule; AF-002, three names for one app.
+- **Tests proved:** variant styles and sizes, pressed, disabled, loading and accessibility (`Button.test.tsx`); the masthead (`Screen.test.tsx`); Share spins until the sheet opens, and Leave league is not filled (`LeaguesScreen.test.tsx`). `check` green (1180 tests, 98.69% lines); runtime fingerprint unchanged.
+- **Left:** the finish sheet's buttons come with the AF-019 sheet redesign. Puzzle controls are unchanged. League invite text still says "on Noodle Puzzles", as the website's board.html does; change both together (site first).
+- **Ship:** JS only, over the air.
+
+### 29 Oct 2026 — H3 Recovery and privacy (R5, R7, R8, R9) ([#76](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/76))
+
+- **R5:** `flush()` rechecks opt-out, and setting `digi.optout` drops the queue. Proved: no queued event is sent after opt-out, on the timer or on backgrounding.
+- **R7:** with a connection error and no kept copy, the puzzle shows native "No connection" and Try again (a native refetch). The web player is only for pages without data and for refused data. Proved: offline → fail → reconnect → Try again plays natively and keeps the data.
+- **R8:** the board id is in the board, records, mine and moment query keys; the moment is a minute fresh; old-id queries are dropped when the id changes. No storage key changed. Proved: after adopting another player in the same league and reopening a finished puzzle, the right board and records show and there's no stale trophy.
+- **R9:** `parseFeedLite` checks the feed at download and on reading the cache. Non-lists are refused and the last good copy is kept; bad, mismatched and duplicate cards are dropped. Proved: Today and the Archive still render with the bad cards left out.
+- Checks: `check` steps green (1185 tests, 98.68% lines); runtime fingerprint unchanged.
+- **Left:** R6 (reloading by itself when the connection returns) needs a connectivity dependency: Release B, ADR first.
+- **Needs Alec:** nothing (JS only).
+
+### 29 Oct 2026 — Release safety (G1, G3) ([#77](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/77))
+
+- **G1:**
+  - release.yml now runs on `workflow_run` when CI completes, only for a push to main that CI passed, and checks out that exact commit. Before, it published preview on every push.
+  - `scripts/ci-gate.js` runs before every `eas update` in release.yml and update-production.yml. It fails unless every CI run for that sha is green.
+  - Release skips without going red if main has moved on.
+  - Production is still Run workflow only, and waits up to 15 minutes for CI that's still running.
+  - Both workflows have `actions: read`.
+- **G3:** sign-in auto-refresh starts while the app is active and stops in the background (Supabase's React Native guide).
+- **Tests proved:**
+  - The gate refuses red, cancelled, running and missing CI; it publishes only when all green; the wait is bounded; API errors fail.
+  - The workflow tests prove the gate exists, precedes `eas update` in both workflows and can't be bypassed, and that release.yml triggers on CI completion, not push.
+  - Refresh pauses in the background.
+  - `check` steps green (1187 tests); runtime fingerprint unchanged.
+- **Left:** the first real run of the new release trigger happens on the first merge after this one. Check its "Only a green commit…" step publishes. `workflow_run` workflows run from the default branch's copy, so it takes effect once this is on main.
+- **Needs Alec:** nothing to set up (the workflow token is enough). Update production may now say "CI for … is still in_progress" and wait, or refuse a red commit; re-run once CI is green.
+
+### 29 Oct 2026 — A8 (b): rounds survive the app being closed (AF-029, Tangle/Borders/Reckon)
+
+- Why: AF-029 asked whether Tangle, Borders and Reckon resume after the app is fully closed, not just backgrounded.
+- Found: all three already do, from the site's own saves (`digi-tangle-v1` days, `digi-borders-v1`/`digi-reckon-v1` `cur`): reopening shows the start screen with Resume and the time unchanged. Gap: Tangle saved only on background and every 5 s, so closing from iOS's app switcher (inactive, no background) gave back up to 5 s.
+- Change: `useTangleGame` also calls the engine's `leave()` (its pagehide save) when the app goes inactive. No model change; no new keys.
+- Tests proved (`coldStart.test.tsx`, a new store hydrated from the fake phone storage, no unmount): each type reopens paused behind Resume with the same answers, score and time; the inactive case failed before the fix. `check` green (1170 tests, 98.79% lines); runtime test green.
+- Left: Link (waits on the website keeping Link's round). Unchanged site behaviour noted, not touched: a Borders hint taken on the current question is not remembered across a reload (the site's `start()` resets `cur.hint`), same as on the website.
+- Needs Alec: nothing. JS only; ships over the air.
+
+### 29 Oct 2026 — A8 (a): Today and Archive (AF-020, AF-023, AF-030)
+
+- Why: testers couldn't see a round waiting, could lose one by starting another of the type, were told puzzles would appear offline by themselves, and the Archive repeated today's set.
+- AF-020: cards say "Continue" (was "In progress") with the round's time (grid types' clock from `noodle-app-progress-*`, Tangle's time left); grid types' part-way cards now get the dot mark too. Starting another puzzle of a one-round type (Mini, Doku, Sweep, Path, Borders, Reckon) while another holds the round asks first (Cancel / Go to the kept one / Start this one). Chose warn over keep-both: Borders/Reckon's single `cur` is the site's format, and keep-both for grid types needs new per-puzzle keys and a migration.
+- AF-023: offline notes say "Puzzles you've opened before still work; pull down or tap Try again when you're back online." and no longer promise auto-reload; Today shows it over a kept list too; offline, opened puzzles' cards say "Downloaded".
+- AF-030: Archive lists puzzles before today only, with "Today's puzzles are on the Today tab ›" at the top.
+- Tests proved: see the PR (rounds, question, Today and Archive screens, PuzzleRow); "In progress" expectations changed to "Continue" on purpose. `check` green (1201 tests, 98.68% lines); runtime test green.
+- Left: auto-reload when back online (R6, later store build). Link has no Continue until it keeps a round (website first). Whether the website's archive page should also start from yesterday (AF-030 says "if the website's archive page also starts with today, change it to match"): site change, not made this run.
+- Needs Alec: nothing. JS only; ships over the air.
+
+### 29 Oct 2026: Account screen redesign ([#75](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/75); tracker AF-018 with AF-001, AF-003, AF-004, AF-012, plan G2)
+
+- **What:** Account rebuilt top to bottom:
+  - the sign-in card: "Sign in or create an account", then "Check your email" with a 60 s Send again;
+  - the signed-in status: tick, "Signed in", the email, and one line "Synced … · Sync now" that also carries errors and the league choice; Sign out is tonal;
+  - SETTINGS: Vibration and Animations, app-wide, under the new key `noodle-app-settings`;
+  - LEAGUES: "Join a league" / "Join with a code";
+  - PRIVACY & DATA: "how to change it"; "Delete my saved data" as a plain row with a confirm screen and a red tonal Delete; "Request account deletion" emailing contact@dailynoodle.co.uk;
+  - the version footer.
+    Vibration gates every haptic, since all go through `buzz()`, and Reckon's saved `hap` is no longer read. `useReduceMotion()` honours the app's Reduced, and Link and Tangle now use it.
+- **Tests proved:** signed-out and signed-in states, the 60 s resend countdown, the delete confirm flow (cancel, success, failure), the deletion-request mailto, the switches persisting, Vibration off silencing every buzz (Reckon included), and Reduced stopping motion even with the phone allowing it. Runtime fingerprint unchanged.
+- **Left / needs Alec:**
+  - G2: the request route is an email to contact@dailynoodle.co.uk. Nothing deletes the sign-in account automatically, so Alec deletes the Supabase auth user by hand on each request, and someone should check the mailbox is watched.
+  - The website's account card and privacy page wording need a site PR to match.
+  - The Sound switch comes with AF-013 (Release B).
+- **Ship:** JS only, over the air.
+
+### 29 Oct 2026: Leagues: compact controls, margins, Tangle without time ([#78](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/78); tracker AF-017, AF-007, AF-025, part of G5)
+
+- **What:**
+  - the league picker moves into the heading ("Family ▾"), with Start a new league and Join with a code in its menu, replacing the LEADERBOARD label and league chips;
+  - the puzzle chips are 32 pt in one edge-to-edge row (44 pt tap targets via hitSlop);
+  - the day is one slim line, "‹ Today · Wed 28 Oct ›", without "All eight puzzles";
+  - board and record rows have 10 pt right padding;
+  - Tangle's result has no time line (rows "29 pts", share "🥇 Martin 29 pts");
+  - the controls are split into `BoardControls.tsx`.
+- **Tests proved:** picker states and switching, chip sizes and tap targets, the day line wording, edge-to-edge chips, right padding on board and record rows, and Tangle's rows and share without the time (Borders and Reckon unchanged). Runtime fingerprint unchanged.
+- **Left:** the optional sticky bar (skipped, not trivial); the Leagues scroll bar at the edge (AF-007 point 3); the website's dn-board.js and board.html need the same AF-025 and AF-017 change through a site PR; the rest of the G5 Board split.
+- **Ship:** JS only, over the air.
