@@ -12,6 +12,7 @@ import {
   type ClaimResult,
 } from '@noodle/core';
 import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
+import { useEffect, useRef } from 'react';
 
 import {
   boardClaim,
@@ -33,7 +34,7 @@ import {
 import { BoardError } from '../api/errors';
 import { fetchPuzzleCards } from '../api/feed';
 import type { BoardView, DayBoard, Overall, Records } from '../types';
-import { getPid, loadBoard, saveBoard, setCurrent, setLeagues } from './boardStore';
+import { getPid, loadBoard, saveBoard, setCurrent, setLeagues, useBoardState } from './boardStore';
 
 export const BOARD_QUERY = ['board'] as const;
 
@@ -48,9 +49,33 @@ function refreshAll(qc: QueryClient) {
   return refreshLeagues().finally(() => qc.invalidateQueries({ queryKey: BOARD_QUERY }));
 }
 
+/**
+ * The board id that player-specific query keys carry (R8), so a board, records table or
+ * finish-sheet moment fetched for one player is never shown to another after the install
+ * adopts a different identity ("Already in this league?"). '' before one is minted.
+ */
+export function useBoardPid(): string {
+  return useBoardState().pid ?? '';
+}
+
+/**
+ * Mounted once at the root: when the board id changes, drops every cached answer that was
+ * fetched for the old one (their keys carry it).
+ */
+export function useForgetOldPlayer(): void {
+  const pid = useBoardPid();
+  const qc = useQueryClient();
+  const prev = useRef(pid);
+  useEffect(() => {
+    const old = prev.current;
+    prev.current = pid;
+    if (old && old !== pid) qc.removeQueries({ predicate: (q) => q.queryKey.includes(old) });
+  }, [pid, qc]);
+}
+
 /** This player's leagues from the server (kept in storage, so they show offline too). */
 export function useMine(enabled: boolean) {
-  const pid = loadBoard().pid;
+  const pid = useBoardPid();
   return useQuery({
     queryKey: [...BOARD_QUERY, 'mine', pid],
     queryFn: async () => {
@@ -64,8 +89,9 @@ export function useMine(enabled: boolean) {
 
 /** One league's board for one puzzle (or all eight) on one day. */
 export function useBoardData(code: string | undefined, view: BoardView, date: string) {
+  const pid = useBoardPid();
   return useQuery<DayBoard | Overall>({
-    queryKey: [...BOARD_QUERY, view === 'all' ? 'overall' : 'day', code, view, date],
+    queryKey: [...BOARD_QUERY, view === 'all' ? 'overall' : 'day', pid, code, view, date],
     queryFn: async () => {
       try {
         return view === 'all'
@@ -88,8 +114,9 @@ export function useBoardData(code: string | undefined, view: BoardView, date: st
  * them; off the league is handled as the boards handle it.
  */
 export function useBoardRecords(code: string | undefined) {
+  const pid = useBoardPid();
   return useQuery<Records>({
-    queryKey: [...BOARD_QUERY, 'records', code],
+    queryKey: [...BOARD_QUERY, 'records', pid, code],
     queryFn: async () => {
       try {
         return await boardRecords(getPid(), code!);

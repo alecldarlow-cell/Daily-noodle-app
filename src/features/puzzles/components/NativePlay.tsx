@@ -2,7 +2,9 @@ import { Stack } from 'expo-router';
 import { useMemo, type ReactElement } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
+import { isConnectionError } from '@/shared/net';
 import { usePuzzleTokens } from '@/shared/theme';
+import { Note } from '@/shared/ui';
 
 import { usePuzzleData } from '../api/usePuzzleData';
 import { enabled as bordersEnabled } from '../borders';
@@ -72,8 +74,10 @@ interface NativePlayProps {
 
 /**
  * A puzzle with a native player: its data from reports/<file>.json (kept for offline),
- * checked by the model's validate, then the native screen. A page without a data file,
- * data the model refuses, or no connection and no kept copy: the bridge instead.
+ * checked by the model's validate, then the native screen. A page without a data file
+ * (the oldest few) or data the model refuses: the bridge instead. No connection and no
+ * kept copy: "No connection" with Try again, which asks for the data again (R7); the
+ * bridge's own retry would only reload the web page, never the native data.
  */
 export function NativePlay({ type, file, fallback }: NativePlayProps) {
   const pt = usePuzzleTokens();
@@ -89,6 +93,19 @@ export function NativePlay({ type, file, fallback }: NativePlayProps) {
       <View style={[styles.fill, { backgroundColor: pt.paper }]} testID="native-loading">
         <Stack.Screen options={{ headerShown: false }} />
         <ActivityIndicator style={styles.spin} color={pt.inkSoft} />
+      </View>
+    );
+  if (!data && q.isError && isConnectionError(q.error))
+    return (
+      <View
+        style={[styles.fill, styles.pad, { backgroundColor: pt.paper }]}
+        testID="native-offline">
+        <Note
+          title="No connection"
+          body="This puzzle will open as soon as you’re back online. After that it plays offline too."
+          // A second press while it's still asking joins that request, never restarts it.
+          action={{ label: 'Try again', onPress: () => void q.refetch({ cancelRefetch: false }) }}
+        />
       </View>
     );
   if (!ok || !data) return fallback;
@@ -121,4 +138,5 @@ export function NativePlay({ type, file, fallback }: NativePlayProps) {
 const styles = StyleSheet.create({
   fill: { flex: 1 },
   spin: { marginTop: 120 },
+  pad: { paddingHorizontal: 16, paddingTop: 24 },
 });
