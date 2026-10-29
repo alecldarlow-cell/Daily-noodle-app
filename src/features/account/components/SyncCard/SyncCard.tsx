@@ -115,7 +115,7 @@ export function SyncCard({
             onSubmitEditing={() => void send()}
           />
           <Button
-            kind="go"
+            variant="filled"
             label="Email me a sign-in link"
             onPress={() => void send()}
             disabled={busy}
@@ -143,7 +143,7 @@ export function SyncCard({
           </Text>
           <View style={styles.row}>
             <Button
-              kind="go"
+              variant="filled"
               label="Sync now"
               onPress={() =>
                 void act(async () => {
@@ -168,7 +168,7 @@ export function SyncCard({
                 Your account plays in other leagues than this phone. Choose which to use on Leagues.
               </Text>
               <Button
-                kind="go"
+                variant="filled"
                 label="Choose on Leagues"
                 testID="sync-choose"
                 onPress={() =>

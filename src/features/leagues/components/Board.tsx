@@ -212,7 +212,7 @@ function BoardFailed({ error, busy, retry }: { error: unknown; busy: boolean; re
       </P>
       <Acts>
         <Btn
-          kind="go"
+          variant="filled"
           label={busy ? 'Trying…' : 'Try again'}
           disabled={busy}
           onPress={retry}
@@ -297,10 +297,10 @@ function TopCard({ flow, league }: { flow: Flow; league: BoardLeague }) {
         <P>Share the link in your group chat. Anyone who taps it picks a nickname and joins.</P>
         <Acts>
           <Btn
-            kind="go"
+            variant="filled"
             label="Invite people"
             onPress={() =>
-              void share(`${inviteText(league.name)}\n${inviteLink(league.code)}`).then(done)
+              share(`${inviteText(league.name)}\n${inviteLink(league.code)}`).then(done)
             }
           />
         </Acts>
@@ -315,7 +315,7 @@ function TopCard({ flow, league }: { flow: Flow; league: BoardLeague }) {
         </P>
         <Acts>
           <Btn
-            kind="alt"
+            variant="tonal"
             label="Start another league"
             onPress={() => (done(), flow.setView({ k: 'start', from: 'joined' }))}
           />
@@ -369,7 +369,7 @@ function TopCard({ flow, league }: { flow: Flow; league: BoardLeague }) {
         <P>Then you can join as yourself from another phone or app.</P>
         <Acts>
           <Btn
-            kind="go"
+            variant="filled"
             label="Set a PIN"
             onPress={() => flow.setView({ k: 'pin', fresh: false })}
           />
@@ -578,15 +578,15 @@ function DayView({
       <Acts>
         {d.ranked.length ? (
           <Btn
-            kind="go"
+            variant="filled"
             label="Share leaderboard"
-            onPress={() => void share(shareDay(type, headline, date, d.ranked, league))}
+            onPress={() => share(shareDay(type, headline, date, d.ranked, league))}
           />
         ) : null}
         <Btn
-          kind={d.ranked.length ? 'alt' : 'go'}
+          variant={d.ranked.length ? 'tonal' : 'filled'}
           label="Invite people"
-          onPress={() => void share(`${inviteText(league.name)}\n${inviteLink(league.code)}`)}
+          onPress={() => share(`${inviteText(league.name)}\n${inviteLink(league.code)}`)}
         />
       </Acts>
     </View>
@@ -649,15 +649,15 @@ function OverallView({
       <Acts>
         {d.day.length ? (
           <Btn
-            kind="go"
+            variant="filled"
             label="Share leaderboard"
-            onPress={() => void share(shareAll(date, d.day, league))}
+            onPress={() => share(shareAll(date, d.day, league))}
           />
         ) : null}
         <Btn
-          kind={d.day.length ? 'alt' : 'go'}
+          variant={d.day.length ? 'tonal' : 'filled'}
           label="Invite people"
-          onPress={() => void share(`${inviteText(league.name)}\n${inviteLink(league.code)}`)}
+          onPress={() => share(`${inviteText(league.name)}\n${inviteLink(league.code)}`)}
         />
       </Acts>
     </View>
@@ -736,7 +736,8 @@ function Settings({
               onPress={() => flow.setView({ k: 'pin', fresh: false })}
             />
             <Btn
-              kind="warn"
+              variant="tonal"
+              destructive
               label="Leave league"
               onPress={() =>
                 confirm(
@@ -860,7 +861,8 @@ function Settings({
               <P>Takes the league off everyone’s boards.</P>
               <Acts>
                 <Btn
-                  kind="warn"
+                  variant="tonal"
+                  destructive
                   label="Close league"
                   onPress={() =>
                     confirm(
