@@ -18,6 +18,8 @@ export const TRACK_KEY = /^digi\.(aid|sid|last|optout)$/;
 export interface TrackKV {
   getItem(k: string): string | null;
   setItem(k: string, v: string): void;
+  /** When the store can say a key changed: opting out then drops the queue at once. */
+  subscribe?(k: string, fn: () => void): () => void;
 }
 
 export interface TrackEvent {
@@ -44,6 +46,10 @@ export function optedOut(store: TrackKV): boolean {
 export function createTracker({ store, send, uuid, now = Date.now }: TrackerDeps) {
   const queue: TrackEvent[] = [];
   let isNew = false;
+  // Opting out (the privacy page's switch, through the bridge) drops what's queued (R5).
+  store.subscribe?.('digi.optout', () => {
+    if (optedOut(store)) queue.length = 0;
+  });
 
   function ids(): { a: string; s: string } {
     let a = store.getItem('digi.aid');
@@ -64,6 +70,11 @@ export function createTracker({ store, send, uuid, now = Date.now }: TrackerDeps
   }
 
   function flush(): void {
+    // An event queued before the player opted out is never sent (R5).
+    if (optedOut(store)) {
+      queue.length = 0;
+      return;
+    }
     while (queue.length) {
       const batch = queue.splice(0, MAX_BATCH);
       send(batch).catch(() => undefined);

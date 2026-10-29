@@ -1,4 +1,4 @@
-import { act, screen, waitFor } from '@testing-library/react-native';
+import { act, fireEvent, screen, waitFor } from '@testing-library/react-native';
 import { Text } from 'react-native';
 
 import { appStorage } from '@/shared/storage';
@@ -86,6 +86,45 @@ describe('GIVEN a Mini opened natively', () => {
       mockSite({ [`reports/${FILE}.json`]: new Error('offline') });
       await renderWithProviders(<NativePlay type="mini" file={FILE} fallback={bridge} />);
       expect(screen.getByTestId('start-card')).toBeOnTheScreen();
+    });
+  });
+
+  describe('WHEN it was never opened, the phone is offline, then the connection returns and Try again is pressed', () => {
+    it('THEN it plays natively (not the web page) and keeps the data for offline after', async () => {
+      mockSite({ [`reports/${FILE}.json`]: new TypeError('Network request failed') });
+      await renderWithProviders(<NativePlay type="mini" file={FILE} fallback={bridge} />);
+      await waitFor(() => expect(screen.getByTestId('native-offline')).toBeOnTheScreen(), {
+        timeout: 5000,
+      });
+      expect(screen.getByText('No connection')).toBeOnTheScreen();
+      expect(screen.queryByText('bridge')).toBeNull();
+
+      const fetch = mockSite({ [`reports/${FILE}.json`]: file105 });
+      await fireEvent.press(screen.getByRole('button', { name: 'Try again' }));
+      await waitFor(() => expect(screen.getByTestId('start-card')).toBeOnTheScreen());
+      expect(fetch).toHaveBeenCalledTimes(1);
+      expect(screen.queryByText('bridge')).toBeNull();
+      expect(JSON.parse(appStorage.getItem(PUZZLE_CACHE_PREFIX + FILE)!)).toEqual(file105);
+    });
+
+    it('THEN a second press while it is still asking starts no second request', async () => {
+      mockSite({ [`reports/${FILE}.json`]: new TypeError('Network request failed') });
+      await renderWithProviders(<NativePlay type="mini" file={FILE} fallback={bridge} />);
+      await waitFor(() => expect(screen.getByTestId('native-offline')).toBeOnTheScreen(), {
+        timeout: 5000,
+      });
+      let answer!: (v: unknown) => void;
+      const slow = new Promise((r) => (answer = r));
+      const fetch = mockSite({ [`reports/${FILE}.json`]: () => file105 });
+      fetch.mockImplementationOnce(async () => {
+        await slow;
+        return { ok: true, status: 200, json: async () => file105 };
+      });
+      await fireEvent.press(screen.getByRole('button', { name: 'Try again' }));
+      await fireEvent.press(screen.getByRole('button', { name: 'Try again' }));
+      expect(fetch).toHaveBeenCalledTimes(1);
+      await act(async () => answer(undefined));
+      await waitFor(() => expect(screen.getByTestId('start-card')).toBeOnTheScreen());
     });
   });
 
