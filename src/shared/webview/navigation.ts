@@ -64,7 +64,7 @@ export function decide(url: string, current: string): NavDecision {
   // The app's invite link (SITE.md › App links): the league's invite, as board.html?join=.
   if (p === '/join.html') {
     const c = u.searchParams.get('c');
-    return { kind: 'leagues', params: c ? { join: c } : {} };
+    return { kind: 'leagues', params: c ? { join: c, ...shareBoard(u) } : {} };
   }
   if (p.endsWith('.html')) return { kind: 'external' };
   return { kind: 'allow' };
@@ -83,6 +83,19 @@ function joinCode(raw: string | null): string | null {
 
 /** A sign-in link's marks (Supabase: #access_token=…, ?code=…, an error): never the app's. */
 const AUTH = /(^|[#&?])(access_token|refresh_token|code|error|error_description|token_hash)=/;
+
+/**
+ * A leaderboard share's puzzle and day (join.html?c=CODE&p=mini&d=2026-10-29; AF-010, 29 Oct
+ * 2026), kept only when valid, as the site's join.html passes them on to board.html.
+ */
+export function shareBoard(u: URL): { p?: string; d?: string } {
+  const out: { p?: string; d?: string } = {};
+  const p = u.searchParams.get('p');
+  const d = u.searchParams.get('d');
+  if (p && /^(mini|doku|sweep|path|link|tangle|borders|reckon|all|records)$/.test(p)) out.p = p;
+  if (d && /^\d{4}-\d{2}-\d{2}$/.test(d)) out.d = d;
+  return out;
+}
 
 /**
  * Where the app goes for a link the phone hands it (expo-router's +native-intent). Android
@@ -106,7 +119,9 @@ export function systemPath(path: string): string {
   const p = u.pathname;
   if (p === '/join.html') {
     const c = joinCode(u.searchParams.get('c'));
-    return c ? `/leagues?join=${c}` : '/leagues';
+    if (!c) return '/leagues';
+    const b = shareBoard(u);
+    return `/leagues?join=${c}${b.p ? `&p=${b.p}` : ''}${b.d ? `&d=${b.d}` : ''}`;
   }
   if (p === '/board.html') {
     if (AUTH.test(u.hash) || AUTH.test(u.search) || /dnmove=/.test(u.hash)) return path;

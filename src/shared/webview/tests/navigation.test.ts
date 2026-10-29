@@ -74,6 +74,16 @@ describe('GIVEN an invite link to join.html (SITE.md › App links)', () => {
       // expo-router may hand over the path alone.
       expect(systemPath('/join.html?c=WXYZ2345')).toBe('/leagues?join=WXYZ2345');
     });
+    it('THEN a leaderboard share keeps its puzzle and day (AF-010), and drops bad ones', () => {
+      expect(systemPath(`${S}/join.html?c=ABCD2345&p=mini&d=2026-10-29`)).toBe(
+        '/leagues?join=ABCD2345&p=mini&d=2026-10-29',
+      );
+      expect(systemPath(`${S}/join.html?c=ABCD2345&p=x&d=soon`)).toBe('/leagues?join=ABCD2345');
+      expect(decide(`${S}/join.html?c=ABCD2345&p=all&d=2026-10-29`, CUR)).toEqual({
+        kind: 'leagues',
+        params: { join: 'ABCD2345', p: 'all', d: '2026-10-29' },
+      });
+    });
     it('THEN a missing or broken code opens Leagues', () => {
       expect(systemPath(`${S}/join.html`)).toBe('/leagues');
       expect(systemPath(`${S}/join.html?c=AB`)).toBe('/leagues');
