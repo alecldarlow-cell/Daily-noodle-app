@@ -20,7 +20,7 @@ describe('GIVEN a signed-in player with the app open', () => {
     const { client, calls, emit } = fakeClient({ email: 'a@b.co' });
     const store = memoryStorage({ 'digi-mini-v1': { v: 1, done: { A: { s: 1 } } } });
     const r = await render(<SyncRunner client={client} store={store} delayMs={100} />);
-    const pulls = () => calls.filter((c) => c.fn === 'sync_pull').length;
+    const pulls = () => calls.filter((c) => c.fn === 'sync_pull_rev').length;
     await act(async () => {});
     expect(pulls()).toBe(1);
     announceFinish({ path: 'reports/x.html', type: 'mini', detail: {} });
