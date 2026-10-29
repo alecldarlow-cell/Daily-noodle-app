@@ -494,7 +494,10 @@ describe('GIVEN a player in a league', () => {
       await waitFor(() =>
         expect(m.boardDay).toHaveBeenCalledWith(PID, 'ABCD2345', 'mini', addDays(today, -1)),
       );
-      await waitFor(() => expect(screen.getByText('Yesterday')).toBeOnTheScreen());
+      // One slim line now (AF-017): the day, its date and the puzzle.
+      await waitFor(() =>
+        expect(screen.getByTestId('day-line')).toHaveTextContent(/^Yesterday · /),
+      );
       expect(screen.getByRole('button', { name: 'Next day' })).toBeEnabled();
     });
 

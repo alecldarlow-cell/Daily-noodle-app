@@ -55,8 +55,12 @@ export function result(
   t: BoardTypeId,
   r: Pick<RecordResult, 'secs' | 'score' | 'mistakes'> & { outcome?: Outcome },
 ): { big: string; small: string } {
+  // Tangle is a fixed 90-second round, so its time says nothing: points only (AF-025).
   if (SCORED.has(t))
-    return { big: `${r.score == null ? '–' : r.score} pts`, small: r.secs ? mmss(r.secs) : '' };
+    return {
+      big: `${r.score == null ? '–' : r.score} pts`,
+      small: t !== 'tangle' && r.secs ? mmss(r.secs) : '',
+    };
   if (r.outcome === 'failed')
     return { big: t === 'link' ? 'Out of guesses' : 'Didn’t finish', small: '' };
   if (r.outcome === 'revealed') return { big: 'Revealed', small: '' };

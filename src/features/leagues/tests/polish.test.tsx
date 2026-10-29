@@ -60,6 +60,12 @@ function inBoth() {
   m.boardMine.mockResolvedValue([mineRow(), mineRow(WORK)]);
 }
 
+/** Leagues are picked from the menu under the league's name in the heading (AF-017). */
+async function switchTo(code: string) {
+  await fireEvent.press(screen.getByTestId('league-picker'));
+  await fireEvent.press(screen.getByTestId(`league-${code}`));
+}
+
 async function rerender(r: Awaited<ReturnType<typeof renderWithProviders>>) {
   await r.rerender(
     <QueryProvider client={r.client}>
@@ -76,14 +82,14 @@ describe('GIVEN the owner of two leagues with League settings open', () => {
       await renderWithProviders(<LeaguesScreen />);
       await waitFor(() => expect(screen.getByTestId('overall-board')).toBeOnTheScreen());
       // Both boards seen once, so a switch shows the other at once and Settings stays put.
-      await fireEvent.press(screen.getByTestId(`league-${WORK.code}`));
+      await switchTo(WORK.code);
       await waitFor(() => expect(m.boardOverall).toHaveBeenCalledWith(PID, WORK.code, today));
       await waitFor(() => expect(screen.getByTestId('overall-board')).toBeOnTheScreen());
-      await fireEvent.press(screen.getByTestId(`league-${FAMILY.code}`));
+      await switchTo(FAMILY.code);
       await waitFor(() => expect(board().cur).toBe(FAMILY.code));
       await press('⚙︎ League settings');
       expect(screen.getByLabelText('League name')).toHaveDisplayValue('Family');
-      await fireEvent.press(screen.getByTestId(`league-${WORK.code}`));
+      await switchTo(WORK.code);
       await waitFor(() => expect(board().cur).toBe(WORK.code));
       // Still open: the same Settings, now for Work.
       await waitFor(() => expect(screen.getByLabelText('League name')).toHaveDisplayValue('Work'));

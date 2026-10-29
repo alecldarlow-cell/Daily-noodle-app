@@ -2,28 +2,17 @@
 import { BOARD_TYPE, BOARD_TYPES, type BoardLeague, type BoardTypeId } from '@noodle/core';
 import { router } from 'expo-router';
 import { createContext, useContext, useState } from 'react';
-import {
-  ActivityIndicator,
-  Alert,
-  Pressable,
-  ScrollView,
-  Share,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { ActivityIndicator, Alert, Pressable, Share, StyleSheet, Text, View } from 'react-native';
 
 import { BUILD_ENV } from '@/shared/env';
 import { appStorage, useStoredRaw } from '@/shared/storage';
 import { FONT, useTokens } from '@/shared/theme';
-import { shortDate, useLondonDay } from '@/shared/time';
+import { useLondonDay } from '@/shared/time';
 
 import { isOffline, sayError } from '../api/errors';
-import { hasPin, setCurrent, setLastType, useBoardState } from '../hooks/boardStore';
+import { hasPin, setLastType, useBoardState } from '../hooks/boardStore';
 import {
-  addDays,
   dayMonth,
-  dayName,
   inviteLink,
   inviteText,
   MEDAL,
@@ -46,8 +35,9 @@ import {
 import { useBackfill } from '../hooks/useResults';
 import { leagueNameSchema, firstError } from '../schemas';
 import type { BoardView, DayBoard, DayRow, NotYet, Overall, OverallRow, Records } from '../types';
+import { DayLine, LeaguePicker, PuzzleChips } from './BoardControls';
 import { RecordsView } from './Records';
-import { Acts, B, Btn, Card, Field, Msg, P, Sub } from './ui';
+import { Acts, B, Btn, Card, Field, Msg, P, ROW_INSET_RIGHT, Sub } from './ui';
 
 /** Sign-in sync is in this build: then joining points to it, for playing on another phone. */
 const syncOn = (): boolean => BUILD_ENV.EXPO_PUBLIC_SYNC === '1';
@@ -121,35 +111,15 @@ export function Board({ flow, league }: { flow: Flow; league: BoardLeague }) {
   return (
     <RecordsCtx.Provider value={{ recs: rec.data, open: rec.data ? openCard : undefined }}>
       <View testID="league-board">
-        <LeagueBar flow={flow} league={league} leagues={s.leagues || []} />
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.pills}>
-          {PILLS.map((p) => {
-            const on = p.id === view;
-            return (
-              <Pressable
-                key={p.id}
-                accessibilityRole="button"
-                accessibilityState={{ selected: on }}
-                accessibilityLabel={p.name}
-                testID={`pill-${p.id}`}
-                onPress={() => {
-                  setCard(null);
-                  pick(p.id);
-                }}
-                style={[
-                  styles.pill,
-                  { borderColor: on ? t.ink : t.hair, backgroundColor: on ? t.ink : t.paper },
-                ]}>
-                <Text style={[styles.pillText, { color: on ? t.canvas : t.ink }]}>
-                  {p.emoji} {p.name}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </ScrollView>
+        <LeaguePicker flow={flow} league={league} leagues={s.leagues || []} />
+        <PuzzleChips
+          pills={PILLS}
+          view={view}
+          onPick={(v) => {
+            setCard(null);
+            pick(v);
+          }}
+        />
 
         <TopCard flow={flow} league={league} />
 
@@ -224,66 +194,6 @@ function BoardFailed({ error, busy, retry }: { error: unknown; busy: boolean; re
 }
 
 /** The league in the masthead: switch, start or join another. */
-function LeagueBar({
-  flow,
-  league,
-  leagues,
-}: {
-  flow: Flow;
-  league: BoardLeague;
-  leagues: BoardLeague[];
-}) {
-  const t = useTokens();
-  return (
-    <View style={styles.leagueBar}>
-      <Text style={[styles.kicker, { color: t.faint }]}>Leaderboard</Text>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.pills}>
-        {leagues.map((l) => {
-          const on = l.code === league.code;
-          return (
-            <Pressable
-              key={l.code}
-              accessibilityRole="button"
-              accessibilityState={{ selected: on }}
-              testID={`league-${l.code}`}
-              onPress={() => setCurrent(l.code)}
-              style={[
-                styles.pill,
-                {
-                  borderColor: on ? t.accent : t.hair,
-                  backgroundColor: on ? t.accentSoft : t.paper,
-                },
-              ]}>
-              <Text
-                style={[
-                  styles.pillText,
-                  { color: t.ink, fontFamily: on ? FONT.bodyBold : FONT.bodySemi },
-                ]}>
-                {l.name}
-              </Text>
-            </Pressable>
-          );
-        })}
-        <Pressable
-          accessibilityRole="button"
-          onPress={() => flow.setView({ k: 'start' })}
-          style={[styles.pill, { borderColor: t.hair }]}>
-          <Text style={[styles.pillText, { color: t.accent }]}>＋ Start a new league</Text>
-        </Pressable>
-        <Pressable
-          accessibilityRole="button"
-          onPress={() => flow.setView({ k: 'code' })}
-          style={[styles.pill, { borderColor: t.hair }]}>
-          <Text style={[styles.pillText, { color: t.accent }]}>＋ Join with a code</Text>
-        </Pressable>
-      </ScrollView>
-    </View>
-  );
-}
-
 /** The one card at the top after something happened, else the PIN nudge (board.html topCard). */
 function TopCard({ flow, league }: { flow: Flow; league: BoardLeague }) {
   const s = useBoardState();
@@ -378,46 +288,6 @@ function TopCard({ flow, league }: { flow: Flow; league: BoardLeague }) {
       </Card>
     );
   return null;
-}
-
-function DayBar({
-  label,
-  date,
-  first,
-  today,
-  setDate,
-}: {
-  label: string;
-  date: string;
-  first: string;
-  today: string;
-  setDate: (d: string) => void;
-}) {
-  const t = useTokens();
-  const btn = (dir: -1 | 1, can: boolean, name: string) => (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={name}
-      accessibilityState={{ disabled: !can }}
-      disabled={!can}
-      onPress={() => setDate(addDays(date, dir))}
-      style={[
-        styles.dayBtn,
-        { borderColor: t.hair, backgroundColor: t.paper, opacity: can ? 1 : 0.3 },
-      ]}>
-      <Text style={[styles.dayArrow, { color: t.ink }]}>{dir < 0 ? '‹' : '›'}</Text>
-    </Pressable>
-  );
-  return (
-    <View style={styles.dayBar} testID="day-bar">
-      {btn(-1, date > first, 'Previous day')}
-      <View style={styles.dayLabel}>
-        <Text style={[styles.dayName, { color: t.ink }]}>{dayName(date, today)}</Text>
-        <Text style={[styles.daySmall, { color: t.faint }]}>{label}</Text>
-      </View>
-      {btn(1, date < today, 'Next day')}
-    </View>
-  );
 }
 
 function Row({
@@ -540,8 +410,8 @@ function DayView({
   const file = path?.replace(/^reports\//, '').replace(/\.html$/, '');
   return (
     <View testID="day-board">
-      <DayBar
-        label={`${T.emoji} ${headline ?? T.name} · ${shortDate(date)}`}
+      <DayLine
+        what={`${T.emoji} ${headline ?? T.name}`}
         date={date}
         first={d.first || date}
         today={today}
@@ -619,13 +489,7 @@ function OverallView({
   );
   return (
     <View testID="overall-board">
-      <DayBar
-        label={`🏆 All eight puzzles · ${shortDate(date)}`}
-        date={date}
-        first={d.first || date}
-        today={today}
-        setDate={setDate}
-      />
+      <DayLine date={date} first={d.first || date} today={today} setDate={setDate} />
       {!d.day.length ? (
         <Text style={[styles.nobody, { color: t.muted }]}>
           Nobody in {league.name} has played {date === today ? 'yet today' : 'on this day'}.
@@ -884,24 +748,6 @@ function Settings({
 }
 
 const styles = StyleSheet.create({
-  leagueBar: { marginBottom: 4 },
-  kicker: {
-    fontFamily: FONT.bodySemi,
-    fontSize: 11,
-    letterSpacing: 0.8,
-    textTransform: 'uppercase',
-    marginBottom: 6,
-  },
-  pills: { gap: 8, paddingVertical: 6 },
-  pill: {
-    minHeight: 44,
-    justifyContent: 'center',
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 999,
-    borderWidth: 1,
-  },
-  pillText: { fontFamily: FONT.bodySemi, fontSize: 14 },
   loading: { fontFamily: FONT.body, textAlign: 'center', paddingVertical: 40, fontSize: 14 },
   spin: { marginTop: 40 },
   nobody: {
@@ -910,25 +756,6 @@ const styles = StyleSheet.create({
     paddingTop: 28,
     paddingBottom: 10,
     fontSize: 15,
-  },
-  dayBar: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 14, marginBottom: 6 },
-  dayBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  dayArrow: { fontFamily: FONT.display, fontSize: 22, lineHeight: 26 },
-  dayLabel: { flex: 1, alignItems: 'center' },
-  dayName: { fontFamily: FONT.displayHeavy, fontSize: 16 },
-  daySmall: {
-    fontFamily: FONT.bodySemi,
-    fontSize: 11,
-    letterSpacing: 0.7,
-    textTransform: 'uppercase',
-    marginTop: 2,
   },
   play: { marginTop: 10, marginBottom: 4, padding: 12, borderRadius: 10, gap: 4 },
   playText: { fontFamily: FONT.body, fontSize: 14.5 },
@@ -939,7 +766,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 10,
     paddingVertical: 11,
-    paddingHorizontal: 2,
+    paddingLeft: 2,
+    paddingRight: ROW_INSET_RIGHT,
     borderBottomWidth: 1,
   },
   rk: { fontFamily: FONT.displayHeavy, width: 34, textAlign: 'center', fontSize: 17 },

@@ -17,7 +17,7 @@ import {
   recordRows,
 } from '../hooks/recordsText';
 import type { Records, RecordsPlayer } from '../types';
-import { Acts, Btn, Sub } from './ui';
+import { Acts, Btn, ROW_INSET_RIGHT, Sub } from './ui';
 
 const share = (message: string) => Share.share({ message }).catch(() => {});
 
@@ -277,6 +277,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 10,
     paddingVertical: 10,
+    paddingLeft: 2,
+    paddingRight: ROW_INSET_RIGHT,
     borderBottomWidth: 1,
     minHeight: 52,
   },
