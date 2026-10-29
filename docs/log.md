@@ -731,3 +731,28 @@ below when it finishes.
 - **Tests proved:** picker states and switching, chip sizes and tap targets, the day line wording, edge-to-edge chips, right padding on board and record rows, and Tangle's rows and share without the time (Borders and Reckon unchanged). Runtime fingerprint unchanged.
 - **Left:** the optional sticky bar (skipped, not trivial); the Leagues scroll bar at the edge (AF-007 point 3); the website's dn-board.js and board.html need the same AF-025 and AF-017 change through a site PR; the rest of the G5 Board split.
 - **Ship:** JS only, over the air.
+
+### 29 Oct 2026 — Release A published (over the air)
+
+- Update production run [40950996721](https://github.com/alecldarlow-cell/Daily-noodle-app/actions/runs/40950996721) published main `12ffc1e` (#71–#79) to the production channel at 20:43 UTC, after Alec's go-ahead in the session. Its new CI gate passed. Before the run, the fingerprint still matched the Play build (`fa92e2c3…`; runtime test green).
+- This was the only production update of the run. None follows Release B.
+
+### 29 Oct 2026 — Release B (0.3.0 store build): reconnect, sound, share links ([#80](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/80))
+
+- **R6, reconnect:** NetInfo 12.0.1 (ADR-008) drives React Query's onlineManager. Failed queries reload when the connection returns, so Today, Archive and puzzle data load without a tap. The offline wording no longer asks for one.
+- **AF-013/AF-012, sound:** expo-audio 58.0.10 (ADR-009, playback only, RECORD_AUDIO blocked). The website's tones for Tangle, Borders and Reckon are rendered to `assets/sounds` by `scripts/make-sounds.js`. A Sound switch sits on Account (on by default, `noodle-app-settings.sound`), and the phone's silent mode is followed. The finish fanfares are the three games' jingles. Models are untouched (saves identical with Sound on and off).
+- **AF-010, share links:** App Links for `/<type>`, `/<type>/` and `/<type>/index.html` open today's puzzle of that type. `board.html?join=` is routed in JS, but board.html is not an App Link (the website's sign-in emails land there).
+- **Version 0.3.0.** `store/runtime.json` android is `ea55e856…`, "0.3.0, pending Play upload".
+- **Tests proved:** see the PR. `check` green, and runtime test green on the new fingerprint.
+- **Left:**
+  - The celebration jingle for Mini, Doku, Sweep, Path and Link. The website goes first (site PR), then the app adds the notes to `make-sounds.js`.
+  - board.html as an App Link (needs the website's sign-in redirect moved off board.html first).
+  - Play's app-signing SHA-256 in assetlinks.json (AF-024). It now lists two fingerprints, and it's unconfirmed whether either is Play's.
+  - iOS universal links.
+  - After the Play upload, confirm the build's runtime is `ea55e856…` (else correct `store/runtime.json`) and drop "pending".
+- **Needs Alec:**
+  - Build and upload 0.3.0 after Release A's update is published.
+  - On the phone, check `adb shell pm get-app-links uk.co.dailynoodle.app` (verified), a WhatsApp tap on `dailynoodle.co.uk/mini`, and sound on and off, on silent, and with music playing.
+
+- **Merged** 29 Oct after Release A was out. CI: `replay path` failed once with an unreadable log, then passed on the one re-run; it had been green on the same code before main's docs-only merge.
+- **Store build:** queued through Release ("Run workflow", production, android) as run [40953273792](https://github.com/alecldarlow-cell/Daily-noodle-app/actions/runs/40953273792) on `78c26e1`. The EAS build id is only in that run's log, which this workspace can't read; find it on expo.dev. Alec uploads it to Play's closed track. After that, check the runtime is `ea55e856…` and drop "pending" from `store/runtime.json`.
