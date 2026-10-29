@@ -73,8 +73,9 @@ export class TangleHost {
 /**
  * One Tangle open on the screen: the engine (engines/tangle.js, ported) on the real
  * clock, ticking every 100 ms as the page does, paused and saved when the app goes to
- * the background (the page's visibilitychange), saved when the screen closes (its
- * pagehide), and its first result announced on the results bus with the tracker's
+ * the background (the page's visibilitychange), saved when the app goes inactive or the
+ * screen closes (its pagehide), so a round left part-way comes back after the app is
+ * closed as "Round paused" with its time (AF-029), and its first result announced on the results bus with the tracker's
  * detail.
  */
 export function useTangleGame(file: PuzzleFile<TangleData>, deps: Deps = {}) {
@@ -102,6 +103,10 @@ export function useTangleGame(file: PuzzleFile<TangleData>, deps: Deps = {}) {
     const sub = AppState.addEventListener('change', (st) => {
       if (st === 'active') e.visible();
       else if (st === 'background') e.hidden();
+      // inactive (iOS's app switcher, a call): the app can be closed from there with no
+      // background first, so keep the round where it stands now (the page's pagehide
+      // save; nothing in play changes) rather than as of the last 5-second save.
+      else e.leave();
     });
     return () => {
       clearInterval(h);

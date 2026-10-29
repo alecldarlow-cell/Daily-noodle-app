@@ -1,12 +1,13 @@
 import { useQuery } from '@tanstack/react-query';
 
 import { getJson, HttpError } from '@/shared/net';
+import { PUZZLE_CACHE_PREFIX } from '@/shared/played/rounds';
 import { appStorage, type CachedStorage } from '@/shared/storage';
 
 import type { PuzzleFile } from '../types';
 
 /** App-only key prefix: a puzzle's data kept after its first open, so it plays offline. */
-export const PUZZLE_CACHE_PREFIX = 'noodle-app-puzzle:';
+export { PUZZLE_CACHE_PREFIX };
 
 function looksLikeFile(x: unknown): x is PuzzleFile {
   const f = x as PuzzleFile | null;

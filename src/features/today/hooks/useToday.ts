@@ -56,7 +56,8 @@ export function useToday(
   const out = { refresh, refreshing };
   // Say what's wrong at the first failure; retries carry on quietly behind it.
   const why = q.error ?? q.failureReason;
-  if (q.data) return { kind: 'ready', list: q.data, stale: !!why, ...out };
+  if (q.data)
+    return { kind: 'ready', list: q.data, stale: !!why, offline: isConnectionError(why), ...out };
   if (why instanceof NotTodayYet) return { kind: 'nearly', ...out };
   // "No connection" only when the phone looks offline; a bad answer from the site isn't that.
   if (why) return { kind: isConnectionError(why) ? 'offline' : 'failed', ...out };

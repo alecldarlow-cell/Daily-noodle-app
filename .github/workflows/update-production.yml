@@ -19,6 +19,11 @@ concurrency:
   group: update-production
   cancel-in-progress: false
 
+permissions:
+  contents: read
+  # ci-gate.js reads the commit's CI runs.
+  actions: read
+
 env:
   EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
   EAS: npx --yes eas-cli@25.3.0
@@ -27,7 +32,7 @@ jobs:
   update:
     name: update
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     steps:
       - name: Stop unless on main with EXPO_TOKEN
         if: github.ref != 'refs/heads/main' || env.EXPO_TOKEN == ''
@@ -35,6 +40,13 @@ jobs:
           echo "::error::Run this from main, with the EXPO_TOKEN repository secret set (docs/install.md)."
           exit 1
       - uses: actions/checkout@v4
+      - name: Only a commit whose CI is green publishes
+        # Hardening G1: stops (red) unless every CI run for this exact commit passed; waits up
+        # to 15 minutes if CI is still running (Run workflow pressed just after a merge).
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          SHA: ${{ github.sha }}
+        run: node scripts/ci-gate.js "$SHA" --wait 900
       - uses: actions/setup-node@v4
         with:
           node-version: 22
