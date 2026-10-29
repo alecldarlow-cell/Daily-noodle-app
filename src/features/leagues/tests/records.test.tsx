@@ -84,7 +84,9 @@ describe('GIVEN a player in a league', () => {
       expect(ids).toEqual(['record-mini', 'record-link', 'record-tangle']);
       expect(screen.getByTestId('record-mini')).toHaveTextContent(/Mini.*Ma · 18 Oct.*0:30/);
       expect(screen.getByTestId('record-link')).toHaveTextContent(/1:35.*1 mistake/);
-      expect(screen.getByTestId('record-tangle')).toHaveTextContent(/🏆 today.*57 pts.*4:00/);
+      // Tangle reads points only, no time (AF-025).
+      expect(screen.getByTestId('record-tangle')).toHaveTextContent(/🏆 today.*57 pts$/);
+      expect(screen.getByTestId('record-tangle')).not.toHaveTextContent(/4:00/);
     });
 
     it('THEN the honours name their leaders, and the players run most-finished first', async () => {

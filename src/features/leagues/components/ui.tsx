@@ -5,6 +5,12 @@ import { StyleSheet, Text, View, type TextInputProps } from 'react-native';
 import { FONT, useTokens } from '@/shared/theme';
 import { Button, TextField, type ButtonVariant } from '@/shared/ui';
 
+/**
+ * A board or record row's inset on the right, matching the left's (the rank sits centred in
+ * a 34 pt column), so a highlighted row's result doesn't sit hard on the band's edge (AF-007).
+ */
+export const ROW_INSET_RIGHT = 10;
+
 export function Card({
   icon,
   title,

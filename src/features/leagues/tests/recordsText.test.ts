@@ -23,7 +23,8 @@ describe('GIVEN a league’s records', () => {
     it('THEN it reads as the board writes a finished result: time, mistakes, or points', () => {
       expect(result('mini', d.records.mini!)).toEqual({ big: '0:30', small: '' });
       expect(result('link', d.records.link!)).toEqual({ big: '1:35', small: '1 mistake' });
-      expect(result('tangle', d.records.tangle!)).toEqual({ big: '57 pts', small: '4:00' });
+      // Tangle: points only, no time (AF-025).
+      expect(result('tangle', d.records.tangle!)).toEqual({ big: '57 pts', small: '' });
     });
   });
 

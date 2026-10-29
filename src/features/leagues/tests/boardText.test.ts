@@ -22,6 +22,32 @@ const row = (o: Partial<DayRow>): DayRow => ({
   ...o,
 });
 
+describe('GIVEN a Tangle result, always a 90-second round (AF-025)', () => {
+  it('THEN it reads points only: no time under the row, none in brackets in the share', () => {
+    expect(result('tangle', row({ outcome: 'scored', score: 29, secs: 90 }))).toEqual({
+      big: '29 pts',
+      small: '',
+    });
+    const ranked = [
+      row({ rank: 1, nick: 'Martin', outcome: 'scored', score: 29, secs: 90 }),
+      row({ rank: 2, nick: 'Mumby', outcome: 'scored', score: 24, secs: 90 }),
+    ];
+    const text = shareDay('tangle', 'Tangle 22', '2026-10-28', ranked, {
+      name: 'Noodlers',
+      code: 'ABCD2345',
+    });
+    expect(text.split('\n').slice(1, 3)).toEqual(['🥇 Martin 29 pts', '🥈 Mumby 24 pts']);
+    expect(text).not.toMatch(/1:30/);
+  });
+
+  it('THEN Borders and Reckon keep their time, which varies', () => {
+    const r = [row({ rank: 1, nick: 'Jo', outcome: 'scored', score: 650, secs: 75 })];
+    expect(shareDay('borders', 'Borders 24', '2026-10-28', r, { name: 'N', code: 'C' })).toMatch(
+      /🥇 Jo 650 pts \(1:15\)/,
+    );
+  });
+});
+
 describe('GIVEN results on a board', () => {
   it('THEN times, scores and losses read as board.html writes them', () => {
     expect(result('mini', row({ secs: 87 }))).toEqual({ big: '1:27', small: '' });
@@ -46,6 +72,10 @@ describe('GIVEN results on a board', () => {
     expect(result('tangle', row({ outcome: 'scored', score: null, secs: null }))).toEqual({
       big: '– pts',
       small: '',
+    });
+    expect(result('reckon', row({ outcome: 'scored', score: 7, secs: 61 }))).toEqual({
+      big: '7 pts',
+      small: '1:01',
     });
     expect(mmss(3725)).toBe('1:02:05');
     expect(mmss(null)).toBe('');
