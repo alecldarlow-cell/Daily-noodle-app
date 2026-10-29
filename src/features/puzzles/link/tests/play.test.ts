@@ -170,7 +170,7 @@ describe('GIVEN the native half of the replay', () => {
     expect(sim.snaps.at(-1)).toMatchObject({ sheet: true, share: true, tiles: '' });
     expect(sim.final.ends).toHaveLength(1);
     expect(sim.final.sheets.length).toBe(v === 'loss' ? 2 : 1);
-    expect(sim.final.sheets[0]!.kick).toBe('Link 78, Sunday 25 October');
+    expect(sim.final.sheets[0]!.kick).toBe('Link 78');
     if (v === 'loss') {
       expect(sim.final.sheets[0]!.again).toBe(true);
       expect(sim.final.save).toMatchObject({ done: { 'DP·LINK·0078': { o: 'loss', m: 4 } } });

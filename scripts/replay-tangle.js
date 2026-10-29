@@ -123,9 +123,8 @@ const sheetRead = (p) =>
         hero: txt('#rBig'),
         note: txt('.fin-note'),
         share: txt('.fin-share-text'),
-        stats: [...document.querySelectorAll('.fin-stats > div > b')].map((b) =>
-          b.textContent.trim(),
-        ),
+        // AF-019 (site #40): the three stats became one line under the score
+        streakLine: txt('.fin-streak'),
         time: txt('#winTime'),
         star: txt('#rStar'),
         meter:

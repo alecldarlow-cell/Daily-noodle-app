@@ -48,7 +48,7 @@ describe('GIVEN a scenario simulated on a fake clock', () => {
         share: `〰️ Path #92 — ${t}`,
         title: 'Thread complete',
         note: 'One to 36 without a hint.',
-        kick: 'Path 92, Sunday 18 October',
+        kick: 'Path 92',
         stats: ['1', '1', '1'],
       });
       expect(out.final.end).toMatchObject({ type: 'logic-path', outcome: 'solved', hints: 0 });
@@ -57,6 +57,7 @@ describe('GIVEN a scenario simulated on a fake clock', () => {
         note: '',
         hero: t,
         stats: ['1', '1', '1'],
+        streakLine: '🔥 1-day streak',
       });
     });
   });

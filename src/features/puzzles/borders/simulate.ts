@@ -13,6 +13,7 @@ import {
   type SaveStore,
 } from '@noodle/core';
 
+import { streakLine } from '@/shared/finish-sheet/rules';
 import { longDate } from '@/shared/time/format';
 
 import { commitFinish, readSave, reopenInfo, saveHost, type FinishInfo } from './finishing';
@@ -185,18 +186,24 @@ export interface Outcome {
   hero: string;
   title: string;
   kick: string;
+  /** The model's three numbers (kept as a check; the sheet shows only `streakLine` since AF-019). */
   stats: string[];
+  /** "🔥 5-day streak", the sheet's line under the score. */
+  streakLine: string;
   tiles: string[];
 }
 
 export interface Simulation {
   snaps: Snapshot[];
   final: Outcome;
-  reopened: Pick<Outcome, 'share' | 'note' | 'hero' | 'stats' | 'tiles'> | null;
+  reopened: Pick<Outcome, 'share' | 'note' | 'hero' | 'stats' | 'streakLine' | 'tiles'> | null;
 }
 
 export const tileText = (f: FinishInfo) => f.tiles.map((x) => `${x.ok ? 'ok' : 'x'}:${x.caption}`);
 const sheetStats = (f: FinishInfo) => [String(f.points), String(f.streak), String(f.best)];
+
+/** The sheet's line under the score (finish.js streakLine, AF-019): the day streak. */
+const line = (n: number) => streakLine([{ value: n, label: 'day streak' }]);
 const json = (kv: KV, k: string) => JSON.parse(kv.getItem(k) || 'null') as unknown;
 
 export function simulate(
@@ -226,8 +233,9 @@ export function simulate(
     note: f.note,
     hero: f.hero,
     title: 'Spotted',
-    kick: `Borders ${dnNum(data.id).slice(1)}, ${longDate(data.date)}`,
+    kick: `Borders ${dnNum(data.id).slice(1)}`,
     stats: sheetStats(f),
+    streakLine: line(f.streak),
     tiles: tileText(f),
   };
   let reopened: Simulation['reopened'] = null;
@@ -238,6 +246,7 @@ export function simulate(
       note: r.note,
       hero: r.hero,
       stats: sheetStats(r),
+      streakLine: line(r.streak),
       tiles: tileText(r),
     };
   }

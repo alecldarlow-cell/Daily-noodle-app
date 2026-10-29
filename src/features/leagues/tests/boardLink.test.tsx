@@ -145,9 +145,12 @@ describe('GIVEN a finished puzzle’s sheet', () => {
   describe('WHEN the player is in leagues and has a rank in the one last viewed', () => {
     it('THEN the line says “Currently 3rd of 6 in Work” once the board answers', async () => {
       setBoard({ pid: PID, leagues: [FAMILY, WORK], cur: WORK.code });
-      m.boardDay.mockResolvedValue(day(3, 6));
+      let answer!: (d: DayBoard) => void;
+      m.boardDay.mockReturnValue(new Promise<DayBoard>((r) => (answer = r)));
       await slot(pathOn(today));
       expect(screen.getByRole('link', { name: 'See today’s board in Work' })).toBeOnTheScreen();
+      await waitFor(() => expect(m.boardDay).toHaveBeenCalled());
+      await act(async () => answer(day(3, 6)));
       await waitFor(() =>
         expect(screen.getByRole('link', { name: 'Currently 3rd of 6 in Work' })).toBeOnTheScreen(),
       );

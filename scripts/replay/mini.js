@@ -71,9 +71,8 @@ const finishRead = (p) =>
       hero: txt('#winTime'),
       title: txt('#winTitle'),
       kick: txt('.fin-kick'),
-      stats: [...document.querySelectorAll('.fin-stats > div > b')].map((b) =>
-        (b.textContent || '').trim(),
-      ),
+      // AF-019 (site #40): the three stats became one line under the score
+      streakLine: txt('.fin-streak'),
       open: !!document.querySelector('#winModal.fin-open'),
     };
   });
@@ -98,13 +97,13 @@ module.exports = {
     ['finish time', w.hero, n.hero],
     ['finish title', w.title, n.title],
     ['finish kicker', w.kick, n.kick],
-    ['finish stats', w.stats, n.stats],
+    ['finish streak line', w.streakLine, n.streakLine],
   ],
   reopenPairs: (r, nr) => [
     ['reopened share line', r.share, nr.share],
     ['reopened note', r.note, nr.note],
     ['reopened time', r.hero, nr.hero],
-    ['reopened stats', r.stats, nr.stats],
+    ['reopened streak line', r.streakLine, nr.streakLine],
   ],
   refused: async (p) => (await p.locator('#grid .cell').count()) !== 25,
 };

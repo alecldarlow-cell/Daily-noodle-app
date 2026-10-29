@@ -12,7 +12,7 @@
  */
 import { createSaveStore, dnNum, type KV } from '@noodle/core';
 
-import { longDate } from '@/shared/time/format';
+import { streakLine } from '@/shared/finish-sheet/rules';
 
 import { commitFinish, isRanked, reopenInfo, type FinishInfo } from './finishing';
 import {
@@ -73,7 +73,10 @@ export interface Sheet {
   kick: string;
   /** The guess squares: "g1 x g2 …". */
   hero: string;
+  /** The model's three numbers (kept as a check; the sheet shows only `streakLine` since AF-019). */
   stats: string[];
+  /** "🔥 5-day streak", the sheet's line under the score. */
+  streakLine: string;
   /** "Play again (not recorded)" under a lost result. */
   again: boolean;
 }
@@ -106,6 +109,8 @@ export function memoryKV(
 
 export const heroCode = (squares: number[]) => squares.map((r) => (r ? `g${r}` : 'x')).join(' ');
 const statsOf = (f: FinishInfo) => [f.time, String(f.streak), String(f.best)];
+/** The sheet's line under the score (finish.js streakLine, AF-019): the day streak. */
+const line = (n: number) => streakLine([{ value: n, label: 'day streak' }]);
 const sheetOf = (f: FinishInfo, kick: string): Sheet => ({
   share: f.share,
   note: f.note,
@@ -113,6 +118,7 @@ const sheetOf = (f: FinishInfo, kick: string): Sheet => ({
   kick,
   hero: heroCode(f.squares),
   stats: statsOf(f),
+  streakLine: line(f.streak),
   again: !f.won,
 });
 
@@ -158,7 +164,7 @@ export function simulate(
   };
   const ends: Record<string, unknown>[] = [];
   const sheets: Sheet[] = [];
-  const kick = `Link ${dnNum(data.id).slice(1)}, ${longDate(date)}`;
+  const kick = `Link ${dnNum(data.id).slice(1)}`;
   let info: FinishInfo | null = null;
   let sheetAt = Infinity;
   const finishNow = (at: number) => {

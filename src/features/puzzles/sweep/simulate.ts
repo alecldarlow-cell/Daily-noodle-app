@@ -7,7 +7,7 @@
  */
 import { createSaveStore, type KV } from '@noodle/core';
 
-import { longDate } from '@/shared/time/format';
+import { streakLine } from '@/shared/finish-sheet/rules';
 
 import { barStreak, commitFinish, isRanked, reopenInfo, type FinishInfo } from './finishing';
 import {
@@ -86,7 +86,10 @@ export interface Outcome {
   hero: string;
   title: string;
   kick: string;
+  /** The model's three numbers (kept as a check; the sheet shows only `streakLine` since AF-019). */
   stats: string[];
+  /** "🔥 5-day streak", the sheet's line under the score. */
+  streakLine: string;
   again: boolean;
   /** Which round the sheet ended (2 after one Play again). */
   round: number;
@@ -95,7 +98,10 @@ export interface Outcome {
 export interface Simulation {
   snaps: Snapshot[];
   final: Outcome;
-  reopened: Pick<Outcome, 'share' | 'note' | 'hero' | 'stats' | 'title' | 'again'> | null;
+  reopened: Pick<
+    Outcome,
+    'share' | 'note' | 'hero' | 'stats' | 'streakLine' | 'title' | 'again'
+  > | null;
 }
 
 export function memoryKV(
@@ -111,6 +117,8 @@ export function memoryKV(
 }
 
 const stats = (f: FinishInfo) => [String(f.streak), String(f.best), String(f.played)];
+/** The sheet's line under the score (finish.js streakLine, AF-019): the day streak. */
+const line = (n: number) => streakLine([{ value: n, label: 'day streak' }]);
 
 /**
  * Play `sc` on a page opened at `openAt` whose first move is at `firstAt`. `date` is
@@ -176,8 +184,9 @@ export function simulate(
     note: info.note,
     hero: info.hero,
     title: info.title,
-    kick: `Sweep ${n}, ${longDate(date)}`,
+    kick: `Sweep ${n}`,
     stats: stats(info),
+    streakLine: line(info.streak),
     again: info.again,
     round: state.round,
   };
@@ -191,6 +200,7 @@ export function simulate(
       note: f.note,
       hero: f.hero,
       stats: stats(f),
+      streakLine: line(f.streak),
       title: f.title,
       again: f.again,
     };
