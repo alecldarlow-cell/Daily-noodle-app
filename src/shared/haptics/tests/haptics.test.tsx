@@ -2,7 +2,9 @@ import { renderHook } from '@testing-library/react-native';
 import * as Haptics from 'expo-haptics';
 import { Platform } from 'react-native';
 
-import { buzz, HAPTICS_ON, strongest, useHapticDiff, type Buzz } from '../haptics';
+import { DEFAULT_SETTINGS, saveSettings } from '@/shared/settings';
+
+import { buzz, hapticsOn, strongest, useHapticDiff, type Buzz } from '../haptics';
 
 jest.mock('expo-haptics', () => ({
   ...jest.requireActual('expo-haptics'),
@@ -13,6 +15,7 @@ jest.mock('expo-haptics', () => ({
 const H = jest.mocked(Haptics);
 const os = Platform.OS;
 afterEach(() => {
+  saveSettings(DEFAULT_SETTINGS);
   Platform.OS = os;
   jest.clearAllMocks();
 });
@@ -21,8 +24,8 @@ describe('GIVEN the haptics helper on an iPhone', () => {
   beforeEach(() => {
     Platform.OS = 'ios';
   });
-  it('THEN the switch is on for now', () => {
-    expect(HAPTICS_ON).toBe(true);
+  it('THEN the app’s Vibration switch is on by default', () => {
+    expect(hapticsOn()).toBe(true);
   });
   describe('WHEN each kind of buzz is asked for', () => {
     it('THEN a tap is a light impact, a success and an error are notifications', () => {
@@ -55,6 +58,33 @@ describe('GIVEN the haptics helper on an iPhone', () => {
       expect(() => buzz('tap')).not.toThrow();
       expect(() => buzz('error')).not.toThrow();
       await Promise.resolve();
+    });
+  });
+});
+
+describe('GIVEN the app’s Vibration switch is off (Account › Settings)', () => {
+  describe('WHEN any buzz is asked for, on either platform, directly or on a state change', () => {
+    it('THEN nothing buzzes; switched back on, it buzzes again', async () => {
+      saveSettings({ vibration: false });
+      expect(hapticsOn()).toBe(false);
+      for (const os2 of ['ios', 'android'] as const) {
+        Platform.OS = os2;
+        buzz('tap');
+        buzz('success');
+        buzz('error');
+      }
+      const { rerender } = await renderHook(
+        ({ s }: { s: number }) => useHapticDiff(s, () => 'error'),
+        { initialProps: { s: 0 } },
+      );
+      await rerender({ s: 1 });
+      expect(H.impactAsync).not.toHaveBeenCalled();
+      expect(H.notificationAsync).not.toHaveBeenCalled();
+      expect(H.performAndroidHapticsAsync).not.toHaveBeenCalled();
+      saveSettings({ vibration: true });
+      Platform.OS = 'ios';
+      buzz('tap');
+      expect(H.impactAsync).toHaveBeenCalledTimes(1);
     });
   });
 });

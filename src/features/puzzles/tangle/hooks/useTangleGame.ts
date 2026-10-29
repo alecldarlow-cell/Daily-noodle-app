@@ -1,8 +1,9 @@
 import { londonDay, type KV, type SaveStore } from '@noodle/core';
 import { useEffect, useState, useSyncExternalStore } from 'react';
-import { AccessibilityInfo, AppState } from 'react-native';
+import { AppState } from 'react-native';
 
 import { useHapticDiff } from '@/shared/haptics';
+import { useReduceMotion } from '@/shared/motion';
 import { announceFinish } from '@/shared/results';
 import { appStorage, saves as appSaves } from '@/shared/storage';
 
@@ -15,7 +16,7 @@ interface Deps {
   store?: KV;
   saves?: SaveStore;
   now?: () => number;
-  /** The phone asks for reduced motion (read from the system when not given). */
+  /** Reduced motion asked for (else the app's switch or the phone's setting). */
   reduced?: boolean;
 }
 
@@ -88,21 +89,11 @@ export function useTangleGame(file: PuzzleFile<TangleData>, deps: Deps = {}) {
   useSyncExternalStore(host.subscribe, host.getVersion);
   useHapticDiff(tangleSnap(host.engine), tangleFeel);
 
-  const reduced = deps.reduced;
+  // The app's Animations switch, else the phone's setting (AF-012), kept up to date.
+  const system = useReduceMotion();
+  const reduced = deps.reduced ?? system;
   useEffect(() => {
-    if (reduced !== undefined) {
-      host.setReduced(reduced);
-      return;
-    }
-    let on = true;
-    AccessibilityInfo.isReduceMotionEnabled()
-      .then((r) => {
-        if (on) host.setReduced(r);
-      })
-      .catch(() => undefined);
-    return () => {
-      on = false;
-    };
+    if (reduced !== null) host.setReduced(reduced);
   }, [host, reduced]);
 
   useEffect(() => {

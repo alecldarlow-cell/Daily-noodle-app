@@ -18,6 +18,3 @@ export function reckonSnap(s: ReckonState): ReckonFeelSnap {
 export function reckonFeel(prev: ReckonFeelSnap, next: ReckonFeelSnap): Buzz | null {
   return strongest(next.ended && !prev.ended && 'success', next.locked > prev.locked && 'tap');
 }
-
-/** The page's own Vibration setting (save.hap, on by default): read, never changed. */
-export const reckonHaptics = (s: ReckonState) => s.save.hap !== false;
