@@ -2,7 +2,7 @@
   "expo": {
     "name": "Daily Noodle",
     "slug": "daily-noodle",
-    "version": "0.2.0",
+    "version": "0.3.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "dailynoodle",
@@ -29,13 +29,45 @@
           "autoVerify": true,
           "data": [{ "scheme": "https", "host": "dailynoodle.co.uk", "pathPrefix": "/join.html" }],
           "category": ["BROWSABLE", "DEFAULT"]
+        },
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            { "scheme": "https", "host": "dailynoodle.co.uk", "path": "/mini" },
+            { "scheme": "https", "host": "dailynoodle.co.uk", "path": "/mini/" },
+            { "scheme": "https", "host": "dailynoodle.co.uk", "path": "/mini/index.html" },
+            { "scheme": "https", "host": "dailynoodle.co.uk", "path": "/doku" },
+            { "scheme": "https", "host": "dailynoodle.co.uk", "path": "/doku/" },
+            { "scheme": "https", "host": "dailynoodle.co.uk", "path": "/doku/index.html" },
+            { "scheme": "https", "host": "dailynoodle.co.uk", "path": "/sweep" },
+            { "scheme": "https", "host": "dailynoodle.co.uk", "path": "/sweep/" },
+            { "scheme": "https", "host": "dailynoodle.co.uk", "path": "/sweep/index.html" },
+            { "scheme": "https", "host": "dailynoodle.co.uk", "path": "/path" },
+            { "scheme": "https", "host": "dailynoodle.co.uk", "path": "/path/" },
+            { "scheme": "https", "host": "dailynoodle.co.uk", "path": "/path/index.html" },
+            { "scheme": "https", "host": "dailynoodle.co.uk", "path": "/link" },
+            { "scheme": "https", "host": "dailynoodle.co.uk", "path": "/link/" },
+            { "scheme": "https", "host": "dailynoodle.co.uk", "path": "/link/index.html" },
+            { "scheme": "https", "host": "dailynoodle.co.uk", "path": "/tangle" },
+            { "scheme": "https", "host": "dailynoodle.co.uk", "path": "/tangle/" },
+            { "scheme": "https", "host": "dailynoodle.co.uk", "path": "/tangle/index.html" },
+            { "scheme": "https", "host": "dailynoodle.co.uk", "path": "/borders" },
+            { "scheme": "https", "host": "dailynoodle.co.uk", "path": "/borders/" },
+            { "scheme": "https", "host": "dailynoodle.co.uk", "path": "/borders/index.html" },
+            { "scheme": "https", "host": "dailynoodle.co.uk", "path": "/reckon" },
+            { "scheme": "https", "host": "dailynoodle.co.uk", "path": "/reckon/" },
+            { "scheme": "https", "host": "dailynoodle.co.uk", "path": "/reckon/index.html" }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
         }
       ],
       "permissions": ["android.permission.VIBRATE"],
       "blockedPermissions": [
         "android.permission.READ_EXTERNAL_STORAGE",
         "android.permission.WRITE_EXTERNAL_STORAGE",
-        "android.permission.SYSTEM_ALERT_WINDOW"
+        "android.permission.SYSTEM_ALERT_WINDOW",
+        "android.permission.RECORD_AUDIO"
       ]
     },
     "plugins": [
@@ -52,7 +84,15 @@
           }
         }
       ],
-      "expo-updates"
+      "expo-updates",
+      [
+        "expo-audio",
+        {
+          "microphonePermission": false,
+          "recordAudioAndroid": false,
+          "enableBackgroundPlayback": false
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

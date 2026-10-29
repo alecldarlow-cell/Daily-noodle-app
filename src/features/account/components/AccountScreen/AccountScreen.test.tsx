@@ -97,9 +97,18 @@ describe('GIVEN the app-wide settings on Account (AF-012)', () => {
     });
   });
 
-  it('THEN there is no Sound switch yet', async () => {
-    await render(<AccountScreen client={null} />);
-    expect(screen.queryByText(/Sound/)).toBeNull();
+  describe('WHEN the player switches Sound off, then on (AF-012, AF-013)', () => {
+    it('THEN it is on by default, saved under the same key, and Vibration is left alone', async () => {
+      await render(<AccountScreen client={null} />);
+      const sw = screen.getByLabelText('Sound');
+      expect(sw.props.value).toBe(true);
+      await act(async () => fireEvent(sw, 'valueChange', false));
+      expect(readSettings()).toMatchObject({ sound: false, vibration: true });
+      expect(JSON.parse(appStorage.getItem(APP_SETTINGS_KEY)!)).toMatchObject({ sound: false });
+      expect(screen.getByLabelText('Sound').props.value).toBe(false);
+      await act(async () => fireEvent(screen.getByLabelText('Sound'), 'valueChange', true));
+      expect(readSettings().sound).toBe(true);
+    });
   });
 });
 

@@ -1,4 +1,4 @@
-import type { PuzzleType } from '@noodle/core';
+import { isPuzzleType, type PuzzleType } from '@noodle/core';
 
 import { SITE } from '@/shared/net';
 
@@ -75,11 +75,25 @@ export function pageUrl(file: string): string {
   return `${SITE}/reports/${encodeURIComponent(file)}.html?via=app`;
 }
 
+/** A league code as typed or shared, tidied; null unless it could be one. */
+function joinCode(raw: string | null): string | null {
+  const c = (raw ?? '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+  return /^[A-Z0-9]{4,12}$/.test(c) ? c : null;
+}
+
+/** A sign-in link's marks (Supabase: #access_token=…, ?code=…, an error): never the app's. */
+const AUTH = /(^|[#&?])(access_token|refresh_token|code|error|error_description|token_hash)=/;
+
 /**
- * Where the app goes for a link the phone hands it (expo-router's +native-intent).
- * Android opens the site's invite links, https://dailynoodle.co.uk/join.html?c=CODE, in the
- * app (app.json intentFilters); they go to that league's invite on the Leagues tab. Anything
- * else (dailynoodle://auth, the app's own routes) is left to the router as it came.
+ * Where the app goes for a link the phone hands it (expo-router's +native-intent). Android
+ * opens these site links in the app (app.json intentFilters, verified by the site's
+ * assetlinks.json):
+ * - an invite, https://dailynoodle.co.uk/join.html?c=CODE → that league's invite on Leagues;
+ * - a shared result's short link, /mini … /reckon (also /mini/ and /mini/index.html, as the
+ *   site serves it) → today's puzzle of that type, on Today (`/?open=mini`; AF-010);
+ * - a board link with a code, board.html?join=CODE → the same invite as join.html. A board
+ *   link carrying the website's sign-in (its email links land on board.html) is left alone.
+ * Anything else (dailynoodle://auth, the app's own routes) goes to the router as it came.
  */
 export function systemPath(path: string): string {
   let u: URL;
@@ -88,7 +102,18 @@ export function systemPath(path: string): string {
   } catch {
     return path;
   }
-  if (u.origin !== SITE || u.pathname !== '/join.html') return path;
-  const c = (u.searchParams.get('c') ?? '').toUpperCase().replace(/[^A-Z0-9]/g, '');
-  return /^[A-Z0-9]{4,12}$/.test(c) ? `/leagues?join=${c}` : '/leagues';
+  if (u.origin !== SITE) return path;
+  const p = u.pathname;
+  if (p === '/join.html') {
+    const c = joinCode(u.searchParams.get('c'));
+    return c ? `/leagues?join=${c}` : '/leagues';
+  }
+  if (p === '/board.html') {
+    if (AUTH.test(u.hash) || AUTH.test(u.search) || /dnmove=/.test(u.hash)) return path;
+    const c = joinCode(u.searchParams.get('join'));
+    return c ? `/leagues?join=${c}` : path;
+  }
+  const m = /^\/([a-z]+)(?:\/(?:index\.html)?)?$/.exec(p);
+  if (m && isPuzzleType(m[1])) return `/?open=${m[1]}`;
+  return path;
 }

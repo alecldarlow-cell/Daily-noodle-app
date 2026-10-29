@@ -4,12 +4,14 @@ import { AppState } from 'react-native';
 
 import { useHapticDiff } from '@/shared/haptics';
 import { announceFinish } from '@/shared/results';
+import { play, useSoundDiff } from '@/shared/sound';
 import { appStorage, saves as appSaves, type CachedStorage } from '@/shared/storage';
 
 import type { PuzzleFile } from '../../types';
 import { commitFinish, readSave, reopenInfo, saveHost, type FinishInfo } from '../finishing';
 import { apply, frame, init, type BordersData, type BordersState, type Move } from '../model';
 import { bordersFeel, bordersSnap } from './feel';
+import { bordersSound, bordersSoundSnap } from './sound';
 
 interface Deps {
   store?: CachedStorage;
@@ -44,6 +46,8 @@ export function useBordersGame(file: PuzzleFile<BordersData>, deps: Deps = {}) {
   const [state, setState] = useState<BordersState>(initial);
   const [info, setInfo] = useState<FinishInfo | null>(() => reopenInfo(initial, host.today()));
   useHapticDiff(bordersSnap(state), bordersFeel);
+  // The website's tones (AF-013), read off each new state; never into the model.
+  useSoundDiff(bordersSoundSnap(state), bordersSound);
 
   const settle = useCallback(
     (s: BordersState) => {
@@ -52,6 +56,7 @@ export function useBordersGame(file: PuzzleFile<BordersData>, deps: Deps = {}) {
         s = f.state;
         setInfo(f);
         announceFinish({ path: file.path, type: 'borders', detail: f.detail });
+        play('borders-pass'); // the page's one finishing chime, its celebration jingle
       }
       ref.current = s;
       setState(s);

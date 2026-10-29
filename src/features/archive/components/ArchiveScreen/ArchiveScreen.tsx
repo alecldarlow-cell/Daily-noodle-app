@@ -120,7 +120,7 @@ export function ArchiveScreen() {
         <Note
           testID="archive-offline-kept"
           title="You’re offline"
-          body="Puzzles you’ve opened before still work; pull down or tap Try again when you’re back online."
+          body="Puzzles you’ve opened before still work; the rest load when you’re back online."
           action={{ label: 'Try again', onPress: refresh }}
         />
       ) : null}
@@ -131,7 +131,7 @@ export function ArchiveScreen() {
           title={offline ? 'No connection' : 'Couldn’t load the archive'}
           body={
             offline
-              ? 'You’re offline, and the archive hasn’t downloaded yet. Pull down or tap Try again when you’re back online.'
+              ? 'You’re offline, and the archive hasn’t downloaded yet. It loads when you’re back online.'
               : 'Something went wrong at our end. Try again in a moment.'
           }
           action={{ label: 'Try again', onPress: refresh }}

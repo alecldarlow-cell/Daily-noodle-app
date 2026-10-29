@@ -156,7 +156,7 @@ describe('GIVEN no connection and today’s list kept from earlier', () => {
       expect(screen.getByText('You’re offline')).toBeOnTheScreen();
       expect(
         screen.getByText(
-          'Puzzles you’ve opened before still work; pull down or tap Try again when you’re back online.',
+          'Puzzles you’ve opened before still work; the rest load when you’re back online.',
         ),
       ).toBeOnTheScreen();
       expect(screen.queryByText(/as soon as/)).toBeNull();
@@ -183,7 +183,7 @@ describe('GIVEN no connection and today’s list kept from earlier', () => {
 
 describe('GIVEN no connection and no list for today', () => {
   describe('WHEN Today opens', () => {
-    it('THEN it says the puzzles haven’t downloaded, without promising they’ll appear', async () => {
+    it('THEN it says the puzzles haven’t downloaded and the rest load when back online, asking for no tap', async () => {
       mockSite({ 'puzzles-today.json': offline });
       await renderWithProviders(<TodayScreen />);
       await waitFor(() => expect(screen.getByTestId('today-offline')).toBeOnTheScreen(), {
@@ -191,7 +191,7 @@ describe('GIVEN no connection and no list for today', () => {
       });
       expect(
         screen.getByText(
-          'You’re offline, and today’s puzzles haven’t downloaded yet. Puzzles you’ve opened before still work; pull down or tap Try again when you’re back online.',
+          'You’re offline, and today’s puzzles haven’t downloaded yet. Puzzles you’ve opened before still work; the rest load when you’re back online.',
         ),
       ).toBeOnTheScreen();
       expect(screen.queryByTestId('today-offline-kept')).toBeNull();

@@ -14,8 +14,9 @@ const MOTION: { value: MotionChoice; label: string }[] = [
 ];
 
 /**
- * The app-wide switches (tracker AF-012), for every puzzle: Vibration on or off, and
- * Animations following the phone's setting or always reduced. No per-puzzle choices.
+ * The app-wide switches (tracker AF-012), for every puzzle: Vibration on or off, Sound on or
+ * off (AF-013), and Animations following the phone's setting or always reduced. No
+ * per-puzzle choices.
  */
 export function SettingsCard({ store = appStorage }: { store?: CachedStorage }) {
   const t = useTokens();
@@ -36,6 +37,25 @@ export function SettingsCard({ store = appStorage }: { store?: CachedStorage }) 
           testID="set-vibration"
           value={s.vibration}
           onValueChange={(on) => void saveSettings({ vibration: on }, store)}
+          trackColor={{ true: t.accent, false: t.hair }}
+          thumbColor={t.paper}
+          ios_backgroundColor={t.hair}
+        />
+      </View>
+      <View style={[styles.row, styles.rule, { borderTopColor: t.hair }]}>
+        <View style={styles.text}>
+          <Text style={[styles.label, { color: t.ink }]} nativeID="set-sound">
+            Sound
+          </Text>
+          <Text style={[styles.sub, { color: t.faint }]}>
+            Tones in Tangle, Borders and Reckon, unless the phone is on silent
+          </Text>
+        </View>
+        <Switch
+          accessibilityLabel="Sound"
+          testID="set-sound"
+          value={s.sound}
+          onValueChange={(on) => void saveSettings({ sound: on }, store)}
           trackColor={{ true: t.accent, false: t.hair }}
           thumbColor={t.paper}
           ios_backgroundColor={t.hair}

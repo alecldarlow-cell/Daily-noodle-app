@@ -149,7 +149,7 @@ describe('GIVEN no connection and the archive kept from earlier', () => {
     });
     expect(
       screen.getByText(
-        'Puzzles you’ve opened before still work; pull down or tap Try again when you’re back online.',
+        'Puzzles you’ve opened before still work; the rest load when you’re back online.',
       ),
     ).toBeOnTheScreen();
     expect(screen.getByTestId('archive-DP·PATH·0050-meta')).toHaveTextContent(/Downloaded$/);
@@ -158,7 +158,7 @@ describe('GIVEN no connection and the archive kept from earlier', () => {
 });
 
 describe('GIVEN no connection and nothing kept', () => {
-  it('THEN it says the archive hasn’t downloaded, without promising it will load by itself', async () => {
+  it('THEN it says the archive hasn’t downloaded and will load when back online, asking for no tap', async () => {
     mockSite({ 'feed-lite.json': offline });
     await renderWithProviders(<ArchiveScreen />);
     await waitFor(() => expect(screen.getByTestId('archive-offline')).toBeOnTheScreen(), {
@@ -166,7 +166,7 @@ describe('GIVEN no connection and nothing kept', () => {
     });
     expect(
       screen.getByText(
-        'You’re offline, and the archive hasn’t downloaded yet. Pull down or tap Try again when you’re back online.',
+        'You’re offline, and the archive hasn’t downloaded yet. It loads when you’re back online.',
       ),
     ).toBeOnTheScreen();
     expect(screen.queryByTestId('archive-offline-kept')).toBeNull();

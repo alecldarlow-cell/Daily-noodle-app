@@ -1,6 +1,6 @@
 /**
- * The app-wide switches on Account (tracker AF-012): Vibration and Animations, for every
- * puzzle. Kept under their own new key, `noodle-app-settings`, which sync and the
+ * The app-wide switches on Account (tracker AF-012): Vibration, Sound and Animations, for
+ * every puzzle (Sound from 0.3.0, AF-013). Kept under their own new key, `noodle-app-settings`, which sync and the
  * personal link leave out (they skip `noodle-app-*`), so a choice stays on this phone.
  * No puzzle's own saved setting is read or changed: Reckon's `hap` stays in its save,
  * unread, so this one switch rules.
@@ -17,10 +17,12 @@ export type MotionChoice = 'phone' | 'reduced';
 export interface AppSettings {
   /** Haptic buzzes on taps, wrong answers and wins. On unless switched off. */
   vibration: boolean;
+  /** The website's tones in Tangle, Borders and Reckon. On unless switched off. */
+  sound: boolean;
   motion: MotionChoice;
 }
 
-export const DEFAULT_SETTINGS: AppSettings = { vibration: true, motion: 'phone' };
+export const DEFAULT_SETTINGS: AppSettings = { vibration: true, sound: true, motion: 'phone' };
 
 /** The settings saved at `raw`, any missing or unreadable part taking its default. */
 export function parseSettings(raw: string | null): AppSettings {
@@ -29,6 +31,7 @@ export function parseSettings(raw: string | null): AppSettings {
     const o = JSON.parse(raw) as Partial<Record<keyof AppSettings, unknown>> | null;
     return {
       vibration: o?.vibration === false ? false : true,
+      sound: o?.sound === false ? false : true,
       motion: o?.motion === 'reduced' ? 'reduced' : 'phone',
     };
   } catch {
@@ -40,7 +43,7 @@ export function readSettings(store: CachedStorage = appStorage): AppSettings {
   return parseSettings(store.getItem(APP_SETTINGS_KEY));
 }
 
-/** Change one or both switches; the rest stays as saved. */
+/** Change one or more switches; the rest stays as saved. */
 export function saveSettings(
   patch: Partial<AppSettings>,
   store: CachedStorage = appStorage,
@@ -50,7 +53,7 @@ export function saveSettings(
   return next;
 }
 
-/** The switches, re-rendering when either changes. */
+/** The switches, re-rendering when any changes. */
 export function useAppSettings(store: CachedStorage = appStorage): AppSettings {
   const raw = useSyncExternalStore(
     (fn) => store.subscribe(APP_SETTINGS_KEY, fn),
