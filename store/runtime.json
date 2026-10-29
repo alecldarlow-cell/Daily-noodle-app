@@ -1,5 +1,5 @@
 {
   "note": "The native fingerprint (EAS runtime version) of the build testers have from Google Play. EAS Updates reach a phone only when they match it. Change this only after shipping a new store build, to that build's runtime version.",
   "android": "ea55e856fbc4ca0d7c93c11f209d9b60bb71cdf2",
-  "build": "0.3.0, pending Play upload"
+  "build": "0.3.0, pending Play upload; production Android build queued 29 Oct 2026 by Release run 40953273792 (https://github.com/alecldarlow-cell/Daily-noodle-app/actions/runs/40953273792) on main 78c26e1; the EAS build id is in that run's log and on expo.dev"
 }
