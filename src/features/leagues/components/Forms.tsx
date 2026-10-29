@@ -49,7 +49,7 @@ export function Intro({ flow }: { flow: Flow }) {
         </View>
       ))}
       <Acts>
-        <Btn kind="go" label="Start a league" onPress={() => flow.setView({ k: 'start' })} />
+        <Btn variant="filled" label="Start a league" onPress={() => flow.setView({ k: 'start' })} />
         <Btn label="Join with a code" onPress={() => flow.setView({ k: 'code' })} />
       </Acts>
     </Card>
@@ -82,7 +82,7 @@ export function StartForm({ flow }: { flow: Flow }) {
       <Msg text={f.msg} />
       <Acts>
         <Btn
-          kind="go"
+          variant="filled"
           label="Start league"
           disabled={f.busy}
           onPress={() =>
@@ -127,7 +127,7 @@ export function CodeForm({ flow }: { flow: Flow }) {
       <Msg text={f.msg} />
       <Acts>
         <Btn
-          kind="go"
+          variant="filled"
           label="Next"
           onPress={() =>
             f.submit(async (v) => {
@@ -163,7 +163,7 @@ export function InviteForm({ flow, code, typed }: { flow: Flow; code: string; ty
       <Card title="Couldn’t reach the leagues" testID="invite-offline">
         <P>Check your connection and try again. The invite still works.</P>
         <Acts>
-          <Btn kind="go" label="Try again" onPress={() => void peek.refetch()} />
+          <Btn variant="filled" label="Try again" onPress={() => void peek.refetch()} />
           <Btn label="Back" onPress={flow.home} />
         </Acts>
       </Card>
@@ -174,7 +174,7 @@ export function InviteForm({ flow, code, typed }: { flow: Flow; code: string; ty
       <Card title="No league has that code" testID="invite-no-code">
         <P>Check the code and try again, or ask someone in the league for its link.</P>
         <Acts>
-          <Btn kind="go" label="Try again" onPress={() => flow.setView({ k: 'code' })} />
+          <Btn variant="filled" label="Try again" onPress={() => flow.setView({ k: 'code' })} />
           <Btn label="Back" onPress={flow.back} />
         </Acts>
       </Card>
@@ -207,7 +207,7 @@ export function InviteForm({ flow, code, typed }: { flow: Flow; code: string; ty
       <Msg text={f.msg} />
       <Acts>
         <Btn
-          kind="go"
+          variant="filled"
           label="Join league"
           disabled={f.busy}
           onPress={() =>
@@ -327,7 +327,7 @@ export function ClaimForm({
       <Msg text={f.msg} />
       <Acts>
         <Btn
-          kind="go"
+          variant="filled"
           label="Play as me here"
           disabled={f.busy}
           onPress={() =>
@@ -364,7 +364,7 @@ export function PinForm({ flow, fresh }: { flow: Flow; fresh: boolean }) {
       <Msg text={f.msg} />
       <Acts>
         <Btn
-          kind="go"
+          variant="filled"
           label="Save PIN"
           disabled={f.busy}
           onPress={() =>
@@ -401,7 +401,7 @@ export function PendCard({ flow, pend }: { flow: Flow; pend: BoardPending }) {
       <P>Results and streaks have been added here either way.</P>
       <Acts>
         <Btn
-          kind="go"
+          variant="filled"
           label="Use those leagues"
           disabled={settle.isPending}
           onPress={() => choose(true)}

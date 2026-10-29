@@ -2,7 +2,7 @@ import { useFonts } from 'expo-font';
 import { Stack, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useColorScheme } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
@@ -12,7 +12,7 @@ import { BoardSlotProvider } from '@/shared/finish-sheet';
 import { ConfettiHost } from '@/shared/motion';
 import { QueryProvider } from '@/shared/query';
 import { navigationTheme, RouteError, stackScreenOptions, statusBarStyleFor } from '@/shared/shell';
-import { appStorage } from '@/shared/storage';
+import { SaveNotice, SavesLoadFailed, useStoreLoad } from '@/shared/storage';
 import { FONT_FILES, tokensFor } from '@/shared/theme';
 import { VisitRecorder } from '@/shared/track';
 
@@ -33,16 +33,11 @@ export { RouteError as ErrorBoundary };
  */
 export default function RootLayout() {
   const scheme = useColorScheme();
-  const [saves, setSaves] = useState(appStorage.hydrated);
+  // A failed read is its own state ("Couldn't load your saves", Try again), never ready:
+  // running on an empty store would let the next save write over the history (R2).
+  const saves = useStoreLoad();
   const [fontsLoaded, fontError] = useFonts(FONT_FILES);
-  const ready = saves && (fontsLoaded || !!fontError);
-  useEffect(() => {
-    if (saves) return;
-    appStorage
-      .hydrate()
-      .catch((e: unknown) => console.warn('Saved progress could not be read', e))
-      .finally(() => setSaves(true));
-  }, [saves]);
+  const ready = saves.state !== 'loading' && (fontsLoaded || !!fontError);
   useEffect(() => {
     if (fontError) console.warn('Fonts could not be loaded', fontError);
   }, [fontError]);
@@ -51,6 +46,14 @@ export default function RootLayout() {
   }, [ready]);
   if (!ready) return null;
   const t = tokensFor(scheme);
+  if (saves.state !== 'ready') {
+    return (
+      <GestureHandlerRootView style={{ flex: 1, backgroundColor: t.canvas }}>
+        <StatusBar style={statusBarStyleFor(scheme)} />
+        <SavesLoadFailed retrying={saves.state === 'retrying'} onRetry={saves.retry} />
+      </GestureHandlerRootView>
+    );
+  }
   return (
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: t.canvas }}>
       <QueryProvider>
@@ -80,6 +83,8 @@ export default function RootLayout() {
         </ThemeProvider>
         {/* the win's confetti, over every screen so it carries on as the sheet rises */}
         <ConfettiHost />
+        {/* "Couldn't save, retrying" while a result or streak hasn't reached the disk (R1) */}
+        <SaveNotice />
       </QueryProvider>
     </GestureHandlerRootView>
   );

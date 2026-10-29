@@ -6,6 +6,30 @@ import { tokensFor } from '@/shared/theme';
 import { MAST_MAX_SCALE, refreshColors, Screen } from './Screen';
 
 describe('GIVEN a Screen', () => {
+  describe('WHEN its masthead is drawn', () => {
+    it('THEN it shows the Daily Noodle wordmark and the green DN mark, not DP or NoodlePuzzles', async () => {
+      const t = tokensFor('light');
+      await render(<Screen title="Today" />);
+      expect(screen.getByTestId('masthead-word')).toHaveTextContent('Daily Noodle');
+      expect(screen.getByTestId('masthead-mono')).toHaveTextContent('DN');
+      expect(StyleSheet.flatten(screen.getByTestId('masthead-mark').props.style)).toMatchObject({
+        backgroundColor: t.brand,
+        width: 30,
+        height: 30,
+      });
+      expect(StyleSheet.flatten(screen.getByTestId('masthead-mono').props.style).color).toBe(
+        t.onBrand,
+      );
+      expect(screen.queryByText('DP')).toBeNull();
+      expect(screen.queryByText(/NoodlePuzzles|Puzzles/)).toBeNull();
+    });
+
+    it('THEN the mark is the launcher icon’s green in dark mode too', () => {
+      expect(tokensFor('dark').brand).toBe(tokensFor('light').brand);
+      expect(tokensFor('dark').onBrand).toBe('#FFFFFF');
+    });
+  });
+
   describe('WHEN it renders with a title and content', () => {
     it('THEN the title is a header and the content is shown', async () => {
       await render(
@@ -19,7 +43,7 @@ describe('GIVEN a Screen', () => {
   });
 
   describe('WHEN the phone’s text size is very large (2.0)', () => {
-    it('THEN the DP monogram never grows past its box', async () => {
+    it('THEN the DN mark never grows past its box', async () => {
       await render(<Screen title="Today" subtitle="Mon 26 Oct" />);
       expect(screen.getByTestId('masthead-mono').props.maxFontSizeMultiplier).toBe(1);
       expect(MAST_MAX_SCALE.mono).toBe(1);

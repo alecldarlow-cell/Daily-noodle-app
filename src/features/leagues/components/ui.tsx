@@ -1,9 +1,9 @@
 /* The board page's pieces (board.html .bcard, .field, .btn, .msg, .lnk) in the house tokens. */
 import type { ReactNode } from 'react';
-import { Pressable, StyleSheet, Text, View, type TextInputProps } from 'react-native';
+import { StyleSheet, Text, View, type TextInputProps } from 'react-native';
 
 import { FONT, useTokens } from '@/shared/theme';
-import { Button, TextField, type ButtonKind } from '@/shared/ui';
+import { Button, TextField, type ButtonVariant } from '@/shared/ui';
 
 export function Card({
   icon,
@@ -82,8 +82,10 @@ export function PinField(props: {
 /** The house button, sharing the row's width as board.html's .acts buttons do. */
 export function Btn(props: {
   label: string;
-  onPress: () => void;
-  kind?: ButtonKind;
+  onPress: () => unknown;
+  variant?: ButtonVariant;
+  destructive?: boolean;
+  loading?: boolean;
   disabled?: boolean;
   testID?: string;
 }) {
@@ -94,12 +96,12 @@ export function Acts({ children }: { children: ReactNode }) {
   return <View style={styles.acts}>{children}</View>;
 }
 
+/** A minor action: the house text button, centred under the card's buttons. */
 export function TextLink({ label, onPress }: { label: string; onPress: () => void }) {
-  const t = useTokens();
   return (
-    <Pressable accessibilityRole="button" onPress={onPress} style={styles.lnkWrap}>
-      <Text style={[styles.lnk, { color: t.accent }]}>{label}</Text>
-    </Pressable>
+    <View style={styles.lnkWrap}>
+      <Button variant="text" label={label} onPress={onPress} />
+    </View>
   );
 }
 
@@ -125,19 +127,7 @@ const styles = StyleSheet.create({
   p: { fontFamily: FONT.body, fontSize: 15, lineHeight: 22 },
   bold: { fontFamily: FONT.bodyBold },
   acts: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 10 },
-  lnkWrap: {
-    alignSelf: 'center',
-    minHeight: 44,
-    justifyContent: 'center',
-    paddingVertical: 6,
-    paddingHorizontal: 4,
-  },
-  lnk: {
-    fontFamily: FONT.bodySemi,
-    fontSize: 14.5,
-    textDecorationLine: 'underline',
-    textAlign: 'center',
-  },
+  lnkWrap: { alignSelf: 'center' },
   msg: { fontFamily: FONT.body, fontSize: 14, lineHeight: 20, marginTop: 6 },
   sub: {
     fontFamily: FONT.bodyBold,
