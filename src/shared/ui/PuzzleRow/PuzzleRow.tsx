@@ -19,6 +19,10 @@ interface PuzzleRowProps {
   /** Reading time ("~3 min"), shown until the puzzle is played. */
   read?: string;
   played: PlayedState | null;
+  /** The time a round left part-way shows beside Continue ("4:05", "1:12 left"). */
+  roundTime?: string;
+  /** Offline, and this puzzle is downloaded (opened before), so it still plays. */
+  kept?: boolean;
   onPress: () => void;
   /** "How to play", a sibling of the card so it never opens the puzzle. */
   onHowTo?: () => void;
@@ -56,6 +60,8 @@ export function PuzzleRow({
   when,
   read,
   played,
+  roundTime,
+  kept,
   onPress,
   onHowTo,
   testID,
@@ -68,9 +74,12 @@ export function PuzzleRow({
     const { width: w, height: h } = e.nativeEvent.layout;
     setHowTo((o) => (o.w === w && o.h === h ? o : { w, h }));
   };
-  const result = played?.done ? played.text : played ? 'In progress' : null;
-  const label = [title, result ?? when].filter(Boolean).join(', ');
-  const meta = [when, result ?? read].filter((s): s is string => !!s);
+  // A round left part-way says Continue, with its time when known (AF-020).
+  const result = played?.done ? played.text : played ? 'Continue' : null;
+  const time = played && !played.done ? roundTime : undefined;
+  const offline = kept ? 'Downloaded' : undefined;
+  const label = [title, result ?? when, time, offline?.toLowerCase()].filter(Boolean).join(', ');
+  const meta = [when, result ?? read, time, offline].filter((s): s is string => !!s);
   const resultColour = played?.done
     ? played.lost
       ? t.muted
