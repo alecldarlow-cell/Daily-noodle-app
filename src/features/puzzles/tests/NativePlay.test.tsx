@@ -120,8 +120,12 @@ describe('GIVEN a Mini opened natively', () => {
         await slow;
         return { ok: true, status: 200, json: async () => file105 };
       });
-      await fireEvent.press(screen.getByRole('button', { name: 'Try again' }));
-      await fireEvent.press(screen.getByRole('button', { name: 'Try again' }));
+      // A double tap: both presses land on the same button before the screen redraws.
+      const retry = screen.getByRole('button', { name: 'Try again' });
+      await act(async () => {
+        fireEvent.press(retry);
+        fireEvent.press(retry);
+      });
       expect(fetch).toHaveBeenCalledTimes(1);
       await act(async () => answer(undefined));
       await waitFor(() => expect(screen.getByTestId('start-card')).toBeOnTheScreen());
