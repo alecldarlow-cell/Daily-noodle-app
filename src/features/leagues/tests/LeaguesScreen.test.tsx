@@ -129,7 +129,7 @@ describe('GIVEN someone in no league', () => {
         within(screen.getByTestId('notice-created')).getByRole('button', { name: 'Invite people' }),
       );
       expect(shared).toEqual([
-        'Join Noodle family on Noodle Puzzles: tap the link, pick a nickname, and your results go on our daily leaderboards.\nhttps://dailynoodle.co.uk/join.html?c=NEWC2345',
+        'Join Noodle family on Daily Noodle: tap the link, pick a nickname, and your results go on our daily leaderboards.\nhttps://dailynoodle.co.uk/join.html?c=NEWC2345',
       ]);
     });
 
@@ -471,7 +471,7 @@ describe('GIVEN a player in a league', () => {
       expect(screen.getByText(/This week · 19 Oct – 25 Oct/)).toBeOnTheScreen();
       await press('Share leaderboard');
       expect(shared[0]).toMatch(
-        /^🏆 All puzzles · .*\n🥇 Ma 9 pts \(4\/8\)\n🥈 Alec 1 pt \(1\/8\)\nFamily leaderboard:\n.*join=ABCD2345&v=2&p=all/,
+        /^🏆 All puzzles · .*\n🥇 Ma 9 pts \(4\/8\)\n🥈 Alec 1 pt \(1\/8\)\nFamily leaderboard:\nhttps:\/\/dailynoodle.co.uk\/join.html\?c=ABCD2345&p=all&d=/,
       );
     });
 

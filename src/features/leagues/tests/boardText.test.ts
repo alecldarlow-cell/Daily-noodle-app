@@ -1,6 +1,7 @@
 import {
   dayName,
   boardLink,
+  boardShareLink,
   inviteLink,
   mmss,
   puzzleOn,
@@ -104,7 +105,7 @@ describe('GIVEN results on a board', () => {
         '5. P5 1:05',
         '+1 more',
         'Family leaderboard:',
-        'https://dailynoodle.co.uk/board.html?join=ABCD2345&v=2&p=mini&d=2026-10-24',
+        'https://dailynoodle.co.uk/join.html?c=ABCD2345&p=mini&d=2026-10-24',
       ].join('\n'),
     );
     expect(
@@ -120,9 +121,12 @@ describe('GIVEN results on a board', () => {
         { name: 'F', code: 'C' },
       ),
     ).toBe(
-      '🏆 All puzzles · Sat 24 Oct\n🥇 Ma 1 pt (1/8)\nF leaderboard:\nhttps://dailynoodle.co.uk/board.html?join=C&v=2&p=all&d=2026-10-24',
+      '🏆 All puzzles · Sat 24 Oct\n🥇 Ma 1 pt (1/8)\nF leaderboard:\nhttps://dailynoodle.co.uk/join.html?c=C&p=all&d=2026-10-24',
     );
     expect(inviteLink('AB CD')).toBe('https://dailynoodle.co.uk/join.html?c=AB%20CD');
+    expect(boardShareLink('C', 'all', '2026-10-29')).toBe(
+      'https://dailynoodle.co.uk/join.html?c=C&p=all&d=2026-10-29',
+    );
     expect(boardLink('AB CD')).toBe('https://dailynoodle.co.uk/board.html?join=AB%20CD&v=2');
   });
 

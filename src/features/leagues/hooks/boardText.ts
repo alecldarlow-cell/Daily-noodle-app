@@ -8,7 +8,7 @@ import type { DayRow, Outcome, OverallRow, PuzzleCard, RecordResult } from '../t
 /** Board links carry the link-preview version (board.html PREVIEW_V). */
 export const PREVIEW_V = '2';
 
-/** A league's board on the website, as leaderboard shares link it (board.html's invite link). */
+/** A league's board on the website (board.html's invite link). The app's own shares use join.html (below). */
 export function boardLink(code: string): string {
   return `https://dailynoodle.co.uk/board.html?join=${encodeURIComponent(code)}&v=${PREVIEW_V}`;
 }
@@ -21,8 +21,16 @@ export function inviteLink(code: string): string {
   return `https://dailynoodle.co.uk/join.html?c=${encodeURIComponent(code)}`;
 }
 
+/**
+ * A leaderboard share's link (Alec, 29 Oct 2026, AF-010): join.html, which opens the app on
+ * Android and, in a browser, goes on to board.html with the same puzzle and day.
+ */
+export function boardShareLink(code: string, p: string, d: string): string {
+  return `${inviteLink(code)}&p=${encodeURIComponent(p)}&d=${encodeURIComponent(d)}`;
+}
+
 export function inviteText(name: string): string {
-  return `Join ${name} on Noodle Puzzles: tap the link, pick a nickname, and your results go on our daily leaderboards.`;
+  return `Join ${name} on Daily Noodle: tap the link, pick a nickname, and your results go on our daily leaderboards.`;
 }
 
 export const MEDAL: Record<number, string> = { 1: '🥇', 2: '🥈', 3: '🥉' };
@@ -114,7 +122,7 @@ export function shareDay(
   }
   if (ranked.length > 5) lines.push(`+${ranked.length - 5} more`);
   lines.push(`${league.name} leaderboard:`);
-  return `${lines.join('\n')}\n${boardLink(league.code)}&p=${t}&d=${date}`;
+  return `${lines.join('\n')}\n${boardShareLink(league.code, t, date)}`;
 }
 
 /** "Share leaderboard" for All puzzles. */
@@ -128,7 +136,7 @@ export function shareAll(
     lines.push(`${MEDAL[r.rank] ?? `${r.rank}.`} ${r.nick} ${pts(r.points)} (${r.completed}/8)`);
   if (day.length > 5) lines.push(`+${day.length - 5} more`);
   lines.push(`${league.name} leaderboard:`);
-  return `${lines.join('\n')}\n${boardLink(league.code)}&p=all&d=${date}`;
+  return `${lines.join('\n')}\n${boardShareLink(league.code, 'all', date)}`;
 }
 
 /**
