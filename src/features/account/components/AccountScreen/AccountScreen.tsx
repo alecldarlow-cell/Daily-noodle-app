@@ -25,7 +25,7 @@ export function AccountScreen() {
             : 'In a league on another phone or the website? Play as yourself here too, with your league’s code and PIN.'}
         </Text>
         <Button
-          kind={syncEnabled() ? 'plain' : 'go'}
+          variant={syncEnabled() ? 'tonal' : 'filled'}
           label="I have a league PIN"
           testID="account-claim"
           // A fresh `n` each tap, so Leagues opens the form again after its Back.
