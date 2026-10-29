@@ -9,7 +9,7 @@ import { appStorage, saves as appSaves, type CachedStorage } from '@/shared/stor
 import type { PuzzleFile } from '../../types';
 import { commitFinish, readSave, reopenInfo, saveHost, type FinishInfo } from '../finishing';
 import { apply, frame, init, type Move, type ReckonData, type ReckonState } from '../model';
-import { reckonFeel, reckonHaptics, reckonSnap } from './feel';
+import { reckonFeel, reckonSnap } from './feel';
 
 interface Deps {
   store?: CachedStorage;
@@ -45,8 +45,8 @@ export function useReckonGame(file: PuzzleFile<ReckonData>, deps: Deps = {}) {
   const ref = useRef<ReckonState>(initial);
   const [state, setState] = useState<ReckonState>(initial);
   const [info, setInfo] = useState<FinishInfo | null>(() => reopenInfo(initial, host.today()));
-  // The page's own Vibration setting decides for Reckon.
-  useHapticDiff(reckonSnap(state), reckonFeel, reckonHaptics(state));
+  // The app's one Vibration switch rules (AF-012); the page's own saved `hap` isn't read.
+  useHapticDiff(reckonSnap(state), reckonFeel);
 
   const dispatch = useCallback(
     (m: Move) => {

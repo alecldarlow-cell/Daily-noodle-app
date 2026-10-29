@@ -11,13 +11,18 @@ import * as Haptics from 'expo-haptics';
 import { useEffect, useRef } from 'react';
 import { Platform } from 'react-native';
 
+import { readSettings } from '@/shared/settings';
+
 export type Buzz = 'tap' | 'success' | 'error';
 
 /**
- * The app's one switch: on for now. A setting can drive it later; a type whose own
- * saved setting says haptics are off (Reckon's `hap`) passes `allowed = false`.
+ * The app's one Vibration switch (Account › Settings, tracker AF-012), on by default.
+ * Every buzz in the app comes through `buzz`, so this gates them all. No puzzle's own
+ * saved setting is read: one switch rules.
  */
-export const HAPTICS_ON = true;
+export function hapticsOn(): boolean {
+  return readSettings().vibration;
+}
 
 const ANDROID: Record<Buzz, Haptics.AndroidHaptics> = {
   tap: Haptics.AndroidHaptics.Keyboard_Tap,
@@ -25,9 +30,9 @@ const ANDROID: Record<Buzz, Haptics.AndroidHaptics> = {
   error: Haptics.AndroidHaptics.Reject,
 };
 
-/** Feel one buzz, unless the switch or the type's own setting says no. Never throws. */
+/** Feel one buzz, unless the app's switch (or the caller) says no. Never throws. */
 export function buzz(kind: Buzz | null | undefined, allowed = true): void {
-  if (!kind || !HAPTICS_ON || !allowed) return;
+  if (!kind || !allowed || !hapticsOn()) return;
   try {
     // Android: the system's own haptic effects (the SDK 58 docs advise them over the
     // Vibrator that impactAsync / notificationAsync simulate there).

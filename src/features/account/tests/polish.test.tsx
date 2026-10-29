@@ -47,7 +47,7 @@ describe('GIVEN a message from Supabase or a failed request', () => {
 
 describe('GIVEN a signed-in player', () => {
   describe('WHEN Sync now brings an account that plays as someone else in leagues', () => {
-    it('THEN Account points to the choice on Leagues instead of saying “Up to date.”', async () => {
+    it('THEN the sync line points to the choice on Leagues', async () => {
       const store = memoryStorage({
         'noodle-board-v1': {
           pid: PID_A,
@@ -70,8 +70,9 @@ describe('GIVEN a signed-in player', () => {
       expect(screen.queryByTestId('sync-waiting')).toBeNull();
       await act(async () => fireEvent.press(screen.getByTestId('sync-now')));
       expect(await screen.findByTestId('sync-waiting')).toHaveTextContent(
-        /Choose which to use on Leagues/,
+        'Your account plays in other leagues than this phone.',
       );
+      expect(screen.queryByTestId('sync-last')).toBeNull();
       expect(screen.queryByText('Up to date.')).toBeNull();
       await act(async () =>
         fireEvent.press(screen.getByRole('button', { name: 'Choose on Leagues' })),
@@ -91,6 +92,9 @@ describe('GIVEN a signed-in player', () => {
       await act(async () => fireEvent.press(screen.getByTestId('sync-now')));
       expect(await screen.findByTestId('sync-msg')).toHaveTextContent(AUTH_WORDS.offline);
       expect(screen.queryByText(/TypeError/)).toBeNull();
+      // The error takes the sync line, with a way to try again.
+      expect(screen.getByTestId('sync-line')).toHaveTextContent(/Try again/);
+      expect(screen.queryByTestId('sync-last')).toBeNull();
     });
   });
 });
@@ -125,11 +129,11 @@ describe('GIVEN the sign-in screen is waiting', () => {
 });
 
 describe('GIVEN the Account tab', () => {
-  describe('WHEN “I have a league PIN” is tapped twice (Back on Leagues in between)', () => {
+  describe('WHEN “Join with a code” is tapped twice (Back on Leagues in between)', () => {
     it('THEN each tap is a new ask for Leagues', async () => {
       await render(<AccountScreen />);
-      await fireEvent.press(screen.getByRole('button', { name: 'I have a league PIN' }));
-      await fireEvent.press(screen.getByRole('button', { name: 'I have a league PIN' }));
+      await fireEvent.press(screen.getByRole('button', { name: 'Join with a code' }));
+      await fireEvent.press(screen.getByRole('button', { name: 'Join with a code' }));
       const asks = jest
         .mocked(router.navigate)
         .mock.calls.map(

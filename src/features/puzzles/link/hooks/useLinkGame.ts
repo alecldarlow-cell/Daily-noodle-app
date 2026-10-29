@@ -1,8 +1,8 @@
 import type { SaveStore } from '@noodle/core';
 import { useCallback, useEffect, useState, useSyncExternalStore } from 'react';
-import { AccessibilityInfo } from 'react-native';
 
 import { useHapticDiff } from '@/shared/haptics';
+import { useReduceMotion } from '@/shared/motion';
 import { announceFinish, usePuzzleVisit } from '@/shared/results';
 import { appStorage, saves as appSaves, type CachedStorage } from '@/shared/storage';
 
@@ -18,7 +18,7 @@ interface Deps {
   saves?: SaveStore;
   now?: () => number;
   random?: () => number;
-  /** The phone asks for reduced motion (read from the system when not given). */
+  /** Reduced motion asked for (else the app's switch or the phone's setting). */
   reduced?: boolean;
 }
 
@@ -37,21 +37,11 @@ export function useLinkGame(file: PuzzleFile<LinkData>, deps: Deps = {}) {
   useSyncExternalStore(game.subscribe, game.getVersion);
   useHapticDiff(game.state, linkFeel);
 
-  const reduced = deps.reduced;
+  // The app's Animations switch, else the phone's setting (AF-012), kept up to date.
+  const system = useReduceMotion();
+  const reduced = deps.reduced ?? system;
   useEffect(() => {
-    if (reduced !== undefined) {
-      game.setReduced(reduced);
-      return;
-    }
-    let on = true;
-    AccessibilityInfo.isReduceMotionEnabled()
-      .then((r) => {
-        if (on) game.setReduced(r);
-      })
-      .catch(() => undefined);
-    return () => {
-      on = false;
-    };
+    if (reduced !== null) game.setReduced(reduced);
   }, [game, reduced]);
   useEffect(() => () => game.dispose(), [game]);
 

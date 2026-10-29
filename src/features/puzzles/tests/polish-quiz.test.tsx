@@ -1,7 +1,7 @@
 /**
- * WP12 on the quiz types: Reckon and Borders buzz where their pages do, Reckon heeds
- * its own saved Vibration setting (read, never changed), and their sheets make their
- * entrance only on a fresh finish.
+ * WP12 on the quiz types: Reckon and Borders buzz where their pages do, the app's one
+ * Vibration switch rules them (Reckon's own saved setting is no longer read, and never
+ * changed; AF-012), and their sheets make their entrance only on a fresh finish.
  */
 import { createSaveStore } from '@noodle/core';
 import { act, fireEvent, screen } from '@testing-library/react-native';
@@ -9,6 +9,7 @@ import * as Haptics from 'expo-haptics';
 import { Animated } from 'react-native';
 
 import { forgetReduceMotion } from '@/shared/motion';
+import { saveSettings } from '@/shared/settings';
 import { appStorage } from '@/shared/storage';
 import { mockSite, renderWithProviders } from '@/shared/testing';
 
@@ -92,14 +93,25 @@ describe('GIVEN a Reckon with its Vibration setting on (the page’s default)', 
   });
 });
 
-describe('GIVEN a Reckon whose saved Vibration setting is off', () => {
-  describe('WHEN the ten are locked in', () => {
-    it('THEN nothing buzzes, and the setting is left as it was', async () => {
+describe('GIVEN a Reckon whose own saved Vibration setting is off (AF-012: one switch rules)', () => {
+  describe('WHEN the ten are locked in with the app’s Vibration switch on', () => {
+    it('THEN it buzzes as usual, and its own setting is left as it was', async () => {
       appStorage.setItem(RECKON_KEY, JSON.stringify({ v: 1, done: {}, hap: false }));
+      await playReckon();
+      expect(H.impactAsync).toHaveBeenCalledTimes(10);
+      expect(H.notificationAsync.mock.calls).toEqual([[Success]]);
+      expect(JSON.parse(appStorage.getItem(RECKON_KEY)!).hap).toBe(false);
+    });
+  });
+});
+
+describe('GIVEN the app’s Vibration switch is off', () => {
+  describe('WHEN a Reckon is played to the end', () => {
+    it('THEN nothing buzzes', async () => {
+      saveSettings({ vibration: false });
       await playReckon();
       expect(H.impactAsync).not.toHaveBeenCalled();
       expect(H.notificationAsync).not.toHaveBeenCalled();
-      expect(JSON.parse(appStorage.getItem(RECKON_KEY)!).hap).toBe(false);
     });
   });
 });
