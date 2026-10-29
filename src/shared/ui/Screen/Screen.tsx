@@ -20,7 +20,7 @@ interface ScreenProps {
 
 /**
  * Largest text sizes for the masthead, which is a logo more than text: the monogram never
- * grows past its 30 pt box (at 2.0 "DP" clipped in it), the wordmark grows a little, the
+ * grows past its 30 pt box (at 2.0 the letters clipped in it), the wordmark grows a little, the
  * kicker a little more. If the row still doesn't fit (large text, a narrow phone) the kicker
  * wraps under the wordmark, right-aligned, rather than running off the screen.
  */
@@ -32,20 +32,24 @@ export function refreshColors(t: Tokens) {
 }
 
 /**
- * The site's masthead (front.css `.mast`): the DP monogram and the Noodle·Puzzles wordmark,
- * with the page's name as the kicker on the right, over a 2 pt ink rule.
+ * The masthead: the Daily Noodle mark (the launcher icon's green DN tile, drawn in code) and
+ * the Daily Noodle wordmark, with the page's name as the kicker on the right, over a 2 pt
+ * ink rule (the site's front.css `.mast` layout).
  */
 function Masthead({ title, subtitle }: { title: string; subtitle?: string }) {
   const t = useTokens();
   return (
     <View style={[styles.mast, { borderBottomColor: t.ink }]} testID="masthead">
       <View style={styles.brand}>
-        <View style={[styles.mono, { backgroundColor: t.accent }]} accessible={false}>
+        <View
+          style={[styles.mono, { backgroundColor: t.brand }]}
+          accessible={false}
+          testID="masthead-mark">
           <Text
             maxFontSizeMultiplier={MAST_MAX_SCALE.mono}
-            style={[styles.monoText, { color: t.onAccent }]}
+            style={[styles.monoText, { color: t.onBrand }]}
             testID="masthead-mono">
-            DP
+            DN
           </Text>
         </View>
         <Text
@@ -56,7 +60,7 @@ function Masthead({ title, subtitle }: { title: string; subtitle?: string }) {
           style={[styles.word, { color: t.ink }]}
           accessible={false}
           testID="masthead-word">
-          Noodle<Text style={{ color: t.accent }}>Puzzles</Text>
+          Daily <Text style={{ color: t.accent }}>Noodle</Text>
         </Text>
       </View>
       <View style={styles.kick} testID="masthead-kicker">
@@ -148,7 +152,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  // includeFontPadding off and a set line height so "DP" sits in the middle on Android too.
+  // includeFontPadding off and a set line height so "DN" sits in the middle on Android too.
   monoText: {
     fontFamily: FONT.displayHeavy,
     fontSize: 17,

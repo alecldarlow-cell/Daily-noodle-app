@@ -7,4 +7,14 @@ export { fitBoard } from './fitBoard';
 export { BOARD_SLOT, useBoardFit } from './useBoardFit';
 export { PRESSED, pressable } from './pressed';
 export { Chevron, ShareGlyph } from './Glyph/Glyph';
-export { Button, FieldLabel, TextField, type ButtonKind } from './Button/Button';
+export {
+  Button,
+  FieldLabel,
+  TextField,
+  TAP,
+  TAP_GAP,
+  buttonColors,
+  buttonStyle,
+  type ButtonKind,
+  type ButtonVariant,
+} from './Button/Button';

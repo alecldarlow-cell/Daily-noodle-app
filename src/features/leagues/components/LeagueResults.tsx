@@ -1,3 +1,4 @@
+import { useForgetOldPlayer } from '../hooks/useLeagues';
 import { useSubmitFinishes } from '../hooks/useResults';
 
 /**
@@ -6,5 +7,6 @@ import { useSubmitFinishes } from '../hooks/useResults';
  */
 export function LeagueResults() {
   useSubmitFinishes();
+  useForgetOldPlayer();
   return null;
 }

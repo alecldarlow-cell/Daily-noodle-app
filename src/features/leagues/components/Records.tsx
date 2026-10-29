@@ -201,9 +201,9 @@ export function RecordsView({
       <Text style={[styles.how, { color: t.faint }]}>{RECORDS_HOW}</Text>
       <Acts>
         <Btn
-          kind="go"
+          variant="filled"
           label="Invite people"
-          onPress={() => void share(`${inviteText(league.name)}\n${inviteLink(league.code)}`)}
+          onPress={() => share(`${inviteText(league.name)}\n${inviteLink(league.code)}`)}
         />
       </Acts>
     </View>
