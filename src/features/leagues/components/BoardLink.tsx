@@ -26,7 +26,7 @@ export function BoardLink({ path, onTag }: BoardSlotProps) {
   const member = (s.leagues || []).length > 0;
   const T = /^reports\//.test(path) ? boardTypeOfPath(path) : null;
   if (!member || !T) return null;
-  return <MemberLink path={path} onTag={onTag} typeId={T.id} typeName={T.name} />;
+  return <MemberLink path={path} onTag={onTag} typeId={T.id} typeName={T.name} pid={s.pid ?? ''} />;
 }
 
 function MemberLink({
@@ -34,11 +34,14 @@ function MemberLink({
   onTag,
   typeId,
   typeName,
+  pid,
 }: {
   path: string;
   onTag: (tag: string) => void;
   typeId: string;
   typeName: string;
+  /** In the key, so another player's answer is never reused (R8). */
+  pid: string;
 }) {
   const pt = usePuzzleTokens();
   const today = useLondonDay();
@@ -46,13 +49,14 @@ function MemberLink({
   // A new submission of this puzzle (it finished again while the sheet shows) asks again.
   const n = useSyncExternalStore(onSubmission, () => submissionOf(path).n);
   const q = useQuery({
-    queryKey: ['leagues', 'moment', path, n],
+    queryKey: ['leagues', 'moment', pid, path, n],
     queryFn: async () => {
       await submissionOf(path).done;
       return boardMoment(getPid(), path);
     },
     retry: false,
-    staleTime: Infinity,
+    // A record can be beaten later: a reopened sheet asks again after a minute (R8).
+    staleTime: 60_000,
   });
   const line = q.isSuccess ? momentLine(q.data, typeName, pdate === today) : null;
   const record = !!line?.record;

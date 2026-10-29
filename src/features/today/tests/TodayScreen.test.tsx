@@ -111,7 +111,7 @@ describe('GIVEN the site has published today’s list', () => {
   });
 
   describe('WHEN some of today’s puzzles are saved as played', () => {
-    it('THEN their cards show the result, in progress, or lost, in the site’s words', async () => {
+    it('THEN their cards show the result, Continue (in progress), or lost, in the site’s words', async () => {
       appStorage.setItem(
         'digi-mini-v1',
         JSON.stringify({ v: 1, done: { 'DP·MINI·0105': { s: 87, d: today } } }),
@@ -129,7 +129,8 @@ describe('GIVEN the site has published today’s list', () => {
         expect(screen.getByRole('button', { name: 'Mini 105, Solved in 1:27' })).toBeOnTheScreen(),
       );
       expect(screen.getByRole('button', { name: 'Sweep 100, Hit a mine' })).toBeOnTheScreen();
-      expect(screen.getByRole('button', { name: 'Borders 20, In progress' })).toBeOnTheScreen();
+      // AF-020: a round left part-way says Continue (it said "In progress").
+      expect(screen.getByRole('button', { name: 'Borders 20, Continue' })).toBeOnTheScreen();
       // The three played cards carry a mark on their tile; the other five don't.
       expect(screen.getByTestId('today-mini-mark')).toBeOnTheScreen();
       expect(screen.getByTestId('today-borders-mark')).toBeOnTheScreen();

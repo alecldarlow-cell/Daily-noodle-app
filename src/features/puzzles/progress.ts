@@ -14,12 +14,11 @@
 import { useEffect, useRef } from 'react';
 import { AppState } from 'react-native';
 
+import { progressKey, type ProgressType } from '@/shared/played/rounds';
 import type { CachedStorage } from '@/shared/storage';
 
-export type ProgressType = 'mini' | 'doku' | 'sweep' | 'path';
-
-/** `noodle-app-progress-mini` and so on. */
-export const progressKey = (type: ProgressType) => `noodle-app-progress-${type}`;
+/** `noodle-app-progress-mini` and so on (in shared/played, which Today and the Archive read). */
+export { progressKey, type ProgressType };
 
 /** The most moves kept: far more than any real round; a longer log is not ours. */
 export const MAX_MOVES = 5000;
