@@ -6,6 +6,9 @@ module.exports = {
   preset: 'jest-expo',
   // The preset's own setup first, then ours, which needs its globals installed.
   setupFiles: [...preset.setupFiles, '<rootDir>/test/resolve-lazy-globals.js'],
+  // A sound file becomes its cue's name, so tests can tell which sound played (ADR-009);
+  // first, so it wins over the preset's asset stub.
+  transform: { '\\.wav$': '<rootDir>/test/wav-transformer.js', ...preset.transform },
   testMatch: ['**/*.test.ts', '**/*.test.tsx'],
   testPathIgnorePatterns: ['/node_modules/', '/coverage/', '/.expo/'],
   moduleNameMapper: {
@@ -19,6 +22,8 @@ module.exports = {
     // its native side and fails outside a phone.
     '^@react-native-community/netinfo$':
       '<rootDir>/node_modules/@react-native-community/netinfo/jest/netinfo-mock.js',
+    // expo-audio ships no Jest mock and can't load without its native side (ADR-009).
+    '^expo-audio$': '<rootDir>/test/mocks/expo-audio.js',
   },
   collectCoverageFrom: [
     'src/**/*.{ts,tsx}',

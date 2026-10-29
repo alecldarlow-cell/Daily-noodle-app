@@ -4,12 +4,14 @@ import { AppState } from 'react-native';
 
 import { useHapticDiff } from '@/shared/haptics';
 import { announceFinish } from '@/shared/results';
+import { play, useSoundDiff } from '@/shared/sound';
 import { appStorage, saves as appSaves, type CachedStorage } from '@/shared/storage';
 
 import type { PuzzleFile } from '../../types';
 import { commitFinish, readSave, reopenInfo, saveHost, type FinishInfo } from '../finishing';
 import { apply, frame, init, type Move, type ReckonData, type ReckonState } from '../model';
 import { reckonFeel, reckonSnap } from './feel';
+import { reckonSound, reckonSoundSnap } from './sound';
 
 interface Deps {
   store?: CachedStorage;
@@ -47,6 +49,8 @@ export function useReckonGame(file: PuzzleFile<ReckonData>, deps: Deps = {}) {
   const [info, setInfo] = useState<FinishInfo | null>(() => reopenInfo(initial, host.today()));
   // The app's one Vibration switch rules (AF-012); the page's own saved `hap` isn't read.
   useHapticDiff(reckonSnap(state), reckonFeel);
+  // The website's tones (AF-013), read off each new state; never into the model.
+  useSoundDiff(reckonSoundSnap(state), reckonSound);
 
   const dispatch = useCallback(
     (m: Move) => {
@@ -56,6 +60,7 @@ export function useReckonGame(file: PuzzleFile<ReckonData>, deps: Deps = {}) {
         s = f.state;
         setInfo(f);
         announceFinish({ path: file.path, type: 'reckon', detail: f.detail });
+        play('reckon-done'); // the page's one finishing chime, its celebration jingle
       }
       ref.current = s;
       setState(s);

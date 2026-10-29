@@ -23,40 +23,57 @@ afterEach(() => {
 const flush = () => act(async () => undefined);
 
 describe('GIVEN no saved app settings', () => {
-  it('THEN Vibration is on and Animations follow the phone', () => {
-    expect(readSettings()).toEqual({ vibration: true, motion: 'phone' });
-    expect(DEFAULT_SETTINGS).toEqual({ vibration: true, motion: 'phone' });
+  it('THEN Vibration and Sound are on and Animations follow the phone', () => {
+    expect(readSettings()).toEqual({ vibration: true, sound: true, motion: 'phone' });
+    expect(DEFAULT_SETTINGS).toEqual({ vibration: true, sound: true, motion: 'phone' });
   });
 
   describe('WHEN what is saved is unreadable or half there', () => {
     it('THEN each missing part takes its default', () => {
       expect(parseSettings('{oops')).toEqual(DEFAULT_SETTINGS);
       expect(parseSettings(null)).toEqual(DEFAULT_SETTINGS);
-      expect(parseSettings('{"vibration":false}')).toEqual({ vibration: false, motion: 'phone' });
-      expect(parseSettings('{"motion":"reduced","vibration":"no"}')).toEqual({
+      expect(parseSettings('{"vibration":false}')).toEqual({
+        vibration: false,
+        sound: true,
+        motion: 'phone',
+      });
+      expect(parseSettings('{"motion":"reduced","vibration":"no","sound":0}')).toEqual({
         vibration: true,
+        sound: true,
         motion: 'reduced',
       });
+      // A 0.2.0 save (Vibration and Animations only) reads with Sound on.
+      expect(parseSettings('{"v":1,"vibration":false,"motion":"reduced"}')).toEqual({
+        vibration: false,
+        sound: true,
+        motion: 'reduced',
+      });
+      expect(parseSettings('{"sound":false}')).toMatchObject({ sound: false });
     });
   });
 });
 
 describe('GIVEN a player changes a switch', () => {
-  describe('WHEN Vibration goes off, then Animations go to Reduced', () => {
-    it('THEN both are kept under the new key, and a screen showing them follows', async () => {
+  describe('WHEN Vibration goes off, Animations go to Reduced, then Sound goes off', () => {
+    it('THEN all are kept under the same key, and a screen showing them follows', async () => {
       const { result } = await renderHook(() => useAppSettings());
       expect(result.current).toEqual(DEFAULT_SETTINGS);
       await act(async () => {
         saveSettings({ vibration: false });
       });
-      expect(result.current).toEqual({ vibration: false, motion: 'phone' });
+      expect(result.current).toEqual({ vibration: false, sound: true, motion: 'phone' });
       await act(async () => {
         saveSettings({ motion: 'reduced' });
       });
-      expect(result.current).toEqual({ vibration: false, motion: 'reduced' });
+      expect(result.current).toEqual({ vibration: false, sound: true, motion: 'reduced' });
+      await act(async () => {
+        saveSettings({ sound: false });
+      });
+      expect(result.current).toEqual({ vibration: false, sound: false, motion: 'reduced' });
       expect(JSON.parse(appStorage.getItem('noodle-app-settings')!)).toEqual({
         v: 1,
         vibration: false,
+        sound: false,
         motion: 'reduced',
       });
     });

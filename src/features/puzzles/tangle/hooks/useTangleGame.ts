@@ -5,12 +5,14 @@ import { AppState } from 'react-native';
 import { useHapticDiff } from '@/shared/haptics';
 import { useReduceMotion } from '@/shared/motion';
 import { announceFinish } from '@/shared/results';
+import { useSoundDiff } from '@/shared/sound';
 import { appStorage, saves as appSaves } from '@/shared/storage';
 
 import type { PuzzleFile } from '../../types';
 import { sheetInfo } from '../finishing';
 import { createTangle, KEY, type Rect, type TangleData, type TangleEngine } from '../model';
 import { tangleFeel, tangleSnap } from './feel';
+import { tangleSound, tangleSoundSnap } from './sound';
 
 interface Deps {
   store?: KV;
@@ -89,6 +91,8 @@ export function useTangleGame(file: PuzzleFile<TangleData>, deps: Deps = {}) {
   );
   useSyncExternalStore(host.subscribe, host.getVersion);
   useHapticDiff(tangleSnap(host.engine), tangleFeel);
+  // The website's tones (AF-013), read off the engine after each change; never into it.
+  useSoundDiff(tangleSoundSnap(host.engine), tangleSound);
 
   // The app's Animations switch, else the phone's setting (AF-012), kept up to date.
   const system = useReduceMotion();
