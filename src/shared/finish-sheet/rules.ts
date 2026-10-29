@@ -1,6 +1,7 @@
 /**
- * The finish sheet's rules, ported from dailynoodle engines/finish.js: the Next row
- * (fillNext), the countdown to the next London day (toMidnight, hm) and its run line.
+ * The finish sheet's rules, ported from dailynoodle engines/finish.js: the Play more row
+ * (fillNext), the countdown to the next London day (toMidnight, hm), the day streak line
+ * and which round counts as solved (AF-019, 29 Oct 2026).
  */
 import {
   PUZZLE_TYPES,
@@ -20,13 +21,18 @@ function doneOf(docs: Docs, type: PuzzleType): Record<string, unknown> {
 export interface NextRow {
   main: string;
   sub: string;
-  /** The puzzle to open, or null for today's list. */
+  /** The puzzle to open, or null for today's list (or the archive, when `all`). */
   item: TodayItem | null;
+  /** Every puzzle today is done: a quiet line to the archive instead of a button. */
+  all: boolean;
 }
 
-/** "Next: Doku 103" / "3 of 8 played today", from today's list and the saves. */
+/**
+ * "Play Doku 103" / "3 of 8 done today", from today's list and the saves; once every
+ * puzzle is done, "All 8 done today. Try the archive ›" (finish.js fillNext).
+ */
 export function nextRow(list: TodayList | null | undefined, type: PuzzleType, docs: Docs): NextRow {
-  if (!list) return { main: 'Today’s puzzles', sub: ' ', item: null };
+  if (!list) return { main: 'Today’s puzzles', sub: ' ', item: null, all: false };
   const items = list.items;
   let played = 0;
   for (const it of items) if (doneOf(docs, it.type)[it.id]) played++;
@@ -36,10 +42,14 @@ export function nextRow(list: TodayList | null | undefined, type: PuzzleType, do
     const t = PUZZLE_TYPES[(start + k) % PUZZLE_TYPES.length]!;
     for (const it of items) if (!next && it.type === t && !doneOf(docs, t)[it.id]) next = it;
   }
-  const sub = `${played} of ${items.length} played today`;
   return next
-    ? { main: `Next: ${next.name}`, sub, item: next }
-    : { main: 'All today’s puzzles done', sub, item: null };
+    ? {
+        main: `Play ${next.name}`,
+        sub: `${played} of ${items.length} done today`,
+        item: next,
+        all: false,
+      }
+    : { main: `All ${items.length} done today. Try the archive`, sub: '', item: null, all: true };
 }
 
 /** Seconds until the next London midnight. */
@@ -74,16 +84,30 @@ export interface ClockLine {
   /** Before the bold part. */
   lead: string;
   bold: string | null;
-  after: string;
-  run: number;
 }
 
-/** The countdown line's parts: "A new Mini in **5h 12m**." plus the run, as finish.js paints it. */
-export function clockLine(name: string, s: number, run: number): ClockLine {
-  if (s <= 60 || s >= 86340)
-    return { lead: 'Today’s puzzles are out.', bold: null, after: '', run };
-  return { lead: `A new ${name} in `, bold: hm(s), after: '.', run };
+/** The footer's countdown: "New Mini in **5h 12m**", as finish.js paints it. */
+export function clockLine(name: string, s: number): ClockLine {
+  if (s <= 60 || s >= 86340) return { lead: 'Today’s puzzles are out.', bold: null };
+  return { lead: `New ${name} in `, bold: hm(s) };
 }
+
+/**
+ * The line under the score (finish.js streakLine): the type's "day streak" stat as
+ * "🔥 5-day streak"; nothing under 1.
+ */
+export function streakLine(stats: readonly { value: string | number; label: string }[]): string {
+  const s = stats.find((x) => /day streak/i.test(x.label));
+  const n = s ? parseInt(String(s.value), 10) || 0 : 0;
+  return n >= 1 ? `🔥 ${n}-day streak` : '';
+}
+
+/** The five grid puzzles that play the celebration jingle on a fresh win (AF-013). */
+export const JINGLE_TYPES: readonly PuzzleType[] = ['mini', 'doku', 'sweep', 'path', 'link'];
+
+/** Whether a finish plays the jingle: a fresh (not reopened) solve of one of the five. */
+export const playsJingle = (type: PuzzleType, fresh: boolean, solved: boolean): boolean =>
+  fresh && solved && JINGLE_TYPES.includes(type);
 
 /**
  * The result and its unit, drawn apart as finish.js draws them (`325<small>pts</small>`):

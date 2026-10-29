@@ -9,8 +9,10 @@ import * as api from '../api/board';
 import { BoardLink } from '../components/BoardLink';
 import { LeagueResults } from '../components/LeagueResults';
 import { addDays, momentLine } from '../hooks/boardText';
+import { ordinal, rankLine } from '../hooks/rankText';
+import type { DayBoard } from '../types';
 import { clearSubmissions } from '../hooks/submissions';
-import { clearStore, FAMILY, PID, setBoard } from './helpers';
+import { board, clearStore, FAMILY, PID, setBoard } from './helpers';
 
 jest.mock('../api/board');
 jest.mock('expo-router', () => ({ router: { dismissTo: jest.fn(), navigate: jest.fn() } }));
@@ -37,7 +39,28 @@ beforeEach(() => {
   tags = [];
   m.boardSubmit.mockResolvedValue(true);
   m.boardMoment.mockResolvedValue({ type: 'mini', pb: false, records: [] });
+  m.boardDay.mockResolvedValue(day(null, 3));
 });
+
+/** A board_day answer: this player at `rank` among `n` members (null: not ranked). */
+function day(rank: number | null, n: number): DayBoard {
+  const players = Array.from({ length: n }, (_, i) => (i === 0 ? 'Alec' : `P${i}`));
+  return {
+    ranked:
+      rank === null
+        ? [{ rank: 1, nick: 'P1', me: false, outcome: 'solved', secs: 60, mistakes: 0, streak: 1 }]
+        : [{ rank, nick: 'Alec', me: true, outcome: 'solved', secs: 60, mistakes: 0, streak: 1 }],
+    unranked:
+      rank === null
+        ? [{ nick: 'Alec', me: true, outcome: 'failed', secs: 60, mistakes: 4, streak: 0 }]
+        : [],
+    not_yet: [],
+    players,
+    members: n,
+    first: null,
+  };
+}
+const SEE = 'See today’s board in Family';
 
 afterEach(async () => {
   await act(async () => {
@@ -71,14 +94,94 @@ describe('GIVEN the record line’s wording (dn-board.js showMoment)', () => {
   });
 });
 
+describe('GIVEN the league line’s wording (dn-board.js rankText, AF-019)', () => {
+  it('THEN ordinals read as English does', () => {
+    expect([1, 2, 3, 4, 11, 12, 13, 21, 22, 23, 101, 111].map(ordinal)).toEqual([
+      '1st',
+      '2nd',
+      '3rd',
+      '4th',
+      '11th',
+      '12th',
+      '13th',
+      '21st',
+      '22nd',
+      '23rd',
+      '101st',
+      '111th',
+    ]);
+  });
+  it('THEN first says only the place; lower says “of” the members; no rank says nothing', () => {
+    expect(rankLine(day(1, 6), 'Noodlers')).toBe('Currently 1st in Noodlers');
+    expect(rankLine(day(3, 6), 'Noodlers')).toBe('Currently 3rd of 6 in Noodlers');
+    expect(rankLine(day(2, 1), 'Noodlers')).toBe('Currently 2nd in Noodlers');
+    expect(rankLine(day(null, 6), 'Noodlers')).toBeNull();
+    expect(rankLine(null, 'Noodlers')).toBeNull();
+  });
+});
+
 describe('GIVEN a finished puzzle’s sheet', () => {
-  describe('WHEN the player is in no league', () => {
-    it('THEN the slot shows nothing and asks nothing', async () => {
+  describe('WHEN the player is in no league (AF-022)', () => {
+    it('THEN the line invites them to start one, with the trophy and no emoji, and asks nothing', async () => {
       await slot(pathOn(today));
-      expect(screen.queryByText('🏆 See today’s board')).toBeNull();
-      expect(screen.queryByTestId('board-slot')).toBeNull();
+      const line = screen.getByRole('link', { name: 'Start a league with friends' });
+      expect(line).toHaveTextContent('Start a league with friends');
+      expect(screen.getByTestId('board-trophy')).toBeOnTheScreen();
+      expect(screen.queryByText(/🏆/)).toBeNull();
       expect(m.boardMoment).not.toHaveBeenCalled();
+      expect(m.boardDay).not.toHaveBeenCalled();
       expect(tags).toEqual([]);
+    });
+    it('THEN a tap opens Leagues on the start form', async () => {
+      await slot(pathOn(today));
+      await fireEvent.press(screen.getByRole('link', { name: 'Start a league with friends' }));
+      expect(router.dismissTo).toHaveBeenCalledWith({
+        pathname: '/leagues',
+        params: { go: 'start', n: expect.any(String) },
+      });
+    });
+  });
+
+  describe('WHEN the player is in leagues and has a rank in the one last viewed', () => {
+    it('THEN the line says “Currently 3rd of 6 in Work” once the board answers', async () => {
+      setBoard({ pid: PID, leagues: [FAMILY, WORK], cur: WORK.code });
+      m.boardDay.mockResolvedValue(day(3, 6));
+      await slot(pathOn(today));
+      expect(screen.getByRole('link', { name: 'See today’s board in Work' })).toBeOnTheScreen();
+      await waitFor(() =>
+        expect(screen.getByRole('link', { name: 'Currently 3rd of 6 in Work' })).toBeOnTheScreen(),
+      );
+      expect(m.boardDay).toHaveBeenCalledWith(PID, WORK.code, 'mini', today);
+      expect(screen.queryByText(/Alec|P1/)).toBeNull();
+    });
+    it('THEN first place reads “Currently 1st in Family”, and a tap opens that league’s board', async () => {
+      setBoard({ pid: PID, leagues: [FAMILY, WORK] });
+      m.boardDay.mockResolvedValue(day(1, 3));
+      await slot(pathOn(earlier));
+      const line = await screen.findByRole('link', { name: 'Currently 1st in Family' });
+      await fireEvent.press(line);
+      expect(board().cur).toBe(FAMILY.code);
+      expect(router.dismissTo).toHaveBeenCalledWith({
+        pathname: '/leagues',
+        params: { p: 'mini', d: earlier, n: expect.any(String) },
+      });
+    });
+    it('THEN with no rank (failed, revealed) or no answer, it stays “See today’s board in …”', async () => {
+      setBoard({ pid: PID, leagues: [FAMILY] });
+      m.boardDay.mockResolvedValue(day(null, 3));
+      const r = await slot(pathOn(today));
+      await waitFor(() => expect(m.boardDay).toHaveBeenCalled());
+      await act(async () => {
+        await new Promise((res) => setTimeout(res, 20));
+      });
+      expect(screen.getByRole('link', { name: SEE })).toBeOnTheScreen();
+      await r.unmount();
+      m.boardDay.mockRejectedValue(new Error('offline'));
+      await slot(pathOn(today));
+      await act(async () => {
+        await new Promise((res) => setTimeout(res, 20));
+      });
+      expect(screen.getByRole('link', { name: SEE })).toBeOnTheScreen();
     });
   });
 
@@ -94,7 +197,7 @@ describe('GIVEN a finished puzzle’s sheet', () => {
         ],
       });
       await slot(pathOn(today));
-      expect(screen.getByText('🏆 See today’s board')).toBeOnTheScreen();
+      expect(screen.getByRole('link', { name: SEE })).toBeOnTheScreen();
       await waitFor(() =>
         expect(screen.getByTestId('board-moment')).toHaveTextContent(
           '🏆 New league record in Family, Work!',
@@ -159,7 +262,9 @@ describe('GIVEN a finished puzzle’s sheet', () => {
       await act(async () => {
         await new Promise((r) => setTimeout(r, 20));
       });
-      expect(screen.getByText('🏆 See today’s board')).toBeOnTheScreen();
+      expect(
+        screen.getByRole('link', { name: /^(See today’s board|Currently) / }),
+      ).toBeOnTheScreen();
       expect(screen.queryByTestId('board-moment')).toBeNull();
       expect(tags).toEqual([]);
     });
@@ -217,11 +322,11 @@ describe('GIVEN a finished puzzle’s sheet', () => {
     });
   });
 
-  describe('WHEN “See today’s board” is tapped', () => {
+  describe('WHEN the league line is tapped', () => {
     it('THEN the Leagues tab opens on that puzzle and its day', async () => {
       setBoard({ pid: PID, leagues: [FAMILY] });
       await slot(pathOn(earlier));
-      await fireEvent.press(screen.getByRole('link', { name: '🏆 See today’s board' }));
+      await fireEvent.press(screen.getByRole('link', { name: SEE }));
       expect(router.dismissTo).toHaveBeenCalledWith({
         pathname: '/leagues',
         params: { p: 'mini', d: earlier, n: expect.any(String) },
@@ -230,8 +335,8 @@ describe('GIVEN a finished puzzle’s sheet', () => {
     it('THEN a second tap asks again with a fresh n, so Leagues opens that board again', async () => {
       setBoard({ pid: PID, leagues: [FAMILY] });
       await slot(pathOn(earlier));
-      await fireEvent.press(screen.getByRole('link', { name: '🏆 See today’s board' }));
-      await fireEvent.press(screen.getByRole('link', { name: '🏆 See today’s board' }));
+      await fireEvent.press(screen.getByRole('link', { name: SEE }));
+      await fireEvent.press(screen.getByRole('link', { name: SEE }));
       const [a, b] = jest
         .mocked(router.dismissTo)
         .mock.calls.map((c) => (c[0] as unknown as { params: { n: string } }).params.n);
@@ -240,7 +345,7 @@ describe('GIVEN a finished puzzle’s sheet', () => {
     it('THEN a page whose name carries no date opens that puzzle on today', async () => {
       setBoard({ pid: PID, leagues: [FAMILY] });
       await slot('reports/digi-crossword-mini-0002.html');
-      await fireEvent.press(screen.getByRole('link', { name: '🏆 See today’s board' }));
+      await fireEvent.press(screen.getByRole('link', { name: SEE }));
       expect(router.dismissTo).toHaveBeenCalledWith({
         pathname: '/leagues',
         params: { p: 'mini', n: expect.any(String) },
@@ -249,7 +354,10 @@ describe('GIVEN a finished puzzle’s sheet', () => {
   });
 
   describe('WHEN the page isn’t a board puzzle', () => {
-    it('THEN there is no link, as on the site', async () => {
+    it('THEN there is no line, as on the site, member or not', async () => {
+      const r = await slot('reports/DP-SWEEP-2026-07-17.html');
+      expect(screen.queryByTestId('board-slot')).toBeNull();
+      await r.unmount();
       setBoard({ pid: PID, leagues: [FAMILY] });
       await slot('reports/DP-SWEEP-2026-07-17.html');
       expect(screen.queryByTestId('board-slot')).toBeNull();

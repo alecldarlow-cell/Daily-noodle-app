@@ -86,6 +86,7 @@ export function SweepScreen({ file }: { file: PuzzleFile<SweepData> }) {
         n={n}
         date={file.date}
         title={game.info.title}
+        solved={!game.info.again}
         hero={game.info.hero}
         note={game.info.note}
         share={game.info.share}

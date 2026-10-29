@@ -57,6 +57,7 @@ export function LinkScreen({ file }: { file: PuzzleFile<LinkData> }) {
         n={n}
         date={file.date}
         title={f.title}
+        solved={f.won}
         hero={names.join(', ')}
         heroNode={<GuessSquares squares={f.squares} names={names} />}
         note={f.note}

@@ -48,7 +48,8 @@ export function SettingsCard({ store = appStorage }: { store?: CachedStorage }) 
             Sound
           </Text>
           <Text style={[styles.sub, { color: t.faint }]}>
-            Tones in Tangle, Borders and Reckon, unless the phone is on silent
+            Tones in Tangle, Borders and Reckon, and a jingle when you solve the others, unless the
+            phone is on silent
           </Text>
         </View>
         <Switch

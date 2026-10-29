@@ -3,7 +3,7 @@ import { act, fireEvent, screen, waitFor } from '@testing-library/react-native';
 
 import { onFinish, type PuzzleFinish } from '@/shared/results';
 import { appStorage } from '@/shared/storage';
-import { mockSite, renderWithProviders } from '@/shared/testing';
+import { mockSite, renderWithProviders, sharedLine } from '@/shared/testing';
 
 import { DokuScreen } from '../components/DokuScreen';
 import { SAVE_KEY, STREAK_KEY } from '../model';
@@ -119,10 +119,10 @@ describe('GIVEN a Doku not yet played', () => {
         timeout: 3000,
       });
       expect(screen.getByText('All twelve tiles placed.')).toBeOnTheScreen();
-      expect(screen.getByTestId('finish-share-text')).toHaveTextContent(/^🔢 Doku #97 — 0:0\d$/);
+      expect(await sharedLine()).toMatch(/^🔢 Doku #97 — 0:0\d$/);
       expect(screen.getByText('The five given letters are shaded.')).toBeOnTheScreen();
       expect(screen.getByTestId('given-0-1')).toBeOnTheScreen();
-      expect(screen.getByText('Dokus played')).toBeOnTheScreen();
+      expect(screen.queryByText('Dokus played')).toBeNull();
       await fireEvent.press(screen.getByTestId('finish-next'));
       expect(mockRouter.back).toHaveBeenCalled();
     });
@@ -224,7 +224,7 @@ describe('GIVEN a Doku already finished on this phone', () => {
     await renderWithProviders(<DokuScreen file={file97} />);
     expect(screen.getByTestId('finish-sheet')).toBeOnTheScreen();
     expect(screen.getByTestId('finish-hero')).toHaveTextContent('1:27');
-    expect(screen.getByTestId('finish-share-text')).toHaveTextContent('🔢 Doku #97 — 1:27 · 🔥2');
+    expect(await sharedLine()).toBe('🔢 Doku #97 — 1:27 · 🔥2');
     expect(screen.queryByText('All twelve tiles placed.')).toBeNull();
     expect(finishes).toEqual([]);
     await fireEvent.press(screen.getByText('← Puzzles'));

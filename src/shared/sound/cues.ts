@@ -37,6 +37,8 @@ export const SOUND_FILES = {
   'reckon-lock-3': require('../../../assets/sounds/reckon-lock-3.wav') as number,
   'reckon-lock-4': require('../../../assets/sounds/reckon-lock-4.wav') as number,
   'reckon-done': require('../../../assets/sounds/reckon-done.wav') as number,
+  // The celebration jingle for Mini, Doku, Sweep, Path and Link (engines/finish.js JINGLE).
+  jingle: require('../../../assets/sounds/jingle.wav') as number,
 } as const;
 
 export type Cue = keyof typeof SOUND_FILES;

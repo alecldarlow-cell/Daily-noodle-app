@@ -70,12 +70,11 @@ describe('GIVEN a finish sheet under a provided board slot', () => {
       );
       expect(screen.getByText('slot mini 2026-10-24')).toBeOnTheScreen();
       expect(seen[0]).toMatchObject({ path: PATH, type: 'mini', date: '2026-10-24' });
-      expect(screen.getByTestId('finish-share-text')).toHaveTextContent(SHARE);
     });
   });
 
   describe('WHEN the slot tags the share line', () => {
-    it('THEN the line on screen and the line shared both end their first line with 🏆', async () => {
+    it('THEN the line shared ends its first line with 🏆', async () => {
       const spy = jest
         .spyOn(Share, 'share')
         .mockResolvedValue({ action: 'sharedAction', activityType: undefined });
@@ -84,8 +83,7 @@ describe('GIVEN a finish sheet under a provided board slot', () => {
           {sheet({ path: 'reports/2026-10-24-crossword-mini-0105-tag.html' })}
         </BoardSlotProvider>,
       );
-      expect(screen.getByTestId('finish-share-text')).toHaveTextContent(`${SHARE} 🏆`);
-      await fireEvent.press(screen.getByRole('button', { name: 'Share' }));
+      await fireEvent.press(screen.getByRole('button', { name: 'Share result' }));
       expect(spy).toHaveBeenCalledWith({ message: `${SHARE} 🏆\ndailynoodle.co.uk/mini` });
     });
   });

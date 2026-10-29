@@ -3,7 +3,7 @@ import { act, fireEvent, screen, waitFor } from '@testing-library/react-native';
 
 import { onFinish, type PuzzleFinish } from '@/shared/results';
 import { appStorage } from '@/shared/storage';
-import { mockSite, renderWithProviders } from '@/shared/testing';
+import { mockSite, renderWithProviders, sharedLine } from '@/shared/testing';
 
 import { PathScreen } from '../components/PathScreen';
 import { SAVE_KEY, START_MSG, STREAK_KEY } from '../model';
@@ -102,9 +102,9 @@ describe('GIVEN a Path not yet played', () => {
     await waitFor(() => expect(screen.getByTestId('finish-sheet')).toBeOnTheScreen(), {
       timeout: 3000,
     });
-    expect(screen.getByText('Thread complete')).toBeOnTheScreen();
+    expect(screen.getByTestId('finish-title')).toHaveTextContent(/ · Thread\ complete$/);
     expect(screen.getByText('One to 36 without a hint.')).toBeOnTheScreen();
-    expect(screen.getByTestId('finish-share-text')).toHaveTextContent(/^〰️ Path #92 — 0:0\d$/);
+    expect(await sharedLine()).toMatch(/^〰️ Path #92 — 0:0\d$/);
     expect(screen.getByTestId('path-recap')).toBeOnTheScreen();
     await fireEvent.press(screen.getByTestId('finish-next'));
     expect(mockRouter.back).toHaveBeenCalled();
@@ -123,7 +123,7 @@ describe('GIVEN a Path already finished on this phone', () => {
     );
     await renderWithProviders(<PathScreen file={file92} />);
     expect(screen.getByTestId('finish-hero')).toHaveTextContent('1:27');
-    expect(screen.getByTestId('finish-share-text')).toHaveTextContent('〰️ Path #92 — 1:27 · 🔥3');
+    expect(await sharedLine()).toBe('〰️ Path #92 — 1:27 · 🔥3');
     expect(finishes).toEqual([]);
   });
 });

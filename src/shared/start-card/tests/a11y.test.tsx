@@ -62,7 +62,7 @@ describe('GIVEN the start card with large text', () => {
 });
 
 describe('GIVEN the finish sheet with large text', () => {
-  it('THEN the outcome and result are capped, and each stat reads with its label', async () => {
+  it('THEN the label and result are capped, the streak is one line, and Share is a full tap target', async () => {
     await renderWithProviders(
       <FinishSheet
         type="mini"
@@ -81,12 +81,15 @@ describe('GIVEN the finish sheet with large text', () => {
         onNext={noop}
       />,
     );
-    expect(screen.getByRole('header', { name: 'Solved' }).props.maxFontSizeMultiplier).toBe(1.4);
+    expect(
+      screen.getByRole('header', { name: 'Mini 105 · Solved' }).props.maxFontSizeMultiplier,
+    ).toBe(1.4);
     expect(screen.getByTestId('finish-hero').props.maxFontSizeMultiplier).toBe(1.3);
-    expect(screen.getByLabelText('40 Minis played')).toBeOnTheScreen();
+    expect(screen.getByText('🔥 5-day streak')).toBeOnTheScreen();
     expect(screen.getByRole('link', { name: 'Back to Puzzles' })).toBeOnTheScreen();
     expect(
-      StyleSheet.flatten(screen.getByRole('button', { name: 'Share' }).props.style).minHeight,
-    ).toBe(44);
+      StyleSheet.flatten(screen.getByRole('button', { name: 'Share result' }).props.style)
+        .minHeight,
+    ).toBe(48);
   });
 });

@@ -3,7 +3,7 @@ import { act, fireEvent, screen } from '@testing-library/react-native';
 
 import { onFinish, type PuzzleFinish } from '@/shared/results';
 import { appStorage } from '@/shared/storage';
-import { mockSite, renderWithProviders } from '@/shared/testing';
+import { mockSite, renderWithProviders, sharedLine } from '@/shared/testing';
 
 import { LinkScreen } from '../components/LinkScreen';
 import { SAVE_KEY, STREAK_KEY } from '../model';
@@ -101,15 +101,13 @@ describe('GIVEN a Link not yet played', () => {
         },
       ]);
       expect(screen.getByTestId('finish-sheet')).toBeOnTheScreen();
-      expect(screen.getByText('Linked')).toBeOnTheScreen();
+      expect(screen.getByTestId('finish-title')).toHaveTextContent(/ · Linked$/);
       expect(screen.getAllByTestId(/^guess-(g\d|x)$/)).toHaveLength(5);
       expect(screen.getByTestId('guess-x')).toBeOnTheScreen();
       expect(
         screen.getByText('All four groups with one mistake. Weapons caught you out.'),
       ).toBeOnTheScreen();
-      expect(screen.getByTestId('finish-share-text')).toHaveTextContent(
-        /^🔗 Link #78 — 🟩❌🟦🟨⬛ · 0:\d\d$/,
-      );
+      expect(await sharedLine()).toMatch(/^🔗 Link #78 — 🟩❌🟦🟨⬛ · 0:\d\d$/);
       expect(screen.getByTestId('link-recap')).toBeOnTheScreen();
       expect(screen.queryByText('Play again (not recorded)')).toBeNull();
     });
@@ -149,7 +147,7 @@ describe('GIVEN a Link lost', () => {
     ])
       await guess(w, false);
     await run(3000);
-    expect(screen.getByText('So close.')).toBeOnTheScreen();
+    expect(screen.getByTestId('finish-title')).toHaveTextContent(/ · So\ close\.$/);
     expect(
       screen.getByText('You found one group of four. Weapons caught you out.'),
     ).toBeOnTheScreen();
@@ -160,7 +158,7 @@ describe('GIVEN a Link lost', () => {
     expect(screen.getByText('medium · replay')).toBeOnTheScreen();
     for (const g of G) await guess(g);
     await run(1500);
-    expect(screen.getByText('Linked')).toBeOnTheScreen();
+    expect(screen.getByTestId('finish-title')).toHaveTextContent(/ · Linked$/);
     expect(JSON.parse(appStorage.getItem(SAVE_KEY)!).done['DP·LINK·0078']).toEqual(lost);
     expect(finishes).toHaveLength(1);
   });
@@ -195,10 +193,8 @@ describe('GIVEN a Link already finished on this phone', () => {
     );
     await renderWithProviders(<LinkScreen file={file78} />);
     expect(screen.getByTestId('finish-sheet')).toBeOnTheScreen();
-    expect(screen.getByText('2:14')).toBeOnTheScreen();
-    expect(screen.getByTestId('finish-share-text')).toHaveTextContent(
-      '🔗 Link #78 — 🟩🟦🟨⬛ · 2:14 · 🔥3',
-    );
+    expect(screen.getByTestId('finish-streak')).toHaveTextContent('🔥 3-day streak');
+    expect(await sharedLine()).toBe('🔗 Link #78 — 🟩🟦🟨⬛ · 2:14 · 🔥3');
     expect(finishes).toEqual([]);
     await fireEvent.press(screen.getByText('← Puzzles'));
     expect(mockRouter.back).toHaveBeenCalled();

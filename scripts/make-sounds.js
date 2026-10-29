@@ -20,7 +20,8 @@
  * word chime with the word's; Reckon's result with the answer's zone), there is one file
  * per value the site can play. Reckon's Lock in and its result 120 ms later (the page's
  * setTimeout) are one file per zone, so no timer is needed. Mini, Doku, Sweep, Path and
- * Link have no sounds: their celebration jingle comes to the site first (AF-013).
+ * Link have no in-play sounds; their celebration jingle (`jingle`) is engines/finish.js
+ * `JINGLE` (website PR #40, AF-013), played on a fresh win only.
  */
 const fs = require('fs');
 const path = require('path');
@@ -83,6 +84,18 @@ for (let z = 0; z <= 4; z++)
 CUES['reckon-done'] = [523, 659, 784, 1047].map((f, i) =>
   reckonTone(f, i * 0.11, 0.35, 'triangle', 0.09),
 );
+
+// engines/finish.js JINGLE (AF-013): [f, t, dur, type, g], each played with the same tone()
+// envelope and a 50 ms tail. The celebration jingle for Mini, Doku, Sweep, Path and Link.
+const JINGLE = [
+  [523.25, 0, 0.16, 'triangle', 0.12],
+  [659.25, 0.09, 0.16, 'triangle', 0.12],
+  [783.99, 0.18, 0.16, 'triangle', 0.12],
+  [1046.5, 0.27, 0.6, 'triangle', 0.13],
+  [783.99, 0.27, 0.6, 'triangle', 0.08],
+  [1318.51, 0.36, 0.5, 'sine', 0.05],
+];
+CUES['jingle'] = JINGLE.map(([f, t, dur, type, g]) => tone(f, t, dur, type, g));
 
 /** Web Audio's built-in waves as Fourier sine series (the spec's PeriodicWave coefficients). */
 function coeff(type, n) {
@@ -161,7 +174,7 @@ function renderAll() {
   return files;
 }
 
-module.exports = { CUES, RATE, renderAll };
+module.exports = { CUES, JINGLE, RATE, renderAll };
 
 if (require.main === module) {
   const files = renderAll();
