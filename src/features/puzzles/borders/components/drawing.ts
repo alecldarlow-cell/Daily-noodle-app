@@ -133,3 +133,57 @@ figure{margin:0;text-align:center;min-width:0}.t{aspect-ratio:1;background:${s.t
 .x .t path{fill:transparent;stroke:${s.soft};stroke-dasharray:3 2}
 figcaption{margin-top:5px;line-height:1.25;overflow-wrap:anywhere}.x figcaption{color:${s.soft}}</style></head><body>${fig}</body></html>`;
 }
+
+/**
+ * The big locator map (engines/borders.js bigMap, AF-016, website S4): the world inset
+ * zoomed to the country's region, the country's outline carried from the question's
+ * Mercator frame onto the inset's Equal Earth map point by point and pinned on its own
+ * (x, y), drawn in the pin colour, with the pin and (once answered) the name. The page's
+ * code, verbatim but for its box.
+ */
+const BIG = `
+var EE={a1:1.340264,a2:-0.081106,a3:0.000893,a4:0.003796,m:Math.sqrt(3)/2,kx:112.4375,ky:-101.3006};
+function eqEarth(lon,lat){var r=Math.PI/180,t=Math.asin(EE.m*Math.sin(lat*r)),t2=t*t,t6=t2*t2*t2;
+ return [EE.kx*lon*r*Math.cos(t)/(EE.m*(EE.a1+3*EE.a2*t2+t6*(7*EE.a3+9*EE.a4*t2))),EE.ky*t*(EE.a1+EE.a2*t2+t6*(EE.a3+EE.a4*t2))];}
+function onWorld(c){
+ if(!/^[Mlz0-9 .,-]+$/.test(c.d))return null;
+ var r=Math.PI/180,pin=eqEarth(c.lo,c.la),ox=c.x*2-pin[0],oy=c.y*2-pin[1],rings=[];
+ var x=0,y=0,ring=null,re=/([Mlz])([^Mlz]*)/g,m;
+ var put=function(){var lon=c.lo+(x-c.tx)/(c.K*r),lat=(2*Math.atan(Math.exp((c.ty-y)/c.K))-Math.PI/2)/r,w=eqEarth(lon,lat);ring.push([w[0]+ox,w[1]+oy]);};
+ while((m=re.exec(c.d))){var n=(m[2].match(/-?[\\d.]+/g)||[]).map(Number);
+  if(m[1]==='M'){x=n[0];y=n[1];ring=[];rings.push(ring);put();for(var i=2;i+1<n.length;i+=2){x+=n[i];y+=n[i+1];put();}}
+  else if(m[1]==='l'&&ring){for(var j=0;j+1<n.length;j+=2){x+=n[j];y+=n[j+1];put();}}}
+ return rings.filter(function(g){return g.length>1});
+}
+function bigMap(svg,c,named){
+ var rings=onWorld(c)||[];svg.innerHTML='';
+ var H=Math.min(W.wh*2,270);
+ el('path',{d:W.s,fill:'#E4F1F1',stroke:'#1F3A4A','stroke-width':1.5,'vector-effect':'non-scaling-stroke'},svg);
+ el('path',{d:W.w,fill:'#E9DCAE',stroke:'#1F3A4A','stroke-width':1,'vector-effect':'non-scaling-stroke'},svg);
+ var x0=c.x*2,x1=c.x*2,y0=c.y*2,y1=c.y*2;
+ rings.forEach(function(g){g.forEach(function(p){if(p[0]<x0)x0=p[0];if(p[0]>x1)x1=p[0];if(p[1]<y0)y0=p[1];if(p[1]>y1)y1=p[1];});});
+ if(rings.length)el('path',{d:rings.map(function(g){return 'M'+g.map(function(p){return p[0].toFixed(1)+' '+p[1].toFixed(1)}).join('L')+'Z'}).join(''),'class':'bm-land','vector-effect':'non-scaling-stroke'},svg);
+ var ar=0.66,cx=(x0+x1)/2,cy=(y0+y1)/2;
+ var w=Math.max(84,(x1-x0)*3,(y1-y0)*3/ar);w=Math.min(600,w);var h=Math.min(H,w*ar);w=h/ar>w?w:Math.min(600,h/ar);
+ var vx=Math.max(0,Math.min(600-w,cx-w/2)),vy=Math.max(0,Math.min(H-h,cy-h/2));
+ svg.setAttribute('viewBox',vx.toFixed(1)+' '+vy.toFixed(1)+' '+w.toFixed(1)+' '+h.toFixed(1));
+ var u=w/600;
+ el('circle',{cx:c.x*2,cy:c.y*2,r:(9*u).toFixed(2),'class':'ring'},svg).style.strokeWidth=(3*u)+'px';
+ el('circle',{cx:c.x*2,cy:c.y*2,r:(5*u).toFixed(2),'class':'dot',stroke:'#fff','stroke-width':(2*u).toFixed(2)},svg);
+ if(named){var fs=Math.max(16*u,w*0.05),below=cy+(y1-y0)/2+fs*1.35,ty=below<vy+h-fs*0.4?below:Math.max(vy+fs*1.1,cy-(y1-y0)/2-fs*0.5);
+  var t=el('text',{x:Math.max(vx+w*0.2,Math.min(vx+w*0.8,cx)).toFixed(1),y:ty.toFixed(1),'class':'bm-name','text-anchor':'middle','font-size':fs.toFixed(2)},svg);t.textContent=c.n;
+  t.style.strokeWidth=(fs*0.22)+'px';}
+}
+`;
+
+/** The big map for question `q`: named once it has been answered (borders.css #bigMap). */
+export function bigMapHtml(q: BordersQ, named: boolean, c: BordersColors): string {
+  return `<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"><style>${css(c)}
+#bm{display:block;width:100%;height:100%;background:${c.sea}}
+.bm-land{fill:${c.pin};fill-opacity:.85;stroke:${c.ink};stroke-width:1.25px}
+.bm-name{font-family:Georgia,serif;font-style:italic;fill:${c.ink};stroke:${c.paper};paint-order:stroke;stroke-linejoin:round}
+#bm .ring{stroke:${c.pin}}</style></head><body>
+<svg id="bm" preserveAspectRatio="xMidYMid meet" aria-hidden="true"></svg>
+<script>var W=${esc(JSON.stringify(WORLD))},C=${esc(JSON.stringify(q))};${DRAW}${BIG}
+bigMap(document.getElementById('bm'),C,${named ? 'true' : 'false'});</script></body></html>`;
+}

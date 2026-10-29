@@ -246,6 +246,17 @@ export interface Deps {
 
 export type View = 'home' | 'play' | 'winModal';
 
+/**
+ * The traced tiles' flash after a word is entered (engines/tangle.js flashTiles, AF-027):
+ * green for every accepted word (rarer words too), gold only for the star word, grey
+ * "meh" for too short, already found or not in today's list; about 420 ms, 250 ms with
+ * reduced motion. Colours only: it never changes a move, a score or a save.
+ */
+export interface Flash {
+  tiles: number[];
+  cls: 'good' | 'gold' | 'meh';
+}
+
 export interface Toast {
   text: string;
   /** '' (hidden), 'on', 'on good', 'on gold' */
@@ -266,6 +277,10 @@ export interface TangleEngine {
     count: string;
     path: number[];
     toast: Toast;
+    /** The tiles flashing after the last word entered (AF-027), or null. */
+    flash: Flash | null;
+    /** The word last refused as not in today's list (the screen names it, AF-027). */
+    missed: string;
     /** The word just found (the list marks it), until the list is drawn again. */
     fresh: string | null;
     /** The result was shown at the end of the round, rather than reopened. */
@@ -356,6 +371,8 @@ export function createTangle(P: TangleData, deps: Deps): TangleEngine {
     count: '',
     path: [],
     toast: { text: '', cls: '' },
+    flash: null,
+    missed: '',
     fresh: null,
     freshResult: false,
   };
@@ -363,6 +380,7 @@ export function createTangle(P: TangleData, deps: Deps): TangleEngine {
   let drag: { id: number; start: number; moved: boolean; lx: number; ly: number } | null = null;
   let cdT: Timer = null;
   let toastT: Timer = null;
+  let flashT: Timer = null;
   let rects: Rect[] = [];
 
   const live = () =>
@@ -405,8 +423,22 @@ export function createTangle(P: TangleData, deps: Deps): TangleEngine {
     i >= 0 &&
     !st.path.includes(i) &&
     (st.path.length === 0 || NB[st.path[st.path.length - 1]!]!.includes(i));
+  function flashTiles(p: number[], cls: Flash['cls']) {
+    st.flash = { tiles: p.slice(), cls };
+    deps.clearTimeout(flashT);
+    flashT = deps.setTimeout(
+      () => {
+        st.flash = null;
+        deps.changed?.();
+      },
+      reduced() ? 250 : 420,
+    );
+  }
   function add(i: number) {
-    if (!st.path.length) st.toast = { ...st.toast, cls: '' };
+    if (!st.path.length) {
+      st.toast = { ...st.toast, cls: '' };
+      st.flash = null;
+    }
     st.path = [...st.path, i];
   }
   const wordOf = (p: number[]) => p.map((i) => low[i]).join('');
@@ -454,14 +486,18 @@ export function createTangle(P: TangleData, deps: Deps): TangleEngine {
     const w = wordOf(p);
     if (w.length < MINLEN) {
       toast('Too short');
+      flashTiles(p, 'meh');
       return { r: 'short', w };
     }
     if (R.found.includes(w)) {
       toast('Already found');
+      flashTiles(p, 'meh');
       return { r: 'dup', w };
     }
     if (!ALLW.has(w)) {
       toast("Not in today's list");
+      st.missed = w;
+      flashTiles(p, 'meh');
       return { r: 'none', w };
     }
     const g = pts(w);
@@ -469,8 +505,11 @@ export function createTangle(P: TangleData, deps: Deps): TangleEngine {
     R.score += g;
     persist();
     st.fresh = w;
+    // AF-027 (site S2): every accepted word flashes green, rarer words included; gold is
+    // only for the star word, and a rarer word says so in its message.
+    flashTiles(p, w === P.star ? 'gold' : 'good');
     if (w === P.star) toast('★ Longest word! +' + g, 'gold');
-    else toast('+' + g + ' ' + w.toUpperCase(), 'good');
+    else toast('+' + g + ' ' + w.toUpperCase() + (MAIN.has(w) ? '' : ' · rarer word'), 'good');
     return { r: MAIN.has(w) ? 'main' : 'bonus', w, pts: g };
   }
 

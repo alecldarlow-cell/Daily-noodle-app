@@ -126,7 +126,13 @@ export function TangleBoard({ engine, setRects, onHome }: TangleBoardProps) {
     : s.toast.cls.includes('good')
       ? pt.good
       : pt.bad;
-  useAnnounce(toastOn ? s.toast.text : '', `${toastOn}|${s.toast.text}|${top.score}|${top.words}`);
+  // AF-027: a word not accepted is named ("FOAM isn't in today's list"); the model keeps
+  // the page's own toast, which the replay compares.
+  const toastText =
+    s.toast.text === "Not in today's list" && s.missed
+      ? `${s.missed.toUpperCase()} isn’t in today’s list`
+      : s.toast.text;
+  useAnnounce(toastOn ? toastText : '', `${toastOn}|${toastText}|${top.score}|${top.words}`);
   /** A screen reader's double-tap on a tile: a tap there, as the page's tap-to-build has it. */
   const tapTile = (i: number) => {
     const [x, y] = centre(rects[i]!);
@@ -230,7 +236,7 @@ export function TangleBoard({ engine, setRects, onHome }: TangleBoardProps) {
                 accessibilityLiveRegion="polite"
                 style={[styles.toast, { color: toastColor }]}
                 testID="tangle-toast">
-                {s.toast.text}
+                {toastText}
               </Text>
             ) : null}
           </View>
@@ -253,6 +259,9 @@ export function TangleBoard({ engine, setRects, onHome }: TangleBoardProps) {
                   const r = rects[i]!;
                   const on = s.path.includes(i);
                   const last = on && s.path[s.path.length - 1] === i;
+                  // The word just entered: its tiles flash (AF-027), under any new trace.
+                  const fl =
+                    !on && s.flash && s.flash.tiles.includes(i) ? tc.flash[s.flash.cls] : null;
                   return (
                     <View
                       key={i}
@@ -283,9 +292,15 @@ export function TangleBoard({ engine, setRects, onHome }: TangleBoardProps) {
                           top: r.top,
                           width: r.width,
                           height: r.height,
-                          backgroundColor: last ? tc.thread : on ? tc.threadT : pt.card,
-                          borderColor: on ? tc.thread : pt.lineSoft,
-                          borderWidth: last ? 3 : on ? 2 : 1,
+                          backgroundColor: last
+                            ? tc.thread
+                            : on
+                              ? tc.threadT
+                              : fl
+                                ? fl.bg
+                                : pt.card,
+                          borderColor: on ? tc.thread : fl ? fl.edge : pt.lineSoft,
+                          borderWidth: last ? 3 : on || fl ? 2 : 1,
                         },
                       ]}>
                       {hide ? null : (
