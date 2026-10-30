@@ -756,3 +756,30 @@ below when it finishes.
 
 - **Merged** 29 Oct after Release A was out. CI: `replay path` failed once with an unreadable log, then passed on the one re-run; it had been green on the same code before main's docs-only merge.
 - **Store build:** queued through Release ("Run workflow", production, android) as run [40953273792](https://github.com/alecldarlow-cell/Daily-noodle-app/actions/runs/40953273792) on `78c26e1`. The EAS build id is only in that run's log, which this workspace can't read; find it on expo.dev. Alec uploads it to Play's closed track. After that, check the runtime is `ea55e856…` and drop "pending" from `store/runtime.json`.
+
+### 30 Oct 2026 — Second unattended run: website S1–S6, app A5, A8, A9, A10, and one production update
+
+The previous run couldn't push to the website. This one could, so the website went first, then the app.
+
+- **Website (dailynoodle), all live 29 Oct, each Build feed run and live check green:**
+  - [#40](https://github.com/alecldarlow-cell/dailynoodle/pull/40) S3: new finish screen (AF-019, AF-015, AF-022), rank line, and the celebration jingle with a Sound switch (AF-013, key `dn-sound`).
+  - [#41](https://github.com/alecldarlow-cell/dailynoodle/pull/41) S5: Tangle without times (AF-025), slim day line (AF-017), "Daily Noodle" invites; join.html passes `p`/`d` on.
+  - [#44](https://github.com/alecldarlow-cell/dailynoodle/pull/44) S2: Link pauses while away and keeps its round in `digi-link-v1.cur` (R10, AF-029), waiting clock (AF-028); Tangle green flash (AF-027); Mini skips filled squares (AF-031).
+  - [#42](https://github.com/alecldarlow-cell/dailynoodle/pull/42) S1: sync revisions with compare-and-swap and pull-merge-retry (H2), plus the account wording (AF-001, AF-004).
+  - [#45](https://github.com/alecldarlow-cell/dailynoodle/pull/45) S4: Borders big map (AF-016), Path "path" wording (AF-026; 657 forthcoming blurbs from 1 Nov).
+  - [#46](https://github.com/alecldarlow-cell/dailynoodle/pull/46) S6: Path start card and guide wording; SITE.md assetlinks labels corrected.
+- **Live database:** migration `sync_revision` (additive): `rev` column, `sync.rev_seq`, `sync_pull_rev`/`sync_push_rev` (signed-in only), old `sync_push` bumps the revision. Dry-run in a rolled-back transaction first; all 42 rows for 3 accounts kept. Security advisor: the same expected notices as 28 Oct.
+- **App:**
+  - [#82](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/82): leaderboard shares link join.html (AF-010).
+  - [#83](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/83) A5: finish screen matching S3, plus the jingle.
+  - [#85](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/85) A8: Borders map, Path wording, Tangle tile flash, Mini skip-filled.
+  - [#86](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/86) A10: Link pause and resume. The round is kept in `digi-link-v1.cur`, the website's format, instead of a new key, so the replay can compare the whole save.
+  - [#84](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/84) A9: sync revisions (R3), and "Keep this one" remembered under the new app-only key `noodle-app-league-keep` (R4).
+  - A5, A8, A10 and A9 were stacked and merged together: once S2 and S4 were live, only the full stack could match the website. The stack top's CI was green on `check` and all eight replays; the tree merged to main ([07d8302](https://github.com/alecldarlow-cell/Daily-noodle-app/commit/07d8302d4033f80147c1966663b21a299d7b5290)) is identical to the one tested, and main's CI was green.
+- **Replay expectations changed only for:** the Link timer pause and waiting clock, the Mini skip-filled rule, and the finish-screen readers (screen-reading only, no model change).
+- **Release:** production update run [41005008387](https://github.com/alecldarlow-cell/Daily-noodle-app/actions/runs/41005008387) published main `07d8302` at 04:51 London, 30 Oct; its CI gate passed. It targets the 0.3.0 runtime (`ea55e856…`), so testers get it once the 0.3.0 Play build is installed. No store build.
+- **Left / needs Alec:**
+  - G2: automated deletion was parked by Alec (email route stays). Site PR #43 is closed unmerged; its branch and SQL are kept.
+  - AF-024: Play's app signing key (`0A:E9:05:AD…`) is already in assetlinks.json; still to check `pm get-app-links` on a Play-installed phone.
+  - Yarn still flashes rarer words yellow: change it?
+  - Not seen on a real phone: the Borders big map, the jingle on silent, the Link pause through the lock screen, and two-device sync.
