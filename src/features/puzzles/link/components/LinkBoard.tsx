@@ -277,7 +277,8 @@ export function LinkBoard({ state, dispatch, past = false }: LinkBoardProps) {
 
 const styles = StyleSheet.create({
   wrap: { flex: 1 },
-  board: { flex: 1, gap: 7 },
+  // Rows sit at the bottom of the spare height, by the controls (AF-032).
+  board: { flex: 1, gap: 7, justifyContent: 'flex-end' },
   row: { flexDirection: 'row', gap: 8, flex: 1, maxHeight: 96 },
   tile: { flex: 1, minHeight: 56 },
   face: {
