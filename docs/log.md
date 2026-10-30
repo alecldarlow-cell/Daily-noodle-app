@@ -790,3 +790,8 @@ The previous run couldn't push to the website. This one could, so the website we
 - **Change** (Alec's call 30 Oct, replacing his 26 Oct top alignment): the shared `BOARD_SLOT` now uses `justifyContent: 'flex-end'`, so Mini, Doku, Sweep and Path hold the board at the bottom of the spare height, just above their controls. Link's rows and Tangle's board do the same. On short phones there is no spare height, so nothing moves. Board sizing is unchanged.
 - **Tests proved:** `layout.test.tsx` expects the bottom alignment for all four board players, and Link and Tangle (it failed on the old alignment). `check` green (1421 tests); runtime test green.
 - **Ship:** JS only; production update after merge (reaches testers on 0.3.0).
+
+### 30 Oct 2026 — 0.3.0 on Google Play (Alpha)
+
+- Alec uploaded the 0.3.0 production `.aab` (version code 7) to Closed testing – Alpha. Play blocked review with "Missing sign-in details"; the declaration now says sign-in is restricted, with one entry explaining it is optional, magic-link only and not needed to review (Alec's choice, 30 Oct). Approved and published the same evening.
+- `store/runtime.json` no longer says pending; the handover's Play notes are updated. Runtime `ea55e856…` as recorded on 29 Oct; not re-read from EAS in this session.
