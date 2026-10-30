@@ -34,6 +34,15 @@ export function getPid(store: CachedStorage = appStorage): string {
   return boardPid(store, () => uuid.v4());
 }
 
+/**
+ * Whether the install still plays as `pid`. An async flow captures the board id when it
+ * starts and writes its answer only if this holds, so a reply for one player never lands
+ * on another adopted meanwhile (claim, sync, "Use my link").
+ */
+export function stillPlayer(pid: string, store: CachedStorage = appStorage): boolean {
+  return loadBoard(store).pid === pid;
+}
+
 export function setLeagues(list: BoardLeague[], store: CachedStorage = appStorage): void {
   patchBoard({ leagues: list || [] }, store);
 }

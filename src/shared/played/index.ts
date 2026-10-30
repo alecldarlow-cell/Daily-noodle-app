@@ -1,5 +1,5 @@
 export { useKept, usePlayed } from './usePlayed';
-export { openPuzzle } from './openPuzzle';
+export { openPuzzle, type Opener } from './openPuzzle';
 export {
   fileOf,
   heldElsewhere,

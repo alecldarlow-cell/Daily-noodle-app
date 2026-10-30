@@ -255,6 +255,66 @@ describe('GIVEN a personal link opened in an install with saves of its own', () 
     });
   });
 
+  it('THEN kept rounds and Tangle days merge as the site does: newer Link round, finished day wins', () => {
+    const round = (at: number, f: number[]) => ({
+      id: 'L',
+      f,
+      m: 0,
+      g: [],
+      tr: [],
+      l: [],
+      s: 9,
+      at,
+    });
+    const day = (state: string, score: number) => ({ state, found: [], left: 0, score });
+    const cases: [Record<string, unknown>, Record<string, unknown>][] = [
+      [
+        { v: 1, cur: round(1, [1]) },
+        { v: 1, cur: round(2, [2]) },
+      ],
+      [
+        { v: 1, cur: round(3, [3]) },
+        { v: 1, cur: round(2, [2]) },
+      ],
+      [
+        { v: 1, cur: null },
+        { v: 1, cur: round(2, [2]) },
+      ],
+      [
+        { v: 1, cur: { id: 'B', i: 3 } },
+        { v: 1, cur: { id: 'B', i: 7 } },
+      ],
+      [
+        { v: 1, days: { T: day('playing', 1) } },
+        { v: 1, days: { T: day('done', 2) } },
+      ],
+      [
+        { v: 1, days: { T: day('done', 1) } },
+        { v: 1, days: { T: day('playing', 2) } },
+      ],
+      [
+        { v: 1, days: { T: day('done', 1) } },
+        { v: 1, days: { T: day('done', 2), U: 5 } },
+      ],
+    ];
+    for (const [here, there] of cases) {
+      const d = { 'digi-link-v1': JSON.stringify(there) };
+      const hash = `#dnmove=${b64urlEncode(JSON.stringify({ v: 1, d, h: '' }))}`;
+      const browser = new WebStorage({ 'digi-link-v1': JSON.stringify(here) });
+      const app = new WebStorage({ 'digi-link-v1': JSON.stringify(here) });
+      runMove(browser, hash);
+      importMove(app, unpackMove(`https://dailynoodle.co.uk/board.html${hash}`)!, () => 0);
+      expect(app.dump()).toEqual(browser.dump());
+    }
+    // And the rules themselves, so a site change can't make both wrong together.
+    const a = new WebStorage({ 'digi-link-v1': JSON.stringify(cases[0]![0]) });
+    importMove(a, { v: 1, d: { 'digi-link-v1': JSON.stringify(cases[0]![1]) } }, () => 0);
+    expect(JSON.parse(a.getItem('digi-link-v1')!).cur.f).toEqual([2]);
+    const t = new WebStorage({ 'digi-link-v1': JSON.stringify(cases[4]![0]) });
+    importMove(t, { v: 1, d: { 'digi-link-v1': JSON.stringify(cases[4]![1]) } }, () => 0);
+    expect(JSON.parse(t.getItem('digi-link-v1')!).days.T.state).toBe('done');
+  });
+
   it('THEN anything that is not a personal link is refused', () => {
     expect(unpackMove('https://dailynoodle.co.uk/board.html?join=ABCD2345&v=2')).toBeNull();
     expect(unpackMove('#dnmove=!!!')).toBeNull();

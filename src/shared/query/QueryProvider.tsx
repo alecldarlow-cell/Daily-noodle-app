@@ -44,8 +44,15 @@ export function createQueryClient(): QueryClient {
   });
 }
 
-/** Online unless the phone says it has no connection (an unknown state counts as online). */
-export const isOnline = (s: Pick<NetInfoState, 'isConnected'>) => s.isConnected !== false;
+/**
+ * Online unless the phone says it has no connection, or that the Internet can't be reached
+ * through it (Wi-Fi still joined but the line down, code review 30 Oct 2026); an unknown
+ * state (null) counts as online. Queries run regardless (networkMode 'always'): this only
+ * decides when "the connection came back" reloads what failed.
+ */
+export const isOnline = (
+  s: Pick<NetInfoState, 'isConnected'> & Partial<Pick<NetInfoState, 'isInternetReachable'>>,
+) => s.isConnected !== false && s.isInternetReachable !== false;
 
 /**
  * React Query's network status from the phone's (NetInfo, ADR-008), as TanStack's React

@@ -19,7 +19,7 @@ import { onFinish, type PuzzleFinish } from '@/shared/results';
 import { appStorage } from '@/shared/storage';
 
 import { boardBackfill, boardSubmit } from '../api/board';
-import { getPid, loadBoard, saveBoard } from './boardStore';
+import { getPid, loadBoard, saveBoard, stillPlayer } from './boardStore';
 import { recordSubmission } from './submissions';
 import { BOARD_QUERY } from './useLeagues';
 
@@ -50,13 +50,18 @@ export function useSubmitFinishes(): void {
   );
 }
 
-/** Run a backfill plan's calls in order, then save how far it got. Returns rows added. */
+/**
+ * Run a backfill plan's calls in order as the player it started for, then save how far it
+ * got (unless the install has adopted another player meanwhile). Returns rows added.
+ */
 export async function runBackfill(plan: BackfillPlan): Promise<number> {
+  const pid = getPid();
   let total = 0;
   for (const c of backfillCalls(plan)) {
-    total += Number(await boardBackfill(getPid(), c.aid, c.rows)) || 0;
+    total += Number(await boardBackfill(pid, c.aid, c.rows)) || 0;
   }
-  saveBoard(afterBackfill(loadBoard(), plan));
+  // A backfill for a player the install has since left is not recorded on the new one.
+  if (stillPlayer(pid)) saveBoard(afterBackfill(loadBoard(), plan));
   return total;
 }
 

@@ -133,6 +133,10 @@ function parse(s: unknown): unknown {
     return undefined;
   }
 }
+/** A day whose round is over (Tangle's `days[id].state`). */
+export function finished(d: unknown): boolean {
+  return isObj(d) && d.state === 'done';
+}
 function isStreak(o: unknown): o is Obj {
   return isObj(o) && 'last' in o && ('streak' in o || 'n' in o);
 }
@@ -144,8 +148,8 @@ const DAY_MS = 864e5;
  * Merge a save from the link (`old`) into the one already here, as dn-track.js
  * `mergeObj`: finished puzzles, days and atlas entries add up (what's here wins an id
  * both hold, so the first result kept here stays); for a streak keep the more recent
- * run and the higher best, recounting the run from both lists of days; anything else
- * keeps what's here.
+ * run and the higher best, recounting the run from both lists of days; for an unfinished
+ * round (`cur`) stamped with `at`, the newer one; anything else keeps what's here.
  */
 export function mergeMoved(here: Obj, old: Obj): Obj {
   const out: Obj = {};
@@ -181,9 +185,21 @@ export function mergeMoved(here: Obj, old: Obj): Obj {
   for (const k in old) {
     if (!(k in out)) out[k] = old[k];
     else if (UNION[k] && isObj(out[k]) && isObj(old[k])) {
-      out[k] = Object.assign({}, old[k], out[k]);
+      const u: Obj = Object.assign({}, old[k], out[k]);
+      // A day finished there beats the same day still in play here (Tangle, 30 Oct 2026).
+      if (k === 'days')
+        for (const j in old[k] as Obj)
+          if (finished((old[k] as Obj)[j]) && !finished((out[k] as Obj)[j]))
+            u[j] = (old[k] as Obj)[j];
+      out[k] = u;
     } else if (k === 'streak' && isObj(out[k]) && isObj(old[k])) {
       out[k] = mergeMoved(out[k] as Obj, old[k] as Obj);
+    } else if (k === 'cur' && isObj(old[k]) && Number(old[k].at) > 0) {
+      // An unfinished round stamped with when it was saved (Link, 29 Oct 2026): the newer
+      // one wins. Rounds without a stamp (Borders, Reckon) keep what's here.
+      const here = out[k];
+      if (here == null || (isObj(here) && Number(old[k].at) > (Number(here.at) || 0)))
+        out[k] = old[k];
     }
   }
   return out;

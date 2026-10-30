@@ -8,7 +8,7 @@ import { renderWithProviders } from '@/shared/testing';
 import * as api from '../api/board';
 import { LeagueResults } from '../components/LeagueResults';
 import { runBackfill } from '../hooks/useResults';
-import { board, clearStore, FAMILY, PID, setBoard } from './helpers';
+import { board, clearStore, FAMILY, OTHER, PID, setBoard } from './helpers';
 
 jest.mock('../api/board');
 const m = jest.mocked(api);
@@ -107,5 +107,27 @@ describe('GIVEN a history copy with tracker ids from a personal link', () => {
       [PID, b, []],
     ]);
     expect(board().fill).toEqual({ n: 1, aids: [a, b] });
+  });
+});
+
+describe('GIVEN a backfill running for one player', () => {
+  describe('WHEN the install adopts another player before it finishes', () => {
+    it('THEN the old player’s fill is not written onto the new player', async () => {
+      setBoard({ pid: PID, leagues: [FAMILY], fill: { n: 0, aids: [] } });
+      const a = '00000000-0000-4000-8000-0000000000a1';
+      let answer!: (n: number) => void;
+      m.boardBackfill.mockReturnValueOnce(
+        new Promise((r) => (answer = r)) as ReturnType<typeof api.boardBackfill>,
+      );
+      const rows = [{ outcome: 'solved', secs: 9, path }];
+      const run = runBackfill({ rows, aids: [a], n: 1, done: [] });
+      await waitFor(() => expect(m.boardBackfill).toHaveBeenCalledWith(PID, a, rows));
+
+      setBoard({ pid: OTHER, leagues: [FAMILY], fill: { n: 4, aids: [] } });
+      answer(2);
+      await expect(run).resolves.toBe(2);
+      expect(board().pid).toBe(OTHER);
+      expect(board().fill).toEqual({ n: 4, aids: [] });
+    });
   });
 });

@@ -1,4 +1,4 @@
-import { BOARD_KEY, importMove, keptPids, type KV, type MovePayload } from '@noodle/core';
+import { BOARD_KEY, finished, importMove, keptPids, type KV, type MovePayload } from '@noodle/core';
 
 import { missingFunction, type RevDoc, type SyncApi } from '../api/syncApi';
 
@@ -63,13 +63,23 @@ function mergeIn(
   return mine;
 }
 
-/** A puzzle the account already has a result for keeps the account's (the first one stored). */
+/**
+ * A puzzle the account already has a result for keeps the account's (the first one stored),
+ * but a day finished here replaces the account's copy of it still in play (Tangle, as the
+ * website's dn-sync.js since 30 Oct 2026), or the account would keep offering "Resume".
+ */
 const UNION = ['done', 'days', 'found'];
 function forAccount(mine: Doc, theirs: Doc | undefined): Doc {
   if (!isObj(theirs)) return mine;
   const out: Doc = { ...mine };
   for (const k of UNION)
-    if (isObj(mine[k]) && isObj(theirs[k])) out[k] = { ...(mine[k] as Doc), ...(theirs[k] as Doc) };
+    if (isObj(mine[k]) && isObj(theirs[k])) {
+      const u: Doc = { ...(mine[k] as Doc), ...(theirs[k] as Doc) };
+      if (k === 'days')
+        for (const [j, d] of Object.entries(mine[k] as Doc))
+          if (finished(d) && !finished((theirs[k] as Doc)[j])) u[j] = d;
+      out[k] = u;
+    }
   return out;
 }
 

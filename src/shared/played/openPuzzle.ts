@@ -11,15 +11,27 @@ export interface PuzzleRef {
   path: string;
 }
 
-const go = (type: PuzzleType, path: string) =>
-  router.push({ pathname: '/play/[type]/[file]', params: { type, file: fileOf(path) } });
+/** How a puzzle's route is opened: pushed above the list (cards), or swapped in (a player). */
+export type Opener = (href: {
+  pathname: '/play/[type]/[file]';
+  params: { type: PuzzleType; file: string };
+}) => void;
+
+const push: Opener = (href) => router.push(href);
 
 /**
- * Opens a puzzle from its card. When another puzzle of the type holds the type's one kept
- * round (`held`: its name and path when the list knows it), asks first, since playing this
- * one replaces that round (AF-020): Cancel, go to the other one, or start this one.
+ * Opens a puzzle from its card (pushed), or from a player's Play more (`open` swaps it in).
+ * When another puzzle of the type holds the type's one kept round (`held`: its name and
+ * path when the list knows it), asks first, since playing this one replaces that round
+ * (AF-020): Cancel, go to the other one, or start this one.
  */
-export function openPuzzle(target: PuzzleRef, held: { name?: string; path?: string } | null) {
+export function openPuzzle(
+  target: PuzzleRef,
+  held: { name?: string; path?: string } | null,
+  open: Opener = push,
+) {
+  const go = (type: PuzzleType, path: string) =>
+    open({ pathname: '/play/[type]/[file]', params: { type, file: fileOf(path) } });
   if (!held) {
     go(target.type, target.path);
     return;
