@@ -23,6 +23,29 @@ describe('GIVEN the phone’s network status', () => {
     });
   });
 
+  describe('WHEN the phone stays on Wi-Fi but the Internet can’t be reached', () => {
+    it('THEN that counts as offline, and reachable again (or not yet known) as online', () => {
+      expect(isOnline({ isConnected: true, isInternetReachable: false })).toBe(false);
+      expect(isOnline({ isConnected: true, isInternetReachable: true })).toBe(true);
+      expect(isOnline({ isConnected: true, isInternetReachable: null })).toBe(true);
+    });
+
+    it('THEN React Query goes offline and back online when the line returns', () => {
+      let report: (s: { isConnected: boolean; isInternetReachable: boolean }) => void = () =>
+        undefined;
+      addListener.mockImplementation((fn: typeof report) => {
+        report = fn;
+        return jest.fn();
+      });
+      const stop = followNetwork();
+      report({ isConnected: true, isInternetReachable: false });
+      expect(onlineManager.isOnline()).toBe(false);
+      report({ isConnected: true, isInternetReachable: true });
+      expect(onlineManager.isOnline()).toBe(true);
+      stop();
+    });
+  });
+
   describe('WHEN followNetwork listens and NetInfo reports a change', () => {
     it('THEN React Query’s online state follows it, and stopping unsubscribes NetInfo', () => {
       const unsubscribe = jest.fn();

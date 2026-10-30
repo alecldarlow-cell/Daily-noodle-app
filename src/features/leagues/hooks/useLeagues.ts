@@ -37,19 +37,30 @@ import {
 import { BoardError } from '../api/errors';
 import { fetchPuzzleCards } from '../api/feed';
 import type { BoardView, DayBoard, Overall, Records } from '../types';
-import { getPid, loadBoard, saveBoard, setCurrent, setLeagues, useBoardState } from './boardStore';
+import {
+  getPid,
+  loadBoard,
+  saveBoard,
+  setCurrent,
+  setLeagues,
+  stillPlayer,
+  useBoardState,
+} from './boardStore';
 
 export const BOARD_QUERY = ['board'] as const;
 
-/** The server's view of this player's leagues, saved as `refresh()` saves it. */
-export async function refreshLeagues(): Promise<void> {
-  const list = await boardMine(getPid());
-  setLeagues(leaguesFromMine(list));
+/**
+ * The server's view of `pid`'s leagues, saved as `refresh()` saves it, unless the install
+ * has adopted another player while it was on its way.
+ */
+export async function refreshLeagues(pid: string = getPid()): Promise<void> {
+  const list = await boardMine(pid);
+  if (stillPlayer(pid)) setLeagues(leaguesFromMine(list));
 }
 
 /** Ask the server for the leagues again, and redraw every board. */
-function refreshAll(qc: QueryClient) {
-  return refreshLeagues().finally(() => qc.invalidateQueries({ queryKey: BOARD_QUERY }));
+function refreshAll(qc: QueryClient, pid: string) {
+  return refreshLeagues(pid).finally(() => qc.invalidateQueries({ queryKey: BOARD_QUERY }));
 }
 
 /**
@@ -82,7 +93,7 @@ export function useMine(enabled: boolean) {
   return useQuery({
     queryKey: [...BOARD_QUERY, 'mine', pid],
     queryFn: async () => {
-      await refreshLeagues();
+      await refreshLeagues(pid);
       return loadBoard().leagues ?? [];
     },
     enabled: enabled && !!pid,
@@ -96,14 +107,15 @@ export function useBoardData(code: string | undefined, view: BoardView, date: st
   return useQuery<DayBoard | Overall>({
     queryKey: [...BOARD_QUERY, view === 'all' ? 'overall' : 'day', pid, code, view, date],
     queryFn: async () => {
+      const me = getPid();
       try {
         return view === 'all'
-          ? await boardOverall(getPid(), code!, date)
-          : await boardDay(getPid(), code!, view as BoardTypeId, date);
+          ? await boardOverall(me, code!, date)
+          : await boardDay(me, code!, view as BoardTypeId, date);
       } catch (e) {
         // Off the league (left, removed, closed, new code): the server's list is the truth.
         if (e instanceof BoardError && (e.code === 'not_member' || e.code === 'no_league'))
-          await refreshLeagues().catch(() => {});
+          await refreshLeagues(me).catch(() => {});
         throw e;
       }
     },
@@ -121,11 +133,12 @@ export function useBoardRecords(code: string | undefined) {
   return useQuery<Records>({
     queryKey: [...BOARD_QUERY, 'records', pid, code],
     queryFn: async () => {
+      const me = getPid();
       try {
-        return await boardRecords(getPid(), code!);
+        return await boardRecords(me, code!);
       } catch (e) {
         if (e instanceof BoardError && (e.code === 'not_member' || e.code === 'no_league'))
-          await refreshLeagues().catch(() => {});
+          await refreshLeagues(me).catch(() => {});
         throw e;
       }
     },
@@ -156,19 +169,20 @@ export function usePuzzleCards(enabled = true) {
 }
 
 /** Set (or change) this player's PIN. A failure after joining never undoes the join. */
-async function setPin(pin: string) {
-  await boardPinSet(getPid(), pin);
-  await refreshLeagues();
+async function setPin(pin: string, pid: string = getPid()) {
+  await boardPinSet(pid, pin);
+  await refreshLeagues(pid);
 }
 
 export function useCreateLeague() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (v: { name: string; nick: string; pin?: string }) => {
-      const l = await boardCreate(getPid(), v.name, v.nick);
-      await refreshLeagues();
-      setCurrent(l.code);
-      if (v.pin) await setPin(v.pin).catch(() => {});
+      const pid = getPid();
+      const l = await boardCreate(pid, v.name, v.nick);
+      await refreshLeagues(pid);
+      if (stillPlayer(pid)) setCurrent(l.code);
+      if (v.pin) await setPin(v.pin, pid).catch(() => {});
       return l;
     },
     onSettled: () => qc.invalidateQueries({ queryKey: BOARD_QUERY }),
@@ -179,10 +193,11 @@ export function useJoinLeague() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (v: { code: string; nick: string; pin?: string }) => {
-      const l = await boardJoin(getPid(), v.code, v.nick);
-      await refreshLeagues();
-      setCurrent(l.code);
-      if (v.pin) await setPin(v.pin).catch(() => {});
+      const pid = getPid();
+      const l = await boardJoin(pid, v.code, v.nick);
+      await refreshLeagues(pid);
+      if (stillPlayer(pid)) setCurrent(l.code);
+      if (v.pin) await setPin(v.pin, pid).catch(() => {});
       return l;
     },
     onSettled: () => qc.invalidateQueries({ queryKey: BOARD_QUERY }),
@@ -192,7 +207,7 @@ export function useJoinLeague() {
 export function useSetPin() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: setPin,
+    mutationFn: (pin: string) => setPin(pin),
     onSettled: () => qc.invalidateQueries({ queryKey: BOARD_QUERY }),
   });
 }
@@ -202,9 +217,10 @@ export function useLeaveLeague() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (code: string) => {
-      await boardLeave(getPid(), code);
-      await refreshLeagues();
-      setCurrent('');
+      const pid = getPid();
+      await boardLeave(pid, code);
+      await refreshLeagues(pid);
+      if (stillPlayer(pid)) setCurrent('');
     },
     onSettled: () => qc.invalidateQueries({ queryKey: BOARD_QUERY }),
   });
@@ -229,7 +245,7 @@ export function useOwnerAction() {
           break;
         case 'new_code': {
           const r = await boardNewCode(pid, a.code);
-          setCurrent(r.code);
+          if (stillPlayer(pid)) setCurrent(r.code);
           break;
         }
         case 'remove':
@@ -237,12 +253,12 @@ export function useOwnerAction() {
           break;
         case 'close':
           await boardClose(pid, a.code);
-          setCurrent('');
+          if (stillPlayer(pid)) setCurrent('');
           break;
         case 'let_back':
           return boardLetBack(pid, a.code, a.nick);
       }
-      await refreshAll(qc);
+      await refreshAll(qc, pid);
       return true;
     },
   });
@@ -268,8 +284,9 @@ export function useClaim() {
       const { state, pending } = adoptClaim(loadBoard(), r);
       saveBoard(state);
       if (!pending) {
-        await refreshLeagues();
-        setCurrent(r.code!);
+        const pid = getPid();
+        await refreshLeagues(pid);
+        if (stillPlayer(pid)) setCurrent(r.code!);
       }
       return { nick: r.nick!, needsPin: !!r.needs_pin, pending };
     },

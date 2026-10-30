@@ -132,8 +132,12 @@ function MemberLink({
   });
   const line = q.isSuccess ? momentLine(q.data, typeName, pdate === today) : null;
   const record = !!line?.record;
+  // The share line carries 🏆 only while the line shows a record: a record beaten since (asked
+  // again after a minute), another player, or leaving the league takes it off (review 30 Oct).
   useEffect(() => {
-    if (record) onTag('🏆');
+    if (!record) return;
+    onTag('🏆');
+    return () => onTag('');
   }, [record, onTag]);
 
   // That league's board, on this puzzle and day (dn-board.js setCurrent, then board.html):

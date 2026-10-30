@@ -211,6 +211,37 @@ describe('GIVEN a finished puzzle’s sheet', () => {
     });
   });
 
+  describe('WHEN the sheet held a league record and the record no longer stands (code review)', () => {
+    const recordToday = () =>
+      m.boardMoment.mockResolvedValue({
+        type: 'mini',
+        pb: true,
+        records: [{ code: FAMILY.code, name: 'Family' }],
+      });
+
+    it('THEN a record beaten since takes 🏆 off the share line when it is asked again', async () => {
+      setBoard({ pid: PID, leagues: [FAMILY], cur: FAMILY.code });
+      recordToday();
+      const { client } = await slot(pathOn(today));
+      await waitFor(() => expect(tags).toEqual(['🏆']));
+      m.boardMoment.mockResolvedValue({ type: 'mini', pb: true, records: [] });
+      await act(async () => {
+        await client.invalidateQueries();
+      });
+      await waitFor(() => expect(tags[tags.length - 1]).toBe(''));
+      expect(screen.queryByText(/league record/)).toBeNull();
+    });
+
+    it('THEN leaving the league takes 🏆 off too', async () => {
+      setBoard({ pid: PID, leagues: [FAMILY], cur: FAMILY.code });
+      recordToday();
+      await slot(pathOn(today));
+      await waitFor(() => expect(tags).toEqual(['🏆']));
+      await act(async () => setBoard({ pid: PID, leagues: [], cur: '' }));
+      await waitFor(() => expect(tags).toEqual(['🏆', '']));
+    });
+  });
+
   describe('WHEN a reopened puzzle from an earlier day holds a league record', () => {
     it('THEN it reads “League record”, asked straight away (nothing was sent)', async () => {
       setBoard({ pid: PID, leagues: [FAMILY] });

@@ -89,3 +89,22 @@ describe('GIVEN Today showing a list kept from earlier while offline', () => {
     });
   });
 });
+
+describe('GIVEN Today offline while the phone stays on Wi-Fi with the line down', () => {
+  describe('WHEN the Internet comes back on the same Wi-Fi', () => {
+    it('THEN today’s puzzles load without a tap', async () => {
+      mockSite({ 'puzzles-today.json': offline, 'feed-lite.json': offline });
+      const { client } = await renderWithProviders(<TodayScreen />);
+      await waitFor(() => expect(screen.getByTestId('today-offline')).toBeOnTheScreen(), {
+        timeout: 20_000,
+      });
+      await settled(client);
+      mockSite({ 'puzzles-today.json': todayList(), 'feed-lite.json': offline });
+      const wifi = network as unknown as (s: Partial<NetInfoState>) => void;
+      await act(async () => wifi({ isConnected: true, isInternetReachable: false }));
+      await act(async () => wifi({ isConnected: true, isInternetReachable: true }));
+      await waitFor(() => expect(screen.getByTestId('today-mini')).toBeOnTheScreen());
+      expect(screen.queryByTestId('today-offline')).toBeNull();
+    });
+  });
+});

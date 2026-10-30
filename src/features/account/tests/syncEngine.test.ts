@@ -296,3 +296,88 @@ describe("GIVEN this phone kept its own league player over the account's (R4)", 
     });
   });
 });
+
+describe('GIVEN rounds left part-way on two devices (code review, 30 Oct 2026)', () => {
+  const LINK = 'DP·LINK·0071';
+  const round = (at: number, f: number[]) => ({
+    id: LINK,
+    f,
+    m: 1,
+    g: [],
+    tr: [],
+    l: [],
+    s: 40,
+    at,
+  });
+
+  describe('WHEN a phone holding an older Link round syncs with a newer one on the account', () => {
+    it('THEN the phone takes the newer round and the account keeps it', async () => {
+      const store = memoryStorage({ 'digi-link-v1': { v: 1, done: {}, cur: round(1000, [1]) } });
+      const { client, remote } = fakeClient({
+        email: 'a@b.c',
+        remote: { 'digi-link-v1': { v: 1, done: {}, cur: round(2000, [1, 2]) } },
+      });
+      await runSync(store, syncApi(client));
+      expect(read(store, 'digi-link-v1').cur.f).toEqual([1, 2]);
+      expect((remote['digi-link-v1'] as { cur: { f: number[] } }).cur.f).toEqual([1, 2]);
+    });
+  });
+
+  describe('WHEN the phone holds the newer Link round', () => {
+    it('THEN the phone keeps it and the account gets it', async () => {
+      const store = memoryStorage({ 'digi-link-v1': { v: 1, done: {}, cur: round(3000, [3]) } });
+      const { client, remote } = fakeClient({
+        email: 'a@b.c',
+        remote: { 'digi-link-v1': { v: 1, done: {}, cur: round(2000, [1, 2]) } },
+      });
+      await runSync(store, syncApi(client));
+      expect(read(store, 'digi-link-v1').cur.f).toEqual([3]);
+      expect((remote['digi-link-v1'] as { cur: { f: number[] } }).cur.f).toEqual([3]);
+    });
+  });
+
+  const TANGLE = 'DP·TANGLE·0042';
+  const playing = { state: 'playing', found: ['ant'], left: 52, score: 1 };
+  const done = { state: 'done', found: ['ant', 'tan'], left: 0, score: 2 };
+  const result = { o: 'played', s: 2, w: 2, st: false, d: '2026-10-30' };
+
+  describe('WHEN a Tangle day paused and synced is finished on this phone, then synced', () => {
+    it('THEN the account holds the finished day, so a new install never offers Resume', async () => {
+      const store = memoryStorage({
+        'digi-tangle-v1': { v: 1, done: { [TANGLE]: result }, days: { [TANGLE]: done } },
+      });
+      const { client, remote } = fakeClient({
+        email: 'a@b.c',
+        remote: { 'digi-tangle-v1': { v: 1, done: {}, days: { [TANGLE]: playing } } },
+      });
+      await runSync(store, syncApi(client));
+      const acc = remote['digi-tangle-v1'] as { days: Record<string, unknown>; done: object };
+      expect(acc.days[TANGLE]).toEqual(done);
+      expect(acc.done).toEqual({ [TANGLE]: result });
+
+      const fresh = memoryStorage();
+      await runSync(fresh, syncApi(client));
+      expect(read(fresh, 'digi-tangle-v1').days[TANGLE]).toEqual(done);
+    });
+  });
+
+  describe('WHEN this phone still has the day in play and the account has it finished', () => {
+    it('THEN the phone takes the finished day; finished days on both keep the account’s', async () => {
+      const store = memoryStorage({
+        'digi-tangle-v1': { v: 1, done: {}, days: { [TANGLE]: playing } },
+      });
+      const other = { ...done, score: 9 };
+      const { client, remote } = fakeClient({
+        email: 'a@b.c',
+        remote: {
+          'digi-tangle-v1': { v: 1, done: { [TANGLE]: result }, days: { [TANGLE]: other } },
+        },
+      });
+      await runSync(store, syncApi(client));
+      expect(read(store, 'digi-tangle-v1').days[TANGLE]).toEqual(other);
+      expect((remote['digi-tangle-v1'] as { days: Record<string, unknown> }).days[TANGLE]).toEqual(
+        other,
+      );
+    });
+  });
+});

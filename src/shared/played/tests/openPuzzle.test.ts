@@ -63,3 +63,15 @@ describe('GIVEN another round is kept that the list doesn’t know', () => {
     expect(buttons().map((b) => b.text)).toEqual(['Cancel', 'Start Mini 106']);
   });
 });
+
+describe('GIVEN a player opens the puzzle with its own opener', () => {
+  it('THEN that opener is used, straight away and from Start, and push is not', () => {
+    const open = jest.fn();
+    openPuzzle(MINI, null, open);
+    expect(open).toHaveBeenCalledWith(route('2026-10-25-crossword-mini-0106'));
+    openPuzzle(MINI, {}, open);
+    buttons()[1]!.onPress!();
+    expect(open).toHaveBeenCalledTimes(2);
+    expect(router.push).not.toHaveBeenCalled();
+  });
+});

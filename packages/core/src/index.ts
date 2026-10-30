@@ -41,6 +41,7 @@ export {
   b64urlEncode,
   b64urlDecode,
   mergeMoved,
+  finished,
   unpackMove,
   adoptBoard,
   importMove,
