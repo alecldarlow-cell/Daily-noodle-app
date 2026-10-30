@@ -67,7 +67,7 @@ describe('GIVEN the native half of the replay', () => {
       const sim = simulate(doku97, sc, Date.parse(`${date}T08:16:00Z`), date);
       expect(sim.opened).toMatchObject({ last: '2026-10-17', streak: 3, best: 3, seeded: 1 });
       expect(sim.final.streak).toMatchObject({ last: date, streak: 4, best: 4, seeded: 1 });
-      expect(sim.final.kick).toBe('Doku 97, Sunday 18 October');
+      expect(sim.final.kick).toBe('Doku 97');
       expect(sim.final.note).toBe('All twelve tiles placed.');
       expect(sim.final.stats).toEqual(['4', '4', '4']);
       expect(sim.reopened).toMatchObject({ note: '', stats: ['4', '4', '4'] });

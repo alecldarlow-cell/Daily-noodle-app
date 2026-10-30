@@ -8,7 +8,7 @@
  */
 import { createSaveStore, dnNum, type KV } from '@noodle/core';
 
-import { longDate } from '@/shared/time/format';
+import { streakLine } from '@/shared/finish-sheet/rules';
 
 import { commitFinish, ensureStreak, reopenInfo, type FinishInfo } from './finishing';
 import {
@@ -85,7 +85,10 @@ export interface Outcome {
   hero: string;
   title: string;
   kick: string;
+  /** The model's three numbers (kept as a check; the sheet shows only `streakLine` since AF-019). */
   stats: string[];
+  /** "🔥 5-day streak", the sheet's line under the score. */
+  streakLine: string;
   recap: string;
 }
 
@@ -94,7 +97,7 @@ export interface Simulation {
   opened: unknown;
   snaps: Snapshot[];
   final: Outcome;
-  reopened: Pick<Outcome, 'share' | 'note' | 'hero' | 'stats'> | null;
+  reopened: Pick<Outcome, 'share' | 'note' | 'hero' | 'stats' | 'streakLine'> | null;
 }
 
 export function memoryKV(
@@ -110,6 +113,8 @@ export function memoryKV(
 }
 
 const stats = (f: FinishInfo) => [String(f.streak), String(f.best), String(f.played)];
+/** The sheet's line under the score (finish.js streakLine, AF-019): the day streak. */
+const line = (n: number) => streakLine([{ value: n, label: 'day streak' }]);
 const doc = (kv: KV, k: string): unknown => JSON.parse(kv.getItem(k) || 'null');
 
 /**
@@ -153,14 +158,21 @@ export function simulate(data: DokuData, sc: Scenario, t0: number, date: string)
     note: f.note,
     hero: f.hero,
     title: 'Solved',
-    kick: `Doku ${dnNum(data.id).slice(1)}, ${longDate(date)}`,
+    kick: `Doku ${dnNum(data.id).slice(1)}`,
     stats: stats(f),
+    streakLine: line(f.streak),
     recap: recapSub(state.p),
   };
   let reopened: Simulation['reopened'] = null;
   if (sc.reopen) {
     const r = reopenInfo(data.id, saves.getDone(SAVE_KEY, data.id)!, kv);
-    reopened = { share: r.share, note: r.note, hero: r.hero, stats: stats(r) };
+    reopened = {
+      share: r.share,
+      note: r.note,
+      hero: r.hero,
+      stats: stats(r),
+      streakLine: line(r.streak),
+    };
   }
   return { opened, snaps, final, reopened };
 }

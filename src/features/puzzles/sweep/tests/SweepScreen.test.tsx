@@ -1,9 +1,11 @@
 import { londonDay } from '@noodle/core';
 import { act, fireEvent, screen, waitFor } from '@testing-library/react-native';
+import * as Audio from 'expo-audio';
 
 import { onFinish, type PuzzleFinish } from '@/shared/results';
+import { SOUND_FILES } from '@/shared/sound';
 import { appStorage } from '@/shared/storage';
-import { mockSite, renderWithProviders } from '@/shared/testing';
+import { mockSite, renderWithProviders, sharedLine } from '@/shared/testing';
 
 import { SweepScreen } from '../components/SweepScreen';
 import { SAVE_KEY, START_MSG, STREAK_KEY } from '../model';
@@ -91,9 +93,17 @@ describe('GIVEN a Sweep not yet played', () => {
       await tap(START);
       await tap(2);
       await waitFor(() => expect(screen.getByTestId('finish-sheet')).toBeOnTheScreen());
-      expect(screen.getByText('Boom.')).toBeOnTheScreen();
-      expect(screen.getByTestId('finish-share-text')).toHaveTextContent('💥 Sweep 18 Oct — boom');
+      expect(screen.getByTestId('finish-title')).toHaveTextContent(/ · Boom\.$/);
+      expect(await sharedLine()).toBe('💥 Sweep 18 Oct — boom');
       expect(screen.getByTestId('sweep-recap')).toBeOnTheScreen();
+      // A loss: the answer comes straight after the result (AF-015), and no jingle (AF-013).
+      expect(screen.getByTestId('finish-sheet')).toContainElement(
+        screen.getByTestId('finish-recap'),
+      );
+      const ids = JSON.stringify(screen.toJSON());
+      expect(ids.indexOf('"finish-recap"')).toBeLessThan(ids.indexOf('"finish-share-button"'));
+      const played = (Audio as unknown as { __played: unknown[] }).__played;
+      expect(played.filter((f) => f === SOUND_FILES.jingle)).toEqual([]);
       expect(JSON.parse(appStorage.getItem(STREAK_KEY)!)).toMatchObject({ streak: 0, best: 5 });
       const day = londonDay();
       expect(JSON.parse(appStorage.getItem(SAVE_KEY)!).done['DP·SWEEP·2026-10-18']).toEqual({
@@ -128,7 +138,7 @@ describe('GIVEN a Sweep not yet played', () => {
       await waitFor(() => expect(screen.getByTestId('finish-sheet')).toBeOnTheScreen(), {
         timeout: 3000,
       });
-      expect(screen.getByText('Swept')).toBeOnTheScreen();
+      expect(screen.getByTestId('finish-title')).toHaveTextContent(/ · Swept$/);
       expect(screen.getByText('All seven mines found, no hints.')).toBeOnTheScreen();
       expect(JSON.parse(appStorage.getItem(STREAK_KEY)!)).toMatchObject({ streak: 1 });
       expect(finishes).toHaveLength(1);
@@ -168,9 +178,7 @@ describe('GIVEN a Sweep already finished on this phone', () => {
     );
     await renderWithProviders(<SweepScreen file={file94} />);
     expect(screen.getByTestId('finish-hero')).toHaveTextContent('1:27');
-    expect(screen.getByTestId('finish-share-text')).toHaveTextContent(
-      '💣 Sweep 18 Oct — swept in 1:27 · 🔥2',
-    );
+    expect(await sharedLine()).toBe('💣 Sweep 18 Oct — swept in 1:27 · 🔥2');
     expect(screen.getByText('All seven mines found.')).toBeOnTheScreen();
     expect(finishes).toEqual([]);
   });

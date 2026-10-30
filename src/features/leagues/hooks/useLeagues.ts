@@ -8,11 +8,14 @@ import {
   adoptClaim,
   leaguesFromMine,
   settlePending,
+  rememberKeep,
   type BoardTypeId,
   type ClaimResult,
 } from '@noodle/core';
 import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
 import { useEffect, useRef } from 'react';
+
+import { appStorage } from '@/shared/storage';
 
 import {
   boardClaim,
@@ -279,7 +282,11 @@ export function useSettlePending() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (take: boolean) => {
-      saveBoard(settlePending(loadBoard(), take));
+      const before = loadBoard();
+      // "Keep this one" is remembered for that account player (plan R4), so the next sync
+      // and a restart don't ask again; "Use my link" makes it this phone's player anyway.
+      if (!take && before.pend?.pid) rememberKeep(appStorage, before.pend.pid);
+      saveBoard(settlePending(before, take));
       await refreshLeagues().catch(() => {});
     },
     onSettled: () => qc.invalidateQueries({ queryKey: BOARD_QUERY }),

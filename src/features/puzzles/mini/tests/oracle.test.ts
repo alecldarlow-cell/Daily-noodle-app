@@ -53,7 +53,7 @@ describe('GIVEN a scenario simulated on a fake clock', () => {
       });
       expect(sim.final.share).toMatch(/^✏️ Mini #105 — \d:\d\d$/);
       expect(sim.final.note).toBe('No checks, no reveals.');
-      expect(sim.final.kick).toBe('Mini 105, Saturday 24 October');
+      expect(sim.final.kick).toBe('Mini 105');
       expect(sim.final.stats).toEqual(['1', '1', '1']);
     });
 
@@ -63,6 +63,7 @@ describe('GIVEN a scenario simulated on a fake clock', () => {
         note: '',
         hero: sim.final.hero,
         stats: ['1', '1', '1'],
+        streakLine: '🔥 1-day streak',
       });
     });
   });

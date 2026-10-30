@@ -37,7 +37,7 @@ describe('GIVEN a Borders simulated on a fake clock', () => {
       cur: null,
       seenCoach: true,
     });
-    expect(sim.final.kick).toBe('Borders 15, Monday 19 October');
+    expect(sim.final.kick).toBe('Borders 15');
     expect(sim.reopened).toMatchObject({
       share: sim.final.share,
       note: sim.final.note,

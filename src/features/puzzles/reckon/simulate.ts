@@ -18,6 +18,7 @@ import {
   type SaveStore,
 } from '@noodle/core';
 
+import { streakLine } from '@/shared/finish-sheet/rules';
 import { longDate } from '@/shared/time/format';
 
 import { commitFinish, readSave, reopenInfo, saveHost, type FinishInfo } from './finishing';
@@ -220,19 +221,25 @@ export interface Outcome {
   hero: string;
   title: string;
   kick: string;
+  /** The model's three numbers (kept as a check; the sheet shows only `streakLine` since AF-019). */
   stats: string[];
+  /** "🔥 5-day streak", the sheet's line under the score. */
+  streakLine: string;
   rows: string[];
 }
 
 export interface Simulation {
   snaps: Snapshot[];
   final: Outcome;
-  reopened: Pick<Outcome, 'share' | 'note' | 'hero' | 'stats' | 'rows'> | null;
+  reopened: Pick<Outcome, 'share' | 'note' | 'hero' | 'stats' | 'streakLine' | 'rows'> | null;
 }
 
 /** The recap rows as their text reads on the page: question, guess and answer, points. */
 export const rowText = (f: FinishInfo) => f.rows.map((r) => `${r.q}${r.line}${r.pts}`);
 const sheetStats = (f: FinishInfo) => [f.time, String(f.streak), String(f.best)];
+
+/** The sheet's line under the score (finish.js streakLine, AF-019): the day streak. */
+const line = (n: number) => streakLine([{ value: n, label: 'day streak' }]);
 
 /**
  * Play `sc` on a page opened at wall time `openAt`, whose clock reads `off` then; the
@@ -264,8 +271,9 @@ export function simulate(
     note: f.note,
     hero: `${f.points}pts`,
     title: 'Reckoned',
-    kick: `Reckon ${dnNum(data.id).slice(1)}, ${longDate(data.date)}`,
+    kick: `Reckon ${dnNum(data.id).slice(1)}`,
     stats: sheetStats(f),
+    streakLine: line(f.streak),
     rows: rowText(f),
   };
   let reopened: Simulation['reopened'] = null;
@@ -276,6 +284,7 @@ export function simulate(
       note: r.note,
       hero: `${r.points}pts`,
       stats: sheetStats(r),
+      streakLine: line(r.streak),
       rows: rowText(r),
     };
   }

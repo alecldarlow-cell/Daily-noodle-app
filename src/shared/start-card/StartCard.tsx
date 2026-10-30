@@ -17,6 +17,11 @@ interface StartCardProps {
   stats: StartStats;
   /** A small picture of the board (house.js art). */
   art?: ReactNode;
+  /**
+   * A round kept part-way (Link, engines/link.js resumeCard): the card reads "Today’s Link,
+   * part-played", says where it was paused, and its button is Resume.
+   */
+  resume?: { head: string; status: string };
   onPlay: () => void;
   onBack: () => void;
 }
@@ -26,7 +31,8 @@ interface StartCardProps {
  * 2026): back to Puzzles and your streak, the name and date, today's rule with Play,
  * your three numbers, and How to play.
  */
-export function StartCard({ type, n, date, rule, stats, art, onPlay, onBack }: StartCardProps) {
+export function StartCard(props: StartCardProps) {
+  const { type, n, date, rule, stats, art, resume, onPlay, onBack } = props;
   const name = nameOf(type);
   const today = useLondonDay();
   return (
@@ -36,9 +42,9 @@ export function StartCard({ type, n, date, rule, stats, art, onPlay, onBack }: S
       dateLine={`No. ${n}, ${longDate(date)}`}
       streak={stats.streak >= 1 ? `${stats.streak}-day streak` : undefined}
       art={art}
-      head={dayHead(name, date, today)}
-      status={rule}
-      button={{ label: 'Play', onPress: onPlay }}
+      head={resume?.head ?? dayHead(name, date, today)}
+      status={resume?.status ?? rule}
+      button={{ label: resume ? 'Resume' : 'Play', onPress: onPlay }}
       stats={[
         [stats.streak, 'day streak'],
         [stats.best, 'best streak'],

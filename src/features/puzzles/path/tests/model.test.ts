@@ -110,18 +110,18 @@ describe('GIVEN a tap the rules refuse', () => {
     [
       'not next to the end',
       () => play(init(path92), cell(0, 0)),
-      'Not next to the active end — the thread grows one square at a time.',
+      'Not next to the active end — the path grows one square at a time.',
     ],
-    ['on the thread', () => play(lowTo(3), to(2)), 'That square is already part of the thread.'],
+    ['on the thread', () => play(lowTo(3), to(2)), 'That square is already part of the path.'],
     [
       'a given that isn’t next',
       () => play(lowTo(8), to(7)),
-      'That given is 7, but the thread needs 9 next.',
+      'That given is 7, but the path needs 9 next.',
     ],
     [
       'a number given elsewhere',
       () => play(lowTo(6), cell(2, 3)),
-      '7 is already given elsewhere — the thread has to pass through it.',
+      '7 is already given elsewhere — the path has to pass through it.',
     ],
     [
       'a number left stranded',
@@ -144,7 +144,7 @@ describe('GIVEN a tap the rules refuse', () => {
     expect(u.lowHead).toBe(28);
     const wrong = play(lowTo(8), to(9), to(10), to(11), to(12), to(13));
     expect(play(wrong, cell(3, 1)).msg).toBe(
-      'Not next to the active end — the thread grows one square at a time.',
+      'Not next to the active end — the path grows one square at a time.',
     );
     const given = play(lowTo(4), cell(3, 4));
     expect(play(given, cell(3, 5)).activeEnd).toBe('high');
@@ -213,7 +213,7 @@ describe('GIVEN Hint picks a square the rules then refuse (Path 422)', () => {
     let s = play(init(p422), { t: 'hint' }, cell(1, 4)); // 35 placed, then the 1 chosen
     expect(s.activeEnd).toBe('low');
     s = play(s, { t: 'hint' });
-    expect(s.msg).toBe('34 is already given elsewhere — the thread has to pass through it.');
+    expect(s.msg).toBe('34 is already given elsewhere — the path has to pass through it.');
     expect(s.activeEnd).toBe('high');
     expect(endMark(s, 1, 4)).toBe('active');
     expect(endMark(s, 1, 0)).toBeNull();
@@ -257,7 +257,7 @@ describe('GIVEN the thread complete', () => {
   it('THEN a saved one reopens complete with its time', () => {
     const s = restore(path92, { t: '1:27' });
     expect(s.solved).toBe(true);
-    expect(s.msg).toBe('Thread complete in 1:27.');
+    expect(s.msg).toBe('Path complete in 1:27.');
     expect(recordTime({ t: 'soon' })).toBe('0:00');
     expect(recordTime(null)).toBe('0:00');
     expect(timerText(65)).toBe('1:05');

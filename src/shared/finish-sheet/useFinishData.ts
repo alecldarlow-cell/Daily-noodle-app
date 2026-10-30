@@ -1,11 +1,4 @@
-import {
-  overallRun,
-  PUZZLE_TYPES,
-  RUN_RESULT_KEYS,
-  RUN_STREAK_KEYS,
-  saveKey,
-  type PuzzleType,
-} from '@noodle/core';
+import { PUZZLE_TYPES, saveKey, type PuzzleType } from '@noodle/core';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo, useState } from 'react';
 
@@ -15,14 +8,14 @@ import { TODAY_CACHE_KEY, cachedToday, fetchToday } from '@/shared/today';
 
 import { nextRow, toMidnight, type NextRow } from './rules';
 
-const KEYS = [...new Set([...PUZZLE_TYPES.map(saveKey), ...RUN_RESULT_KEYS, ...RUN_STREAK_KEYS])];
+const KEYS = [...new Set(PUZZLE_TYPES.map(saveKey))];
 
 /**
- * The Next row and countdown: today's list (the kept copy straight away, then the
+ * The Play more row and countdown: today's list (the kept copy straight away, then the
  * site's file, as finish.js does with dn-today-cache), the saves, and a clock that
  * repaints every 30 seconds.
  */
-export function useFinishData(type: PuzzleType): { next: NextRow; secs: number; run: number } {
+export function useFinishData(type: PuzzleType): { next: NextRow; secs: number } {
   const day = useLondonDay();
   const docs = useStoredDocs(KEYS);
   const q = useQuery({
@@ -44,5 +37,5 @@ export function useFinishData(type: PuzzleType): { next: NextRow; secs: number; 
   }, []);
   const list = q.data ?? cachedToday(day) ?? null;
   const next = useMemo(() => nextRow(list, type, docs), [list, type, docs]);
-  return { next, secs: toMidnight(now), run: overallRun(docs, now) };
+  return { next, secs: toMidnight(now) };
 }

@@ -1,6 +1,7 @@
 /**
  * The Mini, as a pure model: ported line for line from dailynoodle `engines/mini.js`
  * (findSlots, numberGrid, wordAt, clueList, load, the square and clue-bar taps, advance,
+ * advanceEmpty (AF-031),
  * type, del, gotoClue, checkCells, revealCells, checkWin, the finish sheet's note,
  * restoreDone) and from `dn-track.js` (how the tracker counts Check and Reveal presses
  * and names the outcome). No React, no storage, no clock: the screen owns the clock
@@ -319,6 +320,38 @@ export function apply(prev: MiniState, move: Move): MiniState {
       s.sel.c = w.cells[j]![1];
     }
   };
+  /*
+   * After a letter (engines/mini.js advanceEmpty, AF-031, 29 Oct 2026, agreed with Alec):
+   * the next EMPTY square in the word (forward, then back round to the word's start), so
+   * letters already in from crossing answers aren't typed over. If the word is now full,
+   * the next clue in the clue bar's order (across, then down, round again) that has an
+   * empty square, at its first one. A full grid stays where it is.
+   */
+  const advanceEmpty = () => {
+    const w = wordAt(P, s.sel.r, s.sel.c, s.sel.dir);
+    if (!w) return;
+    const empty = ([y, x]: Cell) => !s.entries[y]![x];
+    const i = w.cells.findIndex(([y, x]) => y === s.sel.r && x === s.sel.c);
+    const n = w.cells.length;
+    for (let k = 1; k < n; k++) {
+      const cell = w.cells[(i + k) % n]!;
+      if (empty(cell)) {
+        s.sel.r = cell[0];
+        s.sel.c = cell[1];
+        return;
+      }
+    }
+    const list = orderedSlots(P);
+    const at = list.indexOf(w);
+    for (let k = 1; k <= list.length; k++) {
+      const sl = list[(at + k) % list.length]!;
+      const cell = sl.cells.find(empty);
+      if (cell) {
+        s.sel = { r: cell[0], c: cell[1], dir: sl.t };
+        return;
+      }
+    }
+  };
   const checkWin = () => {
     if (s.solved) return;
     const done = allCells(P).every(([r, c]) => s.entries[r]![c] === P.grid[r]![c]);
@@ -358,7 +391,7 @@ export function apply(prev: MiniState, move: Move): MiniState {
       startTimer();
       s.entries[s.sel.r]![s.sel.c] = move.ch.toUpperCase();
       s.checked[s.sel.r]![s.sel.c] = null;
-      advance();
+      advanceEmpty();
       checkWin();
       break;
     }

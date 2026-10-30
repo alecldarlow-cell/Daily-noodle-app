@@ -4,7 +4,7 @@ import { AppState, type AppStateStatus } from 'react-native';
 
 import { onFinish, type PuzzleFinish } from '@/shared/results';
 import { appStorage } from '@/shared/storage';
-import { mockSite, renderWithProviders } from '@/shared/testing';
+import { mockSite, renderWithProviders, sharedLine } from '@/shared/testing';
 
 import { LIST_H, tileRects, TOAST_H, WORD_H } from '../components/TangleBoard';
 import { dayCard, TangleScreen } from '../components/TangleScreen';
@@ -114,10 +114,8 @@ describe('GIVEN a Tangle not yet played', () => {
       },
     ]);
     expect(screen.getByTestId('finish-sheet')).toBeOnTheScreen();
-    expect(screen.getByText('Time’s up')).toBeOnTheScreen();
-    expect(screen.getByTestId('finish-share-text')).toHaveTextContent(
-      '🧶 Tangle #19 — 13 points, 2 words ★',
-    );
+    expect(screen.getByTestId('finish-title')).toHaveTextContent(/ · Time’s\ up$/);
+    expect(await sharedLine()).toBe('🧶 Tangle #19 — 13 points, 2 words ★');
     expect(
       screen.getByText('2 words, including the longest, ORIGINAL, for 12 points.'),
     ).toBeOnTheScreen();
@@ -166,10 +164,8 @@ describe('GIVEN a Tangle already played today', () => {
       }),
     );
     await renderWithProviders(<TangleScreen file={file19} />);
-    expect(screen.getByText('Your score')).toBeOnTheScreen();
-    expect(screen.getByTestId('finish-share-text')).toHaveTextContent(
-      '🧶 Tangle #19 — 2 points, 2 words',
-    );
+    expect(screen.getByTestId('finish-title')).toHaveTextContent(/ · Your\ score$/);
+    expect(await sharedLine()).toBe('🧶 Tangle #19 — 2 points, 2 words');
     expect(finishes).toEqual([]);
     await fireEvent.press(screen.getByText('← Puzzles'));
     expect(mockRouter.back).toHaveBeenCalled();

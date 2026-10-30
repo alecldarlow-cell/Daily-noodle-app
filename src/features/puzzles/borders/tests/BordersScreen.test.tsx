@@ -3,7 +3,7 @@ import { act, fireEvent, screen, within } from '@testing-library/react-native';
 
 import { onFinish, type PuzzleFinish } from '@/shared/results';
 import { appStorage } from '@/shared/storage';
-import { mockSite, renderWithProviders } from '@/shared/testing';
+import { mockSite, renderWithProviders, sharedLine } from '@/shared/testing';
 
 import { BordersScreen } from '../components/BordersScreen';
 import { ATLAS_KEY, SAVE_KEY } from '../model';
@@ -94,11 +94,9 @@ describe('GIVEN a Borders not yet played', () => {
       await press('borders-next');
     }
     expect(screen.getByTestId('finish-sheet')).toBeOnTheScreen();
-    expect(screen.getByText('Spotted')).toBeOnTheScreen();
+    expect(screen.getByTestId('finish-title')).toHaveTextContent(/ · Spotted$/);
     expect(screen.getByText('7 of 10')).toBeOnTheScreen();
-    expect(screen.getByTestId('finish-share-text').props.children).toMatch(
-      /^🌍 Borders #15 — 7\/10 · \d+ pts$/,
-    );
+    expect(await sharedLine()).toMatch(/^🌍 Borders #15 — 7\/10 · \d+ pts$/);
     expect(finishes).toHaveLength(1);
     expect(finishes[0]!.detail).toMatchObject({ type: 'geo-borders', got: 7, of: 10, hints: 1 });
     expect(saved().done[borders15.id]).toMatchObject({ c: 7, on: '2026-10-19' });

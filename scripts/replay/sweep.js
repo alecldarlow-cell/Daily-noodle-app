@@ -92,9 +92,8 @@ const finishRead = (p) =>
       hero: txt('#winTime'),
       title: txt('#winTitle'),
       kick: txt('.fin-kick'),
-      stats: [...document.querySelectorAll('.fin-stats > div > b')].map((b) =>
-        (b.textContent || '').trim(),
-      ),
+      // AF-019 (site #40): the three stats became one line under the score
+      streakLine: txt('.fin-streak'),
       again: txt('.fin > .fin-link') === 'Play again (not recorded)',
       bar: [txt('#streak'), txt('#best')],
       open: !!document.querySelector('#winModal.fin-open'),
@@ -124,14 +123,14 @@ module.exports = {
     // replay round's title, time and streaks on 25 Oct 2026).
     ['finish time', w.hero, n.hero],
     ['finish title', w.title, n.title],
-    ['finish stats', w.stats, n.stats],
+    ['finish streak line', w.streakLine, n.streakLine],
   ],
   reopenPairs: (r, nr) => [
     ['reopened share line', r.share, nr.share],
     ['reopened note', r.note, nr.note],
     ['reopened time', r.hero, nr.hero],
     ['reopened title', r.title, nr.title],
-    ['reopened stats', r.stats, nr.stats],
+    ['reopened streak line', r.streakLine, nr.streakLine],
     ['reopened: Play again offered', r.again, nr.again],
   ],
   refused: (p) =>

@@ -153,9 +153,8 @@ const finishRead = (p) =>
       hero: txt('#rBig'),
       title: txt('#winTitle'),
       kick: txt('.fin-kick'),
-      stats: [...document.querySelectorAll('.fin-stats > div > b')].map((b) =>
-        (b.textContent || '').trim(),
-      ),
+      // AF-019 (site #40): the three stats became one line under the score
+      streakLine: txt('.fin-streak'),
       rows: [...document.querySelectorAll('.fin-rk button')].map((b) => b.textContent || ''),
       open: !!document.querySelector('#winModal.fin-open'),
     };
@@ -183,14 +182,14 @@ module.exports = {
     ['finish points', w.hero, n.hero],
     ['finish title', w.title, n.title],
     ['finish kicker', w.kick, n.kick],
-    ['finish stats', w.stats, n.stats],
+    ['finish streak line', w.streakLine, n.streakLine],
     ['recap rows', w.rows, n.rows],
   ],
   reopenPairs: (r, nr) => [
     ['reopened share line', r.share, nr.share],
     ['reopened note', r.note, nr.note],
     ['reopened points', r.hero, nr.hero],
-    ['reopened stats', r.stats, nr.stats],
+    ['reopened streak line', r.streakLine, nr.streakLine],
     ['reopened recap rows', r.rows, nr.rows],
   ],
   refused: (p) => p.evaluate(() => !!(window.__reckonGate && window.__reckonGate.length)),

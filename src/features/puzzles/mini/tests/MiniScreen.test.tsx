@@ -1,9 +1,11 @@
 import { londonDay } from '@noodle/core';
 import { act, fireEvent, screen, waitFor } from '@testing-library/react-native';
+import * as Audio from 'expo-audio';
 
 import { onFinish, type PuzzleFinish } from '@/shared/results';
+import { SOUND_FILES } from '@/shared/sound';
 import { appStorage } from '@/shared/storage';
-import { mockSite, renderWithProviders } from '@/shared/testing';
+import { mockSite, renderWithProviders, sharedLine } from '@/shared/testing';
 
 import { MiniScreen } from '../components/MiniScreen';
 import { SAVE_KEY, STREAK_KEY } from '../model';
@@ -32,12 +34,17 @@ async function solveOnScreen() {
     }
 }
 
+/** How many times the celebration jingle has played (AF-013). */
+const played = (Audio as unknown as { __played: unknown[] }).__played;
+const jingles = () => played.filter((f) => f === SOUND_FILES.jingle).length;
+
 let finishes: PuzzleFinish[] = [];
 let off = () => {};
 beforeEach(() => {
   clear();
   jest.clearAllMocks();
   finishes = [];
+  played.length = 0;
   off = onFinish((f) => finishes.push(f));
   mockSite({});
 });
@@ -110,8 +117,9 @@ describe('GIVEN a Mini not yet played', () => {
         timeout: 3000,
       });
       expect(screen.getByText('No checks, no reveals.')).toBeOnTheScreen();
-      expect(screen.getByTestId('finish-share-text')).toHaveTextContent(/^✏️ Mini #105 — 0:0\d$/);
+      expect(await sharedLine()).toMatch(/^✏️ Mini #105 — 0:0\d$/);
       expect(screen.getByTestId('solved-grid')).toBeOnTheScreen();
+      expect(jingles()).toBe(1);
     });
   });
 });
@@ -129,9 +137,10 @@ describe('GIVEN a Mini already finished on this phone', () => {
     await renderWithProviders(<MiniScreen file={file105} />);
     expect(screen.getByTestId('finish-sheet')).toBeOnTheScreen();
     expect(screen.getByTestId('finish-hero')).toHaveTextContent('1:27');
-    expect(screen.getByTestId('finish-share-text')).toHaveTextContent('✏️ Mini #105 — 1:27 · 🔥2');
+    expect(await sharedLine()).toBe('✏️ Mini #105 — 1:27 · 🔥2');
     expect(screen.queryByText('No checks, no reveals.')).toBeNull();
     expect(finishes).toEqual([]);
+    expect(jingles()).toBe(0);
     await fireEvent.press(screen.getByText('← Puzzles'));
     expect(mockRouter.back).toHaveBeenCalled();
   });

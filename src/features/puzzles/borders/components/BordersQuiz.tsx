@@ -1,13 +1,15 @@
+import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { useReduceMotion } from '@/shared/motion';
 import { FONT } from '@/shared/theme';
 import { PRESSED, pressable } from '@/shared/ui';
 
 import { useAnnounce } from '../../link/hooks/announce';
 import { quizView, type BordersState, type Move } from '../model';
 import type { BordersColors } from './colors';
-import { mapHtml } from './drawing';
+import { bigMapHtml, mapHtml } from './drawing';
 import { Picture } from './Picture';
 
 interface Props {
@@ -36,6 +38,8 @@ export function BordersQuiz({ state, c, dispatch }: Props) {
   const v = quizView(state);
   const verdict = verdictOf(state);
   useAnnounce(verdict, `${state.cur?.i ?? 0}|${verdict}`);
+  const big = useBigMap(state);
+  const qi = state.cur?.i ?? -1;
   return (
     <SafeAreaView style={[styles.fill, { backgroundColor: c.bg }]} testID="borders-quiz">
       <ScrollView
@@ -91,6 +95,15 @@ export function BordersQuiz({ state, c, dispatch }: Props) {
             label="Country outline"
             testID="borders-map"
           />
+          {v.inset && !big.open ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Open the map large"
+              testID="borders-inset"
+              onPress={() => big.show(false)}
+              style={styles.insetHit}
+            />
+          ) : null}
           {v.plate ? (
             <View
               style={[styles.nameplate, { backgroundColor: c.veil }]}
@@ -176,6 +189,36 @@ export function BordersQuiz({ state, c, dispatch }: Props) {
           ) : null}
         </View>
       </ScrollView>
+      {big.open && !state.paused && qi >= 0 ? (
+        <Pressable
+          accessibilityViewIsModal
+          accessibilityRole="button"
+          accessibilityLabel={
+            big.goesOn ? `${big.caption}. ${v.nextLabel}` : `${big.caption}. Close`
+          }
+          testID="borders-bigmap"
+          onPress={() => (big.goesOn ? dispatch({ t: 'next' }) : big.close())}
+          style={[styles.ov, styles.bigOv]}>
+          <View style={[styles.bmCard, { backgroundColor: c.paper, borderColor: c.edge }]}>
+            <Picture
+              key={`${qi}-${big.named ? 1 : 0}-${c.bg}`}
+              html={bigMapHtml(v.q, big.named, c)}
+              style={[styles.bmMap, { backgroundColor: c.sea }]}
+              testID="borders-bigmap-picture"
+            />
+            <Text maxFontSizeMultiplier={CAP} style={[styles.bmCap, { color: c.ink2 }]}>
+              {big.caption}
+            </Text>
+            <View
+              style={[styles.btn, { backgroundColor: c.ink, borderColor: c.ink }]}
+              testID="borders-bigmap-go">
+              <Text maxFontSizeMultiplier={CAP} style={[styles.btnText, { color: c.paper }]}>
+                {big.goesOn ? v.nextLabel : 'Close'}
+              </Text>
+            </View>
+          </View>
+        </Pressable>
+      ) : null}
       {state.paused ? (
         <View
           style={[styles.ov, { backgroundColor: 'rgba(31,58,74,0.45)' }]}
@@ -213,7 +256,46 @@ export function BordersQuiz({ state, c, dispatch }: Props) {
   );
 }
 
+/** How long after a wrong answer the big map opens (the page's 700 ms; at once with reduced motion). */
+export const BIG_MAP_MS = 700;
+
+/**
+ * The big locator map (engines/borders.js bigMap, AF-016): opened by itself after a wrong
+ * answer, named, and a tap goes on to the next question; or opened from the small map
+ * whenever it shows, with Close (named only once the question is answered). Closed when
+ * the question changes. Screen-only: the model, scores and saves never see it.
+ */
+function useBigMap(state: BordersState) {
+  const reduced = useReduceMotion();
+  const [open, setOpen] = useState<{ i: number; goesOn: boolean } | null>(null);
+  const i = state.cur?.i ?? -1;
+  const last = state.cur?.ans[state.cur.ans.length - 1];
+  const wrong = state.locked && !!last && !last.ok && state.cur?.ans.length === i + 1;
+  useEffect(() => {
+    if (!wrong || state.paused) return;
+    const t = setTimeout(() => setOpen({ i, goesOn: true }), reduced ? 0 : BIG_MAP_MS);
+    return () => clearTimeout(t);
+  }, [wrong, i, reduced, state.paused]);
+  const shown = open && open.i === i ? open : null;
+  const name = state.cur ? state.plate?.name : undefined;
+  const named = state.locked;
+  return {
+    open: !!shown,
+    goesOn: !!shown?.goesOn,
+    named,
+    caption: named && name ? `Where ${name} is` : 'Where today’s country is',
+    show: (goesOn: boolean) => setOpen({ i, goesOn }),
+    close: () => setOpen(null),
+  };
+}
+
 const styles = StyleSheet.create({
+  // The small map's place in the outline (drawing.ts #inset: right 10, top 10, 46% wide, 600 × 270).
+  insetHit: { position: 'absolute', right: 10, top: 10, width: '46%', aspectRatio: 600 / 270 },
+  bigOv: { backgroundColor: 'rgba(31,58,74,0.45)', padding: 12 },
+  bmCard: { width: '100%', maxWidth: 640, borderRadius: 6, borderWidth: 1.5, padding: 8, gap: 10 },
+  bmMap: { width: '100%', aspectRatio: 1 / 0.66, borderRadius: 3 },
+  bmCap: { fontSize: 15, fontFamily: FONT.sans, marginHorizontal: 4 },
   fill: { flex: 1 },
   wrap: {
     flexGrow: 1,

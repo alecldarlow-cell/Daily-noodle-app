@@ -92,9 +92,8 @@ const finishRead = (p) =>
       hero: [...document.querySelectorAll('.fin-guess i')]
         .map((i) => (i.className === 'fin-gx' ? 'x' : i.className.replace('fin-', '')))
         .join(' '),
-      stats: [...document.querySelectorAll('.fin-stats > div > b')].map((b) =>
-        (b.textContent || '').trim(),
-      ),
+      // AF-019 (site #40): the three stats became one line under the score
+      streakLine: txt('.fin-streak'),
       again: [...document.querySelectorAll('.fin > .fin-link')].some(
         (a) => a.textContent === 'Play again (not recorded)',
       ),
@@ -203,7 +202,7 @@ async function replayOne(H, browser, pg, variant) {
   sheets.forEach((ws, i) => {
     const ns = n.sheets[i] || {};
     const pre = i ? 'replay sheet' : 'sheet';
-    for (const k of ['share', 'note', 'title', 'kick', 'hero', 'stats', 'again']) {
+    for (const k of ['share', 'note', 'title', 'kick', 'hero', 'streakLine', 'again']) {
       if (L.same(ws[k], ns[k])) continue;
       const known = KNOWN[`${pre} ${k}`];
       if (known && known(ws[k])) {
@@ -228,7 +227,7 @@ async function replayOne(H, browser, pg, variant) {
       ['reopened note', reopened.note, nr.note],
       ['reopened title', reopened.title, nr.title],
       ['reopened squares', reopened.hero, heroCode(ri.squares)],
-      ['reopened stats', reopened.stats, nr.stats],
+      ['reopened streak line', reopened.streakLine, nr.streakLine],
       ['reopened Play again', reopened.again, nr.again],
       ['reopened: no second puzzle_end', reopened.ends.length, 0],
       ['reopened: sheet up, no start card', reopened.open && !reopened.startCard, true],

@@ -105,9 +105,8 @@ const finishRead = (p) =>
       hero: txt('#rBig'),
       title: txt('#winTitle'),
       kick: txt('.fin-kick'),
-      stats: [...document.querySelectorAll('.fin-stats > div > b')].map((b) =>
-        (b.textContent || '').trim(),
-      ),
+      // AF-019 (site #40): the three stats became one line under the score
+      streakLine: txt('.fin-streak'),
       tiles: [...document.querySelectorAll('.fin-outl figure')].map(
         (f) => `${f.className}:${f.querySelector('figcaption').textContent}`,
       ),
@@ -137,14 +136,14 @@ module.exports = {
     ['finish result', w.hero, n.hero],
     ['finish title', w.title, n.title],
     ['finish kicker', w.kick, n.kick],
-    ['finish stats', w.stats, n.stats],
+    ['finish streak line', w.streakLine, n.streakLine],
     ['recap outlines', w.tiles, n.tiles],
   ],
   reopenPairs: (r, nr) => [
     ['reopened share line', r.share, nr.share],
     ['reopened note', r.note, nr.note],
     ['reopened result', r.hero, nr.hero],
-    ['reopened stats', r.stats, nr.stats],
+    ['reopened streak line', r.streakLine, nr.streakLine],
     ['reopened outlines', r.tiles, nr.tiles],
   ],
   refused: (p) => p.evaluate(() => !!(window.__bordersGate && window.__bordersGate.length)),

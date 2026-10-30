@@ -5,6 +5,7 @@
  * load, pointer events arrive with the page's own tile rectangles and points, and
  * leaving the page saves (pagehide) and opens a new engine, as a reload does.
  */
+import { streakLine } from '@/shared/finish-sheet/rules';
 import { createSaveStore, londonDay, type KV } from '@noodle/core';
 
 import { noteText, sheetInfo } from './finishing';
@@ -139,7 +140,8 @@ export interface Sheet {
   hero: string;
   note: string;
   share: string;
-  stats: string[];
+  /** "🔥 5-day streak" (the three stats until AF-019). */
+  streakLine: string;
   time: string;
   star: string;
   meter: string;
@@ -159,12 +161,13 @@ export function sheetOf(e: TangleEngine, today: string): Sheet {
   const res = result(e, today);
   const r = f.recap;
   return {
-    kick: f.kick,
+    // the site's label is the type and number only (finish.js, AF-019)
+    kick: `Tangle ${e.P.n}`,
     title: f.title,
     hero: `${f.hero.score}${f.hero.word}`,
     note: noteText(f.note),
     share: f.share,
-    stats: f.stats.map((x) => String(x.value)),
+    streakLine: streakLine(f.stats),
     time: res.time,
     star: res.star,
     meter: `${r.meter}|${r.points}|${r.pct}`,

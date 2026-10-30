@@ -42,7 +42,8 @@ export interface LinkPuzzle {
   byName: Record<string, number>;
 }
 
-export type Tone = '' | 'bad';
+/** The message's class: plain, a wrong guess, or the waiting hint (link.css .msg.wait). */
+export type Tone = '' | 'bad' | 'wait';
 export type Timer = 'idle' | 'running' | 'stopped';
 
 export interface LinkState {
@@ -116,6 +117,8 @@ export const REPLAY_NOTE =
 export const OUT_NOTE = "Out of mistakes — here's the rest";
 /** The board's note, in place of REPLAY_NOTE, for a past Link's first go when it won't count. */
 export const PAST_NOTE = "A past puzzle — this one won't change your streak.";
+/** Under the board until the clock starts (engines/link.js WAIT_HINT, AF-028). */
+export const WAIT_HINT = 'Starts when you tap a word';
 
 // ---- the ship gate (engines/link.js validateLink, verbatim lists) ----
 
@@ -229,7 +232,8 @@ function started(s: LinkState, order: string[]): LinkState {
     tried: [],
     settling: null,
     revealing: false,
-    msg: { text: '', tone: '' },
+    // The clock waits at 0:00 with a hint until play starts (AF-028); a replay starts at once.
+    msg: s.replayStarted ? { text: '', tone: '' } : { text: WAIT_HINT, tone: 'wait' },
     timer: s.replayStarted ? 'running' : 'idle',
   };
 }
@@ -350,6 +354,7 @@ export function apply(prev: LinkState, move: Move): LinkState {
   const startTimer = () => {
     if (s.over || s.timer === 'running') return;
     s.timer = 'running';
+    if (s.msg.tone === 'wait') s.msg = { text: '', tone: '' };
   };
   switch (move.t) {
     case 'play':
@@ -547,3 +552,158 @@ export function finishNote(p: LinkPuzzle, guesses: unknown[], win: boolean): str
 
 /** The recap: every group, easiest to hardest. */
 export const groupsByRank = (p: LinkPuzzle) => p.groups.slice().sort((a, b) => a.rank - b.rank);
+
+// ---- the unfinished round (engines/link.js curSave / curRead / curRestore, AF-029) ----
+
+/**
+ * The round kept in `digi-link-v1` beside `done`, exactly as the website writes it:
+ * ranks found in order, mistakes, guesses (ranks), guesses already tried, the board's
+ * remaining order, seconds played, and when it was saved (ms). The site's sync keeps the
+ * one with the newer `at`.
+ */
+export interface LinkRound {
+  id: string;
+  f: number[];
+  m: number;
+  g: number[][];
+  tr: string[];
+  l: string[];
+  s: number;
+  at: number;
+}
+
+/** The round to keep now (curSave), or null when there is none to keep. */
+export function roundToKeep(
+  s: LinkState,
+  secs: number,
+  at: number,
+  dirty: boolean,
+): LinkRound | null {
+  if (s.over || s.replayStarted || s.hasRecord) return null;
+  if (!dirty && !secs) return null;
+  return {
+    id: s.p.id,
+    f: s.solved.map((i) => s.p.groups[i]!.rank),
+    m: s.mistakes,
+    g: s.guesses.map((x) => x.slice()),
+    tr: s.tried.slice(),
+    l: s.live.slice(),
+    s: secs,
+    at,
+  };
+}
+
+/**
+ * curWrite: put `c` (or null to clear) into the save document `raw` read-modify-write,
+ * leaving `done` and everything else as it is. Returns the text to store, or null to
+ * leave storage alone: a save it can't read is never overwritten, and clearing a round
+ * that isn't there writes nothing.
+ */
+export function withRound(raw: string | null, c: LinkRound | null): string | null {
+  let s: unknown = null;
+  try {
+    s = JSON.parse(raw || 'null');
+  } catch {
+    s = null;
+  }
+  let doc: Record<string, unknown>;
+  if (!object(s) || s.v !== 1) {
+    if (raw) return null;
+    doc = { v: 1 };
+  } else doc = s;
+  if (!c && !doc.cur) return null;
+  doc.cur = c;
+  return JSON.stringify(doc);
+}
+
+/** curRead: this puzzle's kept round from the save `raw`, checked, or null. */
+export function readRound(
+  p: LinkPuzzle,
+  raw: string | null,
+): {
+  found: number[];
+  m: number;
+  s: number;
+  g: number[][];
+  tr: string[];
+  l: string[] | null;
+} | null {
+  let doc: unknown = null;
+  try {
+    doc = JSON.parse(raw || 'null');
+  } catch {
+    return null;
+  }
+  const c = object(doc) ? doc.cur : null;
+  if (!object(c) || c.id !== p.id) return null;
+  if (object(doc) && object(doc.done) && doc.done[p.id]) return null;
+  if (!Array.isArray(c.f) || c.f.length >= 4 || new Set(c.f).size !== c.f.length) return null;
+  const found = (c.f as unknown[]).map((k) => p.groups.findIndex((g) => g.rank === k));
+  if (found.some((i) => i < 0)) return null;
+  const m = Math.floor(+(c.m as number));
+  if (!(m >= 0 && m < MAX_MISTAKES)) return null;
+  const secs = Math.floor(+(c.s as number));
+  if (!(secs >= 0 && secs <= 359999)) return null;
+  const g = Array.isArray(c.g)
+    ? (c.g as unknown[]).filter(
+        (x): x is number[] => Array.isArray(x) && x.length === 4 && x.every((v) => GLYPH_OK(v)),
+      )
+    : [];
+  // A right guess saved while its group was still flying into place counts as found.
+  for (const x of g)
+    if (x.every((v) => v === x[0])) {
+      const i = p.groups.findIndex((q) => q.rank === x[0]);
+      if (i >= 0 && !found.includes(i)) found.push(i);
+    }
+  if (found.length >= 4) return null;
+  const tr = Array.isArray(c.tr) ? (c.tr as unknown[]).filter((x) => typeof x === 'string') : [];
+  return {
+    found,
+    m,
+    s: secs,
+    g,
+    tr: tr as string[],
+    l: Array.isArray(c.l) ? (c.l as string[]) : null,
+  };
+}
+
+/** "Paused at 1:05 · tap a word to carry on" (curRestore's message). */
+export const pausedNote = (secs: number) =>
+  `Paused at ${dnTime(timerText(secs))} · tap a word to carry on`;
+
+/**
+ * curRestore: the board with the kept round put back, nothing selected, paused (the
+ * clock still, its time `r.s`), or null. `deal` shuffles the remaining tiles when the
+ * kept order no longer matches them.
+ */
+export function resumeRound(
+  s: LinkState,
+  raw: string | null,
+  deal: (tiles: string[]) => string[],
+): { state: LinkState; secs: number } | null {
+  if (s.hasRecord) return null;
+  const r = readRound(s.p, raw);
+  if (!r) return null;
+  const rest = s.p.groups
+    .filter((_, i) => !r.found.includes(i))
+    .flatMap((g) => g.members.map((m) => m.toUpperCase()));
+  const same =
+    !!r.l &&
+    r.l.length === rest.length &&
+    r.l.every((w) => rest.includes(w)) &&
+    new Set(r.l).size === rest.length;
+  return {
+    state: {
+      ...s,
+      solved: r.found,
+      mistakes: r.m,
+      guesses: r.g,
+      tried: r.tr,
+      sel: [],
+      live: same ? r.l!.slice() : deal(rest),
+      timer: 'idle',
+      msg: { text: pausedNote(r.s), tone: 'wait' },
+    },
+    secs: r.s,
+  };
+}

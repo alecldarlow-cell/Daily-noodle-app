@@ -7,7 +7,7 @@
  */
 import { createSaveStore, type KV } from '@noodle/core';
 
-import { longDate } from '@/shared/time/format';
+import { streakLine } from '@/shared/finish-sheet/rules';
 
 import { commitFinish, liveStreak, reopenInfo, type FinishInfo } from './finishing';
 import {
@@ -93,13 +93,16 @@ export interface Outcome {
   hero: string;
   title: string;
   kick: string;
+  /** The model's three numbers (kept as a check; the sheet shows only `streakLine` since AF-019). */
   stats: string[];
+  /** "🔥 5-day streak", the sheet's line under the score. */
+  streakLine: string;
 }
 
 export interface Simulation {
   snaps: Snapshot[];
   final: Outcome;
-  reopened: Pick<Outcome, 'share' | 'note' | 'hero' | 'stats'> | null;
+  reopened: Pick<Outcome, 'share' | 'note' | 'hero' | 'stats' | 'streakLine'> | null;
 }
 
 export function memoryKV(seed: Record<string, unknown> = {}): KV {
@@ -112,6 +115,8 @@ export function memoryKV(seed: Record<string, unknown> = {}): KV {
 }
 
 const stats = (f: FinishInfo) => [String(f.streak), String(f.best), String(f.played)];
+/** The sheet's line under the score (finish.js streakLine, AF-019): the day streak. */
+const line = (n: number) => streakLine([{ value: n, label: 'day streak' }]);
 
 /** "Path 92" from "DP·PATH·0092", as finishSheet numbers it. */
 export const pathNumber = (id: string) => parseInt(String(id).split('·').pop() ?? '', 10);
@@ -164,15 +169,22 @@ export function simulate(
     share: info.share,
     note: info.note,
     hero: info.hero,
-    title: 'Thread complete',
-    kick: `Path ${pathNumber(data.id)}, ${longDate(date)}`,
+    title: 'Path complete',
+    kick: `Path ${pathNumber(data.id)}`,
     stats: stats(info),
+    streakLine: line(info.streak),
   };
   let reopened: Simulation['reopened'] = null;
   if (sc.reopen) {
     const rec = saves.getDone(SAVE_KEY, data.id)!;
     const r = reopenInfo(restore(data, rec), rec, kv, now);
-    reopened = { share: r.share, note: r.note, hero: r.hero, stats: stats(r) };
+    reopened = {
+      share: r.share,
+      note: r.note,
+      hero: r.hero,
+      stats: stats(r),
+      streakLine: line(r.streak),
+    };
   }
   return { snaps, final, reopened };
 }

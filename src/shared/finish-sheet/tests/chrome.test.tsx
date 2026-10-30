@@ -5,7 +5,7 @@ import { PuzzleBar, StartCard } from '@/shared/start-card';
 import { heldStyle, mockSite, renderWithProviders } from '@/shared/testing';
 import { PRESSED } from '@/shared/ui';
 
-import { ANNOUNCE_MS, FinishSheet, stackShare } from '../FinishSheet';
+import { ANNOUNCE_MS, FinishSheet } from '../FinishSheet';
 
 const mockWindow = { width: 390, height: 844, scale: 3, fontScale: 1 };
 jest.mock('react-native/Libraries/Utilities/useWindowDimensions', () => ({
@@ -44,41 +44,39 @@ const sheet = (celebrate: boolean) => (
 
 describe('GIVEN the finish sheet', () => {
   describe('WHEN its buttons are held', () => {
-    it('THEN back, Share and Next each show the shared pressed look', async () => {
+    it('THEN back shows the shared pressed look, and Share and Play more the Button’s', async () => {
       await renderWithProviders(sheet(false));
       expect(await heldStyle(screen.getByRole('link', { name: 'Back to Puzzles' }))).toMatchObject(
         PRESSED,
       );
-      expect(await heldStyle(screen.getByRole('button', { name: 'Share' }))).toMatchObject(PRESSED);
-      expect(await heldStyle(screen.getByTestId('finish-next'))).toMatchObject(PRESSED);
+      const held = async (id: string) =>
+        StyleSheet.flatten(await heldStyle(screen.getByTestId(id)));
+      expect(await held('finish-share-button')).toMatchObject({ opacity: 0.75 });
+      expect(await held('finish-next')).toMatchObject({ opacity: 0.75 });
     });
   });
 
-  describe('WHEN a stat is a long number at large text', () => {
-    it('THEN it stays on one line and shrinks to fit rather than breaking', async () => {
+  describe('WHEN the streak is a long number at large text (AF-019)', () => {
+    it('THEN it is one line under the score, not a big stat', async () => {
+      mockWindow.fontScale = 2;
       await renderWithProviders(sheet(false));
-      const v = screen.getByText('1150');
-      expect(v.props.numberOfLines).toBe(1);
-      expect(v.props.adjustsFontSizeToFit).toBe(true);
-      expect(v.props.minimumFontScale).toBe(0.6);
+      expect(screen.getByTestId('finish-streak')).toHaveTextContent('🔥 1150-day streak');
+      expect(screen.queryByText('1150')).toBeNull();
+      expect(screen.queryByText('best streak')).toBeNull();
     });
   });
 
   describe('WHEN the text is large or the phone narrow', () => {
-    const card = () => StyleSheet.flatten(screen.getByTestId('finish-share-card').props.style);
-    it('THEN the rule stacks only past 1.3× text or under 360 points', () => {
-      expect(stackShare({ width: 390, fontScale: 1 })).toBe(false);
-      expect(stackShare({ width: 390, fontScale: 2 })).toBe(true);
-      expect(stackShare({ width: 320, fontScale: 1 })).toBe(true);
-    });
-    it('THEN at normal text the line and the Share pill sit side by side', async () => {
+    it('THEN Share result stays one full-width button (the line goes in the share sheet)', async () => {
+      Object.assign(mockWindow, { width: 320, fontScale: 2 });
       await renderWithProviders(sheet(false));
-      expect(card().flexDirection).toBe('row');
-    });
-    it('THEN at 2× text the Share pill sits under the share line instead of squeezing it', async () => {
-      mockWindow.fontScale = 2;
-      await renderWithProviders(sheet(false));
-      expect(card().flexDirection).toBe('column');
+      expect(
+        StyleSheet.flatten(screen.getByTestId('finish-share-button').props.style),
+      ).toMatchObject({
+        flexGrow: 1,
+        minHeight: 48,
+      });
+      expect(screen.queryByText('✏️ Mini #105 — 1:27 · 🔥5')).toBeNull();
     });
   });
 

@@ -1,4 +1,4 @@
-import { londonDay } from '@noodle/core';
+import { keptPids, londonDay } from '@noodle/core';
 import { act, fireEvent, screen, waitFor, within } from '@testing-library/react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Alert, Share, StyleSheet } from 'react-native';
@@ -664,6 +664,8 @@ describe('GIVEN a claim that brings another player to an install already in a le
       await waitFor(() => expect(screen.getByTestId('overall-board')).toBeOnTheScreen());
       expect(board().pid).toBe(PID);
       expect(board().pend).toBeUndefined();
+      // R4: the choice is remembered, so the next sync doesn't ask again
+      expect(keptPids(appStorage)).toContain(OTHER);
     });
   });
 });

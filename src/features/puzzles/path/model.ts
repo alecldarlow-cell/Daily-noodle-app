@@ -383,7 +383,7 @@ export function restore(data: PathData, rec: unknown): PathState {
   s.cellValue = data.solution.map((row) => row.slice());
   s.solved = true;
   s.history = [];
-  s.msg = 'Thread complete in ' + recordTime(rec) + '.';
+  s.msg = 'Path complete in ' + recordTime(rec) + '.';
   return s;
 }
 
@@ -435,7 +435,7 @@ function onTap(s: PathState, r: number, c: number): void {
   const headCell = low ? s.lowCell : s.highCell;
   const target = low ? s.lowHead + 1 : s.highHead - 1;
   if (manhattan([r, c], headCell) !== 1) {
-    reject('Not next to the active end — the thread grows one square at a time.');
+    reject('Not next to the active end — the path grows one square at a time.');
     return;
   }
   const existing = s.cellValue[r]![c];
@@ -462,13 +462,13 @@ function onTap(s: PathState, r: number, c: number): void {
     }
     reject(
       P.lockedSet.has(key)
-        ? 'That given is ' + existing + ', but the thread needs ' + target + ' next.'
-        : 'That square is already part of the thread.',
+        ? 'That given is ' + existing + ', but the path needs ' + target + ' next.'
+        : 'That square is already part of the path.',
     );
     return;
   }
   if (P.lockedByValue.has(target)) {
-    reject(target + ' is already given elsewhere — the thread has to pass through it.');
+    reject(target + ' is already given elsewhere — the path has to pass through it.');
     return;
   }
   const vmap = valueCellMap(s);

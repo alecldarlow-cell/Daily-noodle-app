@@ -178,6 +178,54 @@ describe('GIVEN a Tangle not yet played', () => {
 });
 
 describe('GIVEN a round in play', () => {
+  describe('WHEN a word is entered (the tile flash, AF-027)', () => {
+    it('THEN its tiles flash green for any accepted word, rarer included, gold only for the star', () => {
+      const g = playing();
+      const ago = findPath(tangle19, 'ago')!;
+      g.trace(ago);
+      expect(g.e.s.flash).toEqual({ tiles: ago, cls: 'good' });
+      g.word('agio');
+      expect(g.e.s.flash).toEqual({ tiles: findPath(tangle19, 'agio'), cls: 'good' });
+      g.trace(tangle19.starPath);
+      expect(g.e.s.flash).toEqual({ tiles: tangle19.starPath, cls: 'gold' });
+    });
+    it('THEN a word not accepted flashes grey, and the word is kept for the screen to name', () => {
+      const g = playing();
+      g.trace([0, 1, 2]);
+      expect(g.e.s.flash).toEqual({ tiles: [0, 1, 2], cls: 'meh' });
+      expect(g.e.s.missed).toBe([0, 1, 2].map((i) => tangle19.tiles[i]!.toLowerCase()).join(''));
+      g.trace([0, 1]);
+      expect(g.e.s.flash?.cls).toBe('meh');
+      g.word('ago');
+      g.word('ago');
+      expect(g.e.s.flash?.cls).toBe('meh');
+    });
+    it('THEN the flash lasts about 420 ms, 250 ms with reduced motion, and a new trace clears it', () => {
+      const g = playing();
+      g.word('ago');
+      g.wait(400);
+      expect(g.e.s.flash).not.toBeNull();
+      g.wait(40);
+      expect(g.e.s.flash).toBeNull();
+      const r = playing({ 'digi-tangle-v1': { v: 1, rm: true, days: {}, done: {} } });
+      r.word('ago');
+      r.wait(240);
+      expect(r.e.s.flash).not.toBeNull();
+      r.wait(20);
+      expect(r.e.s.flash).toBeNull();
+      r.word('two');
+      r.tap(15);
+      expect(r.e.s.path).toEqual([15]);
+      expect(r.e.s.flash).toBeNull();
+    });
+    it('THEN the flash changes no move, score or save', () => {
+      const a = playing();
+      a.word('ago');
+      a.word('agio');
+      expect(a.doc().days['DP·TANG·0019']).toMatchObject({ found: ['ago', 'agio'], score: 3 });
+    });
+  });
+
   describe('WHEN words are traced', () => {
     it('THEN a word scores its length less two, the star double, and the found list grows', () => {
       const g = playing();
@@ -185,7 +233,8 @@ describe('GIVEN a round in play', () => {
       expect(g.e.s.toast).toEqual({ text: '+1 AGO', cls: 'on good' });
       g.trace(tangle19.starPath);
       expect(g.e.s.toast).toEqual({ text: '★ Longest word! +12', cls: 'on gold' });
-      g.word('agio'); // a rarer word scores too
+      g.word('agio'); // a rarer word scores too, and says so (AF-027, site S2)
+      expect(g.e.s.toast).toEqual({ text: '+2 AGIO · rarer word', cls: 'on good' });
       expect(boardTop(g.e)).toMatchObject({
         score: 15,
         words: '3 words',

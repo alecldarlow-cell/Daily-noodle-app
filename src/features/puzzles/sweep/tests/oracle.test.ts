@@ -69,7 +69,7 @@ describe('GIVEN a scenario simulated on a fake clock', () => {
       expect(out.final).toMatchObject({
         title: 'Swept',
         note: 'All seven mines found, no hints.',
-        kick: 'Sweep 94, Sunday 18 October',
+        kick: 'Sweep 94',
         stats: ['1', '1', '1'],
         again: false,
         round: 1,

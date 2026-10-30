@@ -167,9 +167,8 @@ const finishRead = (p) =>
       hero: txt('#winTime'),
       title: txt('#winTitle'),
       kick: txt('.fin-kick'),
-      stats: [...document.querySelectorAll('.fin-stats > div > b')].map((b) =>
-        (b.textContent || '').trim(),
-      ),
+      // AF-019 (site #40): the three stats became one line under the score
+      streakLine: txt('.fin-streak'),
       recap: txt('.fin-recap-sub'),
       open: !!document.querySelector('#winModal.fin-open'),
       startCard: !!document.querySelector('.dn-start:not([hidden])'),
@@ -264,7 +263,7 @@ async function replayOne(H, drive, browser, pg, variant) {
       ['finish time', w.hero, n.hero],
       ['finish title', w.title, n.title],
       ['finish kicker', w.kick, n.kick],
-      ['finish stats', w.stats, n.stats],
+      ['finish streak line', w.streakLine, n.streakLine],
       ['finish recap line', w.recap, n.recap],
     ])
       if (!same(a, b)) diffs.push({ at: k, web: a, native: b });
@@ -278,7 +277,7 @@ async function replayOne(H, drive, browser, pg, variant) {
         ['reopened share line', r.share, nr.share],
         ['reopened note', r.note, nr.note],
         ['reopened time', r.hero, nr.hero],
-        ['reopened stats', r.stats, nr.stats],
+        ['reopened streak line', r.streakLine, nr.streakLine],
         ['reopened: no second puzzle_end', r.ends.length, 0],
         ['reopened: sheet up, no start card', r.open && !r.startCard, true],
       ])

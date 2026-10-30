@@ -50,7 +50,7 @@ describe('GIVEN a Reckon simulated on a fake clock', () => {
       });
       expect(sim.final.share).toBe('🎯 Reckon #2 — 🎯🎯⬜🎯🎯⬜🎯🎯🎯🎯 · 800 pts');
       expect(sim.final.hero).toBe('800pts');
-      expect(sim.final.kick).toBe('Reckon 2, Wednesday 21 October');
+      expect(sim.final.kick).toBe('Reckon 2');
       expect(sim.final.end).toMatchObject({
         score: 800,
         bulls: 8,
@@ -67,6 +67,7 @@ describe('GIVEN a Reckon simulated on a fake clock', () => {
         note: sim.final.note,
         hero: sim.final.hero,
         stats: sim.final.stats,
+        streakLine: sim.final.streakLine,
         rows: sim.final.rows,
       });
     });
