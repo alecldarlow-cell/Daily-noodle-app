@@ -11,7 +11,8 @@ including the 26 Oct entries. This file is the short version of where things sta
 - **Native build needed for app.json changes.** App Links, the icon and the splash changed the runtime fingerprint, so
   OTA updates from #58 on reach only builds made after it:
   - Alec's phone runs preview build `8bd9988f` (0.1.0, after #61, with the DP icon).
-  - The Play build is production EAS `2b29e8d6-c3e1-4fa3-8191-246c88ff14ea`: 0.2.0, with DN.
+  - The Play build is 0.3.0 (version code 7), from Release run 40953273792 on `78c26e1`, live on Alpha 30 Oct 2026.
+    Runtime `ea55e856…` (`store/runtime.json`). Before it: EAS `2b29e8d6-c3e1-4fa3-8191-246c88ff14ea`, 0.2.0.
 - **Builds:** run the Release workflow (`workflow_dispatch`, profile/platform). It only queues on EAS, and the free
   queue can take one to two hours. `npx eas-cli@25.3.0 build:view <id> --json` shows the status (EAS is logged in on
   this PC).
@@ -27,13 +28,11 @@ including the 26 Oct entries. This file is the short version of where things sta
 - **Store listing:** the four new phone screenshots (`store/screenshots/`, 1080 × 1920, dark) are saved as a draft.
   - They show a real solve of old Mini 92 (2:59, no checks) and Alec's real times.
   - Full-size originals stay local in `store/screenshots/raw/` (ignored).
-- **Next steps, in order:**
-  1. Upload the 0.2.0 DN `.aab` to the Alpha track. At about 67 MB it's over Claude in Chrome's 10 MB upload limit, so
-     Alec drags it in (keep it in the ignored `store/release-0.2.0/`).
-  2. Add release notes.
-  3. Send everything for review from Publishing overview, with Alec's OK.
-  4. When the release is live, Alec shares the group link.
-  5. After 14 days with 12 or more testers, apply for production.
+- **Sign-in details** (Play's App access): "restricted", one entry saying sign-in is optional, magic-link only, adds
+  sync and leagues, and everything works signed out (30 Oct 2026; Play blocked 0.3.0 until it was filled in). Alec
+  ticks its full-access box himself.
+- **Next steps:** after 14 days with 12 or more opted-in testers, apply for production (12 testers for 3 days on
+  30 Oct).
 - **App Links on Play installs:** add Play's **app-signing** SHA-256 (Play Console › App integrity) to the site's
   `.well-known/assetlinks.json` (site PR). Without it, Play-installed copies open invites in the browser. The EAS key
   is already there and verified.
