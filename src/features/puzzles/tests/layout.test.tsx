@@ -40,12 +40,12 @@ describe.each([
   ['Path', () => <PathScreen file={file92} />],
 ])('GIVEN %s on a tall phone', (_name, el) => {
   describe('WHEN the board is laid out', () => {
-    it('THEN its slot takes the spare height but holds the board at its top, under the bar', async () => {
+    it('THEN its slot takes the spare height and holds the board at its bottom, by the controls (AF-032)', async () => {
       await renderWithProviders(el());
       await play();
       expect(flat('board-slot')).toMatchObject({
         flex: 1,
-        justifyContent: 'flex-start',
+        justifyContent: 'flex-end',
         minHeight: 0,
       });
     });
@@ -64,8 +64,8 @@ describe.each([
 });
 
 describe('GIVEN the shared board slot', () => {
-  it('THEN it never centres the board in the spare height', () => {
-    expect(BOARD_SLOT.justifyContent).toBe('flex-start');
+  it('THEN the spare height goes above the board, never between it and the controls', () => {
+    expect(BOARD_SLOT.justifyContent).toBe('flex-end');
   });
 });
 
@@ -104,5 +104,26 @@ describe('GIVEN Doku’s bank tiles', () => {
       const kids = row.children as unknown as { props: { testID?: string } }[];
       expect(kids.map((k) => k.props.testID)).toEqual(['doku-msg', 'doku-hints']);
     });
+  });
+});
+
+declare const __dirname: string;
+
+describe('GIVEN Link and Tangle on a tall phone (AF-032)', () => {
+  it('THEN Link’s rows and Tangle’s board sit at the bottom of their spare height, by the thumb', () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const link = require('fs').readFileSync(
+      `${__dirname}/../link/components/LinkBoard.tsx`,
+      'utf8',
+    ) as string;
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const tangle = require('fs').readFileSync(
+      `${__dirname}/../tangle/components/TangleBoard.tsx`,
+      'utf8',
+    ) as string;
+    expect(link).toMatch(/board: \{ flex: 1, gap: 7, justifyContent: 'flex-end' \}/);
+    expect(tangle).toMatch(
+      /boardWrap: \{ flex: 1, alignItems: 'center', justifyContent: 'flex-end' \}/,
+    );
   });
 });

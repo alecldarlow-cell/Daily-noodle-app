@@ -412,7 +412,8 @@ const styles = StyleSheet.create({
   idle: { fontSize: 14, fontFamily: FONT.sans, letterSpacing: 0 },
   toastSlot: { height: TOAST_H, justifyContent: 'center' },
   toast: { fontSize: 14, fontFamily: FONT.display },
-  boardWrap: { flex: 1, alignItems: 'center', justifyContent: 'flex-start' },
+  // The board sits at the bottom of the spare height, in thumb reach (AF-032).
+  boardWrap: { flex: 1, alignItems: 'center', justifyContent: 'flex-end' },
   board: { position: 'relative' },
   tile: { position: 'absolute', borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   letter: { fontSize: 32, fontFamily: FONT.display },

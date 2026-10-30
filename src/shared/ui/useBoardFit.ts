@@ -11,7 +11,12 @@ const FRAME = 6;
  * height falls between it and the controls, which stay at the bottom for the thumbs; on a
  * short phone or at a large font scale the slot is only as tall as the board needs.
  */
-export const BOARD_SLOT: ViewStyle = { flex: 1, justifyContent: 'flex-start', minHeight: 0 };
+/**
+ * A board's slot: takes the spare height and holds the board at its BOTTOM, just above the
+ * controls, so the board is in thumb reach on tall phones (Alec, 30 Oct 2026, tracker AF-032;
+ * replaces the 26 Oct top alignment). On a short phone there is no spare height, so nothing moves.
+ */
+export const BOARD_SLOT: ViewStyle = { flex: 1, justifyContent: 'flex-end', minHeight: 0 };
 
 /**
  * The side of a square board from the space it actually has. `guess` (fitBoard's

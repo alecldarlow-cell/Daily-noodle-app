@@ -783,3 +783,10 @@ The previous run couldn't push to the website. This one could, so the website we
   - AF-024: Play's app signing key (`0A:E9:05:AD…`) is already in assetlinks.json; still to check `pm get-app-links` on a Play-installed phone.
   - Yarn still flashes rarer words yellow: change it?
   - Not seen on a real phone: the Borders big map, the jingle on silent, the Link pause through the lock screen, and two-device sync.
+
+### 30 Oct 2026 — Boards in thumb reach on tall phones (this PR; tracker AF-032)
+
+- **Feedback** (players via Alec): on tall phones boards sat under the top bar with a large empty gap above the controls (Sweep 106: about half a screen), so every tap was a stretch.
+- **Change** (Alec's call 30 Oct, replacing his 26 Oct top alignment): the shared `BOARD_SLOT` now uses `justifyContent: 'flex-end'`, so Mini, Doku, Sweep and Path hold the board at the bottom of the spare height, just above their controls. Link's rows and Tangle's board do the same. On short phones there is no spare height, so nothing moves. Board sizing is unchanged.
+- **Tests proved:** `layout.test.tsx` expects the bottom alignment for all four board players, and Link and Tangle (it failed on the old alignment). `check` green (1421 tests); runtime test green.
+- **Ship:** JS only; production update after merge (reaches testers on 0.3.0).
