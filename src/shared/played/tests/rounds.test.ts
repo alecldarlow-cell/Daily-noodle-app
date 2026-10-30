@@ -69,8 +69,19 @@ describe('GIVEN Borders’ or Reckon’s save', () => {
     expect(roundOf('reckon', 'R', { cur: { id: 'X' } }, null)).toBeNull();
     expect(roundOf('reckon', 'R', { cur: null }, null)).toBeNull();
   });
-  it('THEN Link never has one (it keeps no round yet)', () => {
-    expect(roundOf('link', 'L', { cur: { id: 'L' } }, null)).toBeNull();
+});
+
+describe('GIVEN Link’s save (its cur since 29 Oct 2026, AF-029/AF-020)', () => {
+  it('THEN its cur for this puzzle is a round, with the time played', () => {
+    expect(roundOf('link', 'L', { cur: { id: 'L', s: 75 } }, null)).toEqual({ time: '1:15' });
+    expect(roundOf('link', 'L', { cur: { id: 'L' } }, null)).toEqual({});
+    expect(roundOf('link', 'L', { cur: { id: 'X', s: 5 } }, null)).toBeNull();
+    expect(roundOf('link', 'L', { cur: null }, null)).toBeNull();
+  });
+  it('THEN a finished Link has none, even with a stale cur', () => {
+    expect(
+      roundOf('link', 'L', { done: { L: { o: 'win' } }, cur: { id: 'L', s: 3 } }, null),
+    ).toBeNull();
   });
 });
 
@@ -80,6 +91,7 @@ describe('GIVEN a type with one kept round', () => {
       expect(heldElsewhere('mini', 'A', null, slot('B'))).toBe('B');
       expect(heldElsewhere('borders', 'A', { cur: { id: 'B' } }, null)).toBe('B');
       expect(heldElsewhere('reckon', 'A', { cur: { id: 'B' } }, null)).toBe('B');
+      expect(heldElsewhere('link', 'A', { cur: { id: 'B', s: 9 } }, null)).toBe('B');
     });
   });
   describe('WHEN this puzzle holds it, nobody does, or the holder is finished', () => {
@@ -91,11 +103,10 @@ describe('GIVEN a type with one kept round', () => {
       expect(heldElsewhere('doku', 'A', { done: { B: { s: 3 } } }, slot('B'))).toBeNull();
     });
   });
-  describe('WHEN the type keeps rounds side by side (Tangle) or none (Link)', () => {
+  describe('WHEN the type keeps rounds side by side (Tangle)', () => {
     it('THEN nothing is ever replaced', () => {
       const site = { days: { B: { state: 'playing' } }, cur: { id: 'B' } };
       expect(heldElsewhere('tangle', 'A', site, null)).toBeNull();
-      expect(heldElsewhere('link', 'A', site, null)).toBeNull();
     });
   });
 });

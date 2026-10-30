@@ -9,7 +9,9 @@ import {
   finishing,
   init,
   recordTime,
+  resumeRound,
   REVEAL_STEP_MS,
+  roundToKeep,
   SAVE_KEY,
   SETTLE_MS,
   shuffle,
@@ -17,6 +19,7 @@ import {
   type LinkData,
   type LinkState,
   type Move,
+  withRound,
 } from '../model';
 
 export type Phase = 'start' | 'play' | 'finished';
@@ -45,6 +48,12 @@ export interface GameDeps {
  * (saved, the streak on today's first go only, announced on a first finish), the sheet
  * rising 1.2 s after a win (0.5 s after a loss, at once with reduced motion), and Play
  * again (not recorded) after a loss. A finished Link opens on its sheet.
+ *
+ * The clock (R10, as engines/link.js since 29 Oct 2026) adds up stretches of play: it
+ * stops while the app is away (`away`) and carries on when it's back (`back`), so time
+ * away never counts. The unfinished round is kept in `digi-link-v1` › cur, as the page
+ * keeps it, after every counted guess and whenever the app goes away; it is cleared at
+ * the finish. A Link opened with a kept round shows it paused behind Resume.
  */
 export class LinkGame {
   state: LinkState;
@@ -52,8 +61,15 @@ export class LinkGame {
   info: FinishInfo | null;
   /** The puzzle's day is before today's (London): an archive Link. Display only. */
   readonly past: boolean;
+  /** Milliseconds already played, and when the current stretch began (null: stopped). */
+  private acc = 0;
   private clockAt: number | null = null;
-  private frozen = 0;
+  /** The clock was stopped by the app going away, and carries on when it's back. */
+  private awayPaused = false;
+  /** A guess has been made since the round began (the page's curDirty). */
+  private dirty = false;
+  /** Opened with a kept round: the start card offers Resume, with this many seconds. */
+  readonly resumed: { found: number; secs: number } | null = null;
   /** A reopened puzzle shows its saved time. */
   private shown: string | null;
   private committed: boolean;
@@ -82,6 +98,17 @@ export class LinkGame {
     this.info = restored ? reopenInfo(this.state.p, rec, deps.store) : null;
     this.shown = restored ? recordTime(rec) : null;
     this.committed = this.state.restored;
+    if (!restored) {
+      const r = resumeRound(this.state, deps.store.getItem(SAVE_KEY), (t) =>
+        shuffle(t, deps.random),
+      );
+      if (r) {
+        this.state = r.state;
+        this.acc = r.secs * 1000;
+        this.dirty = true;
+        this.resumed = { found: r.state.solved.length, secs: r.secs };
+      }
+    }
   }
 
   subscribe = (fn: () => void) => {
@@ -104,30 +131,88 @@ export class LinkGame {
     this.timers = [];
   }
 
-  /** The clock as the page's #timer shows it. */
+  /** Whole seconds played (the page's secs()). */
+  secs(at = this.deps.now()): number {
+    return Math.floor((this.acc + (this.clockAt !== null ? at - this.clockAt : 0)) / 1000);
+  }
+
+  /** The clock as the page keeps it, "MM:SS" (the saved record's form). */
   clock(at = this.deps.now()): string {
     if (this.shown !== null) return this.shown;
-    if (this.state.timer === 'running' && this.clockAt !== null)
-      return timerText((at - this.clockAt) / 1000);
-    return timerText(this.state.timer === 'idle' ? 0 : this.frozen);
+    return timerText(this.secs(at));
+  }
+
+  /** The bar's clock, the house way ("0:42"); dimmed while it waits (`waiting`). */
+  get waiting(): boolean {
+    return this.shown === null && !this.state.over && this.clockAt === null;
+  }
+
+  /** The app went to the background or inactive: stop the clock and keep the round. */
+  away() {
+    if (this.state.timer === 'running' && !this.state.over) {
+      this.stop();
+      this.awayPaused = true;
+      this.poke();
+    }
+    this.keep();
+  }
+
+  /** The app is back: carry on where it stopped. */
+  back() {
+    if (!this.awayPaused || this.state.over) return;
+    this.awayPaused = false;
+    this.clockAt = this.deps.now();
+    this.poke();
+  }
+
+  private stop(at = this.deps.now()) {
+    if (this.clockAt !== null) this.acc += at - this.clockAt;
+    this.clockAt = null;
+  }
+
+  /** curSave: write the round to digi-link-v1 › cur (quietly: a failed write is let go). */
+  private keep(at = this.deps.now()) {
+    const c = roundToKeep(this.state, this.secs(at), at, this.dirty);
+    if (c) this.writeRound(c);
+  }
+
+  private writeRound(c: Parameters<typeof withRound>[1]) {
+    try {
+      const next = withRound(this.deps.store.getItem(SAVE_KEY), c);
+      if (next !== null) this.deps.store.setItem(SAVE_KEY, next);
+    } catch {
+      /* the page's curWrite is quiet on failure */
+    }
   }
 
   private later(fn: () => void, ms: number) {
     this.timers.push(this.setT(fn, ms));
   }
 
-  private step(move: Move) {
+  private step(move: Move, at = this.deps.now()) {
     const before = this.state;
-    const at = this.deps.now();
     this.state = apply(before, move);
     const s = this.state;
-    if (
-      s.timer === 'running' &&
-      (before.timer !== 'running' || s.replayStarted !== before.replayStarted)
-    )
+    if (s.replayStarted !== before.replayStarted || (move.t === 'again' && s !== before)) {
+      // Play again: a fresh board and clock (the page's start()).
+      this.acc = 0;
+      this.clockAt = null;
+      this.awayPaused = false;
+      this.dirty = false;
+    }
+    if (s.timer === 'running' && before.timer !== 'running') {
+      this.awayPaused = false;
       this.clockAt = at;
-    if (s.timer === 'stopped' && before.timer === 'running')
-      this.frozen = Math.floor((at - (this.clockAt ?? at)) / 1000);
+    } else if (s.timer === 'running' && this.clockAt === null) this.clockAt = at;
+    if (s.timer === 'stopped' && before.timer === 'running') this.stop(at);
+    if (s.guesses.length > before.guesses.length) this.dirty = true;
+    // curSave after a counted guess that isn't a right four (that one keeps on landing),
+    // and after a landing that doesn't end the round; the fourth mistake clears it.
+    if (move.t === 'submit' && s.guesses.length > before.guesses.length && !s.settling) {
+      if (s.over) this.writeRound(null);
+      else this.keep(at);
+    }
+    if (move.t === 'land' && before.settling && !s.over) this.keep(at);
     if (s.settling && !before.settling)
       this.later(() => this.step({ t: 'land' }), this.reduced ? 0 : SETTLE_MS);
     if (s.revealing && !before.revealing) {
@@ -140,6 +225,7 @@ export class LinkGame {
     if (finishing(s) && !this.committed) {
       this.committed = true;
       const f = commitFinish(s, this.clock(at), this.deps.saves, this.deps.store, at);
+      this.writeRound(null); // curClear
       if (f.first) this.deps.announce(f);
       this.state = afterFinish(s, f);
       this.info = f;

@@ -215,6 +215,32 @@ export function settlePending(s: BoardState, take: boolean): BoardState {
   return st;
 }
 
+/**
+ * The league-identity choice, remembered (plan R4, 29 Oct 2026). When a sync finds the
+ * account holds another league player and the player taps "Keep this one", the account's
+ * player id is recorded here, so the next sync (and a restart) doesn't ask again: that
+ * account player is left alone and the account keeps it, as the site does while a
+ * browser hasn't chosen. App-only key; never synced.
+ */
+export const KEEP_KEY = 'noodle-app-league-keep';
+
+export function keptPids(kv: KV): string[] {
+  try {
+    const v: unknown = JSON.parse(kv.getItem(KEEP_KEY) ?? 'null');
+    const list = v && typeof v === 'object' ? (v as { pids?: unknown }).pids : null;
+    return Array.isArray(list) ? list.filter((x): x is string => typeof x === 'string') : [];
+  } catch {
+    return [];
+  }
+}
+
+export function rememberKeep(kv: KV, pid: string): void {
+  if (!pid) return;
+  const pids = keptPids(kv).filter((x) => x !== pid);
+  pids.push(pid);
+  kv.setItem(KEEP_KEY, JSON.stringify({ pids: pids.slice(-10) }));
+}
+
 // ---------- the history copy (dn-board.js backfill) ----------
 
 /** One finished puzzle for board_backfill: `{outcome, secs?, score?, mistakes?, path}`. */

@@ -12,6 +12,8 @@ interface PuzzleBarProps {
   streak: number;
   /** The clock as the player shows it, "0:14". */
   clock?: string;
+  /** The clock hasn't started yet (or is paused): drawn dimmed (link.css #timer.waiting). */
+  waiting?: boolean;
   onBack: () => void;
 }
 
@@ -31,7 +33,7 @@ export function clockLabel(clock: string): string {
  * The slim bar over a board (engines/house.js): back, name and number, difficulty, streak,
  * clock. The name is the board screen's heading for screen readers.
  */
-export function PuzzleBar({ name, sub, streak, clock, onBack }: PuzzleBarProps) {
+export function PuzzleBar({ name, sub, streak, clock, waiting, onBack }: PuzzleBarProps) {
   const pt = usePuzzleTokens();
   const shown = clock;
   return (
@@ -62,7 +64,7 @@ export function PuzzleBar({ name, sub, streak, clock, onBack }: PuzzleBarProps) 
       ) : null}
       {shown !== undefined ? (
         <Text
-          style={[styles.clock, { color: pt.ink }]}
+          style={[styles.clock, { color: pt.ink }, waiting && styles.waiting]}
           accessibilityRole="timer"
           accessibilityLabel={clockLabel(shown)}
           accessibilityLiveRegion="none"
@@ -76,6 +78,7 @@ export function PuzzleBar({ name, sub, streak, clock, onBack }: PuzzleBarProps) 
 }
 
 const styles = StyleSheet.create({
+  waiting: { opacity: 0.42 },
   bar: { flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 52, marginBottom: 6 },
   back: {
     width: 44,

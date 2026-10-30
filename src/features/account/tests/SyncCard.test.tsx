@@ -120,7 +120,7 @@ describe('GIVEN a signed-in player (AF-018, AF-003)', () => {
     expect(screen.getByRole('button', { name: 'Sync now' })).toBeOnTheScreen();
     expect(screen.queryByText(/Delete/)).toBeNull();
     await act(async () => fireEvent.press(screen.getByTestId('sync-now')));
-    expect(calls.map((c) => c.fn)).toEqual(['sync_pull', 'sync_push']);
+    expect(calls.map((c) => c.fn)).toEqual(['sync_pull_rev', 'sync_push_rev']);
     // One status only: no second “Up to date.” line.
     expect(screen.queryByText('Up to date.')).toBeNull();
     expect(screen.getByTestId('sync-line')).toHaveTextContent(/^Synced just now ·\s*Sync now$/);

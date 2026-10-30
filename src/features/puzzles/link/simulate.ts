@@ -22,6 +22,7 @@ import {
   disabled,
   init,
   REVEAL_STEP_MS,
+  roundToKeep,
   SAVE_KEY,
   SETTLE_MS,
   showsShare,
@@ -29,6 +30,7 @@ import {
   timerText,
   type LinkData,
   type LinkState,
+  withRound,
 } from './model';
 import { realMove, type Scenario } from './oracle';
 
@@ -57,7 +59,8 @@ export function snapshot(s: LinkState, timer: string, sheet: boolean): Snapshot 
     tiles: s.live.map((w) => w + (s.sel.includes(w) ? '*' : '')).join(' '),
     pips: s.mistakes,
     msg: `${s.msg.text}|${s.msg.tone}`,
-    timer,
+    // the bar's clock the house way ("0:15"), as #timer shows it since 29 Oct 2026
+    timer: timer.replace(/^0+(\d)/, '$1'),
     rank: s.label ? '· replay' : '',
     share: showsShare(s),
     off: (['submit', 'clear', 'shuffle'] as const).filter((k) => d[k]).join(' '),
@@ -148,10 +151,23 @@ export function simulate(
   let state = init(data, deal(allTiles(data)), { ranked: isRanked(kv, opened), rec: null });
   let clockAt: number | null = null;
   let frozen = 0;
-  const shown = (at: number) =>
+  const secsAt = (at: number) =>
     state.timer === 'running' && clockAt !== null
-      ? timerText((at - clockAt) / 1000)
-      : timerText(state.timer === 'idle' ? 0 : frozen);
+      ? Math.floor((at - clockAt) / 1000)
+      : state.timer === 'idle'
+        ? 0
+        : frozen;
+  const shown = (at: number) => timerText(secsAt(at));
+  // The round kept in digi-link-v1 › cur, as the page's curSave / curClear write it.
+  let dirty = false;
+  const writeRound = (c: Parameters<typeof withRound>[1]) => {
+    const next = withRound(kv.getItem(SAVE_KEY), c);
+    if (next !== null) kv.setItem(SAVE_KEY, next);
+  };
+  const keep = (at: number) => {
+    const c = roundToKeep(state, secsAt(at), at, dirty);
+    if (c) writeRound(c);
+  };
   const track = (before: LinkState, at: number) => {
     if (
       state.timer === 'running' &&
@@ -173,6 +189,7 @@ export function simulate(
     const f = commitFinish(state, shown(at), saves, kv, at);
     now = saved;
     if (f.first) ends.push(f.detail);
+    writeRound(null);
     state = afterFinish(state, f);
     info = f;
     sheets.push(sheetOf(f, kick));
@@ -188,13 +205,23 @@ export function simulate(
     let before = state;
     state = apply(state, real);
     track(before, now);
-    if (m.t === 'again') sheetAt = Infinity;
+    if (m.t === 'again') {
+      sheetAt = Infinity;
+      dirty = false;
+    }
+    const guessed = state.guesses.length > before.guesses.length;
+    if (guessed) dirty = true;
+    if (guessed && !state.settling) {
+      if (state.over) writeRound(null);
+      else keep(now);
+    }
     if (state.settling) {
       const at = now + (sc.reduced ? 0 : SETTLE_MS);
       before = state;
       state = apply(state, { t: 'land' });
       track(before, at);
       if (state.over) finishNow(at);
+      else keep(at);
     } else if (state.revealing) {
       const rest = 4 - state.solved.length;
       const at = now + REVEAL_STEP_MS + (sc.reduced ? 0 : REVEAL_STEP_MS * rest);

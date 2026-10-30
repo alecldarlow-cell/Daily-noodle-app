@@ -1,5 +1,7 @@
 import type { SaveStore } from '@noodle/core';
+import { dnTime } from '@noodle/core';
 import { useCallback, useEffect, useState, useSyncExternalStore } from 'react';
+import { AppState } from 'react-native';
 
 import { useHapticDiff } from '@/shared/haptics';
 import { useReduceMotion } from '@/shared/motion';
@@ -45,6 +47,20 @@ export function useLinkGame(file: PuzzleFile<LinkData>, deps: Deps = {}) {
   }, [game, reduced]);
   useEffect(() => () => game.dispose(), [game]);
 
+  // R10: the clock stops while the app is in the background or inactive (the page's
+  // visibilitychange / pagehide), the round is kept, and it carries on when it's back.
+  // Leaving the screen keeps the round too.
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (st) => {
+      if (st === 'active') game.back();
+      else game.away();
+    });
+    return () => {
+      sub?.remove();
+      game.away();
+    };
+  }, [game]);
+
   // The page repaints its clock every 250 ms while it runs.
   const running = game.state.timer === 'running';
   useEffect(() => {
@@ -56,7 +72,8 @@ export function useLinkGame(file: PuzzleFile<LinkData>, deps: Deps = {}) {
   const dispatch = useCallback((m: ScreenMove) => game.dispatch(m), [game]);
   // Play on the start card is the page's start; a finished Link reopened is not.
   const [doneAtOpen] = useState(() => game.phase === 'finished');
-  const start = usePuzzleVisit(file.path, 'link', doneAtOpen);
+  // A resumed round was started when it was first played.
+  const start = usePuzzleVisit(file.path, 'link', doneAtOpen || !!game.resumed);
   const play = useCallback(() => {
     start();
     game.play();
@@ -66,7 +83,10 @@ export function useLinkGame(file: PuzzleFile<LinkData>, deps: Deps = {}) {
     phase: game.phase,
     info: game.info,
     past: game.past,
-    clock: game.clock(),
+    // the bar's clock the house way ("0:42"), dimmed while it waits (AF-028)
+    clock: dnTime(game.clock()),
+    waiting: game.waiting,
+    resumed: game.resumed,
     dispatch,
     play,
   };

@@ -1,4 +1,4 @@
-import { dnNum } from '@noodle/core';
+import { dnNum, dnTime } from '@noodle/core';
 import { useRef, type ComponentRef } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -11,9 +11,12 @@ import { usePlayerExit } from '@/shared/shell';
 
 import type { PuzzleFile } from '../../types';
 import { useLinkGame } from '../hooks/useLinkGame';
-import { groupsByRank, shownLabel, type LinkData } from '../model';
+import { groupsByRank, shownLabel, timerText, type LinkData } from '../model';
 import { LinkBoard } from './LinkBoard';
 import { GroupBands, GuessSquares, LinkArt, PlayAgain } from './LinkParts';
+
+/** engines/link.js resumeCard: how many groups a kept round had found. */
+const FOUND = ['No groups', 'One group', 'Two groups', 'Three groups'];
 
 /** Link, played natively: start card, board, finish sheet. */
 export function LinkScreen({ file }: { file: PuzzleFile<LinkData> }) {
@@ -39,6 +42,14 @@ export function LinkScreen({ file }: { file: PuzzleFile<LinkData> }) {
         rule={ruleFor('link', {})}
         stats={stats}
         art={<LinkArt />}
+        resume={
+          game.resumed
+            ? {
+                head: 'Today’s Link, part-played',
+                status: `Paused at ${dnTime(timerText(game.resumed.secs))}. ${FOUND[game.resumed.found] ?? ''} found so far; your clock carries on from there.`,
+              }
+            : undefined
+        }
         onPlay={game.play}
         onBack={back}
       />
@@ -87,6 +98,7 @@ export function LinkScreen({ file }: { file: PuzzleFile<LinkData> }) {
           sub={`${file.data.band}${shownLabel(state, game.past) ? ' · replay' : ''}`}
           streak={stats.streak}
           clock={game.clock}
+          waiting={game.waiting}
           onBack={back}
         />
         <LinkBoard state={state} dispatch={dispatch} past={game.past} />

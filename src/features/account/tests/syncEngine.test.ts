@@ -1,4 +1,6 @@
-import { LAST_SYNC_KEY, runSync } from '../hooks/syncEngine';
+import { KEEP_KEY } from '@noodle/core';
+
+import { LAST_SYNC_KEY, runSync, SyncBusyError, TRIES } from '../hooks/syncEngine';
 import { syncApi } from '../api/syncApi';
 import { fakeClient, memoryStorage } from './fakeClient';
 
@@ -30,7 +32,13 @@ describe('GIVEN a signed-in player with saves on this phone and on their account
       const r = await runSync(store, syncApi(client), () => 1000);
       const here = read(store, 'digi-mini-v1');
       expect(Object.keys(here.done).sort()).toEqual(['A', 'B', 'C']);
-      expect(remote['digi-mini-v1']).toEqual(here);
+      // The account keeps the first result it stored for A, and this phone keeps its own
+      // (the website's rule since 29 Oct 2026, S1); both now hold A, B and C.
+      expect(here.done.A).toEqual({ s: 60, d: '2026-10-24' });
+      expect(remote['digi-mini-v1']).toEqual({
+        ...here,
+        done: { ...here.done, A: { s: 999, d: '2026-10-23' } },
+      });
       expect(r).toEqual({ pulled: 1, pushed: 1 });
       expect(remote['noodle-app-today']).toBeUndefined();
       expect(remote['digi-yarn-v1']).toBeUndefined();
@@ -115,7 +123,7 @@ describe('GIVEN a signed-in player with saves on this phone and on their account
     it('THEN nothing is pushed', async () => {
       const { client, calls } = fakeClient({ email: 'a@b.c' });
       expect(await runSync(memoryStorage(), syncApi(client))).toEqual({ pulled: 0, pushed: 0 });
-      expect(calls.map((c) => c.fn)).toEqual(['sync_pull']);
+      expect(calls.map((c) => c.fn)).toEqual(['sync_pull_rev']);
     });
   });
 
@@ -138,7 +146,153 @@ describe('GIVEN a signed-in player with saves on this phone and on their account
       await runSync(store, syncApi(client));
       expect(store.getItem('digi-doku-v1')).toBe('{broken');
       expect(store.getItem('digi-yarn-v1')).toBeNull();
-      expect(calls.map((c) => c.fn)).toEqual(['sync_pull']);
+      expect(calls.map((c) => c.fn)).toEqual(['sync_pull_rev']);
+    });
+  });
+});
+
+// Plan R3 (29 Oct 2026): revisions with compare-and-swap, as the website's dn-sync.js.
+describe('GIVEN two devices on one account (R3)', () => {
+  const mini = (id: string, s: number) => ({ v: 1, done: { [id]: { s, d: '2026-10-29' } } });
+
+  describe('WHEN another device writes between this phone pulling and pushing', () => {
+    it('THEN nothing is stored, the phone pulls again, merges and retries, and both results end up on the account', async () => {
+      const store = memoryStorage({ 'digi-mini-v1': mini('P', 30) });
+      let once = true;
+      const { client, remote, calls } = fakeClient({
+        email: 'a@b.c',
+        remote: { 'digi-mini-v1': mini('A', 40) },
+        beforePushRev: (r, bump) => {
+          if (!once) return;
+          once = false;
+          r['digi-mini-v1'] = {
+            v: 1,
+            done: { A: { s: 40, d: '2026-10-29' }, Q: { s: 50, d: '2026-10-29' } },
+          };
+          bump('digi-mini-v1');
+        },
+      });
+      const r = await runSync(store, syncApi(client));
+      expect(calls.map((c) => c.fn)).toEqual([
+        'sync_pull_rev',
+        'sync_push_rev',
+        'sync_pull_rev',
+        'sync_push_rev',
+      ]);
+      expect(Object.keys((remote['digi-mini-v1'] as { done: object }).done).sort()).toEqual([
+        'A',
+        'P',
+        'Q',
+      ]);
+      expect(Object.keys(read(store, 'digi-mini-v1').done).sort()).toEqual(['A', 'P', 'Q']);
+      expect(r.pushed).toBe(1);
+    });
+  });
+
+  describe('WHEN the phones push in either order from the same start', () => {
+    it.each([['phone 1 first'], ['phone 2 first']])(
+      'THEN a fresh third phone gets both results (%s)',
+      async (order) => {
+        const { client, remote } = fakeClient({ email: 'a@b.c' });
+        const one = memoryStorage({ 'digi-link-v1': mini('L1', 61) });
+        const two = memoryStorage({ 'digi-link-v1': mini('L2', 62) });
+        const [a, b] = order === 'phone 1 first' ? [one, two] : [two, one];
+        await runSync(a, syncApi(client));
+        await runSync(b, syncApi(client));
+        const three = memoryStorage();
+        await runSync(three, syncApi(client));
+        expect(Object.keys(read(three, 'digi-link-v1').done).sort()).toEqual(['L1', 'L2']);
+        expect(Object.keys((remote['digi-link-v1'] as { done: object }).done).sort()).toEqual([
+          'L1',
+          'L2',
+        ]);
+      },
+    );
+  });
+
+  describe('WHEN another device keeps writing every time', () => {
+    it(`THEN it gives up after ${TRIES} tries with a clear message, and this phone's results stay`, async () => {
+      const store = memoryStorage({ 'digi-mini-v1': mini('P', 30) });
+      const { client } = fakeClient({
+        email: 'a@b.c',
+        remote: { 'digi-mini-v1': mini('A', 40) },
+        beforePushRev: (_r, bump) => bump('digi-mini-v1'),
+      });
+      await expect(runSync(store, syncApi(client))).rejects.toBeInstanceOf(SyncBusyError);
+      expect(Object.keys(read(store, 'digi-mini-v1').done).sort()).toEqual(['A', 'P']);
+    });
+  });
+
+  describe('WHEN the account already has every document as this phone does', () => {
+    it('THEN nothing is pushed', async () => {
+      const doc = mini('A', 40);
+      const store = memoryStorage({ 'digi-mini-v1': doc });
+      const { client, calls } = fakeClient({ email: 'a@b.c', remote: { 'digi-mini-v1': doc } });
+      expect(await runSync(store, syncApi(client))).toEqual({ pulled: 1, pushed: 0 });
+      expect(calls.map((c) => c.fn)).toEqual(['sync_pull_rev']);
+    });
+  });
+
+  describe('WHEN the database has no revision functions yet', () => {
+    it('THEN it falls back to the old pull and push', async () => {
+      const store = memoryStorage({ 'digi-mini-v1': mini('P', 30) });
+      const { client, remote, calls } = fakeClient({
+        email: 'a@b.c',
+        legacy: true,
+        remote: { 'digi-mini-v1': mini('A', 40) },
+      });
+      await runSync(store, syncApi(client));
+      expect(calls.map((c) => c.fn)).toEqual(['sync_pull_rev', 'sync_pull', 'sync_push']);
+      expect(Object.keys((remote['digi-mini-v1'] as { done: object }).done).sort()).toEqual([
+        'A',
+        'P',
+      ]);
+    });
+  });
+
+  describe('WHEN the database refuses for another reason', () => {
+    it('THEN the error is not hidden by the fallback', async () => {
+      const { client } = fakeClient({ email: 'a@b.c', fail: 'not_signed_in' });
+      await expect(runSync(memoryStorage(), syncApi(client))).rejects.toThrow('not_signed_in');
+    });
+  });
+});
+
+// Plan R4 (29 Oct 2026): "Keep this one" is remembered.
+describe("GIVEN this phone kept its own league player over the account's (R4)", () => {
+  const theirs = {
+    pid: PID_A,
+    cur: 'ABCD',
+    leagues: [{ code: 'ABCD', name: 'Noodlers', nick: 'Alec', owner: true }],
+  };
+  const mine = {
+    pid: PID_B,
+    cur: 'WXYZ',
+    leagues: [{ code: 'WXYZ', name: 'Work', nick: 'A', owner: false }],
+  };
+
+  describe('WHEN the phone syncs again, or after a restart', () => {
+    it('THEN it is not asked again, keeps its player, and the account keeps its own', async () => {
+      const store = memoryStorage({ 'noodle-board-v1': mine, [KEEP_KEY]: { pids: [PID_A] } });
+      const { client, remote } = fakeClient({
+        email: 'a@b.c',
+        remote: { 'noodle-board-v1': theirs },
+      });
+      await runSync(store, syncApi(client));
+      await runSync(store, syncApi(client));
+      expect(read(store, 'noodle-board-v1').pend).toBeUndefined();
+      expect(read(store, 'noodle-board-v1').pid).toBe(PID_B);
+      expect((remote['noodle-board-v1'] as { pid: string }).pid).toBe(PID_A);
+    });
+  });
+
+  describe('WHEN a second phone has not made the choice', () => {
+    it('THEN that phone is still asked, never switched silently', async () => {
+      const store = memoryStorage({ 'noodle-board-v1': mine });
+      const { client } = fakeClient({ email: 'a@b.c', remote: { 'noodle-board-v1': theirs } });
+      await runSync(store, syncApi(client));
+      expect(read(store, 'noodle-board-v1').pid).toBe(PID_B);
+      expect(read(store, 'noodle-board-v1').pend).toMatchObject({ pid: PID_A });
     });
   });
 });
