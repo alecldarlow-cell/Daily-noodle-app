@@ -85,6 +85,30 @@ describe('GIVEN a Link in play (R10)', () => {
     });
   });
 
+  describe('WHEN the screen is left part-way (Back)', () => {
+    it('THEN the round is kept with its time, even with no guess yet', async () => {
+      const r = await renderWithProviders(<LinkScreen file={file78} />);
+      await press('Play');
+      await run(4000);
+      await r.unmount();
+      expect(save().cur).toMatchObject({ id: link78.id, f: [], m: 0, s: 4 });
+    });
+  });
+
+  describe('WHEN the app only goes inactive (iOS app switcher) and comes back', () => {
+    it('THEN the clock stops there too', async () => {
+      await renderWithProviders(<LinkScreen file={file78} />);
+      await press('Play');
+      await run(2000);
+      await goAway('inactive');
+      await run(30_000);
+      expect(clockText()).toBe('0:02');
+      await goAway('active');
+      await run(1000);
+      expect(clockText()).toBe('0:03');
+    });
+  });
+
   describe('WHEN a wrong guess is made', () => {
     it('THEN the round is written straight away, as the page writes it', async () => {
       await renderWithProviders(<LinkScreen file={file78} />);
