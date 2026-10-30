@@ -82,7 +82,11 @@ describe('GIVEN the board’s display-only wording', () => {
       expect(shownLabel(fresh(false), false)).toBe(true);
       expect(shownMsg(fresh(false), false).text).toBe(REPLAY_NOTE);
       expect(shownLabel(fresh(true), true)).toBe(false);
-      expect(shownMsg(fresh(true), true).text).toBe('');
+      // AF-028: a first go waits with the hint until the clock starts (was '').
+      expect(shownMsg(fresh(true), true)).toEqual({
+        text: 'Starts when you tap a word',
+        tone: 'wait',
+      });
     });
   });
 

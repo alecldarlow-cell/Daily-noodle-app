@@ -68,10 +68,11 @@ describe('GIVEN a Link not yet played', () => {
       await press('Play');
       expect(screen.getByTestId('link-board')).toBeOnTheScreen();
       expect(screen.getByText('Link 78')).toBeOnTheScreen();
-      expect(screen.getByText('00:00')).toBeOnTheScreen();
+      // The house way, "0:00" (was "00:00"); it runs from Play, so it's no longer dimmed.
+      expect(screen.getByTestId('puzzle-clock')).toHaveTextContent('0:00');
       expect(screen.getAllByTestId(/^tile-/)).toHaveLength(16);
       await run(3000);
-      expect(screen.getByText('00:03')).toBeOnTheScreen();
+      expect(screen.getByTestId('puzzle-clock')).toHaveTextContent('0:03');
     });
   });
 
