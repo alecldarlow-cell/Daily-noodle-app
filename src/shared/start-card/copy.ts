@@ -45,7 +45,7 @@ export function ruleFor(type: GridStreakType, data: RuleData): string {
     case 'sweep':
       return `Clear the board without hitting one of the ${W[mines] || mines} mines. Start on the highlighted square.`;
     case 'path':
-      return 'Join 1 to 36 in one unbroken thread, through every given number.';
+      return 'Join 1 to 36 in one unbroken path, through every given number.';
     case 'link':
       return 'Sixteen words, four hidden groups of four. Four mistakes and it’s over.';
   }
@@ -65,8 +65,8 @@ export const HOW: Record<GridStreakType, readonly string[]> = {
     'Every square can be worked out by deduction, so one mine ends the game. Hint shows a square you could have reasoned out, and why.',
   ],
   path: [
-    'Tap the marigold 1, then tap a touching square to place 2, and so on. Tap the 1 or the 36 to grow the thread from either end.',
-    'Given numbers are checkpoints the thread must pass through. Undo takes back a step; Hint shows a square that is forced.',
+    'Tap the marigold 1, then tap a touching square to place 2, and so on. Tap the 1 or the 36 to grow the path from either end.',
+    'Given numbers are checkpoints the path must pass through. Undo takes back a step; Hint shows a square that is forced.',
   ],
   link: [
     'Tap four words you think belong together, then Submit. Three right gets a “one away”.',

@@ -43,7 +43,7 @@ describe('GIVEN a Path not yet played', () => {
     await renderWithProviders(<PathScreen file={file92} />);
     expect(screen.getByText('No. 92, Sunday 18 October')).toBeOnTheScreen();
     expect(
-      screen.getByText('Join 1 to 36 in one unbroken thread, through every given number.'),
+      screen.getByText('Join 1 to 36 in one unbroken path, through every given number.'),
     ).toBeOnTheScreen();
     await fireEvent.press(screen.getByRole('button', { name: 'Play' }));
     expect(screen.getByTestId('path-board')).toBeOnTheScreen();
@@ -76,7 +76,7 @@ describe('GIVEN a Path not yet played', () => {
     expect(msg()).toHaveTextContent('Undone.');
     await fireEvent.press(screen.getByTestId('sq-0-0'));
     expect(msg()).toHaveTextContent(
-      'Not next to the active end — the thread grows one square at a time.',
+      'Not next to the active end — the path grows one square at a time.',
     );
     await fireEvent.press(screen.getByRole('button', { name: 'Hint' }));
     expect(screen.getByTestId('sq-2-5')).toHaveAccessibleName(/35/);
@@ -102,7 +102,7 @@ describe('GIVEN a Path not yet played', () => {
     await waitFor(() => expect(screen.getByTestId('finish-sheet')).toBeOnTheScreen(), {
       timeout: 3000,
     });
-    expect(screen.getByTestId('finish-title')).toHaveTextContent(/ · Thread\ complete$/);
+    expect(screen.getByTestId('finish-title')).toHaveTextContent(/ · Path complete$/);
     expect(screen.getByText('One to 36 without a hint.')).toBeOnTheScreen();
     expect(await sharedLine()).toMatch(/^〰️ Path #92 — 0:0\d$/);
     expect(screen.getByTestId('path-recap')).toBeOnTheScreen();

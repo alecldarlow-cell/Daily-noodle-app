@@ -55,7 +55,7 @@ export function PathScreen({ file }: { file: PuzzleFile<PathData> }) {
         path={file.path}
         n={n}
         date={file.date}
-        title="Thread complete"
+        title="Path complete"
         hero={game.info.hero}
         note={game.info.note}
         share={game.info.share}
@@ -65,7 +65,7 @@ export function PathScreen({ file }: { file: PuzzleFile<PathData> }) {
           { value: game.info.played, label: 'Paths played' },
         ]}
         recap={{
-          title: 'The thread',
+          title: 'The path',
           sub: 'The given numbers are shaded.',
           node: <PathRecap state={state} />,
         }}

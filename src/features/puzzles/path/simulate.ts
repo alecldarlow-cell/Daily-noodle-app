@@ -169,7 +169,7 @@ export function simulate(
     share: info.share,
     note: info.note,
     hero: info.hero,
-    title: 'Thread complete',
+    title: 'Path complete',
     kick: `Path ${pathNumber(data.id)}`,
     stats: stats(info),
     streakLine: line(info.streak),

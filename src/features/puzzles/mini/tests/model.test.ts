@@ -84,11 +84,53 @@ describe('GIVEN a new game', () => {
   });
 
   describe('WHEN letters are typed', () => {
-    it('THEN each goes in and the cursor moves on, stopping at the word’s end', () => {
+    // AF-031 (29 Oct 2026; was: the cursor stopped at the word's end, so "morex" ended MORX).
+    it('THEN each goes in, and a full word moves on to the next clue with a gap', () => {
       const s = play(s0, ...keys('morex'));
-      expect(letters(s).split('/')[0]).toBe('MORX#');
-      expect(s.sel).toMatchObject({ r: 0, c: 3 });
+      expect(letters(s).split('/').slice(0, 2)).toEqual(['MORE#', '.#X..']);
+      expect(s.sel).toEqual({ r: 1, c: 3, dir: 'A' });
       expect(s.started).toBe(true);
+    });
+  });
+
+  describe('WHEN a word already has letters from crossing answers (AF-031, engines/mini.js)', () => {
+    it('THEN typing skips the filled squares instead of typing over them', () => {
+      // 1 Down M-A-P-S gives 6 Across its P and 8 Across its S.
+      const down = play(s0, { t: 'cell', r: 0, c: 0 }, ...keys('maps'));
+      expect(letters(down)).toBe('M...#/A#.../P..../S..#./#....');
+      // A full 1 Down moves on to the next clue in the bar's order with a gap: 2 Down.
+      expect(down.sel).toEqual({ r: 0, c: 2, dir: 'D' });
+      // 1 Across from its second square: O, R, E.
+      const s = play(down, { t: 'cell', r: 0, c: 1 }, { t: 'bar' }, ...keys('ore'));
+      expect(letters(s).split('/')[0]).toBe('MORE#');
+      // 6 Across from its second square: R, I, D, E, then the P is already there.
+      const t = play(s, { t: 'cell', r: 2, c: 1 }, ...keys('ride'));
+      expect(t.sel.dir).toBe('A');
+      expect(letters(t).split('/')[2]).toBe('PRIDE');
+    });
+
+    it('THEN the gaps earlier in the word are filled after the later ones (wrapping round)', () => {
+      let s = play(s0, { t: 'cell', r: 2, c: 3 }, ...keys('de')); // 6 Across: ...DE
+      expect(s.sel).toEqual({ r: 2, c: 0, dir: 'A' });
+      s = play(s, ...keys('pri'));
+      expect(letters(s).split('/')[2]).toBe('PRIDE');
+    });
+
+    it('THEN a full word goes to the next clue, in the bar’s order, that has an empty square', () => {
+      const s = play(s0, ...keys('more'), ...keys('and'), ...keys('pride'));
+      expect(s.sel).toEqual({ r: 3, c: 0, dir: 'A' }); // 8 Across, its first square
+      // Every across full: round to the downs, 1 Down's first empty square.
+      const all = play(s, ...keys('sin'), ...keys('dyer'));
+      expect(letters(all)).toBe('MORE#/.#AND/PRIDE/SIN#./#DYER');
+      expect(all.sel).toEqual({ r: 1, c: 0, dir: 'D' });
+    });
+
+    it('THEN Backspace still steps back one square, and a tapped filled square takes a letter', () => {
+      const s = play(s0, ...keys('mo'), { t: 'del' });
+      expect(letters(s).split('/')[0]).toBe('M...#');
+      expect(s.sel).toEqual({ r: 0, c: 1, dir: 'A' });
+      const o = play(s0, ...keys('more'), { t: 'cell', r: 0, c: 1 }, { t: 'key', ch: 'x' });
+      expect(letters(o).split('/')[0]).toBe('MXRE#');
     });
   });
 
@@ -175,7 +217,9 @@ describe('GIVEN letters on the board', () => {
 
   describe('WHEN Reveal word is pressed', () => {
     it('THEN the word fills in as good and is counted', () => {
-      const s = play(s0, { t: 'step', delta: 1 }, { t: 'revealWord' });
+      // After "mxre" fills 1 Across the cursor is already on 4 Across (AF-031; was ›, then Reveal).
+      expect(s0.sel).toEqual({ r: 1, c: 2, dir: 'A' });
+      const s = play(s0, { t: 'revealWord' });
       expect(letters(s).split('/')[1]).toBe('.#AND');
       expect(s.used.reveals).toBe(1);
       expect(s.track.reveals).toBe(1);
