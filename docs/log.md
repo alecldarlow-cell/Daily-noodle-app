@@ -804,3 +804,5 @@ Alec ran an outside review of the app and asked for its findings to be checked a
 - **Tests proved:** each new test failed on the old code and passes now (sync engine 4, core differential vs dn-track.js 1, network 2, Today reconnect 1, leagues identity 2, backfill 1, Play more 3 + opener 1, trophy 2). Website: `tangle-day-sync.test.js` (3), unit suite 105/105, `regression` green.
 - **Ship:** JS only; production update after merge (reaches testers on 0.3.0).
 - **Needs Alec:** the site branch `fix/tangle-finished-day-sync` couldn't be deleted from here (proxy refused); delete it on GitHub when convenient. Not seen on a real phone: Play more's warning, and the Wi-Fi reconnect.
+
+- **Release:** production update run [41167212864](https://github.com/alecldarlow-cell/Daily-noodle-app/actions/runs/41167212864) published main `5c31b39` (#90) at 04:07 London, 31 Oct, on Alec's go-ahead; its CI gate passed. JS only, 0.3.0 runtime. Still to see on a phone: Play more's warning and the Wi-Fi reconnect.
