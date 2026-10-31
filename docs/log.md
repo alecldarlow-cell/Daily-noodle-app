@@ -806,3 +806,8 @@ Alec ran an outside review of the app and asked for its findings to be checked a
 - **Needs Alec:** the site branch `fix/tangle-finished-day-sync` couldn't be deleted from here (proxy refused); delete it on GitHub when convenient. Not seen on a real phone: Play more's warning, and the Wi-Fi reconnect.
 
 - **Release:** production update run [41167212864](https://github.com/alecldarlow-cell/Daily-noodle-app/actions/runs/41167212864) published main `5c31b39` (#90) at 04:07 London, 31 Oct, on Alec's go-ahead; its CI gate passed. JS only, 0.3.0 runtime. Still to see on a phone: Play more's warning and the Wi-Fi reconnect.
+
+### 31 Oct 2026 — 0.3.0 on Google Play
+
+- Alec uploaded the 0.3.0 build (Release run 40953273792, `78c26e1`) to the Play closed track. Before that, the Play Console asked for sign-in details for review; the App access declaration was the fix.
+- Runtime re-checked: `78c26e1` and main both fingerprint to `ea55e856…`, matching `store/runtime.json`, so the overnight update (`07d8302`) and the board-alignment update (#88) reach testers once they're on 0.3.0. "Pending" dropped from the note.
