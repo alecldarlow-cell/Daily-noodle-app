@@ -21,6 +21,8 @@ import {
   playView,
   recapRows,
   scaleMarks,
+  score,
+  setRules,
   shortLab,
   trim,
   validate,
@@ -347,7 +349,7 @@ describe('GIVEN a finished round', () => {
           ans.map((a) => a * 1.2),
         ),
       ),
-    ).toBe('No bullseyes today. Your closest was 20% out.');
+    ).toBe('Your closest was 20% out.');
   });
 
   it('THEN the recap lists each question with the guess, the answer and the points', () => {
@@ -392,5 +394,28 @@ describe('GIVEN a finished round', () => {
   it('THEN a reload is the caller’s to make', () => {
     const { host } = testHost();
     expect(() => apply(init(reckon2, null, 0), { t: 'reload' }, host)).toThrow();
+  });
+});
+
+describe('GIVEN a rules 2 day', () => {
+  afterEach(() => setRules({}));
+
+  describe('WHEN it is scored', () => {
+    it('THEN the zones are 20%, 60%, 2.2× and 3×, and a miss pays 20', () => {
+      setRules({ r: 2 });
+      expect(
+        [100, 120, 120.01, 160, 160.01, 220, 220.01, 300, 300.01].map((x) => zone(x, 100)),
+      ).toEqual([0, 0, 1, 1, 2, 2, 3, 3, 4]);
+      expect([0, 1, 2, 3, 4].map((z) => score({ z: [z] }))).toEqual([100, 80, 60, 40, 20]);
+    });
+  });
+
+  describe('WHEN a day without r follows it', () => {
+    it("THEN that day keeps Ballpark's scoring", () => {
+      setRules({ r: 2 });
+      setRules({});
+      expect(zone(121, 100)).toBe(1);
+      expect(score({ z: [1, 4] })).toBe(75);
+    });
   });
 });

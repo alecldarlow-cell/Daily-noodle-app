@@ -818,3 +818,9 @@ Alec ran an outside review of the app and asked for its findings to be checked a
 - **Cause:** the board sits at the bottom of its slot, directly on the bank (AF-032), and the bank was only as tall as its current rows.
 - **Change:** `bankHeight` works out the height of the full bank (every tile, for that window) and the bank keeps it all game. The board keeps its place and size; empty rows stay as space in the bank, and "bank empty" is centred in it. Resuming a part-played Doku now has the same layout as a fresh start.
 - **Tests proved:** `layout.test.tsx`: heights for 16 and 12 tiles at 412 pt (193 matches the 3-row bank in Alec's screenshot), the 560 pt column limit, and the height held after a tile goes down.
+
+### 3 Nov 2026 — Reckon rules 2 (site branch `reckon-scoring-v2`)
+
+- Reckon now picks its scoring from the page, as the site does: `r:2` days score 20% / 60% / 2.2× / 3× for 100 / 80 / 60 / 40, 20 for a miss; earlier days keep Ballpark's. Finish note no longer says "No bullseyes today". Tests in `reckon/tests/model.test.ts`. The bullseye note test changed with the agreed wording.
+- A rules 2 opener carries `e:1`, so a build from before this still opens those days, with the old scoring. Needs Alec to run Update production once the site ships.
+

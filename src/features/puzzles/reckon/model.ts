@@ -23,8 +23,26 @@
 export const SAVE_KEY = 'digi-reckon-v1';
 export const NQ = 10;
 export const SPAN = 2;
-export const BAND = [1.15, 1.3, 1.6, 3] as const;
-export const PTS = [100, 75, 50, 25, 0] as const;
+/**
+ * Scoring goes with the page, as on the site. Rules 1: Ballpark's, on days without `r`.
+ * Rules 2 (Alec, 3 Nov 2026): softer inner zones, the same 3× edge, a miss pays 20.
+ */
+const RULES = {
+  1: { b: [1.15, 1.3, 1.6, 3], p: [100, 75, 50, 25, 0] },
+  2: { b: [1.2, 1.6, 2.2, 3], p: [100, 80, 60, 40, 20] },
+} as const;
+const EASY_A_DAY = 4;
+export let BAND: readonly number[] = RULES[1].b;
+export let PTS: readonly number[] = RULES[1].p;
+export function setRules(P: { r?: unknown } | null | undefined): void {
+  const t = RULES[P && P.r === 2 ? 2 : 1];
+  BAND = t.b;
+  PTS = t.p;
+}
+export const rulesText = (P: { r?: number }) =>
+  P.r === 2
+    ? 'Within 20% of the answer scores 100; within 60%, 80; within 2.2 times, 60; within three times either way, 40; anything further, 20. Gaps are measured from the smaller number, so half the answer scores the same as double it.'
+    : null;
 export const ZN = ['Bullseye', 'Close', 'Ballpark', 'In range', 'Miss'] as const;
 const MANT = [
   1, 1.05, 1.1, 1.15, 1.2, 1.25, 1.3, 1.35, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2, 2.1, 2.2, 2.3, 2.4,
@@ -61,12 +79,16 @@ export interface ReckonQ {
   i?: number;
   e?: number;
   lo: number;
+  /** On rules 2 days: one of the day's easy facts. */
+  t?: number;
 }
 
 /** The page's `window.DN_PUZZLE` for a Reckon. */
 export interface ReckonData {
   id: string;
   date: string;
+  /** Scoring rules: 2 on newer days, absent on earlier ones. */
+  r?: number;
   qs: ReckonQ[];
 }
 
@@ -77,6 +99,8 @@ export function gate(P: unknown, metaDate: string | null = null): string[] {
   const num = (x: unknown): x is number => typeof x === 'number' && isFinite(x);
   if (!P || typeof P !== 'object') return ['no puzzle object'];
   const p = P as Partial<ReckonData>;
+  setRules(p);
+  if (p.r != null && p.r !== 2) f.push('rules ' + p.r);
   if (!/^DP·RECK·\d{4}$/.test(p.id || '')) f.push('id ' + p.id);
   if (!/^\d{4}-\d{2}-\d{2}$/.test(p.date || '')) f.push('date ' + p.date);
   if (metaDate != null && metaDate !== p.date) f.push('dn:date ' + metaDate + ' != ' + p.date);
@@ -91,7 +115,7 @@ export function gate(P: unknown, metaDate: string | null = null): string[] {
     if (!num(q.lo)) f.push(w + 'scale');
     else {
       const a = L10(q.a as number);
-      const r = L10(BAND[1]);
+      const r = L10(BAND[1]!);
       if (a - r < q.lo - 1e-9 || a + r > q.lo + SPAN + 1e-9) f.push(w + 'zones off the scale');
       if (q.i && q.lo < 0) f.push(w + 'whole-number scale below 1');
     }
@@ -101,7 +125,11 @@ export function gate(P: unknown, metaDate: string | null = null): string[] {
     if (typeof q.k !== 'string' || packs.has(q.k)) f.push(w + 'pack');
     packs.add(q.k);
   });
-  if (p.qs[0] && !p.qs[0].e) f.push('opener is not an easy one');
+  if (p.r === 2) {
+    const t = (q: ReckonQ | null) => !!q?.t;
+    if (p.qs[0] && !t(p.qs[0])) f.push('opener is not an easy one');
+    if (p.qs.filter(t).length < EASY_A_DAY) f.push('expected ' + EASY_A_DAY + ' easy questions');
+  } else if (p.qs[0] && !p.qs[0].e) f.push('opener is not an easy one');
   return f;
 }
 
@@ -344,6 +372,7 @@ function copy(s: ReckonState): ReckonState {
 
 /** A page opened: home, or the finish sheet for a round already finished. */
 export function init(P: ReckonData, stored: unknown, now: number): ReckonState {
+  setRules(P);
   const save = loadSave(stored);
   const s: ReckonState = {
     P,
@@ -717,7 +746,11 @@ export function noteFor(P: ReckonData, rec: ReckonRecord): string {
     const k = Math.max(g / a, a / g);
     if (k < best) best = k;
   });
-  return 'No bullseyes today. Your closest was ' + Math.ceil((best - 1) * 100 - 1e-6) + '% out.';
+  const near = rec.z.filter((z) => z < 4).length;
+  const pc = Math.ceil((best - 1) * 100 - 1e-6);
+  return near > 1
+    ? cap(W[near]!) + ' of ten in range. Your closest was ' + pc + '% out.'
+    : 'Your closest was ' + pc + '% out.';
 }
 
 /** The finish sheet's "Today's ten": one row per question. */
