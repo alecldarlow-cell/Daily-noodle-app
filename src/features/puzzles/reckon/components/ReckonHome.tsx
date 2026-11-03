@@ -5,7 +5,7 @@ import { StartLayout } from '@/shared/start-card';
 import { FONT } from '@/shared/theme';
 import { dayHead, longDate } from '@/shared/time';
 
-import { homeView, serial, type ReckonState } from '../model';
+import { homeView, rulesText, serial, type ReckonState } from '../model';
 import type { ReckonColors } from './colors';
 
 const HOW = [
@@ -71,7 +71,7 @@ export function ReckonHome({ state, today, c, onPlay, onBack }: Props) {
         [h.stats[1]!, 'best score'],
         [h.stats[2]!, 'Reckons played'],
       ]}
-      how={HOW}
+      how={rulesText(state.P) ? [HOW[0]!, rulesText(state.P)!, HOW[2]!] : HOW}
       colors={{
         bg: c.bg,
         card: c.paper,
