@@ -349,7 +349,7 @@ describe('GIVEN a finished round', () => {
           ans.map((a) => a * 1.2),
         ),
       ),
-    ).toBe('Your closest was 20% out.');
+    ).toBe('Ten of ten in range. Your closest was 20% out.');
   });
 
   it('THEN the recap lists each question with the guess, the answer and the points', () => {
