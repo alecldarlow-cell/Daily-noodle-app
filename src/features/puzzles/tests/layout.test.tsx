@@ -5,9 +5,9 @@ import { appStorage } from '@/shared/storage';
 import { mockSite, renderWithProviders } from '@/shared/testing';
 import { BOARD_SLOT } from '@/shared/ui';
 
-import { bankTileSize } from '../doku/components/DokuBank';
+import { bankHeight, bankTileSize } from '../doku/components/DokuBank';
 import { DokuScreen } from '../doku/components/DokuScreen';
-import { file97 } from '../doku/tests/fixtures';
+import { doku97, file97, openSquares } from '../doku/tests/fixtures';
 import { MiniScreen } from '../mini/components/MiniScreen';
 import { file105 } from '../mini/tests/fixtures';
 import { PathScreen } from '../path/components/PathScreen';
@@ -84,6 +84,38 @@ describe('GIVEN Doku’s bank tiles', () => {
   describe('WHEN the phone is narrow (320 pt)', () => {
     it('THEN they never go under 40 pt', () => {
       expect(bankTileSize({ width: 220, height: 800 })).toBe(40);
+    });
+  });
+
+  describe('WHEN the bank’s height is worked out', () => {
+    it('THEN it fits the rows the full bank wraps to', () => {
+      // 412 pt: 6 tiles of 56 to a row, so 16 tiles take 3 rows and 12 take 2.
+      expect(bankHeight(16, { width: 412, height: 915 })).toBe(193);
+      expect(bankHeight(12, { width: 412, height: 915 })).toBe(132);
+    });
+    it('THEN a tablet’s row stops at the screen’s 560 pt column', () => {
+      expect(bankHeight(16, { width: 800, height: 1200 })).toBe(132);
+    });
+  });
+
+  describe('WHEN tiles leave the bank during play', () => {
+    it('THEN the bank keeps its full height, so the board does not move', async () => {
+      await renderWithProviders(<DokuScreen file={file97} />);
+      await play();
+      const height = () =>
+        (StyleSheet.flatten(screen.getByTestId('doku-bank').props.style) as { minHeight: number })
+          .minHeight;
+      const full = height();
+      const total = screen.getAllByRole('button', { name: /^Tile / }).length;
+      expect(full).toBe(bankHeight(total, { width: 412, height: 915 }));
+
+      const tile = screen.getAllByRole('button', { name: /^Tile / })[0]!;
+      await fireEvent.press(tile);
+      const [r, c] = openSquares(doku97)[0]!;
+      await fireEvent.press(screen.getByTestId(`cell-${r}-${c}`));
+
+      expect(screen.getAllByRole('button', { name: /^Tile / })).toHaveLength(total - 1);
+      expect(height()).toBe(full);
     });
   });
 

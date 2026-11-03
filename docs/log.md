@@ -811,3 +811,10 @@ Alec ran an outside review of the app and asked for its findings to be checked a
 
 - Alec uploaded the 0.3.0 build (Release run 40953273792, `78c26e1`) to the Play closed track. Before that, the Play Console asked for sign-in details for review; the App access declaration was the fix.
 - Runtime re-checked: `78c26e1` and main both fingerprint to `ea55e856…`, matching `store/runtime.json`, so the overnight update (`07d8302`) and the board-alignment update (#88) reach testers once they're on 0.3.0. "Pending" dropped from the note.
+
+### 3 Nov 2026 — Doku board stays still as the bank empties
+
+- **Feedback** (Alec, Doku 113): the board jumped a row's height when the bank went from 3 rows to 2, and back when a tile returned.
+- **Cause:** the board sits at the bottom of its slot, directly on the bank (AF-032), and the bank was only as tall as its current rows.
+- **Change:** `bankHeight` works out the height of the full bank (every tile, for that window) and the bank keeps it all game. The board keeps its place and size; empty rows stay as space in the bank, and "bank empty" is centred in it. Resuming a part-played Doku now has the same layout as a fresh start.
+- **Tests proved:** `layout.test.tsx`: heights for 16 and 12 tiles at 412 pt (193 matches the 3-row bank in Alec's screenshot), the 560 pt column limit, and the height held after a tile goes down.
