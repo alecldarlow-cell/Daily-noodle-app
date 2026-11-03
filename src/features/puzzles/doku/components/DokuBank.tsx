@@ -4,6 +4,15 @@ import { FONT, usePuzzleTokens } from '@/shared/theme';
 
 import { bankTiles, type DokuState } from '../model';
 
+/** The tile gap, and the box's padding plus border on one side. */
+const GAP = 5;
+const PADDING = 6;
+const BORDER = 1.5;
+const BOX = PADDING + BORDER;
+/** DokuScreen's column: its widest, and its side gutters together. */
+const SCREEN_MAX = 560;
+const SCREEN_GUTTERS = 24;
+
 interface DokuBankProps {
   state: DokuState;
   onTile: (id: string) => void;
@@ -21,16 +30,39 @@ export function bankTileSize(win: { width: number; height: number }): number {
   return win.height < 700 ? Math.min(size, 44) : size;
 }
 
+/**
+ * The bank's height with every tile in it, for a window: the rows `total` tiles wrap to, plus
+ * the box's padding and border. The bank holds this height all game, however few tiles are
+ * left, because the board sits on top of it: if the bank lost a row, the board would jump
+ * down and resize (AF feedback, 3 Nov 2026).
+ */
+export function bankHeight(total: number, win: { width: number; height: number }): number {
+  const side = bankTileSize(win);
+  const inner = Math.min(win.width, SCREEN_MAX) - SCREEN_GUTTERS - 2 * BOX;
+  const perRow = Math.max(1, Math.floor((inner + GAP) / (side + GAP)));
+  const rows = Math.max(1, Math.ceil(total / perRow));
+  return rows * side + (rows - 1) * GAP + 2 * BOX;
+}
+
 /** The letter bank: the free tiles in order, the chosen one marigold; "bank empty" once all are down. */
 export function DokuBank({ state, onTile }: DokuBankProps) {
   const pt = usePuzzleTokens();
   const free = bankTiles(state);
-  const side = bankTileSize(useWindowDimensions());
+  const win = useWindowDimensions();
+  const side = bankTileSize(win);
   const tile = { width: side, height: side };
   const ch = { fontSize: Math.round(side * 0.42) };
   return (
     <View
-      style={[styles.bank, { backgroundColor: pt.card, borderColor: pt.lineSoft }]}
+      style={[
+        styles.bank,
+        {
+          backgroundColor: pt.card,
+          borderColor: pt.lineSoft,
+          minHeight: bankHeight(state.tiles.length, win),
+        },
+        !free.length && styles.bankEmpty,
+      ]}
       accessibilityLabel="Letter bank"
       testID="doku-bank">
       {free.length ? (
@@ -71,13 +103,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'center',
-    gap: 5,
-    padding: 6,
-    minHeight: 58,
-    borderWidth: 1.5,
+    gap: GAP,
+    padding: PADDING,
+    borderWidth: BORDER,
     borderStyle: 'dashed',
     borderRadius: 12,
   },
+  bankEmpty: { alignContent: 'center' },
   tile: {
     borderWidth: 1.5,
     borderRadius: 8,
