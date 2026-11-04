@@ -88,11 +88,19 @@ export function weekLabel(from: string, to: string): string {
   return `${dm(from)} – ${dm(to)}`;
 }
 
-/** Puzzles so far this week: 9 a day, up to the chosen day. */
+/** Puzzles on a day: Tally joined the leagues on 5 Nov 2026 (board.html dayCount). */
+export function dayCount(day: string): number {
+  return day >= '2026-11-05' ? 9 : 8;
+}
+
+/** Puzzles so far this week, up to the chosen day. */
 export function weekDays(date: string, weekFrom: string): number {
-  const n =
-    Math.round((Date.parse(`${date}T12:00:00Z`) - Date.parse(`${weekFrom}T12:00:00Z`)) / 864e5) + 1;
-  return 9 * Math.max(1, Math.min(7, n));
+  const from = Date.parse(`${weekFrom}T12:00:00Z`);
+  const n = Math.round((Date.parse(`${date}T12:00:00Z`) - from) / 864e5) + 1;
+  let sum = 0;
+  for (let i = 0; i < Math.max(1, Math.min(7, n)); i++)
+    sum += dayCount(new Date(from + i * 864e5).toISOString().slice(0, 10));
+  return sum;
 }
 
 /** The puzzle of a type on a day, from the site's cards. */
@@ -133,7 +141,9 @@ export function shareAll(
 ): string {
   const lines = [`🏆 All puzzles · ${shortDate(date)}`];
   for (const r of day.slice(0, 5))
-    lines.push(`${MEDAL[r.rank] ?? `${r.rank}.`} ${r.nick} ${pts(r.points)} (${r.completed}/8)`);
+    lines.push(
+      `${MEDAL[r.rank] ?? `${r.rank}.`} ${r.nick} ${pts(r.points)} (${r.completed}/${dayCount(date)})`,
+    );
   if (day.length > 5) lines.push(`+${day.length - 5} more`);
   lines.push(`${league.name} leaderboard:`);
   return `${lines.join('\n')}\n${boardShareLink(league.code, 'all', date)}`;

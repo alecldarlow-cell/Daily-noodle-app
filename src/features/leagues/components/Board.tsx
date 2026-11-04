@@ -21,6 +21,7 @@ import {
   result,
   shareAll,
   shareDay,
+  dayCount,
   weekDays,
   weekLabel,
 } from '../hooks/boardText';
@@ -495,7 +496,9 @@ function OverallView({
           Nobody in {league.name} has played {date === today ? 'yet today' : 'on this day'}.
         </Text>
       ) : (
-        <View style={[styles.rows, { borderTopColor: t.hair }]}>{d.day.map((r) => row(r, 8))}</View>
+        <View style={[styles.rows, { borderTopColor: t.hair }]}>
+          {d.day.map((r) => row(r, dayCount(date)))}
+        </View>
       )}
       <NotYetList rows={d.not_yet} />
       <Sub>This week · {weekLabel(d.week_from, d.week_to)}</Sub>

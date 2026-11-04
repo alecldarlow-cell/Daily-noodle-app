@@ -106,14 +106,19 @@ describe('GIVEN a Tally not yet played', () => {
 });
 
 describe('GIVEN a round kept part-way', () => {
-  it('WHEN opened THEN the board is back at its time, with no start card', async () => {
+  it('WHEN opened THEN the start card waits, nothing is rewritten, and Play brings the board back at its time', async () => {
     const g = new Array(16).fill(0);
     g[0] = 2;
     appStorage.setItem(
       SAVE_KEY,
       JSON.stringify({ v: 1, cur: { id: ID, g, notes: new Array(16).fill(0), s: 42, at: 1 } }),
     );
+    const before = appStorage.getItem(SAVE_KEY);
     await renderWithProviders(<TallyScreen file={file1} />);
+    expect(screen.getByTestId('start-card')).toBeOnTheScreen();
+    expect(appStorage.getItem(SAVE_KEY)).toBe(before);
+    expect(screen.getByText('boards played')).toBeOnTheScreen();
+    await play();
     expect(screen.getByTestId('tally-board')).toBeOnTheScreen();
     expect(screen.getByText('0:42')).toBeOnTheScreen();
     expect(screen.getByTestId('tally-msg')).toHaveTextContent('Carrying on where you left off.');

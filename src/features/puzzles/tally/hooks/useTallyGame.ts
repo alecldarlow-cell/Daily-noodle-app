@@ -69,13 +69,17 @@ export function useTallyGame(file: PuzzleFile<TallyData>, deps: Deps = {}) {
   const [state, setState] = useState<TallyState>(
     () => opened.done?.state ?? resumed?.state ?? init(file.data),
   );
-  const [phase, setPhase] = useState<Phase>(opened.done ? 'finished' : resumed ? 'play' : 'start');
+  const [phase, setPhase] = useState<Phase>(opened.done ? 'finished' : 'start');
   const [info, setInfo] = useState<FinishInfo | null>(opened.done?.info ?? null);
   const [streak, setStreak] = useState(opened.streak);
-  const [begun, setBegun] = useState(!!resumed);
+  // A kept round shows the start card too, and its clock waits for Play, as the page's does.
+  const [begun, setBegun] = useState(false);
   useHapticDiff(state, tallyFeel);
 
-  const { secs, read } = usePuzzleClock(begun && !state.solved, { now, initial: resumed?.secs });
+  const { secs, readExact: read } = usePuzzleClock(begun && !state.solved, {
+    now,
+    initial: resumed?.secs,
+  });
   const [endSecs, setEndSecs] = useState<number | null>(null);
 
   const finished = useRef(!!opened.done);
@@ -93,13 +97,13 @@ export function useTallyGame(file: PuzzleFile<TallyData>, deps: Deps = {}) {
 
   // The round is written after each change, when the app goes away, and on leaving.
   const keep = useRef(() => {});
-  const saved = useRef<TallyState | null>(null);
+  const saved = useRef<TallyState>(state);
   useEffect(() => {
     keep.current = () => {
       if (!finished.current && begun) saveCur(store, state, read(), saves, now());
     };
     // Only a change to the board is written: a selection moving is not.
-    if (state.g !== saved.current?.g || state.notes !== saved.current?.notes) keep.current();
+    if (state.g !== saved.current.g || state.notes !== saved.current.notes) keep.current();
     saved.current = state;
   }, [state, begun, read, saves, store, now]);
   useEffect(() => {
