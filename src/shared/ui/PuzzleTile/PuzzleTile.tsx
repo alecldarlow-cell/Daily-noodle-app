@@ -116,7 +116,7 @@ export function PuzzleTile({ type, mask, testID }: PuzzleTileProps) {
         testID={testID}
         accessible={false}
         source={scheme === 'dark' ? picture.dark : picture.light}
-        style={[styles.tile, { borderColor: t.hair }]}
+        style={styles.icon}
       />
     );
   }
@@ -139,6 +139,8 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
     overflow: 'hidden',
   },
+  // Icons carry their own edge: no tile behind them, as the site's cards.
+  icon: { width: SIZE, height: SIZE },
   grid: { padding: 9, borderWidth: 0 },
   row: { flex: 1, flexDirection: 'row' },
   cell: { flex: 1 },
