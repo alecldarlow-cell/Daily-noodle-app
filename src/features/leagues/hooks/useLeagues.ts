@@ -101,7 +101,7 @@ export function useMine(enabled: boolean) {
   });
 }
 
-/** One league's board for one puzzle (or all eight) on one day. */
+/** One league's board for one puzzle (or all nine) on one day. */
 export function useBoardData(code: string | undefined, view: BoardView, date: string) {
   const pid = useBoardPid();
   return useQuery<DayBoard | Overall>({

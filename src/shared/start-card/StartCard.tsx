@@ -48,7 +48,7 @@ export function StartCard(props: StartCardProps) {
       stats={[
         [stats.streak, 'day streak'],
         [stats.best, 'best streak'],
-        [stats.played, `${name}s played`],
+        [stats.played, type === 'tally' ? 'boards played' : `${name}s played`],
       ]}
       how={HOW[type]}
       onBack={onBack}

@@ -8,6 +8,7 @@ export const PUZZLE_TYPES = [
   'tangle',
   'borders',
   'reckon',
+  'tally',
 ] as const;
 
 export type PuzzleType = (typeof PUZZLE_TYPES)[number];
@@ -21,6 +22,7 @@ export const TYPE_LABEL: Record<PuzzleType, string> = {
   tangle: 'Tangle',
   borders: 'Borders',
   reckon: 'Reckon',
+  tally: 'Tally',
 };
 
 /** The id prefix after "DP·" for each type (tools/build-feed.js TYPE_OF_ID). */
@@ -33,6 +35,7 @@ export const TYPE_OF_ID: Record<string, PuzzleType> = {
   TANG: 'tangle',
   BORD: 'borders',
   RECK: 'reckon',
+  TALLY: 'tally',
 };
 
 export function isPuzzleType(x: unknown): x is PuzzleType {
@@ -58,12 +61,12 @@ export function puzzleNumber(id: string, headline?: string): number | null {
   return Number.isNaN(n) ? null : n;
 }
 
-/** The storage keys of a type: its result document and, for the five grid types, its streak. */
+/** The storage keys of a type: its result document and, for the grid types, its streak. */
 export function saveKey(type: PuzzleType): string {
   return `digi-${type}-v1`;
 }
 
-export const GRID_STREAK_TYPES = ['mini', 'doku', 'sweep', 'path', 'link'] as const;
+export const GRID_STREAK_TYPES = ['mini', 'doku', 'sweep', 'path', 'link', 'tally'] as const;
 export type GridStreakType = (typeof GRID_STREAK_TYPES)[number];
 
 export function streakKey(type: GridStreakType): string {

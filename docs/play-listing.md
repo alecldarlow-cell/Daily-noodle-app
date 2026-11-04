@@ -15,7 +15,7 @@ privacy page (dailynoodle.co.uk/privacy.html) and must change whenever it does.
 
 **Full description** (4,000 max):
 
-> The Daily Noodle is eight small puzzles, new every morning, from dailynoodle.co.uk.
+> The Daily Noodle is nine small puzzles, new every morning, from dailynoodle.co.uk.
 >
 > • Mini: a little daily crossword.
 > • Doku: place the letter tiles so every row and column spells a word.
@@ -25,6 +25,7 @@ privacy page (dailynoodle.co.uk/privacy.html) and must change whenever it does.
 > • Tangle: find as many words as you can in ninety seconds.
 > • Borders: identify ten countries from their outlines.
 > • Reckon: estimate ten numbers, and score more the closer you get.
+> • Tally: fill a 4×4 grid so every cage makes its number.
 >
 > Your streaks and results are kept on your phone. Share your result with one tap, or start a private league so friends and family can see each
 > other's times on a daily leaderboard.

@@ -41,6 +41,7 @@ export function resultText(type: PuzzleType, r: Obj): string {
       t = clock(r.s);
       return t ? `Cleared in ${t}` : '';
     case 'path':
+    case 'tally':
       t = shownClock(r.t) || clock(r.s);
       return t ? `Solved in ${t}` : '';
     case 'link':
@@ -82,7 +83,7 @@ export function playedState(type: PuzzleType, id: string, doc: SaveDoc | null): 
   const d = doc.days && doc.days[id];
   if (type === 'tangle' && d && (d.state === 'playing' || d.state === 'suspended'))
     return { done: false };
-  if ((type === 'borders' || type === 'reckon') && doc.cur && doc.cur.id === id)
+  if ((type === 'borders' || type === 'reckon' || type === 'tally') && doc.cur && doc.cur.id === id)
     return { done: false };
   return null;
 }
@@ -96,6 +97,7 @@ export const RUN_RESULT_KEYS = [
   'digi-tangle-v1',
   'digi-borders-v1',
   'digi-reckon-v1',
+  'digi-tally-v1',
 ] as const;
 export const RUN_STREAK_KEYS = [
   'digi-mini-streak',
@@ -103,6 +105,7 @@ export const RUN_STREAK_KEYS = [
   'digi-link-streak',
   'digi-sweep-streak',
   'digi-path-streak',
+  'digi-tally-streak',
 ] as const;
 
 /**

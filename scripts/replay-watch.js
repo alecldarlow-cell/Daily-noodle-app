@@ -27,10 +27,21 @@ const SLUG = {
   'word-link': 'link',
   'word-tangle': 'tangle',
   'quiz-reckon': 'reckon',
+  'logic-tally': 'tally',
   'geo-borders': 'borders',
 };
 /** Shards for a full run, so each job stays well inside GitHub's 6-hour limit. */
-const SHARDS = { mini: 2, link: 1, tangle: 2, doku: 2, sweep: 4, path: 3, reckon: 4, borders: 6 };
+const SHARDS = {
+  mini: 2,
+  link: 1,
+  tangle: 2,
+  doku: 2,
+  sweep: 4,
+  path: 3,
+  reckon: 4,
+  borders: 6,
+  tally: 2,
+};
 /** Site code every native player was ported from, besides its own engine. */
 const SHARED = ['engines/finish.js', 'engines/house.js', 'dn-core.js'];
 /** Most changed pages replayed per type in one night (a spread sample beyond that). */

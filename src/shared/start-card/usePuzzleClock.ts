@@ -59,5 +59,11 @@ export function usePuzzleClock(running: boolean, opts: ClockOptions = {}) {
     return Math.floor((acc.current + live) / 1000);
   }, [now]);
 
-  return { secs, read };
+  // The clock to the millisecond, for a player that rounds its own finish time (Tally).
+  const readExact = useCallback(() => {
+    const live = since.current === null ? 0 : now() - since.current;
+    return (acc.current + live) / 1000;
+  }, [now]);
+
+  return { secs, read, readExact };
 }

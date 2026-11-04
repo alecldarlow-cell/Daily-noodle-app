@@ -8,6 +8,7 @@ import {
   result,
   shareAll,
   shareDay,
+  dayCount,
   weekDays,
   weekLabel,
 } from '../hooks/boardText';
@@ -89,6 +90,10 @@ describe('GIVEN results on a board', () => {
     expect(weekLabel('2026-10-19', '2026-10-25')).toBe('19 Oct – 25 Oct');
     expect(weekDays('2026-10-21', '2026-10-19')).toBe(24);
     expect(weekDays('2026-10-30', '2026-10-19')).toBe(56);
+    // Tally's first week: 8 a day to Wednesday, 9 from Thursday 5 Nov
+    expect(weekDays('2026-11-05', '2026-11-02')).toBe(33);
+    expect(weekDays('2026-11-08', '2026-11-02')).toBe(60);
+    expect(weekDays('2026-11-15', '2026-11-09')).toBe(63);
   });
 
   it('THEN shares list the top five and end with the league’s invite link', () => {
@@ -142,5 +147,21 @@ describe('GIVEN results on a board', () => {
     ];
     expect(puzzleOn(cards, 'mini', '2026-10-24')?.headline).toBe('Mini 105');
     expect(puzzleOn(undefined, 'mini', '2026-10-24')).toBeNull();
+  });
+});
+
+describe('GIVEN the number of puzzles on a day', () => {
+  it('WHEN Tally joins on 5 Nov 2026 THEN the count goes from 8 to 9', () => {
+    expect(dayCount('2026-11-04')).toBe(8);
+    expect(dayCount('2026-11-05')).toBe(9);
+  });
+
+  it('WHEN a day from 5 Nov is shared THEN it reads out of 9', () => {
+    const text = shareAll(
+      '2026-11-05',
+      [{ rank: 1, nick: 'Ma', me: false, points: 1, played: 9, completed: 9 }],
+      { name: 'F', code: 'ABC' },
+    );
+    expect(text).toContain('(9/9)');
   });
 });

@@ -110,3 +110,12 @@ describe('GIVEN a type with one kept round', () => {
     });
   });
 });
+
+describe('GIVEN Tally’s save', () => {
+  it('THEN its round is its `cur`, with its time, and holds the one slot', () => {
+    expect(roundOf('tally', 'T', { cur: { id: 'T', s: 95 } }, null)).toEqual({ time: '1:35' });
+    expect(roundOf('tally', 'T', { cur: { id: 'T' } }, null)).toEqual({});
+    expect(roundOf('tally', 'T', { cur: { id: 'U', s: 95 } }, null)).toBeNull();
+    expect(heldElsewhere('tally', 'A', { cur: { id: 'B' } }, null)).toBe('B');
+  });
+});

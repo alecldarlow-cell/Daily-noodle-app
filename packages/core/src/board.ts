@@ -50,6 +50,7 @@ export const BOARD_TYPES = [
   { id: 'tangle', tv: 'word-tangle', name: 'Tangle', emoji: '🧶' },
   { id: 'borders', tv: 'geo-borders', name: 'Borders', emoji: '🌍' },
   { id: 'reckon', tv: 'quiz-reckon', name: 'Reckon', emoji: '🎯' },
+  { id: 'tally', tv: 'logic-tally', name: 'Tally', emoji: '🧮' },
 ] as const;
 
 export type BoardType = (typeof BOARD_TYPES)[number];
@@ -64,7 +65,7 @@ for (const t of BOARD_TYPES) {
 
 export function boardTypeOfPath(p: unknown): BoardType | null {
   const m = String(p || '').match(
-    /(crossword-mini|logic-doku|logic-path|logic-sweep|word-link|word-tangle|geo-borders|quiz-reckon)/,
+    /(crossword-mini|logic-doku|logic-path|logic-sweep|word-link|word-tangle|geo-borders|quiz-reckon|logic-tally)/,
   );
   return m ? BY_TV[m[1]!]! : null;
 }
@@ -290,6 +291,7 @@ const SAVES: { key: string; t: BoardTypeId; read: (r: Rec) => Obj }[] = [
     t: 'reckon',
     read: (r) => ({ outcome: 'scored', score: r.p, secs: r.secs }),
   },
+  { key: 'digi-tally-v1', t: 'tally', read: (r) => ({ outcome: 'solved', secs: r.s }) },
 ];
 
 /** Every finished puzzle this install remembers, as board rows, found by its page in the feed. */

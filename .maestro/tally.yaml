@@ -1,0 +1,34 @@
+# Today's Tally plays natively: Play, a square, a number, then back out and in again
+# keeps the round behind the start card. Runs against an installed build (EAS, WP6):
+#   maestro test .maestro/tally.yaml
+appId: ${APP_ID}
+---
+- launchApp:
+    clearState: true
+- assertVisible:
+    id: today-screen
+- tapOn:
+    id: today-tally
+- extendedWaitUntil:
+    visible:
+      id: start-card
+    timeout: 15000
+- assertVisible: 'boards played'
+- tapOn: 'Play'
+- assertVisible:
+    id: tally-board
+- tapOn:
+    id: tally-cell-0
+- tapOn:
+    id: tally-key-1
+- back
+- tapOn:
+    id: today-tally
+- extendedWaitUntil:
+    visible:
+      id: start-card
+    timeout: 15000
+- tapOn: 'Play'
+- assertVisible:
+    id: tally-board
+- assertVisible: 'Carrying on where you left off.'

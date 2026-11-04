@@ -118,3 +118,13 @@ describe('GIVEN a grid player’s clock', () => {
     });
   });
 });
+
+describe('GIVEN a player that rounds its own finish time', () => {
+  it('WHEN 62.7 seconds have run THEN readExact keeps the fraction and read drops it', async () => {
+    let t = 0;
+    const { result } = await renderHook(() => usePuzzleClock(true, { now: () => t }));
+    t = 62700;
+    expect(result.current.readExact()).toBeCloseTo(62.7);
+    expect(result.current.read()).toBe(62);
+  });
+});

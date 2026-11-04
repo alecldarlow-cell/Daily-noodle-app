@@ -26,7 +26,7 @@ export function openHowTo(type: PuzzleType): void {
 }
 
 /**
- * Today's eight puzzles, in the daily set's order, as the site's cards: each with its
+ * Today's nine puzzles, in the daily set's order, as the site's cards: each with its
  * preview tile and standfirst from feed-lite (just the name until that list arrives),
  * and your results so far.
  *

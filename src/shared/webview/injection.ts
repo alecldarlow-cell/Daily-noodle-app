@@ -13,7 +13,8 @@
  */
 
 /** Puzzle save keys the bridge carries, both ways. Game and board keys are left alone. */
-export const BRIDGED_KEY = /^digi-(mini|doku|sweep|path|link|tangle|borders|reckon)-(v1|streak)$/;
+export const BRIDGED_KEY =
+  /^digi-(mini|doku|sweep|path|link|tangle|borders|reckon|tally)-(v1|streak)$/;
 
 /** The site tracker's own keys (dn-track.js), shared both ways. '' in the app means absent. */
 export const ID_KEY = /^digi\.(aid|sid|last|optout)$/;

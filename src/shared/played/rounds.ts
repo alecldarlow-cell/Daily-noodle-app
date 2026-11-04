@@ -7,8 +7,8 @@
  * Rounds live in two places. Mini, Doku, Sweep and Path keep theirs in the app's own
  * one-slot-per-type keys (`noodle-app-progress-<type>`, features/puzzles/progress.ts).
  * Tangle, Borders and Reckon keep theirs in the site's save (`digi-tangle-v1` days,
- * `digi-borders-v1` / `digi-reckon-v1` / `digi-link-v1` `cur`; Link's from 29 Oct 2026, as
- * the website's engines/link.js keeps it, AF-029).
+ * `digi-borders-v1` / `digi-reckon-v1` / `digi-link-v1` / `digi-tally-v1` `cur`; Link's from
+ * 29 Oct 2026, as the website's engines/link.js keeps it, AF-029).
  */
 import { clock, type PuzzleType } from '@noodle/core';
 
@@ -61,8 +61,8 @@ export function roundOf(type: PuzzleType, id: string, site: unknown, slot: unkno
     const cur = obj(site) ? site.cur : null;
     return obj(cur) && cur.id === id ? {} : null;
   }
-  if (type === 'link') {
-    // engines/link.js cur: {id, f, m, g, tr, l, s: seconds played, at}
+  if (type === 'link' || type === 'tally') {
+    // engines/link.js cur: {id, f, m, g, tr, l, s: seconds played, at}; tally.js: {id, g, notes, s, at}
     const cur = obj(site) ? site.cur : null;
     if (!obj(cur) || cur.id !== id) return null;
     const time = typeof cur.s === 'number' ? clock(Math.floor(cur.s)) : '';
@@ -74,7 +74,7 @@ export function roundOf(type: PuzzleType, id: string, site: unknown, slot: unkno
 /**
  * The puzzle another round of `type` holds in its one slot, if starting `id` would take
  * that slot (replacing the other round once play starts): the grid types' progress slot,
- * and Borders', Reckon's and Link's `cur`. Tangle keeps every day's round side by side, so
+ * and Borders', Reckon's, Link's and Tally's `cur`. Tangle keeps every day's round side by side, so
  * it never replaces one.
  */
 export function heldElsewhere(
@@ -86,7 +86,7 @@ export function heldElsewhere(
   let held: unknown = null;
   if (isProgressType(type)) {
     if (obj(slot) && Array.isArray(slot.moves) && slot.moves.length) held = slot.id;
-  } else if (type === 'borders' || type === 'reckon' || type === 'link') {
+  } else if (type === 'borders' || type === 'reckon' || type === 'link' || type === 'tally') {
     held = obj(site) && obj(site.cur) ? site.cur.id : null;
   }
   if (typeof held !== 'string' || !held || held === id) return null;

@@ -5,3 +5,4 @@ export { enabled as sweepEnabled } from './sweep';
 export { enabled as pathEnabled } from './path';
 export { enabled as reckonEnabled } from './reckon';
 export { enabled as bordersEnabled } from './borders';
+export { enabled as tallyEnabled } from './tally';

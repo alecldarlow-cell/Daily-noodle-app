@@ -33,6 +33,10 @@ const PICTURES: Partial<Record<PuzzleType, { light: number; dark: number }>> = {
     light: require('../../../../assets/images/tiles/reckon-light.png') as number,
     dark: require('../../../../assets/images/tiles/reckon-dark.png') as number,
   },
+  tally: {
+    light: require('../../../../assets/images/tiles/tally-light.png') as number,
+    dark: require('../../../../assets/images/tiles/tally-dark.png') as number,
+  },
   tangle: {
     light: require('../../../../assets/images/tiles/tangle-light.png') as number,
     dark: require('../../../../assets/images/tiles/tangle-dark.png') as number,
