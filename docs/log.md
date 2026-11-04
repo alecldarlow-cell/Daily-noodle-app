@@ -852,3 +852,8 @@ Alec ran an outside review of the app and asked for its findings to be checked a
 
 - **Change:** Alec's call after seeing the set live: no square within a square. Icons are redrawn from the site's SVGs with a transparent background and a tight crop, and `PuzzleTile` draws them with no border, so they fill the 96 pt space. Same in light and dark.
 - **Tests proved:** `check` on the pull request. Not yet seen on a real phone.
+
+### 4 Nov 2026 — League points: players beaten (site PR #65 first)
+
+- **Change:** Alec's call. The All puzzles note now reads "Each puzzle you finish scores 1 point for every player you beat." The points come from the site's `board_overall`, so the rule itself needs no app change; the old wording stays until the next app update reaches phones.
+- **Tests proved:** `check` on the pull request.
