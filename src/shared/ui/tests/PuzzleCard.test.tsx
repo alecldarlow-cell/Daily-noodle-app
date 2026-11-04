@@ -182,3 +182,10 @@ describe('GIVEN a row with a long day and result beside How to play', () => {
     expect(meta.props.adjustsFontSizeToFit).toBe(true);
   });
 });
+
+describe('GIVEN Tally, whose feed mask is sixteen blanks', () => {
+  it('WHEN its card is drawn THEN it is the picture, not an empty grid', async () => {
+    await render(<PuzzleTile type="tally" mask={'.'.repeat(16)} testID="t" />);
+    expect(screen.getByTestId('t').type).toBe('Image');
+  });
+});
