@@ -832,3 +832,12 @@ Alec ran an outside review of the app and asked for its findings to be checked a
 - **`/tally` in app.json is deliberately left out:** app links there are native config and would change the fingerprint. The short link opens in the browser until the next store build; `systemPath` already handles it then.
 - **Tests proved:** model, oracle, finishing and screen tests (GIVEN/WHEN/THEN). Replay `--type tally` against the site branch with the tracker injected (as Build feed does). A rule broken on purpose was caught. Expected lists changed only for the ninth type (`PUZZLE_TYPES`, `NATIVE`, jingle types, chips, weekly total now 9 a day).
 - **Left:** the nightly replay covers every Tally. Not seen on a real phone: board look, keypad, Notes, a round carried from web to app.
+
+### 4 Nov 2026 — Tally released, a day earlier than planned
+
+- **Dates:** first daily moved from Fri 6 Nov to Thu 5 Nov at Alec's request, then he asked to go today. Website [#62](https://github.com/alecldarlow-cell/dailynoodle/pull/62) merged 19:18 London and Tally 11 is today's ninth puzzle. Leagues still start Thu 5 Nov: `board_submit` refuses earlier Tally days, so 4 Nov counts 8 puzzles.
+- **Database:** migrations `tally_board`, `tally_sync` and `tally_insights` applied live; the advisor shows no new kinds of warning. `sync.saves` did need the key added.
+- **Review fixes before merge:** finish time rounds to nearest (`readExact`, not Path's floor), a kept round shows the start card with the clock waiting and writes nothing on opening, "boards played" on the start card, counts of 8 a day before 5 Nov and 9 after (`dayCount`, site and app), `.maestro/tally.yaml`.
+- **Tests proved:** `check` and every replay green on `d964fab`. Full Tally replay on a site copy: 1,450 of 1,732 runs with no differences when this was written; it ran from the first app commit, before the review fixes, which change the screen hook and not the model. The nightly replay covers all of Tally.
+- **Release:** Update production run [41897648865](https://github.com/alecldarlow-cell/Daily-noodle-app/actions/runs/41897648865) published `d964fab` at 19:33 London. JS only, runtime `ea55e856…`, native player.
+- **Still to do:** not yet seen on a real phone. `/tally` opens in the browser until the next store build adds it to the app links. The replay does not cover `useTallyGame` or `cur` writes after a reload.
