@@ -823,4 +823,3 @@ Alec ran an outside review of the app and asked for its findings to be checked a
 
 - Reckon now picks its scoring from the page, as the site does: `r:2` days score 20% / 60% / 2.2× / 3× for 100 / 80 / 60 / 40, 20 for a miss; earlier days keep Ballpark's. Finish note no longer says "No bullseyes today". Tests in `reckon/tests/model.test.ts`. The bullseye note test changed with the agreed wording.
 - A rules 2 opener carries `e:1`, so a build from before this still opens those days, with the old scoring. Needs Alec to run Update production once the site ships.
-
