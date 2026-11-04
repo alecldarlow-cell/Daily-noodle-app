@@ -23,8 +23,28 @@ export function tileCells(mask: string | undefined): { size: number; cells: Tile
   return { size, cells };
 }
 
-/** The site's picture tiles (assets/*-thumb.svg), drawn to PNG in light and dark. */
+/** Each type's icon: the site's assets/<type>-thumb.svg, drawn to PNG in light and dark. */
 const PICTURES: Partial<Record<PuzzleType, { light: number; dark: number }>> = {
+  mini: {
+    light: require('../../../../assets/images/tiles/mini-light.png') as number,
+    dark: require('../../../../assets/images/tiles/mini-dark.png') as number,
+  },
+  doku: {
+    light: require('../../../../assets/images/tiles/doku-light.png') as number,
+    dark: require('../../../../assets/images/tiles/doku-dark.png') as number,
+  },
+  path: {
+    light: require('../../../../assets/images/tiles/path-light.png') as number,
+    dark: require('../../../../assets/images/tiles/path-dark.png') as number,
+  },
+  sweep: {
+    light: require('../../../../assets/images/tiles/sweep-light.png') as number,
+    dark: require('../../../../assets/images/tiles/sweep-dark.png') as number,
+  },
+  link: {
+    light: require('../../../../assets/images/tiles/link-light.png') as number,
+    dark: require('../../../../assets/images/tiles/link-dark.png') as number,
+  },
   borders: {
     light: require('../../../../assets/images/tiles/borders-light.png') as number,
     dark: require('../../../../assets/images/tiles/borders-dark.png') as number,
@@ -55,13 +75,15 @@ interface PuzzleTileProps {
   testID?: string;
 }
 
-/** A card's 96 pt preview: the puzzle's grid, the type's picture, or a plain "Play" tile. */
+/**
+ * A card's 96 pt preview: the type's icon, as the site's cards (Alec, 4 Nov 2026). A type
+ * with no icon yet falls back to its grid, then a plain "Play" tile.
+ */
 export function PuzzleTile({ type, mask, testID }: PuzzleTileProps) {
   const t = useTokens();
   const scheme = useColorScheme();
-  // Tally's mask is sixteen blanks: its card is always the picture, as on the site.
-  const grid = type === 'tally' ? null : tileCells(mask);
   const picture = PICTURES[type];
+  const grid = picture ? null : tileCells(mask);
 
   if (grid) {
     const gap = grid.size === 4 ? 2.5 : 1.5;

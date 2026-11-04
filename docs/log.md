@@ -841,3 +841,9 @@ Alec ran an outside review of the app and asked for its findings to be checked a
 - **Tests proved:** `check` and every replay green on `d964fab`. Full Tally replay on a site copy: 1,450 of 1,732 runs with no differences when this was written; it ran from the first app commit, before the review fixes, which change the screen hook and not the model. The nightly replay covers all of Tally.
 - **Release:** Update production run [41897648865](https://github.com/alecldarlow-cell/Daily-noodle-app/actions/runs/41897648865) published `d964fab` at 19:33 London. JS only, runtime `ea55e856…`, native player.
 - **Still to do:** not yet seen on a real phone. `/tally` opens in the browser until the next store build adds it to the app links. The replay does not cover `useTallyGame` or `cur` writes after a reload.
+
+### 4 Nov 2026 — New puzzle card icons (site PR #63 first)
+
+- **Change:** Alec's new set. `PuzzleTile` now shows one fixed icon per type on Today and the archive, in light and dark, in place of the day's grid. Mini, Doku, Path, Sweep and Link are new; Borders, Tally and Reckon redrawn; Tangle unchanged. PNGs at 288 px in `assets/images/tiles/`, drawn from the site's `assets/<type>-thumb.svg`. `mask` is still read, and the grid stays as a fallback for a type with no icon.
+- **Tests proved:** `PuzzleCard` and `TodayScreen` updated for the new behaviour (every daily type draws its icon; a mask no longer draws a grid). Local tile tests and type check; `check` on the pull request.
+- **Left:** not yet seen on a real phone.
