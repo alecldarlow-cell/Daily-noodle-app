@@ -48,6 +48,8 @@ export function ruleFor(type: GridStreakType, data: RuleData): string {
       return 'Join 1 to 36 in one unbroken path, through every given number.';
     case 'link':
       return 'Sixteen words, four hidden groups of four. Four mistakes and it’s over.';
+    case 'tally':
+      return 'Fill the grid with 1 to 4, no repeats in a row or column, so every cage makes its number.';
   }
 }
 
@@ -71,6 +73,10 @@ export const HOW: Record<GridStreakType, readonly string[]> = {
   link: [
     'Tap four words you think belong together, then Submit. Three right gets a “one away”.',
     'Groups run easiest to hardest: green, blue, yellow, then black. Guessing the same four twice costs nothing.',
+  ],
+  tally: [
+    'Tap a square, then a number. The number in a cage is the answer and the sign is how you get there: 12× multiplies to 12, 9+ adds to 9, 3÷ is the larger over the smaller, 2− the larger minus the smaller. A lone number is that digit.',
+    'Notes puts small candidates in a square; Undo takes back a move. Every board is solved by logic alone, so no guessing is ever needed. The clock starts when you tap Play.',
   ],
 };
 

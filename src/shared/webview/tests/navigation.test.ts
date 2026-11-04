@@ -47,6 +47,7 @@ describe('GIVEN puzzle file names', () => {
     ['2026-10-24-word-tangle-0018', 'tangle'],
     ['2026-10-24-geo-borders-0020', 'borders'],
     ['2026-10-24-quiz-reckon-0005', 'reckon'],
+    ['2026-11-05-logic-tally-0012', 'tally'],
     ['2026-10-24-briefing', null],
   ])('THEN %s is a %s', (file, type) => {
     expect(typeOfFile(file)).toBe(type);

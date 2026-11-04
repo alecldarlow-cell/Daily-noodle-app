@@ -87,8 +87,8 @@ describe('GIVEN results on a board', () => {
     expect(dayName('2026-10-23', '2026-10-24')).toBe('Yesterday');
     expect(dayName('2026-09-22', '2026-10-24')).toBe('Tue 22 Sep');
     expect(weekLabel('2026-10-19', '2026-10-25')).toBe('19 Oct – 25 Oct');
-    expect(weekDays('2026-10-21', '2026-10-19')).toBe(24);
-    expect(weekDays('2026-10-30', '2026-10-19')).toBe(56);
+    expect(weekDays('2026-10-21', '2026-10-19')).toBe(27);
+    expect(weekDays('2026-10-30', '2026-10-19')).toBe(63);
   });
 
   it('THEN shares list the top five and end with the league’s invite link', () => {

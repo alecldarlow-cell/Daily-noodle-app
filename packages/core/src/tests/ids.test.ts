@@ -11,6 +11,7 @@ describe('GIVEN puzzle ids', () => {
       ['DP·TANG·0018', 'tangle'],
       ['DP·BORD·0020', 'borders'],
       ['DP·RECK·0005', 'reckon'],
+      ['DP·TALLY·0012', 'tally'],
     ])('THEN %s is %s', (id, type) => {
       expect(typeOfId(id)).toBe(type);
     });
@@ -48,6 +49,7 @@ describe('GIVEN puzzle ids', () => {
         'tangle',
         'borders',
         'reckon',
+        'tally',
       ]);
       expect(isPuzzleType('reckon')).toBe(true);
       expect(isPuzzleType('lexi')).toBe(false);

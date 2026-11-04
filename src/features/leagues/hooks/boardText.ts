@@ -88,11 +88,11 @@ export function weekLabel(from: string, to: string): string {
   return `${dm(from)} – ${dm(to)}`;
 }
 
-/** Puzzles so far this week: 8 a day, up to the chosen day. */
+/** Puzzles so far this week: 9 a day, up to the chosen day. */
 export function weekDays(date: string, weekFrom: string): number {
   const n =
     Math.round((Date.parse(`${date}T12:00:00Z`) - Date.parse(`${weekFrom}T12:00:00Z`)) / 864e5) + 1;
-  return 8 * Math.max(1, Math.min(7, n));
+  return 9 * Math.max(1, Math.min(7, n));
 }
 
 /** The puzzle of a type on a day, from the site's cards. */

@@ -122,8 +122,8 @@ describe('GIVEN the line under the score (finish.js streakLine)', () => {
 });
 
 describe('GIVEN which finishes play the jingle (AF-013)', () => {
-  it('THEN only a fresh solve of Mini, Doku, Sweep, Path or Link', () => {
-    expect([...JINGLE_TYPES].sort()).toEqual(['doku', 'link', 'mini', 'path', 'sweep']);
+  it('THEN only a fresh solve of Mini, Doku, Sweep, Path, Link or Tally', () => {
+    expect([...JINGLE_TYPES].sort()).toEqual(['doku', 'link', 'mini', 'path', 'sweep', 'tally']);
     for (const t of JINGLE_TYPES) expect(playsJingle(t, true, true)).toBe(true);
     for (const t of ['tangle', 'borders', 'reckon'] as PuzzleType[])
       expect(playsJingle(t, true, true)).toBe(false);

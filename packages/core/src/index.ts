@@ -107,6 +107,7 @@ export {
   shareTangle,
   shareBorders,
   shareReckon,
+  shareTally,
   shortLink,
   shareMessage,
 } from './share';

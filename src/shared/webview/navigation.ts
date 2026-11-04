@@ -22,6 +22,7 @@ const SLUG: [RegExp, PuzzleType][] = [
   [/word-tangle/, 'tangle'],
   [/geo-borders/, 'borders'],
   [/quiz-reckon/, 'reckon'],
+  [/logic-tally/, 'tally'],
 ];
 
 /** A puzzle page's type from its file name ("2026-10-24-crossword-mini-0105" → mini). */
@@ -92,7 +93,8 @@ export function shareBoard(u: URL): { p?: string; d?: string } {
   const out: { p?: string; d?: string } = {};
   const p = u.searchParams.get('p');
   const d = u.searchParams.get('d');
-  if (p && /^(mini|doku|sweep|path|link|tangle|borders|reckon|all|records)$/.test(p)) out.p = p;
+  if (p && /^(mini|doku|sweep|path|link|tangle|borders|reckon|tally|all|records)$/.test(p))
+    out.p = p;
   if (d && /^\d{4}-\d{2}-\d{2}$/.test(d)) out.d = d;
   return out;
 }

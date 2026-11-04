@@ -28,6 +28,9 @@ import { validate as validateSweep, type SweepData } from '../sweep/model';
 import { enabled as reckonEnabled } from '../reckon';
 import { ReckonScreen } from '../reckon/components/ReckonScreen';
 import { validate as validateReckon, type ReckonData } from '../reckon/model';
+import { enabled as tallyEnabled } from '../tally';
+import { TallyScreen } from '../tally/components/TallyScreen';
+import { validate as validateTally, type TallyData } from '../tally/model';
 import { enabled as tangleEnabled } from '../tangle';
 import { TangleScreen } from '../tangle/components/TangleScreen';
 import { validate as validateTangle, type TangleData } from '../tangle/model';
@@ -43,6 +46,7 @@ export const NATIVE: Record<string, boolean> = {
   path: pathEnabled,
   reckon: reckonEnabled,
   borders: bordersEnabled,
+  tally: tallyEnabled,
 };
 
 /**
@@ -58,6 +62,7 @@ const VALIDATE: Record<string, (f: PuzzleFile) => boolean> = {
   path: (f) => validatePath(f.data).ok,
   reckon: (f) => validateReckon(f.data, f.date).ok,
   borders: (f) => validateBorders(f.data, f.date).ok,
+  tally: (f) => validateTally(f.data).ok,
 };
 
 /** Puzzle types with a native player, each on once its replay has passed on every puzzle. */
@@ -124,6 +129,8 @@ export function NativePlay({ type, file, fallback }: NativePlayProps) {
       <PathScreen key={file} file={data as PuzzleFile<PathData>} />
     ) : type === 'reckon' ? (
       <ReckonScreen key={file} file={data as PuzzleFile<ReckonData>} />
+    ) : type === 'tally' ? (
+      <TallyScreen key={file} file={data as PuzzleFile<TallyData>} />
     ) : (
       <BordersScreen key={file} file={data as PuzzleFile<BordersData>} />
     );

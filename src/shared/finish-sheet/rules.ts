@@ -28,8 +28,8 @@ export interface NextRow {
 }
 
 /**
- * "Play Doku 103" / "3 of 8 done today", from today's list and the saves; once every
- * puzzle is done, "All 8 done today. Try the archive ›" (finish.js fillNext).
+ * "Play Doku 103" / "3 of 9 done today", from today's list and the saves; once every
+ * puzzle is done, "All 9 done today. Try the archive ›" (finish.js fillNext).
  */
 export function nextRow(list: TodayList | null | undefined, type: PuzzleType, docs: Docs): NextRow {
   if (!list) return { main: 'Today’s puzzles', sub: ' ', item: null, all: false };
@@ -102,8 +102,15 @@ export function streakLine(stats: readonly { value: string | number; label: stri
   return n >= 1 ? `🔥 ${n}-day streak` : '';
 }
 
-/** The five grid puzzles that play the celebration jingle on a fresh win (AF-013). */
-export const JINGLE_TYPES: readonly PuzzleType[] = ['mini', 'doku', 'sweep', 'path', 'link'];
+/** The grid puzzles that play the celebration jingle on a fresh win (AF-013). */
+export const JINGLE_TYPES: readonly PuzzleType[] = [
+  'mini',
+  'doku',
+  'sweep',
+  'path',
+  'link',
+  'tally',
+];
 
 /** Whether a finish plays the jingle: a fresh (not reopened) solve of one of the five. */
 export const playsJingle = (type: PuzzleType, fresh: boolean, solved: boolean): boolean =>

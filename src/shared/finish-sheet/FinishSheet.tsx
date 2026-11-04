@@ -71,7 +71,7 @@ export interface FinishSheetProps {
   onNext: (item: TodayItem | null) => void;
 }
 
-/** Back down to the tabs, on the Archive (the "All 8 done today. Try the archive ›" line). */
+/** Back down to the tabs, on the Archive (the "All 9 done today. Try the archive ›" line). */
 function openArchive() {
   router.dismissTo('/archive');
 }
@@ -83,7 +83,7 @@ function openArchive() {
  *   2 SHARE: one full-width filled "Share result" (the line, a newline and the short link
  *     dailynoodle.co.uk/<type> go to the phone's share sheet; the spinner shows until it opens);
  *   3 LEADERBOARD: the provided board slot's one line ("Currently 1st in Noodlers ›");
- *   4 PLAY MORE: a tonal "Play Borders 24" with "6 of 8 done today" under it;
+ *   4 PLAY MORE: a tonal "Play Borders 24" with "6 of 9 done today" under it;
  *   5 ANSWER: the type's recap, straight after the result when the round wasn't solved;
  * then a footer: "New Doku in 3h 38m" and the puzzle's day.
  */

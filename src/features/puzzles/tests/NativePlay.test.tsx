@@ -6,6 +6,7 @@ import { mockSite, renderWithProviders } from '@/shared/testing';
 
 import { PUZZLE_CACHE_PREFIX } from '../api/usePuzzleData';
 import { hasNativePlayer, NATIVE, NativePlay } from '../components/NativePlay';
+import { enabled as tallyEnabled } from '../tally';
 import { enabled as bordersEnabled } from '../borders';
 import { file15 } from '../borders/tests/fixtures';
 import { enabled as dokuEnabled } from '../doku';
@@ -59,6 +60,7 @@ describe('GIVEN the play route asks which types play natively', () => {
       path: pathOn,
       reckon: reckonEnabled,
       borders: bordersEnabled,
+      tally: tallyEnabled,
     });
     expect(hasNativePlayer('toString')).toBe(false);
     expect(hasNativePlayer(undefined)).toBe(false);

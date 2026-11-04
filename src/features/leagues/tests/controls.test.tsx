@@ -136,7 +136,7 @@ describe('GIVEN a player in two leagues (AF-017)', () => {
       const row = screen.getByTestId('puzzle-chips');
       expect(row.props.horizontal).toBe(true);
       const chips = screen.getAllByTestId(/^pill-/);
-      expect(chips.length).toBe(10);
+      expect(chips.length).toBe(11);
       for (const c of chips) {
         const s = flat(c);
         expect(s.minHeight).toBe(32);

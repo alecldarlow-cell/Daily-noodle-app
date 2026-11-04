@@ -42,7 +42,7 @@ export interface DayBoard {
   first: string | null;
 }
 
-/** board_overall: points across all eight puzzles. */
+/** board_overall: points across all nine puzzles. */
 export interface OverallRow {
   rank: number;
   nick: string;
@@ -108,7 +108,7 @@ export interface Records {
   today: string;
 }
 
-/** What the board shows: one puzzle, all eight, or the league's records. */
+/** What the board shows: one puzzle, all nine, or the league's records. */
 export type BoardView = BoardTypeId | 'all' | 'records';
 
 /** A puzzle card, from the site's feed-lite.json. */

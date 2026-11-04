@@ -42,6 +42,9 @@ export function shareDoku(id: string, time: string, streak: unknown): string {
 export function sharePath(id: string, time: string, streak: unknown): string {
   return `〰️ Path ${dnNum(id)} — ${dnTime(time)}${dnStreak(streak)}`;
 }
+export function shareTally(id: string, time: string, streak: unknown): string {
+  return `🧮 Tally ${dnNum(id)} — ${dnTime(time)}${dnStreak(streak)}`;
+}
 
 /** Sweep: "win" swept in a time, "loss" boom, anything else revealed. */
 export function shareSweep(outcome: string, time: string, streak: unknown, id: string): string {

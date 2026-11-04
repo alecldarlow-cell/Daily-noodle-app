@@ -3,7 +3,8 @@ import { BOARD_KEY, finished, importMove, keptPids, type KV, type MovePayload } 
 import { missingFunction, type RevDoc, type SyncApi } from '../api/syncApi';
 
 /** What sync carries: the eight daily types' saves and streaks, and the league identity. */
-export const SYNC_KEY = /^digi-(mini|doku|sweep|path|link|tangle|borders|reckon)-(v1|streak)$/;
+export const SYNC_KEY =
+  /^digi-(mini|doku|sweep|path|link|tangle|borders|reckon|tally)-(v1|streak)$/;
 /** App-only: when this phone last synced, for the Account screen. */
 export const LAST_SYNC_KEY = 'noodle-app-sync';
 /** Pull, merge and push again at most this many times when another device wrote in between. */

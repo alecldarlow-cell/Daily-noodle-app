@@ -323,7 +323,7 @@ export function importMove(kv: KV, p: MovePayload, now: () => number = Date.now)
 
 // ---------- packing (dn-board.js moveLink) ----------
 
-const PUZZLE_KEY = /^digi-(mini|doku|sweep|path|link|tangle|borders|reckon)-(v1|streak)$/;
+const PUZZLE_KEY = /^digi-(mini|doku|sweep|path|link|tangle|borders|reckon|tally)-(v1|streak)$/;
 const GAME_BUDGET = 40000;
 /** The app's own caches (today's list, the archive): nothing a browser can use. */
 const APP_ONLY = /^noodle-app-/;

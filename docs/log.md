@@ -823,3 +823,12 @@ Alec ran an outside review of the app and asked for its findings to be checked a
 
 - Reckon now picks its scoring from the page, as the site does: `r:2` days score 20% / 60% / 2.2× / 3× for 100 / 80 / 60 / 40, 20 for a miss; earlier days keep Ballpark's. Finish note no longer says "No bullseyes today". Tests in `reckon/tests/model.test.ts`. The bullseye note test changed with the agreed wording.
 - A rules 2 opener carries `e:1`, so a build from before this still opens those days, with the old scoring. Needs Alec to run Update production once the site ships.
+
+### 4 Nov 2026 — Tally, the ninth daily, native (this PR; site PR first)
+
+- **Change** (plan `tally-daily-launch-plan.md`; Alec moved the first daily to Thu 5 Nov, Tally 12): Tally joins `@noodle/core` (types, ids, board, saves, share, played, run keys), sync and bridge key lists, the short link `/tally`, leagues (timed, "All nine puzzles"), rounds, tiles and start card. New `src/features/puzzles/tally/` (model, oracle, finishing, simulate, screen, hook) ported from `engines/tally.js`.
+- **Unfinished rounds** use the site's `digi-tally-v1.cur`, not an app slot, so a round carries between website and app. The sheet opens straight after the last number, as the page's does.
+- **Vendored site copies refreshed**, which also clears the red Site drift runs of 3 and 4 Nov. Those were stale copies only: the differential tests passed once re-vendored.
+- **`/tally` in app.json is deliberately left out:** app links there are native config and would change the fingerprint. The short link opens in the browser until the next store build; `systemPath` already handles it then.
+- **Tests proved:** model, oracle, finishing and screen tests (GIVEN/WHEN/THEN). Replay `--type tally` against the site branch with the tracker injected (as Build feed does). A rule broken on purpose was caught. Expected lists changed only for the ninth type (`PUZZLE_TYPES`, `NATIVE`, jingle types, chips, weekly total now 9 a day).
+- **Left:** the nightly replay covers every Tally. Not seen on a real phone: board look, keypad, Notes, a round carried from web to app.
