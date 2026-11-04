@@ -59,7 +59,8 @@ interface PuzzleTileProps {
 export function PuzzleTile({ type, mask, testID }: PuzzleTileProps) {
   const t = useTokens();
   const scheme = useColorScheme();
-  const grid = tileCells(mask);
+  // Tally's mask is sixteen blanks: its card is always the picture, as on the site.
+  const grid = type === 'tally' ? null : tileCells(mask);
   const picture = PICTURES[type];
 
   if (grid) {
