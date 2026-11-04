@@ -847,3 +847,8 @@ Alec ran an outside review of the app and asked for its findings to be checked a
 - **Change:** Alec's new set. `PuzzleTile` now shows one fixed icon per type on Today and the archive, in light and dark, in place of the day's grid. Mini, Doku, Path, Sweep and Link are new; Borders, Tally and Reckon redrawn; Tangle unchanged. PNGs at 288 px in `assets/images/tiles/`, drawn from the site's `assets/<type>-thumb.svg`. `mask` is still read, and the grid stays as a fallback for a type with no icon.
 - **Tests proved:** `PuzzleCard` and `TodayScreen` updated for the new behaviour (every daily type draws its icon; a mask no longer draws a grid). Local tile tests and type check; `check` on the pull request.
 - **Left:** not yet seen on a real phone.
+
+### 4 Nov 2026 — Puzzle icons: no tile behind them
+
+- **Change:** Alec's call after seeing the set live: no square within a square. Icons are redrawn from the site's SVGs with a transparent background and a tight crop, and `PuzzleTile` draws them with no border, so they fill the 96 pt space. Same in light and dark.
+- **Tests proved:** `check` on the pull request. Not yet seen on a real phone.
