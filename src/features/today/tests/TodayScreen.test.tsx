@@ -100,13 +100,13 @@ describe('GIVEN the site has published today’s list', () => {
       }),
     );
 
-    it('THEN the card shows its standfirst, reading time and grid tile', async () => {
+    it('THEN the card shows its standfirst, reading time and type icon', async () => {
       await renderWithProviders(<TodayScreen />);
       await waitFor(() =>
         expect(screen.getByText('A Bramley or a Cox. Medium.')).toBeOnTheScreen(),
       );
       expect(screen.getByText('~3 min')).toBeOnTheScreen();
-      expect(screen.getByTestId('today-mini-tile-start')).toBeOnTheScreen();
+      expect(screen.getByTestId('today-mini-tile').type).toBe('Image');
     });
   });
 

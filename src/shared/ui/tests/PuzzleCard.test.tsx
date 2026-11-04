@@ -4,6 +4,18 @@ import { PuzzleRow } from '../PuzzleRow/PuzzleRow';
 import { PuzzleTile, tileCells } from '../PuzzleTile/PuzzleTile';
 import { Screen } from '../Screen/Screen';
 
+const DAILY_TYPES = [
+  'mini',
+  'doku',
+  'path',
+  'sweep',
+  'link',
+  'borders',
+  'reckon',
+  'tally',
+  'tangle',
+] as const;
+
 describe('GIVEN a card’s mask from feed-lite', () => {
   describe('WHEN it is a 5×5 Mini grid', () => {
     it('THEN blocks stay blocks and the first open cell is the start square', async () => {
@@ -45,22 +57,18 @@ describe('GIVEN a card’s mask from feed-lite', () => {
 });
 
 describe('GIVEN a tile to draw', () => {
-  it('THEN a grid type draws its cells, with one start square', async () => {
-    await render(<PuzzleTile type="mini" mask={'.'.repeat(25)} testID="t" />);
-    expect(screen.getByTestId('t-start')).toBeOnTheScreen();
-  });
-
-  it('THEN Borders, Reckon and Tangle draw the site’s pictures', async () => {
-    for (const type of ['borders', 'reckon', 'tangle'] as const) {
+  it('THEN every daily type draws its icon', async () => {
+    for (const type of DAILY_TYPES) {
       const { unmount } = await render(<PuzzleTile type={type} testID={`p-${type}`} />);
-      expect(screen.getByTestId(`p-${type}`).props.source).toBeTruthy();
+      expect(screen.getByTestId(`p-${type}`).type).toBe('Image');
       await unmount();
     }
   });
 
-  it('THEN a grid type without a mask yet falls back to a plain Play tile', async () => {
-    await render(<PuzzleTile type="doku" testID="t" />);
-    expect(screen.getByText('Play')).toBeOnTheScreen();
+  it('WHEN a card has a grid mask THEN it still draws the icon, not the day’s grid', async () => {
+    await render(<PuzzleTile type="mini" mask={'.'.repeat(25)} testID="t" />);
+    expect(screen.getByTestId('t').type).toBe('Image');
+    expect(screen.queryByTestId('t-start')).toBeNull();
   });
 });
 
