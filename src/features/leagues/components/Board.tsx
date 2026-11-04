@@ -510,8 +510,8 @@ function OverallView({
         </View>
       )}
       <Text style={[styles.how, { color: t.faint }]}>
-        Each puzzle you finish scores 1 point for every player you beat.
-        Equal points: more puzzles finished goes first.
+        Each puzzle you finish scores 1 point for every player you beat. Equal points: more puzzles
+        finished goes first.
       </Text>
       <Acts>
         {d.day.length ? (
