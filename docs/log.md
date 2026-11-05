@@ -880,3 +880,6 @@ Alec ran an outside review of the app and asked for its findings to be checked a
 - **Email first (Alec's call):** Start a league and Join no longer ask for a PIN. Where sign-in is on, the nudge on the board now asks a player with no PIN to sign in (`signin-nudge`), and goes once they have synced. A PIN stays in League settings and in Already in this league? for existing players, and owners can still Let back in.
 - **Crown:** `CrownNote` shows "👑 Last week’s champion" under the boards when the league has a champion.
 - **Tests proved:** see the pull request. Not seen on a real phone.
+
+- **Release:** production update run [42110558997](https://github.com/alecldarlow-cell/Daily-noodle-app/actions/runs/42110558997) published main `5f7f3b8` on 5 Nov on Alec's go-ahead. JS only. Still to see on a phone: error reports arriving, the update check, today's puzzles offline, the sign-in nudge and the crown line.
+- **Open from the review, not started:** stale Account card after sign-in, a silent failed PIN save, changing a nickname, a 6-digit sign-in code, Doku's two-tap tile mode, and the 1,500-row limit in the Board's full copy.
