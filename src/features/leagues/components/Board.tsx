@@ -12,15 +12,19 @@ import { useLondonDay } from '@/shared/time';
 import { isOffline, sayError } from '../api/errors';
 import { hasPin, setLastType, useBoardState } from '../hooks/boardStore';
 import {
+  addDays,
   dayMonth,
   inviteLink,
+  isMonday,
   inviteText,
   MEDAL,
   pts,
   puzzleOn,
+  recapRows,
   result,
   shareAll,
   shareDay,
+  shareRecap,
   dayCount,
   weekDays,
   weekLabel,
@@ -197,6 +201,30 @@ function BoardFailed({ error, busy, retry }: { error: unknown; busy: boolean; re
 }
 
 /** The league in the masthead: switch, start or join another. */
+/** Mondays: last week's top three, to share, until closed for the day (board.html fillRecap). */
+function RecapCard({ league, today }: { league: BoardLeague; today: string }) {
+  const key = `noodle-board-recap-${league.code}`;
+  const closed = useStoredRaw(key) === today;
+  const q = useBoardData(closed ? undefined : league.code, 'all', addDays(today, -1));
+  const d = q.data as Overall | undefined;
+  if (closed || !d?.week || d.week.length < 2) return null;
+  return (
+    <Card title={`🏆 Last week in ${league.name}`} testID="recap-card">
+      {recapRows(d.week).map((r) => (
+        <P key={r.nick}>{`${MEDAL[r.rank] ?? `${r.rank}.`} ${r.nick} · ${pts(r.points)}`}</P>
+      ))}
+      <Acts>
+        <Btn
+          variant="filled"
+          label="Share"
+          onPress={() => share(shareRecap(league, d.week_from, d.week_to, d.week))}
+        />
+        <Btn label="Close" onPress={() => appStorage.setItem(key, today)} />
+      </Acts>
+    </Card>
+  );
+}
+
 /** The one card at the top after something happened, else the PIN nudge (board.html topCard). */
 function TopCard({ flow, league }: { flow: Flow; league: BoardLeague }) {
   const s = useBoardState();
@@ -276,6 +304,8 @@ function TopCard({ flow, league }: { flow: Flow; league: BoardLeague }) {
         </P>
       </Card>
     );
+  if (isMonday(today) && appStorage.getItem(`noodle-board-recap-${league.code}`) !== today)
+    return <RecapCard league={league} today={today} />;
   // Email sign-in is how leagues follow a player (5 Nov 2026, Alec's call); a PIN stays in
   // League settings as the fallback, and is the only way in a build without sign-in.
   if (syncOn() && !hasPin(s) && !later && !appStorage.getItem(SYNCED_KEY))

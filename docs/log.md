@@ -883,3 +883,10 @@ Alec ran an outside review of the app and asked for its findings to be checked a
 
 - **Release:** production update run [42110558997](https://github.com/alecldarlow-cell/Daily-noodle-app/actions/runs/42110558997) published main `5f7f3b8` on 5 Nov on Alec's go-ahead. JS only. Still to see on a phone: error reports arriving, the update check, today's puzzles offline, the sign-in nudge and the crown line.
 - **Open from the review, not started:** stale Account card after sign-in, a silent failed PIN save, changing a nickname, a 6-digit sign-in code, Doku's two-tap tile mode, and the 1,500-row limit in the Board's full copy.
+
+### 5 Nov 2026 — Long histories, Monday card, Doku hint (website #73 first)
+
+- **Long histories:** `board_backfill` ignores more than 1,500 rows a call, and the client recorded them as sent. `backfillCalls` now sends batches of 1,000, as `dn-board.js` does.
+- **Monday card (Alec's call):** on Mondays the board opens with last week's top three, Share and Close, when at least two players took part. Close lasts the day (`noodle-board-recap-<code>`, a disposable key).
+- **Doku hint:** on an empty board the message line says "Tap a square, then tap letters to fill it", until the first letter is down. Controls are unchanged.
+- **Left, on Alec's call:** Path stays tap by tap; no reminders or iPhone build for now; no widget.

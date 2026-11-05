@@ -14,6 +14,7 @@ import { createCachedStorage } from './cachedStorage';
 export function isDisposableKey(key: string): boolean {
   return (
     key.startsWith('noodle-app-puzzle:') ||
+    key.startsWith('noodle-board-recap-') ||
     key === 'noodle-app-today' ||
     key === 'noodle-app-feed-lite' ||
     key === 'noodle-app-sync' ||

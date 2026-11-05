@@ -21,6 +21,7 @@ export {
   savedResults,
   trackerIds,
   backfillPlan,
+  BACKFILL_BATCH,
   backfillCalls,
   afterBackfill,
   type BoardLeague,
