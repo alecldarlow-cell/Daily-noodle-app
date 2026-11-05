@@ -466,12 +466,12 @@ describe('GIVEN a player in a league', () => {
       await waitFor(() => expect(screen.getByTestId('overall-board')).toBeOnTheScreen());
       expect(m.boardMine).toHaveBeenCalledWith(PID);
       expect(m.boardOverall).toHaveBeenCalledWith(PID, 'ABCD2345', today);
-      expect(screen.getByLabelText('🥇 Ma, 9 pts, 4 of 8 done')).toBeOnTheScreen();
-      expect(screen.getByLabelText('🥈 Alec (you), 1 pt, 1 of 8 done')).toBeOnTheScreen();
+      expect(screen.getByLabelText('🥇 Ma, 9 pts, 4 of 9 done')).toBeOnTheScreen();
+      expect(screen.getByLabelText('🥈 Alec (you), 1 pt, 1 of 9 done')).toBeOnTheScreen();
       expect(screen.getByText(/This week · 19 Oct – 25 Oct/)).toBeOnTheScreen();
       await press('Share leaderboard');
       expect(shared[0]).toMatch(
-        /^🏆 All puzzles · .*\n🥇 Ma 9 pts \(4\/8\)\n🥈 Alec 1 pt \(1\/8\)\nFamily leaderboard:\nhttps:\/\/dailynoodle.co.uk\/join.html\?c=ABCD2345&p=all&d=/,
+        /^🏆 All puzzles · .*\n🥇 Ma 9 pts \(4\/9\)\n🥈 Alec 1 pt \(1\/9\)\nFamily leaderboard:\nhttps:\/\/dailynoodle.co.uk\/join.html\?c=ABCD2345&p=all&d=/,
       );
     });
 

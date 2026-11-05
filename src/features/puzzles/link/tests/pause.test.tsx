@@ -144,7 +144,7 @@ describe('GIVEN a Link left part-way (AF-029)', () => {
     it('THEN the card offers Resume, paused at its time, and the board carries on from 1:05', async () => {
       appStorage.setItem(SAVE_KEY, JSON.stringify(kept()));
       await renderWithProviders(<LinkScreen file={file78} />);
-      expect(screen.getByText('Today’s Link, part-played')).toBeOnTheScreen();
+      expect(screen.getByText('Part-played')).toBeOnTheScreen();
       expect(
         screen.getByText(
           'Paused at 1:05. One group found so far; your clock carries on from there.',

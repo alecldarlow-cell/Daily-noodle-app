@@ -34,35 +34,6 @@ export function useBoardColors() {
   return { ...useSheetGroups(), missBg: dark ? 'rgba(255,122,110,0.16)' : '#FBE3E0' };
 }
 
-/** The start card's picture: four rows of tiles, three of the second row held (house.js art). */
-export function LinkArt() {
-  const pt = usePuzzleTokens();
-  return (
-    <View style={styles.art} accessible={false}>
-      {[0, 1, 2, 3].map((row) => (
-        <View key={row} style={styles.artRow}>
-          {[0, 1, 2, 3].map((col) => {
-            const k = row * 4 + col;
-            const sel = (row === 1 && col < 3) || k === 9;
-            return (
-              <View
-                key={col}
-                style={[
-                  styles.artTile,
-                  {
-                    backgroundColor: sel ? '#FFF0B8' : pt.card,
-                    borderColor: sel ? '#FFD54A' : pt.lineSoft,
-                  },
-                ]}
-              />
-            );
-          })}
-        </View>
-      ))}
-    </View>
-  );
-}
-
 /**
  * The sheet's hero (finish.css .fin-guess): one 44 pt square per guess, the group's colour
  * with a drawn tick, or a miss as a red ring with a red cross.

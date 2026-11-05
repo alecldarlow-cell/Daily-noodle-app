@@ -18,7 +18,7 @@ import type { PuzzleFile } from '../../types';
 import { useTallyGame } from '../hooks/useTallyGame';
 import { tallyNumber, type Move, type TallyData } from '../model';
 import { tallyColors } from './colors';
-import { TallyArt, TallyBoard, TallyRecap } from './TallyBoard';
+import { TallyBoard, TallyRecap } from './TallyBoard';
 
 /** Tally, played natively: start card, board, keypad, Notes, Erase, Undo, finish sheet. */
 export function TallyScreen({ file }: { file: PuzzleFile<TallyData> }) {
@@ -42,7 +42,6 @@ export function TallyScreen({ file }: { file: PuzzleFile<TallyData> }) {
         date={file.date}
         rule={ruleFor('tally', {})}
         stats={stats}
-        art={<TallyArt />}
         onPlay={game.play}
         onBack={back}
       />

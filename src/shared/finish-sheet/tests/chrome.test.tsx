@@ -60,7 +60,7 @@ describe('GIVEN the finish sheet', () => {
     it('THEN it is one line under the score, not a big stat', async () => {
       mockWindow.fontScale = 2;
       await renderWithProviders(sheet(false));
-      expect(screen.getByTestId('finish-streak')).toHaveTextContent('🔥 1150-day streak');
+      expect(screen.getByTestId('finish-streak')).toHaveTextContent('🔥 1150-day Mini streak');
       expect(screen.queryByText('1150')).toBeNull();
       expect(screen.queryByText('best streak')).toBeNull();
     });

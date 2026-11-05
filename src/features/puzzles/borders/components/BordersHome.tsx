@@ -4,12 +4,12 @@ import { StyleSheet, View } from 'react-native';
 import { dayHead } from '@/shared/time';
 
 import { StartLayout } from '@/shared/start-card';
+import { useTokens } from '@/shared/theme';
+import { PuzzleTile } from '@/shared/ui';
 
 import { homeView, serial, type BordersState } from '../model';
 import { homeDate } from '../simulate';
 import type { BordersColors } from './colors';
-import { worldHtml } from './drawing';
-import { Picture } from './Picture';
 
 const HOW = [
   'Ten country outlines, easiest first. Pick the country from four names: 100 points for each right answer, up to 1,000.',
@@ -27,21 +27,20 @@ interface Props {
 /** Borders' start screen (the page's #home, renderHome and homeExtras). */
 export function BordersHome({ state, today, c, onPlay, onBack }: Props) {
   const h = homeView(state, today, dayBefore);
-  const streak = Number(h.stats[0]);
+  const t = useTokens();
   return (
     <StartLayout
       testID="borders-home"
       title="Borders"
       titleAccent={<ScaleBar ink={c.ink} />}
       dateLine={`No. ${serial(state.P.id)}, ${homeDate(state.P.date)}`}
-      streak={streak >= 1 ? `${streak}-day streak` : undefined}
-      art={<Picture html={worldHtml(c)} style={styles.world} />}
+      art={<PuzzleTile type="borders" size={132} />}
       head={dayHead('ten', state.P.date, today)}
       status={h.status}
       statusTestID="borders-status"
       button={{ label: h.button, onPress: onPlay, testID: 'borders-play-button' }}
       stats={[
-        [h.stats[0]!, 'day streak'],
+        [h.stats[0]!, 'Borders streak'],
         [h.stats[1]!, 'best score'],
         [h.stats[2]!, 'Borders played'],
       ]}
@@ -52,8 +51,8 @@ export function BordersHome({ state, today, c, onPlay, onBack }: Props) {
         ink: c.ink,
         inkSoft: c.ink2,
         line: c.line,
-        pill: c.ink,
-        onPill: c.paper,
+        pill: t.accent,
+        onPill: t.onAccent,
       }}
       onBack={onBack}
     />

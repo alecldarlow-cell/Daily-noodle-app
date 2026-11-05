@@ -857,3 +857,10 @@ Alec ran an outside review of the app and asked for its findings to be checked a
 
 - **Change:** Alec's call. The All puzzles note now reads "Each puzzle you finish scores 1 point for every player you beat." The points come from the site's `board_overall`, so the rule itself needs no app change; the old wording stays until the next app update reaches phones.
 - **Tests proved:** `check` on the pull request.
+
+### 5 Nov 2026 — Start and finish pages (site PR #68 first)
+
+- **Change (Alec's list, all nine):** start pages use the type's icon at 132 pt, a full-width green button, no top-right streak, and "Ready to play" (older days keep "Yesterday’s Mini" or "From the archive"). Link's kept round reads "Part-played". Finish: recap grids centred, Play next shows that puzzle's icon. Streaks are named ("Mini streak", "🔥 5-day Mini streak"); Today's chip reads "daily streak". The old `*Art` start pictures are gone.
+- **Date bomb fixed in tests:** the Leagues tests expected "of 8 done" but ran on the real date, so they went red on 5 Nov when `boardText` moved to nine. They now expect nine. This was not caused by this change.
+- **Tests proved:** type check, lint, jest; strings updated for the new wording; replay on the pull request. Not yet seen on a real phone.
+- **Test race fixed:** `NativePlay`'s loading check failed twice on GitHub (it passed locally) because the data could arrive before the check ran. The test now holds the answer until it has seen the loading state; the assertions are unchanged.

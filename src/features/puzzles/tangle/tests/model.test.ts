@@ -136,7 +136,7 @@ describe('GIVEN a Tangle not yet played', () => {
       expect(homeCard(g.e, DATE)).toEqual({
         num: 'No. 19',
         date: 'No. 19, Sunday, 25 October',
-        head: 'Today’s Tangle',
+        head: 'Ready to play',
         status: '90 seconds. Longer words score more; the eight-letter word scores double.',
         go: 'Play',
         streak: 0,

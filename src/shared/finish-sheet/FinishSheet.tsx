@@ -16,7 +16,7 @@ import { Entrance } from '@/shared/motion';
 import { play } from '@/shared/sound';
 import { FONT, usePuzzleTokens } from '@/shared/theme';
 import { longDate } from '@/shared/time';
-import { Button, Chevron, pressable } from '@/shared/ui';
+import { Button, Chevron, pressable, PuzzleTile } from '@/shared/ui';
 
 import { tagged, useBoardSlot } from './boardSlot';
 import type { NoteParts } from './FinishParts';
@@ -99,7 +99,7 @@ export function FinishSheet(props: FinishSheetProps) {
   const url = shortLink(type);
   const line = clockLine(TYPE_LABEL[type], secs);
   const [heroVal, heroUnit] = splitHero(hero);
-  const streak = streakLine(stats);
+  const streak = streakLine(stats, TYPE_LABEL[type]);
   const soft = pt.sheetSoft;
   const label = `${TYPE_LABEL[type]} ${n} · ${title}`;
   // A fresh finish replaces the board in the same route, so a screen reader would be left on
@@ -236,6 +236,11 @@ export function FinishSheet(props: FinishSheetProps) {
                 onPress={() => onNext(next.item)}
                 testID="finish-next"
               />
+              {next.item ? (
+                <View pointerEvents="none" style={styles.nextIcon}>
+                  <PuzzleTile type={next.item.type} size={32} testID="finish-next-icon" />
+                </View>
+              ) : null}
             </View>
             {next.sub.trim() ? (
               <Text style={[styles.moreSub, { color: soft }]} testID="finish-next-sub">
@@ -303,6 +308,7 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   doneText: { fontSize: 15, fontFamily: FONT.sansSemi },
+  nextIcon: { position: 'absolute', left: 12, top: 0, bottom: 0, justifyContent: 'center' },
   recap: { marginTop: 26, paddingTop: 18, borderTopWidth: 1, gap: 14 },
   recapFirst: { marginTop: 18 },
   recapTitle: { fontSize: 28, lineHeight: 32, fontFamily: FONT.serif },

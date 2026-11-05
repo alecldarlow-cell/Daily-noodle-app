@@ -2,7 +2,7 @@ import { useState, type ReactNode } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { FONT, usePuzzleTokens } from '@/shared/theme';
+import { FONT, usePuzzleTokens, useTokens } from '@/shared/theme';
 import { Chevron, pressable } from '@/shared/ui';
 
 /** The colours a type can bring (Borders and Reckon keep their own pages' palettes). */
@@ -24,11 +24,9 @@ export interface StartLayoutProps {
   titleAccent?: ReactNode;
   /** "No. 105, Saturday 24 October". */
   dateLine: string;
-  /** "4-day streak", top right; none before the first day. */
-  streak?: string;
   /** A small picture of the board. */
   art?: ReactNode;
-  /** The card's heading: "Today’s Mini", "Round paused". */
+  /** The card's heading: "Ready to play", "Round paused". */
   head: string;
   status: string;
   statusTestID?: string;
@@ -41,22 +39,23 @@ export interface StartLayoutProps {
 
 /**
  * The page before a puzzle (engines/house.js's start card, approved 18 Oct 2026), shared by
- * all eight: back and streak, the name in Instrument Serif with its number and date in
+ * all nine: back, the name in Instrument Serif with its number and date in
  * italic, a card with the board's picture, the day's line and one pill, three numbers
  * between hairlines, and How to play folded away.
  */
 export function StartLayout(props: StartLayoutProps) {
-  const { testID, title, titleAccent, dateLine, streak, art, head, status, statusTestID } = props;
+  const { testID, title, titleAccent, dateLine, art, head, status, statusTestID } = props;
   const { button, stats, how: paras, onBack } = props;
   const pt = usePuzzleTokens();
+  const t = useTokens();
   const c: StartColors = props.colors ?? {
     bg: pt.paper,
     card: pt.sheet,
     ink: pt.ink,
     inkSoft: pt.inkSoft,
     line: pt.lineSoft,
-    pill: pt.brand,
-    onPill: pt.onBrand,
+    pill: t.accent,
+    onPill: t.onAccent,
   };
   const [how, setHow] = useState(false);
   return (
@@ -71,7 +70,6 @@ export function StartLayout(props: StartLayoutProps) {
             style={pressable(styles.back)}>
             <Text style={[styles.backText, { color: c.inkSoft }]}>← Puzzles</Text>
           </Pressable>
-          {streak ? <Text style={[styles.streak, { color: c.inkSoft }]}>{streak}</Text> : null}
         </View>
         <Text
           accessibilityRole="header"
@@ -160,7 +158,6 @@ const styles = StyleSheet.create({
   },
   back: { minHeight: 44, justifyContent: 'center' },
   backText: { fontSize: 15, fontFamily: FONT.sans },
-  streak: { fontSize: 14, fontFamily: FONT.sans },
   small: { fontSize: 13, fontFamily: FONT.sans, marginTop: 4 },
   title: {
     fontSize: 72,
@@ -182,13 +179,13 @@ const styles = StyleSheet.create({
   h2: { fontSize: 32, lineHeight: 36, fontFamily: FONT.serif },
   rule: { fontSize: 16, lineHeight: 23, marginTop: 6, fontFamily: FONT.sans },
   pill: {
-    alignSelf: 'flex-start',
-    minHeight: 44,
+    minHeight: 52,
+    alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 24,
+    borderRadius: 26,
     paddingHorizontal: 22,
   },
-  pillText: { fontSize: 16, fontFamily: FONT.sansSemi },
+  pillText: { fontSize: 17, fontFamily: FONT.sansSemi },
   stats: { flexDirection: 'row', marginTop: 18, borderTopWidth: 1, borderBottomWidth: 1 },
   stat: { flex: 1, minWidth: 0, paddingVertical: 10 },
   statNext: { borderLeftWidth: 1, paddingLeft: 14 },

@@ -54,7 +54,7 @@ describe('GIVEN the start card with large text', () => {
       screen.getByText(dayHead('Mini', '2026-10-24', londonDay())).props.maxFontSizeMultiplier,
     ).toBe(1.4);
     expect(screen.getByLabelText('12 Minis played')).toBeOnTheScreen();
-    expect(screen.getByLabelText('4 day streak')).toBeOnTheScreen();
+    expect(screen.getByLabelText('4 Mini streak')).toBeOnTheScreen();
     expect(screen.getByRole('link', { name: 'Back to Puzzles' })).toBeOnTheScreen();
     // The rule is body text: it scales freely.
     expect(screen.getByText('Ten clues.').props.maxFontSizeMultiplier).toBeUndefined();
@@ -85,7 +85,7 @@ describe('GIVEN the finish sheet with large text', () => {
       screen.getByRole('header', { name: 'Mini 105 · Solved' }).props.maxFontSizeMultiplier,
     ).toBe(1.4);
     expect(screen.getByTestId('finish-hero').props.maxFontSizeMultiplier).toBe(1.3);
-    expect(screen.getByText('🔥 5-day streak')).toBeOnTheScreen();
+    expect(screen.getByText('🔥 5-day Mini streak')).toBeOnTheScreen();
     expect(screen.getByRole('link', { name: 'Back to Puzzles' })).toBeOnTheScreen();
     expect(
       StyleSheet.flatten(screen.getByRole('button', { name: 'Share result' }).props.style)

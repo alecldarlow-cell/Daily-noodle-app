@@ -43,7 +43,7 @@ describe('GIVEN each variant’s start', () => {
     const at = startAt(mid, DATE, 1700);
     expect(londonDay(at)).toBe(DATE);
     expect(simulate(tally1, mid, at, at + 1200, at + 1700).final.streakLine).toBe(
-      '🔥 5-day streak',
+      '🔥 5-day Tally streak',
     );
   });
   it('THEN moves end on a pause long enough to read the sheet', () => {

@@ -129,7 +129,7 @@ describe('GIVEN Link’s streak', () => {
     it('THEN the bar’s flame shows it, as the start card does', async () => {
       playedToday(3);
       await renderWithProviders(<LinkScreen file={file78} />);
-      expect(screen.getByText('3-day streak')).toBeOnTheScreen();
+      expect(screen.getByLabelText('3 Link streak')).toBeOnTheScreen();
       await press('Play');
       expect(screen.getByLabelText('3-day streak')).toHaveTextContent('🔥3');
     });
@@ -142,7 +142,7 @@ describe('GIVEN Link’s streak', () => {
         JSON.stringify({ last: '2026-10-19', streak: 6, best: 6, dates: ['2026-10-19'] }),
       );
       await renderWithProviders(<LinkScreen file={file78} />);
-      expect(screen.queryByText('6-day streak')).toBeNull();
+      expect(screen.getByLabelText('0 Link streak')).toBeOnTheScreen();
       await press('Play');
       expect(screen.queryByLabelText(/day streak/)).toBeNull();
     });

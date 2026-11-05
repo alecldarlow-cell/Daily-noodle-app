@@ -203,7 +203,7 @@ describe('GIVEN a Reckon already finished', () => {
     await renderWithProviders(<ReckonScreen file={file2} deps={deps} />);
     expect(screen.getByTestId('finish-sheet')).toBeOnTheScreen();
     expect(screen.getByText('725 pts')).toBeOnTheScreen();
-    expect(screen.getByTestId('finish-streak')).toHaveTextContent('🔥 2-day streak');
+    expect(screen.getByTestId('finish-streak')).toHaveTextContent('🔥 2-day Reckon streak');
     expect(await sharedLine()).toBe('🎯 Reckon #2 — 🎯🎯🎯🎯🎯🟩🟨🟧⬜⬜ · 725 pts · 🔥2');
     expect(finishes).toHaveLength(0);
   });

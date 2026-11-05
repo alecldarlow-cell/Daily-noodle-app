@@ -70,9 +70,13 @@ describe('GIVEN the play route asks which types play natively', () => {
 describe('GIVEN a Mini opened natively', () => {
   describe('WHEN the site has its data file', () => {
     it('THEN it plays natively and keeps the data for offline', async () => {
-      const fetch = mockSite({ [`reports/${FILE}.json`]: file105 });
+      // The answer is held back so the loading state can't be missed on a fast machine.
+      let answer = (_: unknown) => {};
+      const held = new Promise((resolve) => (answer = resolve));
+      const fetch = mockSite({ [`reports/${FILE}.json`]: () => held });
       await renderWithProviders(<NativePlay type="mini" file={FILE} fallback={bridge} />);
       expect(screen.getByTestId('native-loading')).toBeOnTheScreen();
+      answer(file105);
       await waitFor(() => expect(screen.getByTestId('start-card')).toBeOnTheScreen());
       expect(fetch).toHaveBeenCalledWith(
         `https://dailynoodle.co.uk/reports/${FILE}.json`,

@@ -57,7 +57,7 @@ describe('GIVEN a scenario simulated on a fake clock', () => {
         note: '',
         hero: t,
         stats: ['1', '1', '1'],
-        streakLine: '🔥 1-day streak',
+        streakLine: '🔥 1-day Path streak',
       });
     });
   });

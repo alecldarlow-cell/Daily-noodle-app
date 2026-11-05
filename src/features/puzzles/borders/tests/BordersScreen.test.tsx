@@ -75,7 +75,8 @@ describe('GIVEN a Borders not yet played', () => {
     ).toBeOnTheScreen();
     await fireEvent.press(screen.getByText('How to play'));
     expect(screen.getByText(/Show on map puts the outline/)).toBeOnTheScreen();
-    expect(screen.getAllByTestId('drawing')[0]!.props.accessibilityValue.text).toBe('false');
+    // The start page shows the Borders icon, not a world map.
+    expect(screen.queryByTestId('drawing')).toBeNull();
   });
 
   it('THEN ten names to the end show the sheet, fill the atlas and announce once', async () => {

@@ -114,7 +114,7 @@ export function memoryKV(
 
 const stats = (f: FinishInfo) => [String(f.streak), String(f.best), String(f.played)];
 /** The sheet's line under the score (finish.js streakLine, AF-019): the day streak. */
-const line = (n: number) => streakLine([{ value: n, label: 'day streak' }]);
+const line = (n: number) => streakLine([{ value: n, label: 'day streak' }], 'Doku');
 const doc = (kv: KV, k: string): unknown => JSON.parse(kv.getItem(k) || 'null');
 
 /**

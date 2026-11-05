@@ -21,7 +21,7 @@ import type { PuzzleFile } from '../../types';
 import { useSweepGame } from '../hooks/useSweepGame';
 import { shownCopy } from '../copy';
 import { minesLeft, msgText, type SweepData } from '../model';
-import { SweepArt, SweepBoard, SweepRecap } from './SweepBoard';
+import { SweepBoard, SweepRecap } from './SweepBoard';
 
 /** The message under the board, its bold parts (the time, the counter) in bold. */
 function Message({ msg, color }: { msg: string; color: string }) {
@@ -71,7 +71,6 @@ export function SweepScreen({ file }: { file: PuzzleFile<SweepData> }) {
         date={file.date}
         rule={ruleFor('sweep', file.data)}
         stats={stats}
-        art={<SweepArt start={file.data.start} />}
         onPlay={game.play}
         onBack={back}
       />

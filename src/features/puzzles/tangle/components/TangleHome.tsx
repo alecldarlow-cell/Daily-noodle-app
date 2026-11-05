@@ -23,13 +23,12 @@ export function TangleHome({ card, onPlay, onBack }: TangleHomeProps) {
       testID="tangle-home"
       title="Tangle"
       dateLine={card.date}
-      streak={card.streak >= 1 ? `${card.streak}-day streak` : undefined}
-      art={<PuzzleTile type="tangle" />}
+      art={<PuzzleTile type="tangle" size={132} />}
       head={card.head}
       status={card.status}
       button={{ label: card.go, onPress: onPlay, testID: 'play-card' }}
       stats={[
-        [card.streak, 'day streak'],
+        [card.streak, 'Tangle streak'],
         [card.best, 'best score'],
         [card.played, 'Tangles played'],
       ]}

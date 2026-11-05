@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Animated, Pressable, StyleSheet, Text, useColorScheme, View } from 'react-native';
+import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Flag, Mark, RecapCell, RecapGrid, RecapText } from '@/shared/finish-sheet';
 import { useReduceMotion, useWinWave, WaveFlash, WaveScale } from '@/shared/motion';
@@ -262,31 +262,6 @@ export function SweepRecap({ state }: { state: SweepState }) {
         );
       }}
     />
-  );
-}
-
-/** The start card's picture: the board, the start square marigold (house.js art). */
-export function SweepArt({ start }: { start: [number, number] }) {
-  const pt = usePuzzleTokens();
-  const sc = sweepColors(useColorScheme() === 'dark');
-  return (
-    <View style={[styles.art, { backgroundColor: pt.block }]} accessible={false}>
-      {Array.from({ length: N }, (_, r) => (
-        <View key={r} style={styles.artRow}>
-          {Array.from({ length: N }, (_, c) => (
-            <View
-              key={c}
-              style={[
-                styles.artSq,
-                {
-                  backgroundColor: r === start[0] - 1 && c === start[1] - 1 ? '#FFD54A' : sc.hidden,
-                },
-              ]}
-            />
-          ))}
-        </View>
-      ))}
-    </View>
   );
 }
 

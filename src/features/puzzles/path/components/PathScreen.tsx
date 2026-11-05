@@ -11,9 +11,9 @@ import { usePlayerExit } from '@/shared/shell';
 
 import type { PuzzleFile } from '../../types';
 import { usePathGame } from '../hooks/usePathGame';
-import type { Cell, PathData } from '../model';
+import type { PathData } from '../model';
 import { pathNumber } from '../simulate';
-import { PathArt, PathBoard, PathRecap } from './PathBoard';
+import { PathBoard, PathRecap } from './PathBoard';
 
 /** Path, played natively: start card, board, Undo and Hint, finish sheet. */
 export function PathScreen({ file }: { file: PuzzleFile<PathData> }) {
@@ -32,7 +32,6 @@ export function PathScreen({ file }: { file: PuzzleFile<PathData> }) {
   const { state, dispatch } = game;
 
   if (game.phase === 'start') {
-    const one = file.data.locked.find((x) => x[2] === 1);
     return (
       <StartCard
         type="path"
@@ -40,7 +39,6 @@ export function PathScreen({ file }: { file: PuzzleFile<PathData> }) {
         date={file.date}
         rule={ruleFor('path', {})}
         stats={stats}
-        art={<PathArt one={one ? ([one[0] - 1, one[1] - 1] as Cell) : null} />}
         onPlay={game.play}
         onBack={back}
       />

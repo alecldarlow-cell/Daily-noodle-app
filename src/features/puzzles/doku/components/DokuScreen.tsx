@@ -11,7 +11,6 @@ import { BOARD_SLOT, fitBoard, pressable, useBoardFit } from '@/shared/ui';
 import { usePlayerExit } from '@/shared/shell';
 
 import type { PuzzleFile } from '../../types';
-import { MiniArt } from '../../mini/components/MiniGrids';
 import { useDokuGame } from '../hooks/useDokuGame';
 import { recapSub, type DokuData } from '../model';
 import { DokuBank } from './DokuBank';
@@ -53,7 +52,6 @@ export function DokuScreen({ file }: { file: PuzzleFile<DokuData> }) {
         date={file.date}
         rule={ruleFor('doku', file.data)}
         stats={stats}
-        art={<MiniArt grid={file.data.grid} />}
         onPlay={game.play}
         onBack={back}
       />

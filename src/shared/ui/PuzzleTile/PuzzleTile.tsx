@@ -72,6 +72,8 @@ function cellColour(t: Tokens, c: TileCell): string {
 interface PuzzleTileProps {
   type: PuzzleType;
   mask?: string;
+  /** The picture's size: 96 on a card, larger on a start page, small on Play next. */
+  size?: number;
   testID?: string;
 }
 
@@ -79,7 +81,7 @@ interface PuzzleTileProps {
  * A card's 96 pt preview: the type's icon, as the site's cards (Alec, 4 Nov 2026). A type
  * with no icon yet falls back to its grid, then a plain "Play" tile.
  */
-export function PuzzleTile({ type, mask, testID }: PuzzleTileProps) {
+export function PuzzleTile({ type, mask, size = SIZE, testID }: PuzzleTileProps) {
   const t = useTokens();
   const scheme = useColorScheme();
   const picture = PICTURES[type];
@@ -116,7 +118,7 @@ export function PuzzleTile({ type, mask, testID }: PuzzleTileProps) {
         testID={testID}
         accessible={false}
         source={scheme === 'dark' ? picture.dark : picture.light}
-        style={styles.icon}
+        style={{ width: size, height: size }}
       />
     );
   }
@@ -139,8 +141,6 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
     overflow: 'hidden',
   },
-  // Icons carry their own edge: no tile behind them, as the site's cards.
-  icon: { width: SIZE, height: SIZE },
   grid: { padding: 9, borderWidth: 0 },
   row: { flex: 1, flexDirection: 'row' },
   cell: { flex: 1 },

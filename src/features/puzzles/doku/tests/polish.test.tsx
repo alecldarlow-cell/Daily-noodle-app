@@ -97,7 +97,7 @@ describe('GIVEN a Doku on the board', () => {
         JSON.stringify({ last: londonDay(), streak: 6, best: 9, dates: [londonDay()] }),
       );
       await renderWithProviders(<DokuScreen file={file97} />);
-      expect(screen.getByText('6-day streak')).toBeOnTheScreen();
+      expect(screen.getByLabelText('6 Doku streak')).toBeOnTheScreen();
       await play();
       expect(screen.getByText('🔥6')).toBeOnTheScreen();
     });
