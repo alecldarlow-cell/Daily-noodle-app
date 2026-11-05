@@ -867,10 +867,16 @@ Alec ran an outside review of the app and asked for its findings to be checked a
 
 ### 5 Nov 2026 — Fixes from Alec's review of the app (this PR; website [#71](https://github.com/alecldarlow-cell/dailynoodle/pull/71) first)
 
-- **Error log.** `shared/report` sends crashes, uncaught errors and failed saves to the site's `log_app_error`: what broke, never who; emails, ids and tokens scrubbed; five reports a launch; off in development and after an opt-out. Website #71 added the table, function and privacy line. **Migration `app_errors` is not applied:** the approval was declined on 5 Nov, so reports go nowhere until Alec decides. Migration `tangle_score_only` is live. The Morning site check reads the log once the table exists.
+- **Error log.** `shared/report` sends crashes, uncaught errors and failed saves to the site's `log_app_error`: what broke, never who; emails, ids and tokens scrubbed; five reports a launch; off in development and after an opt-out. Website #71 added the table, function and privacy line. Migrations `app_errors` and `tangle_score_only` are live, with Alec's go-ahead. The Morning site check reads the log and flags errors.
 - **League results catch up.** A result that couldn't be sent went up only when the Board mounted. `useCatchUp` now tries at launch and on return to the app, at most every 10 minutes, with the last 14 days' rows.
 - **Updates.** `shared/updates` asks on return to the app, at most hourly, and downloads in the background. A downloaded update restarts the app only on a return to Today after 15 minutes away; otherwise the next cold start applies it. Expo's guidance: background download is safe; reloading while backgrounded is experimental, so it never does.
 - **Today downloads.** `keepToday` fetches all of today's puzzles as the list arrives, as the website's worker does, then `trimPuzzles` keeps kept puzzle data under 2 MB, oldest first, never today's or one with a round waiting. Android's AsyncStorage database is capped at 6 MB (library default; the Expo 58 template doesn't change it), and this also keeps today's download from filling it faster. `CachedStorage.removeItem` is new, for caches only.
 - **Tangle ties** are website only (#71): ranking on score alone. No live league's table moved.
 - **Tests proved:** report, updater, runner, keepPuzzles, cachedStorage and catch-up tests (GIVEN/WHEN/THEN); website TANGLE-TIE-02 shows the old ranking. `npm run check` green. Not seen on a real phone.
 - **Left:** `board_backfill` ignores more than 1,500 rows, which a full-set player reaches in about 5.5 months, while the app records them as sent; catch-up's 14-day window avoids it, but the Board's full copy does not. `/tally` app links still wait for the next store build.
+
+### 5 Nov 2026 — Email first for leagues, and the crown explained (website crown PR first)
+
+- **Email first (Alec's call):** Start a league and Join no longer ask for a PIN. Where sign-in is on, the nudge on the board now asks a player with no PIN to sign in (`signin-nudge`), and goes once they have synced. A PIN stays in League settings and in Already in this league? for existing players, and owners can still Let back in.
+- **Crown:** `CrownNote` shows "👑 Last week’s champion" under the boards when the league has a champion.
+- **Tests proved:** see the pull request. Not seen on a real phone.

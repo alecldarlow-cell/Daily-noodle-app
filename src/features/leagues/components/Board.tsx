@@ -60,6 +60,8 @@ const RecordsCtx = createContext<{ recs?: Records; open?: (nick: string) => void
 
 /** "Later" on the PIN card, for the rest of the London day (the site's key). */
 const PIN_LATER = 'noodle-board-pinlater';
+/** Set by the first sync, so a player already signed in isn't asked to. */
+const SYNCED_KEY = 'noodle-app-sync';
 
 const share = (message: string) => Share.share({ message }).catch(() => {});
 
@@ -274,7 +276,23 @@ function TopCard({ flow, league }: { flow: Flow; league: BoardLeague }) {
         </P>
       </Card>
     );
-  if (!hasPin(s) && !later)
+  // Email sign-in is how leagues follow a player (5 Nov 2026, Alec's call); a PIN stays in
+  // League settings as the fallback, and is the only way in a build without sign-in.
+  if (syncOn() && !hasPin(s) && !later && !appStorage.getItem(SYNCED_KEY))
+    return (
+      <Card title="Keep your leagues" testID="signin-nudge">
+        <P>Sign in with your email and your leagues follow you to another phone or the website.</P>
+        <Acts>
+          <Btn
+            variant="filled"
+            label="Sign in on Account"
+            onPress={() => router.navigate('/account')}
+          />
+          <Btn label="Later" onPress={() => appStorage.setItem(PIN_LATER, today)} />
+        </Acts>
+      </Card>
+    );
+  if (!syncOn() && !hasPin(s) && !later)
     return (
       <Card title="Set a PIN" testID="pin-nudge">
         <P>Then you can join as yourself from another phone or app.</P>
@@ -351,6 +369,18 @@ function Row({
         {small ? <Text style={[styles.resSmall, { color: t.faint }]}>{small}</Text> : null}
       </View>
     </Box>
+  );
+}
+
+/** Says what a 👑 means: last week's champion, not whoever is leading now. */
+function CrownNote() {
+  const t = useTokens();
+  const { recs } = useContext(RecordsCtx);
+  if (!recs?.crown?.length) return null;
+  return (
+    <Text style={[styles.notyet, { color: t.muted }]} testID="crown-note">
+      👑 Last week’s champion
+    </Text>
   );
 }
 
@@ -439,6 +469,7 @@ function DayView({
         </View>
       )}
       <NotYetList rows={d.not_yet} />
+      <CrownNote />
       {R && rec ? (
         <Text style={[styles.reline, { color: t.muted }]} testID="record-line">
           {'🏅 League record '}
@@ -501,6 +532,7 @@ function OverallView({
         </View>
       )}
       <NotYetList rows={d.not_yet} />
+      <CrownNote />
       <Sub>This week · {weekLabel(d.week_from, d.week_to)}</Sub>
       {!d.week.length ? (
         <Text style={[styles.notyet, { color: t.muted }]}>No results yet this week.</Text>
