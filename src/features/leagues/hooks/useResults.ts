@@ -7,6 +7,7 @@ import {
   afterBackfill,
   backfillCalls,
   backfillPlan,
+  dateOfPath,
   inAnyLeague,
   submitArgs,
   type BackfillPlan,
@@ -14,11 +15,13 @@ import {
 } from '@noodle/core';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
+import { AppState } from 'react-native';
 
 import { onFinish, type PuzzleFinish } from '@/shared/results';
 import { appStorage } from '@/shared/storage';
 
 import { boardBackfill, boardSubmit } from '../api/board';
+import { fetchPuzzleCards } from '../api/feed';
 import { getPid, loadBoard, saveBoard, stillPlayer } from './boardStore';
 import { recordSubmission } from './submissions';
 import { BOARD_QUERY } from './useLeagues';
@@ -63,6 +66,50 @@ export async function runBackfill(plan: BackfillPlan): Promise<number> {
   // A backfill for a player the install has since left is not recorded on the new one.
   if (stillPlayer(pid)) saveBoard(afterBackfill(loadBoard(), plan));
   return total;
+}
+
+/** A catch-up sends results from this many days back: enough for a spell with no signal. */
+export const CATCH_UP_DAYS = 14;
+/** And looks at most this often. */
+export const CATCH_UP_EVERY_MS = 10 * 60_000;
+
+/** The plan with only its recent rows: the full history goes when the board opens. */
+export function recentOnly(plan: BackfillPlan, now: number): BackfillPlan {
+  const from = new Date(now - CATCH_UP_DAYS * 864e5).toISOString().slice(0, 10);
+  return { ...plan, rows: plan.rows.filter((r) => dateOfPath(r.path) >= from) };
+}
+
+/**
+ * A result that couldn't be sent when its puzzle ended (no signal) goes up the next time the
+ * app opens or comes back, without the player having to open Leagues, so their league sees it.
+ */
+export function useCatchUp(now: () => number = Date.now): void {
+  const qc = useQueryClient();
+  useEffect(() => {
+    let last = 0;
+    let busy = false;
+    const go = () => {
+      if (busy || now() - last < CATCH_UP_EVERY_MS || !inAnyLeague(appStorage)) return;
+      last = now();
+      busy = true;
+      void fetchPuzzleCards()
+        .then(async (feed) => {
+          const plan = backfillPlan(appStorage, feed);
+          if (!plan) return;
+          await runBackfill(recentOnly(plan, now()));
+          await qc.invalidateQueries({ queryKey: BOARD_QUERY });
+        })
+        .catch(() => undefined) // no signal: the next return tries again
+        .finally(() => {
+          busy = false;
+        });
+    };
+    go();
+    const sub = AppState.addEventListener('change', (s) => {
+      if (s === 'active') go();
+    });
+    return () => sub.remove();
+  }, [qc, now]);
 }
 
 /**

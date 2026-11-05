@@ -4,7 +4,8 @@ import { useEffect, useMemo, useRef } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { useFeedLite, type FeedItem } from '@/shared/feed';
-import { fileOf, openPuzzle, useKept, usePlayed } from '@/shared/played';
+import { fileOf, keepToday, openPuzzle, useKept, usePlayed } from '@/shared/played';
+import { appStorage } from '@/shared/storage';
 import { FONT, useTokens } from '@/shared/theme';
 import { shortDate, useLondonDay } from '@/shared/time';
 import { Note, PuzzleRow, PuzzleRowSkeleton, Screen } from '@/shared/ui';
@@ -52,6 +53,10 @@ export function TodayScreen({ open, onOpened }: { open?: PuzzleType; onOpened?: 
   const offline = status.kind === 'ready' && status.offline;
   const paths = useMemo(() => items.map((it) => it.path), [items]);
   const kept = useKept(paths, offline);
+  // Today's puzzles come down as soon as the list is here, so they all play with no signal.
+  useEffect(() => {
+    if (paths.length && !offline) void keepToday(paths, appStorage);
+  }, [paths, offline]);
   /** A puzzle by id, for the replace-your-round question: its card's name and path. */
   const named = (id: string) => {
     const c = cards[id];

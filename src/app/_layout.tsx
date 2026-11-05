@@ -11,10 +11,12 @@ import { BoardLink, LeagueResults } from '@/features/leagues';
 import { BoardSlotProvider } from '@/shared/finish-sheet';
 import { ConfettiHost } from '@/shared/motion';
 import { QueryProvider } from '@/shared/query';
+import { reporter, watchGlobalErrors } from '@/shared/report';
 import { navigationTheme, RouteError, stackScreenOptions, statusBarStyleFor } from '@/shared/shell';
-import { SaveNotice, SavesLoadFailed, useStoreLoad } from '@/shared/storage';
+import { appStorage, SaveNotice, SavesLoadFailed, useStoreLoad } from '@/shared/storage';
 import { FONT_FILES, tokensFor } from '@/shared/theme';
-import { VisitRecorder } from '@/shared/track';
+import { optedOut, VisitRecorder } from '@/shared/track';
+import { UpdateRunner } from '@/shared/updates';
 
 void SplashScreen.preventAutoHideAsync();
 
@@ -44,6 +46,12 @@ export default function RootLayout() {
   useEffect(() => {
     if (ready) void SplashScreen.hideAsync();
   }, [ready]);
+  // Errors can be reported once the saves, and so the player's opt-out, have been read.
+  useEffect(() => {
+    if (saves.state !== 'ready') return;
+    reporter.setAllow(() => !optedOut(appStorage));
+    watchGlobalErrors();
+  }, [saves.state]);
   if (!ready) return null;
   const t = tokensFor(scheme);
   if (saves.state !== 'ready') {
@@ -60,6 +68,7 @@ export default function RootLayout() {
         <LeagueResults />
         <SyncRunner />
         <VisitRecorder />
+        <UpdateRunner />
         {/* Dark icons in light mode, light in dark, over every screen and puzzle. */}
         <StatusBar style={statusBarStyleFor(scheme)} />
         <ThemeProvider value={navigationTheme(scheme)}>

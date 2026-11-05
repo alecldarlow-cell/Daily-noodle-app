@@ -1,7 +1,9 @@
 import { router, type ErrorBoundaryProps } from 'expo-router';
+import { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { reporter } from '@/shared/report';
 import { useTokens } from '@/shared/theme';
 import { Note } from '@/shared/ui';
 
@@ -21,6 +23,7 @@ export function goToToday(): void {
 export function RouteError({ error, retry }: ErrorBoundaryProps) {
   const t = useTokens();
   if (__DEV__) console.warn('A screen crashed', error);
+  useEffect(() => reporter.report('crash', error), [error]);
   return (
     <SafeAreaView style={[styles.fill, { backgroundColor: t.canvas }]} testID="route-error">
       <View style={styles.in}>

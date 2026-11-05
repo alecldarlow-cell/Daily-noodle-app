@@ -1,6 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createSaveStore } from '@noodle/core';
 
+import { reporter } from '@/shared/report';
+
 import { createCachedStorage } from './cachedStorage';
 
 /**
@@ -24,7 +26,10 @@ export function isDisposableKey(key: string): boolean {
 /** The one store for the app, shared by every feature. */
 export const appStorage = createCachedStorage(AsyncStorage, {
   isDisposable: isDisposableKey,
-  onWriteError: (key, error) => console.warn(`Couldn't save ${key}`, error),
+  onWriteError: (key, error) => {
+    console.warn(`Couldn't save ${key}`, error);
+    reporter.report('save', error, key);
+  },
 });
 
 /** The site's save rules (first result kept, merges, notices) over the app's store. */

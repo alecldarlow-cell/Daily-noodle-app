@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 
 import { getJson, HttpError } from '@/shared/net';
-import { PUZZLE_CACHE_PREFIX } from '@/shared/played/rounds';
+import { isPuzzleData, PUZZLE_CACHE_PREFIX } from '@/shared/played/rounds';
 import { appStorage, type CachedStorage } from '@/shared/storage';
 
 import type { PuzzleFile } from '../types';
@@ -9,17 +9,7 @@ import type { PuzzleFile } from '../types';
 /** App-only key prefix: a puzzle's data kept after its first open, so it plays offline. */
 export { PUZZLE_CACHE_PREFIX };
 
-function looksLikeFile(x: unknown): x is PuzzleFile {
-  const f = x as PuzzleFile | null;
-  return (
-    !!f &&
-    typeof f === 'object' &&
-    typeof f.id === 'string' &&
-    typeof f.path === 'string' &&
-    !!f.data &&
-    typeof f.data === 'object'
-  );
-}
+const looksLikeFile = (x: unknown): x is PuzzleFile => isPuzzleData(x);
 
 export function cachedPuzzle(
   file: string,

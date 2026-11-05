@@ -22,6 +22,7 @@ export interface AsyncBackend {
   getAllKeys(): Promise<readonly string[]>;
   multiGet(keys: readonly string[]): Promise<readonly (readonly [string, string | null])[]>;
   setItem(key: string, value: string): Promise<void>;
+  removeItem?(key: string): Promise<void>;
 }
 
 /** `saved`: everything critical is on the disk; `retrying`: something critical isn't yet. */
@@ -33,6 +34,8 @@ export interface CachedStorage extends KV {
   readonly hydrated: boolean;
   /** Run `fn` whenever `key` changes; returns the unsubscribe. */
   subscribe(key: string, fn: () => void): () => void;
+  /** Takes a cached key off the phone. For caches only: results and streaks are never removed. */
+  removeItem(key: string): void;
   /** Every key held. */
   keys(): string[];
   /** Tries every queued write now; resolves when all reached the backend, rejects while a critical one hasn't. */
@@ -178,6 +181,12 @@ export function createCachedStorage(
       queue.set(key, v);
       void kick();
       notify(key);
+    },
+    removeItem(key) {
+      mem.delete(key);
+      queue.delete(key);
+      notify(key);
+      if (hydrated) void backend.removeItem?.(key).catch(() => undefined);
     },
     subscribe(key, fn) {
       let set = subs.get(key);

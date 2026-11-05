@@ -136,3 +136,23 @@ describe('GIVEN saves on the phone', () => {
     });
   });
 });
+
+describe('GIVEN a cached key', () => {
+  it('WHEN it is removed THEN it goes from memory and the disk, and a queued write goes too', async () => {
+    const m: Record<string, string> = { 'noodle-app-puzzle:a': '{}' };
+    const removeItem = jest.fn(async (k: string) => void delete m[k]);
+    const s = createCachedStorage({
+      getAllKeys: async () => Object.keys(m),
+      multiGet: async (ks) => ks.map((k) => [k, m[k] ?? null] as const),
+      setItem: async (k, v) => void (m[k] = v),
+      removeItem,
+    });
+    await s.hydrate();
+    s.removeItem('noodle-app-puzzle:a');
+    expect(s.getItem('noodle-app-puzzle:a')).toBeNull();
+    expect(s.keys()).toEqual([]);
+    await s.flush();
+    expect(removeItem).toHaveBeenCalledWith('noodle-app-puzzle:a');
+    expect(m).toEqual({});
+  });
+});
