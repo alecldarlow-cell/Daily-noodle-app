@@ -149,6 +149,27 @@ export function shareAll(
   return `${lines.join('\n')}\n${boardShareLink(league.code, 'all', date)}`;
 }
 
+/** The Monday card's top of the table: the medal places, five at most. */
+export const recapRows = (week: OverallRow[]) => week.filter((r) => r.rank <= 3).slice(0, 5);
+
+/** Whether `today` is a Monday, when last week's card shows. */
+export const isMonday = (today: string) => new Date(`${today}T12:00:00Z`).getUTCDay() === 1;
+
+/** The Monday card's share, as board.html writes it. */
+export function shareRecap(
+  league: { name: string; code: string },
+  from: string,
+  to: string,
+  week: OverallRow[],
+): string {
+  const rows = recapRows(week);
+  const lines = [`🏆 ${league.name} · ${weekLabel(from, to)}`];
+  for (const r of rows) lines.push(`${MEDAL[r.rank] ?? `${r.rank}.`} ${r.nick} ${pts(r.points)}`);
+  if (week.length > rows.length) lines.push(`+${week.length - rows.length} more`);
+  lines.push(`${league.name} leaderboard:`);
+  return `${lines.join('\n')}\n${boardShareLink(league.code, 'all', to)}`;
+}
+
 /**
  * The finish sheet's line about a result once it's on the board (dn-board.js showMoment):
  * a league record ("New" on the puzzle's own London day), else a personal best, else none.

@@ -371,11 +371,18 @@ export function backfillPlan(
   };
 }
 
-/** The board_backfill calls a plan makes, in order: the rows go with the first. */
+/** board_backfill ignores more than 1,500 rows a call, so a long history goes in batches. */
+export const BACKFILL_BATCH = 1000;
+
+/** The board_backfill calls a plan makes, in order: the first batch of rows goes with the first. */
 export function backfillCalls(plan: BackfillPlan): { aid: string | null; rows: BackfillRow[] }[] {
-  return plan.aids.length
-    ? plan.aids.map((a, i) => ({ aid: a, rows: i ? [] : plan.rows }))
-    : [{ aid: null, rows: plan.rows }];
+  const first = plan.rows.slice(0, BACKFILL_BATCH);
+  const calls: { aid: string | null; rows: BackfillRow[] }[] = plan.aids.length
+    ? plan.aids.map((a, i) => ({ aid: a, rows: i ? [] : first }))
+    : [{ aid: null, rows: first }];
+  for (let i = BACKFILL_BATCH; i < plan.rows.length; i += BACKFILL_BATCH)
+    calls.push({ aid: null, rows: plan.rows.slice(i, i + BACKFILL_BATCH) });
+  return calls;
 }
 
 /** The state once a plan's calls have all gone through. */

@@ -352,11 +352,20 @@
     if (rows.length <= (f.n || 0) && !aids.length) return null;
     return { rows: rows.length > (f.n || 0) ? rows : [], aids: aids, n: Math.max(rows.length, f.n || 0), done: f.aids || [] };
   }
+  /* board_backfill takes at most 1,500 rows a call and ignores more, so a long history goes
+     in batches (5 Nov 2026): a player of all nine reaches that in about 5.5 months. */
+  var BACKFILL_BATCH = 1000;
+  function backfillCalls(plan) {
+    var rows = plan.rows, first = rows.slice(0, BACKFILL_BATCH);
+    var calls = plan.aids.length ? plan.aids.map(function (a, i) { return { aid: a, rows: i ? [] : first }; })
+                                 : [{ aid: null, rows: first }];
+    for (var i = BACKFILL_BATCH; i < rows.length; i += BACKFILL_BATCH) calls.push({ aid: null, rows: rows.slice(i, i + BACKFILL_BATCH) });
+    return calls;
+  }
   function backfillDue(feed) { return !!backfillPlan(feed); }
   function backfill(feed) {
     var plan = backfillPlan(feed); if (!plan) return Promise.resolve(0);
-    var calls = plan.aids.length ? plan.aids.map(function (a, i) { return { aid: a, rows: i ? [] : plan.rows }; })
-                                 : [{ aid: null, rows: plan.rows }];
+    var calls = backfillCalls(plan);
     var total = 0;
     return calls.reduce(function (p, c) {
       return p.then(function () {
@@ -439,6 +448,14 @@
     var p = location.pathname.split('/').filter(Boolean);
     return p.slice(-2).join('/');
   })();
+  if (/-astro-drop\.html$/.test(here)) {   // a game Daily: score, stars and biggest object, first go of the day stands
+    document.addEventListener('dn:game_end', function (e) {
+      var d = e.detail || {};
+      if (!inAny() || d.mode !== 'daily') return;
+      rpc('board_game_submit', { p_player: pid(), p_game: 'astro-drop', p_score: d.score || 0, p_stars: d.stars || 0, p_top: d.level || 0 }).catch(function () {});
+    });
+    return;
+  }
   var T = typeOfPath(here);
   if (!T || !/^reports\//.test(here)) return;
   var PDATE = dateOfPath(here);

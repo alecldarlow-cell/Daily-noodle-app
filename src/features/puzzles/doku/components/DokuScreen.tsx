@@ -18,6 +18,9 @@ import { DokuBoard } from './DokuBoard';
 import { SolvedGrid } from './DokuGrids';
 
 /** The Doku, played natively: start card, board and bank, finish sheet. */
+/** Until the first letter is down: the quick way, one tap a letter, which nothing else shows. */
+export const FIRST_TAP = 'Tap a square, then tap letters to fill it.';
+
 export function DokuScreen({ file }: { file: PuzzleFile<DokuData> }) {
   const { back, next: openNext } = usePlayerExit();
   const pt = usePuzzleTokens();
@@ -113,7 +116,7 @@ export function DokuScreen({ file }: { file: PuzzleFile<DokuData> }) {
             style={[styles.msg, { color: pt.inkSoft }]}
             accessibilityLiveRegion="polite"
             testID="doku-msg">
-            {game.msg}
+            {game.msg || (state.tiles.some((t) => t.at) ? '' : FIRST_TAP)}
           </Text>
           <Pressable
             accessibilityRole="button"

@@ -231,3 +231,15 @@ describe('GIVEN a Doku already finished on this phone', () => {
     expect(mockRouter.back).toHaveBeenCalled();
   });
 });
+
+describe('GIVEN a Doku on an empty board', () => {
+  it('WHEN play starts THEN the quick way is shown, and goes with the first letter', async () => {
+    await renderWithProviders(<DokuScreen file={file97} />);
+    await play();
+    expect(screen.getByText('Tap a square, then tap letters to fill it.')).toBeOnTheScreen();
+    const [r, c] = openSquares(doku97)[0]!;
+    await fireEvent.press(tileFor(doku97.grid[r]![c]!));
+    await press(`cell-${r}-${c}`);
+    expect(screen.queryByText('Tap a square, then tap letters to fill it.')).toBeNull();
+  });
+});
