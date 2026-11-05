@@ -17,19 +17,9 @@ import {
   useSetPin,
   useSettlePending,
 } from '../hooks/useLeagues';
-import {
-  claimSchema,
-  codeSchema,
-  nicknameSchema,
-  optionalPinSchema,
-  pinSchema,
-  startSchema,
-} from '../schemas';
+import { claimSchema, codeSchema, nicknameSchema, pinSchema, startSchema } from '../schemas';
 import { object } from 'yup';
 import { Acts, Btn, Card, Field, Msg, P, PinField, TextLink } from './ui';
-
-const PIN_HINT =
-  'Lets you join as yourself from another phone or app later. Optional, and you can set it later.';
 
 export function Intro({ flow }: { flow: Flow }) {
   const t = useTokens();
@@ -58,7 +48,7 @@ export function Intro({ flow }: { flow: Flow }) {
 
 export function StartForm({ flow }: { flow: Flow }) {
   const create = useCreateLeague();
-  const f = useForm({ name: '', nick: '', pin: '' }, startSchema);
+  const f = useForm({ name: '', nick: '' }, startSchema);
   return (
     <Card title="Start a league" testID="start-form">
       <Field
@@ -78,7 +68,6 @@ export function StartForm({ flow }: { flow: Flow }) {
         value={f.values.nick}
         onChangeText={f.set('nick')}
       />
-      <PinField hint={PIN_HINT} value={f.values.pin} onChangeText={f.set('pin')} />
       <Msg text={f.msg} />
       <Acts>
         <Btn
@@ -87,11 +76,7 @@ export function StartForm({ flow }: { flow: Flow }) {
           disabled={f.busy}
           onPress={() =>
             f.submit(async (v) => {
-              const l = await create.mutateAsync({
-                name: v.name,
-                nick: v.nick,
-                pin: v.pin || undefined,
-              });
+              const l = await create.mutateAsync({ name: v.name, nick: v.nick });
               flow.setNotice({ k: 'created', code: l.code });
               flow.home();
             })
@@ -146,10 +131,7 @@ export function InviteForm({ flow, code, typed }: { flow: Flow; code: string; ty
   const t = useTokens();
   const peek = usePeek(code);
   const join = useJoinLeague();
-  const f = useForm(
-    { nick: '', pin: '' },
-    object({ nick: nicknameSchema, pin: optionalPinSchema }),
-  );
+  const f = useForm({ nick: '' }, object({ nick: nicknameSchema }));
   if (peek.isPending)
     return (
       <ActivityIndicator
@@ -203,7 +185,6 @@ export function InviteForm({ flow, code, typed }: { flow: Flow; code: string; ty
         value={f.values.nick}
         onChangeText={f.set('nick')}
       />
-      <PinField hint={PIN_HINT} value={f.values.pin} onChangeText={f.set('pin')} />
       <Msg text={f.msg} />
       <Acts>
         <Btn
@@ -213,7 +194,7 @@ export function InviteForm({ flow, code, typed }: { flow: Flow; code: string; ty
           onPress={() =>
             f.submit(async (v) => {
               try {
-                await join.mutateAsync({ code, nick: v.nick, pin: v.pin || undefined });
+                await join.mutateAsync({ code, nick: v.nick });
               } catch (e) {
                 if (e instanceof BoardError && e.code === 'nick_taken')
                   throw new SaidError(

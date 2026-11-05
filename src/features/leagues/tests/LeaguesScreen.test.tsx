@@ -104,8 +104,8 @@ describe('GIVEN someone in no league', () => {
     });
   });
 
-  describe('WHEN they start a league with a PIN', () => {
-    it('THEN the league is made under a new board id, the PIN set, and its invite offered', async () => {
+  describe('WHEN they start a league', () => {
+    it('THEN the league is made under a new board id, with no PIN, and its invite offered', async () => {
       m.boardCreate.mockResolvedValue({ code: 'NEWC2345', name: 'Noodle family' });
       m.boardMine.mockResolvedValue([
         mineRow({ ...FAMILY, code: 'NEWC2345', name: 'Noodle family', pin: false }),
@@ -114,13 +114,12 @@ describe('GIVEN someone in no league', () => {
       await press('Start a league');
       await type('League name', '  Noodle   family ');
       await type('Your nickname', 'Alec');
-      await type('PIN', '1234');
       await press('Start league');
       await waitFor(() => expect(screen.getByTestId('notice-created')).toBeOnTheScreen());
       const pid = board().pid!;
       expect(pid).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
       expect(m.boardCreate).toHaveBeenCalledWith(pid, 'Noodle family', 'Alec');
-      expect(m.boardPinSet).toHaveBeenCalledWith(pid, '1234');
+      expect(m.boardPinSet).not.toHaveBeenCalled();
       expect(board()).toMatchObject({
         cur: 'NEWC2345',
         leagues: [{ code: 'NEWC2345', nick: 'Alec', owner: true }],
