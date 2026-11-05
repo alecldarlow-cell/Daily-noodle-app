@@ -95,5 +95,18 @@ export function heldElsewhere(
   return held;
 }
 
+/** True when `x` looks like a puzzle's published data file (reports/<file>.json). */
+export function isPuzzleData(x: unknown): boolean {
+  const f = x as { id?: unknown; path?: unknown; data?: unknown } | null;
+  return (
+    !!f &&
+    typeof f === 'object' &&
+    typeof f.id === 'string' &&
+    typeof f.path === 'string' &&
+    !!f.data &&
+    typeof f.data === 'object'
+  );
+}
+
 /** True when `raw` (a `noodle-app-puzzle:<file>` value) is a kept puzzle. */
 export const isKept = (raw: string | null): boolean => !!raw && raw.startsWith('{');
