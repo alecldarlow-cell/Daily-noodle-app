@@ -8,7 +8,7 @@ import { londonDay } from '@noodle/core';
 
 import { FinishSheet } from '@/shared/finish-sheet';
 import { usePuzzleVisit } from '@/shared/results';
-import { dayHead, useLondonDay } from '@/shared/time';
+import { dayHead, startHead, useLondonDay } from '@/shared/time';
 import { usePlayerExit } from '@/shared/shell';
 
 import type { PuzzleFile } from '../../types';
@@ -21,11 +21,11 @@ import { TangleRecap } from './TangleRecap';
 
 /**
  * The home card with its heading naming the puzzle's day: the model keeps the page's
- * "Today’s Tangle" (the differential replay checks it against tangle.js); the screen
+ * "Ready to play" (the differential replay checks it against tangle.js); the screen
  * says "Yesterday’s Tangle" or "From the archive" on an older board.
  */
 export function dayCard<C extends { head: string }>(card: C, date: string, today: string): C {
-  return card.head === 'Today’s Tangle' ? { ...card, head: dayHead('Tangle', date, today) } : card;
+  return card.head === 'Ready to play' ? { ...card, head: startHead('Tangle', date, today) } : card;
 }
 
 /** Tangle, played natively: its home card, the round, the result. */

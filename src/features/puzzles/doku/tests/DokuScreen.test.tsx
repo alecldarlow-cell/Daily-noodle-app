@@ -84,7 +84,7 @@ describe('GIVEN a Doku not yet played', () => {
         streak: 1,
         seeded: 1,
       });
-      expect(screen.getByText('1-day streak')).toBeOnTheScreen();
+      expect(screen.getByLabelText('1 Doku streak')).toBeOnTheScreen();
     });
   });
 

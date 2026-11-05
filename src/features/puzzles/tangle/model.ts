@@ -750,7 +750,7 @@ export function homeCard(e: TangleEngine, t: string) {
     status = `${mmss(D.left)} left, ${plural(D.score, 'point', 'points')} so far.`;
     go = 'Resume';
   } else {
-    head = 'Today’s Tangle';
+    head = 'Ready to play';
     status = `90 seconds. Longer words score more; the ${num(P.star.length)}-letter word scores double.`;
     go = 'Play';
   }

@@ -113,7 +113,7 @@ describe('GIVEN a Sweep streak that has lapsed (last played long ago, 13 days lo
         JSON.stringify({ last: '2026-01-01', streak: 13, best: 13, dates: ['2026-01-01'] }),
       );
       await renderWithProviders(<SweepScreen file={file94} />);
-      expect(screen.queryByText('13-day streak')).toBeNull();
+      expect(screen.getByLabelText('0 Sweep streak')).toBeOnTheScreen();
       await playBtn();
       expect(screen.queryByText(/🔥/)).toBeNull();
       expect(screen.getByTestId('sweep-msg')).toHaveTextContent(START_MSG);
@@ -124,7 +124,7 @@ describe('GIVEN a Sweep streak that has lapsed (last played long ago, 13 days lo
         JSON.stringify({ last: dayBefore(today()), streak: 13, best: 13, dates: [] }),
       );
       await renderWithProviders(<SweepScreen file={file94} />);
-      expect(screen.getByText('13-day streak')).toBeOnTheScreen();
+      expect(screen.getByLabelText('13 Sweep streak')).toBeOnTheScreen();
       await playBtn();
       expect(screen.getByText('🔥13')).toBeOnTheScreen();
     });

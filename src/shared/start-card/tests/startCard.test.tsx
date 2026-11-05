@@ -63,7 +63,8 @@ describe('GIVEN the start card', () => {
     expect(screen.getByText('No. 105, Saturday 24 October')).toBeOnTheScreen();
     // an earlier day's puzzle is not today's (Alec, 26 Oct 2026)
     expect(screen.getByText(dayHead('Mini', '2026-10-24', londonDay()))).toBeOnTheScreen();
-    expect(screen.getByText('4-day streak')).toBeOnTheScreen();
+    expect(screen.getByLabelText('4 Mini streak')).toBeOnTheScreen();
+    expect(screen.queryByText('4-day streak')).toBeNull();
     expect(screen.getByText('Minis played')).toBeOnTheScreen();
     expect(screen.getByText('12')).toBeOnTheScreen();
   });
@@ -71,7 +72,6 @@ describe('GIVEN the start card', () => {
   describe('WHEN How to play, Play and Puzzles are tapped', () => {
     it('THEN the help opens and the card hands over', async () => {
       await render(card(0));
-      expect(screen.queryByText('4-day streak')).toBeNull();
       expect(screen.queryByText(HOW.mini[0]!)).toBeNull();
       await fireEvent.press(screen.getByRole('button', { name: /How to play/ }));
       expect(screen.getByText(HOW.mini[0]!)).toBeOnTheScreen();

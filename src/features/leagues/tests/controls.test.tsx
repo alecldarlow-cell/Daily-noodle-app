@@ -197,7 +197,7 @@ describe('GIVEN the margins on Leagues (AF-007)', () => {
 
   it('THEN a highlighted board row has inner padding on the right as well as the left', async () => {
     await open();
-    const mine = screen.getByLabelText('🥈 Alec (you), 1 pt, 1 of 8 done');
+    const mine = screen.getByLabelText('🥈 Alec (you), 1 pt, 1 of 9 done');
     const s = flat(mine);
     expect(s.paddingRight).toBe(ROW_INSET_RIGHT);
     expect(ROW_INSET_RIGHT).toBeGreaterThanOrEqual(8);

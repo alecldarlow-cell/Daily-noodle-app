@@ -167,7 +167,7 @@ export function sheetOf(e: TangleEngine, today: string): Sheet {
     hero: `${f.hero.score}${f.hero.word}`,
     note: noteText(f.note),
     share: f.share,
-    streakLine: streakLine(f.stats),
+    streakLine: streakLine(f.stats, 'Tangle'),
     time: res.time,
     star: res.star,
     meter: `${r.meter}|${r.points}|${r.pct}`,

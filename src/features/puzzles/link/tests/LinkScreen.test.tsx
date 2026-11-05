@@ -194,7 +194,7 @@ describe('GIVEN a Link already finished on this phone', () => {
     );
     await renderWithProviders(<LinkScreen file={file78} />);
     expect(screen.getByTestId('finish-sheet')).toBeOnTheScreen();
-    expect(screen.getByTestId('finish-streak')).toHaveTextContent('🔥 3-day streak');
+    expect(screen.getByTestId('finish-streak')).toHaveTextContent('🔥 3-day Link streak');
     expect(await sharedLine()).toBe('🔗 Link #78 — 🟩🟦🟨⬛ · 2:14 · 🔥3');
     expect(finishes).toEqual([]);
     await fireEvent.press(screen.getByText('← Puzzles'));

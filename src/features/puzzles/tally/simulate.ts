@@ -77,7 +77,7 @@ export function memoryKV(seed: Record<string, unknown> = {}): KV {
   };
 }
 
-const line = (n: number) => streakLine([{ value: n, label: 'day streak' }]);
+const line = (n: number) => streakLine([{ value: n, label: 'day streak' }], 'Tally');
 
 export function simulate(
   data: TallyData,

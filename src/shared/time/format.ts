@@ -59,6 +59,12 @@ export function monthLabel(day: string): string {
  * A heading that names the puzzle's day: "Today’s Mini" on today's, "Yesterday’s Mini" on
  * yesterday's, and `older` on anything earlier (an archive puzzle is not today's).
  */
+/** A start page's heading: "Ready to play" on today's, the day's name on any other. */
+export function startHead(name: string, puzzleDate: string, today: string): string {
+  const head = dayHead(name, puzzleDate, today);
+  return head.startsWith('Today') ? 'Ready to play' : head;
+}
+
 export function dayHead(
   noun: string,
   day: string,

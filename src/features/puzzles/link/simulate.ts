@@ -113,7 +113,7 @@ export function memoryKV(
 export const heroCode = (squares: number[]) => squares.map((r) => (r ? `g${r}` : 'x')).join(' ');
 const statsOf = (f: FinishInfo) => [f.time, String(f.streak), String(f.best)];
 /** The sheet's line under the score (finish.js streakLine, AF-019): the day streak. */
-const line = (n: number) => streakLine([{ value: n, label: 'day streak' }]);
+const line = (n: number) => streakLine([{ value: n, label: 'day streak' }], 'Link');
 const sheetOf = (f: FinishInfo, kick: string): Sheet => ({
   share: f.share,
   note: f.note,

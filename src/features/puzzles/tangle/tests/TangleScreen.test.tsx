@@ -206,8 +206,8 @@ describe('GIVEN a Tangle round in play', () => {
 
 describe('GIVEN Tangle’s home card heading', () => {
   it('THEN the model keeps the page’s wording, and the screen names the puzzle’s day', () => {
-    const card = { head: 'Today’s Tangle', status: 's' };
-    expect(dayCard(card, '2026-10-26', '2026-10-26').head).toBe('Today’s Tangle');
+    const card = { head: 'Ready to play', status: 's' };
+    expect(dayCard(card, '2026-10-26', '2026-10-26').head).toBe('Ready to play');
     expect(dayCard(card, '2026-10-25', '2026-10-26').head).toBe('Yesterday’s Tangle');
     expect(dayCard(card, '2026-10-01', '2026-10-26').head).toBe('From the archive');
     // a done or paused round's own heading is left as it is

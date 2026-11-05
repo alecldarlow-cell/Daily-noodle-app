@@ -94,11 +94,11 @@ export function TodayScreen({ open, onOpened }: { open?: PuzzleType; onOpened?: 
           {run >= 2 ? (
             <View
               accessible
-              accessibilityLabel={`${run}-day streak`}
+              accessibilityLabel={`${run}-day daily streak`}
               style={[styles.run, { backgroundColor: t.accentSoft }]}
               testID="run-chip">
               <Text style={[styles.runText, { color: t.accent }]}>
-                🔥 <Text style={styles.bold}>{run}-day</Text> streak
+                🔥 <Text style={styles.bold}>{run}-day</Text> daily streak
               </Text>
             </View>
           ) : null}

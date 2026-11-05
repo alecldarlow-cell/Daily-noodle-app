@@ -94,12 +94,15 @@ export function clockLine(name: string, s: number): ClockLine {
 
 /**
  * The line under the score (finish.js streakLine): the type's "day streak" stat as
- * "🔥 5-day streak"; nothing under 1.
+ * "🔥 5-day Doku streak"; nothing under 1.
  */
-export function streakLine(stats: readonly { value: string | number; label: string }[]): string {
+export function streakLine(
+  stats: readonly { value: string | number; label: string }[],
+  name: string,
+): string {
   const s = stats.find((x) => /day streak/i.test(x.label));
   const n = s ? parseInt(String(s.value), 10) || 0 : 0;
-  return n >= 1 ? `🔥 ${n}-day streak` : '';
+  return n >= 1 ? `🔥 ${n}-day ${name} streak` : '';
 }
 
 /** The grid puzzles that play the celebration jingle on a fresh win (AF-013). */

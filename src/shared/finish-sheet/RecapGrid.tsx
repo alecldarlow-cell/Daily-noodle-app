@@ -86,7 +86,11 @@ export function RecapGrid({
   return (
     <View
       testID={testID}
-      style={[styles.frame, { width: w, borderColor: pt.line, backgroundColor: pt.block }]}>
+      style={[
+        styles.frame,
+        styles.centred,
+        { width: w, borderColor: pt.line, backgroundColor: pt.block },
+      ]}>
       {Array.from({ length: n }, (_, r) => (
         <View key={r} style={styles.row}>
           {Array.from({ length: n }, (_, c) => (
@@ -135,6 +139,7 @@ export function Flag({ size, color }: { size: number; color: string }) {
 }
 
 const styles = StyleSheet.create({
+  centred: { alignSelf: 'center' },
   frame: { alignSelf: 'flex-start', borderWidth: 2, borderRadius: 6, overflow: 'hidden' },
   row: { flexDirection: 'row' },
   cell: { borderWidth: 0.5, alignItems: 'center', justifyContent: 'center' },

@@ -189,7 +189,10 @@ export function PathRecap({ state }: { state: PathState }) {
   const sol = state.p.solution;
   return (
     <View
-      style={[styles.recap, { width: w, borderColor: pt.line, backgroundColor: pt.card }]}
+      style={[
+        styles.recap,
+        { alignSelf: 'center', width: w, borderColor: pt.line, backgroundColor: pt.card },
+      ]}
       testID="path-recap">
       <View style={StyleSheet.absoluteFill} testID="path-recap-thread">
         <View style={styles.threadLayer}>
@@ -214,30 +217,6 @@ export function PathRecap({ state }: { state: PathState }) {
               </View>
             );
           })}
-        </View>
-      ))}
-    </View>
-  );
-}
-
-/** The start card's picture: the board with the marigold 1 (house.js art). */
-export function PathArt({ one }: { one: Cell | null }) {
-  const pt = usePuzzleTokens();
-  return (
-    <View style={[styles.art, { backgroundColor: pt.block }]} accessible={false}>
-      {Array.from({ length: N }, (_, r) => (
-        <View key={r} style={styles.artRow}>
-          {Array.from({ length: N }, (_, c) => (
-            <View
-              key={c}
-              style={[
-                styles.artSq,
-                {
-                  backgroundColor: one && one[0] === r && one[1] === c ? '#FFD54A' : pt.card,
-                },
-              ]}
-            />
-          ))}
         </View>
       ))}
     </View>

@@ -2,7 +2,7 @@ import { londonDay } from '@noodle/core';
 import { act, renderHook } from '@testing-library/react-native';
 import { AppState } from 'react-native';
 
-import { dayHead, longDate, monthLabel, relDay, shortDate } from '../format';
+import { dayHead, longDate, monthLabel, relDay, shortDate, startHead } from '../format';
 import { msToNextLondonDay, useLondonDay } from '../useLondonDay';
 
 describe('GIVEN an instant', () => {
@@ -74,6 +74,8 @@ describe('GIVEN a card’s date and today', () => {
 
 describe('GIVEN a heading that names the puzzle’s day', () => {
   it('THEN today’s says today, yesterday’s says yesterday, and older is the archive', () => {
+    expect(startHead('Mini', '2026-10-26', '2026-10-26')).toBe('Ready to play');
+    expect(startHead('Mini', '2026-10-25', '2026-10-26')).toBe('Yesterday’s Mini');
     expect(dayHead('Mini', '2026-10-26', '2026-10-26')).toBe('Today’s Mini');
     expect(dayHead('Mini', '2026-10-25', '2026-10-26')).toBe('Yesterday’s Mini');
     expect(dayHead('Mini', '2026-10-24', '2026-10-26')).toBe('From the archive');

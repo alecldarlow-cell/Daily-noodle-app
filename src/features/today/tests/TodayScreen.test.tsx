@@ -158,7 +158,7 @@ describe('GIVEN the site has published today’s list', () => {
       );
       await renderWithProviders(<TodayScreen />);
       await waitFor(() => expect(screen.getByTestId('run-chip')).toBeOnTheScreen());
-      expect(screen.getByTestId('run-chip')).toHaveTextContent('🔥 2-day streak');
+      expect(screen.getByTestId('run-chip')).toHaveTextContent('🔥 2-day daily streak');
     });
 
     it('THEN a single day shows no chip (celebration only)', async () => {

@@ -1,2 +1,2 @@
 export { useLondonDay, msToNextLondonDay } from './useLondonDay';
-export { dayHead, shortDate, monthLabel, longDate, relDay } from './format';
+export { dayHead, startHead, shortDate, monthLabel, longDate, relDay } from './format';

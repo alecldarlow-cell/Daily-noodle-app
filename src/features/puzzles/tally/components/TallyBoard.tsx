@@ -149,7 +149,10 @@ export function TallyRecap({ state }: { state: TallyState }) {
   const cells = view(state);
   return (
     <View
-      style={[styles.grid, { width: w, borderColor: pt.line, backgroundColor: pt.line }]}
+      style={[
+        styles.grid,
+        { alignSelf: 'center', width: w, borderColor: pt.line, backgroundColor: pt.line },
+      ]}
       testID="tally-recap">
       {Array.from({ length: state.n }, (_, r) => (
         <View key={r} style={styles.row}>
@@ -177,30 +180,6 @@ export function TallyRecap({ state }: { state: TallyState }) {
               </View>
             );
           })}
-        </View>
-      ))}
-    </View>
-  );
-}
-
-/** The start card's small picture: a 4×4 board with its cage lines (house.js). */
-export function TallyArt() {
-  const pt = usePuzzleTokens();
-  const edge: Record<number, object> = {
-    1: { borderRightWidth: 2.5, borderRightColor: pt.block },
-    5: { borderRightWidth: 2.5, borderRightColor: pt.block },
-    8: { borderTopWidth: 2.5, borderTopColor: pt.block },
-    9: { borderTopWidth: 2.5, borderTopColor: pt.block },
-    10: { borderLeftWidth: 2.5, borderLeftColor: pt.block },
-    14: { borderLeftWidth: 2.5, borderLeftColor: pt.block },
-  };
-  return (
-    <View style={[styles.art, { backgroundColor: pt.block }]} accessible={false}>
-      {Array.from({ length: 4 }, (_, r) => (
-        <View key={r} style={styles.artRow}>
-          {Array.from({ length: 4 }, (_c, c) => (
-            <View key={c} style={[styles.artSq, { backgroundColor: pt.card }, edge[r * 4 + c]]} />
-          ))}
         </View>
       ))}
     </View>

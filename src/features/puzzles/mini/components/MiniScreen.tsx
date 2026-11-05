@@ -16,7 +16,7 @@ import type { MiniData } from '../model';
 import { ClueBar } from './ClueBar';
 import { MiniBoard } from './MiniBoard';
 import { MiniControls } from './MiniControls';
-import { MiniArt, SolvedGrid } from './MiniGrids';
+import { SolvedGrid } from './MiniGrids';
 import { MiniKeyboard } from './MiniKeyboard';
 
 /** The Mini, played natively: start card, board, finish sheet. */
@@ -43,7 +43,6 @@ export function MiniScreen({ file }: { file: PuzzleFile<MiniData> }) {
         date={file.date}
         rule={ruleFor('mini', file.data)}
         stats={stats}
-        art={<MiniArt grid={file.data.grid} />}
         onPlay={game.play}
         onBack={back}
       />

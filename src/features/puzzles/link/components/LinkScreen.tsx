@@ -13,7 +13,7 @@ import type { PuzzleFile } from '../../types';
 import { useLinkGame } from '../hooks/useLinkGame';
 import { groupsByRank, shownLabel, timerText, type LinkData } from '../model';
 import { LinkBoard } from './LinkBoard';
-import { GroupBands, GuessSquares, LinkArt, PlayAgain } from './LinkParts';
+import { GroupBands, GuessSquares, PlayAgain } from './LinkParts';
 
 /** engines/link.js resumeCard: how many groups a kept round had found. */
 const FOUND = ['No groups', 'One group', 'Two groups', 'Three groups'];
@@ -41,11 +41,10 @@ export function LinkScreen({ file }: { file: PuzzleFile<LinkData> }) {
         date={file.date}
         rule={ruleFor('link', {})}
         stats={stats}
-        art={<LinkArt />}
         resume={
           game.resumed
             ? {
-                head: 'Today’s Link, part-played',
+                head: 'Part-played',
                 status: `Paused at ${dnTime(timerText(game.resumed.secs))}. ${FOUND[game.resumed.found] ?? ''} found so far; your clock carries on from there.`,
               }
             : undefined

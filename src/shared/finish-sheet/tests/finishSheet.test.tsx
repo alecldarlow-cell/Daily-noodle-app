@@ -114,10 +114,10 @@ describe('GIVEN the line under the score (finish.js streakLine)', () => {
       { value: 9, label: 'best streak' },
       { value: v, label: 'day streak' },
     ];
-    expect(streakLine(st(5))).toBe('🔥 5-day streak');
-    expect(streakLine(st('12'))).toBe('🔥 12-day streak');
-    expect(streakLine(st(0))).toBe('');
-    expect(streakLine([{ value: 3, label: 'best score' }])).toBe('');
+    expect(streakLine(st(5), 'Doku')).toBe('🔥 5-day Doku streak');
+    expect(streakLine(st('12'), 'Doku')).toBe('🔥 12-day Doku streak');
+    expect(streakLine(st(0), 'Doku')).toBe('');
+    expect(streakLine([{ value: 3, label: 'best score' }], 'Doku')).toBe('');
   });
 });
 
@@ -190,7 +190,8 @@ describe('GIVEN a finish sheet', () => {
       await waitFor(() => expect(screen.getByText('Play Reckon 5')).toBeOnTheScreen());
       expect(screen.getByRole('header', { name: 'Doku 107 · Solved' })).toBeOnTheScreen();
       expect(screen.getByText('1:14')).toBeOnTheScreen();
-      expect(screen.getByText('🔥 5-day streak')).toBeOnTheScreen();
+      expect(screen.getByText('🔥 5-day Doku streak')).toBeOnTheScreen();
+      expect(screen.getByTestId('finish-next-icon').type).toBe('Image');
       expect(screen.getByText('No checks, no reveals.')).toBeOnTheScreen();
       expect(screen.getByRole('button', { name: 'Share result' })).toBeOnTheScreen();
       expect(screen.getByText('Currently 1st in Noodlers')).toBeOnTheScreen();

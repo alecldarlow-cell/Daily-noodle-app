@@ -203,7 +203,7 @@ export const tileText = (f: FinishInfo) => f.tiles.map((x) => `${x.ok ? 'ok' : '
 const sheetStats = (f: FinishInfo) => [String(f.points), String(f.streak), String(f.best)];
 
 /** The sheet's line under the score (finish.js streakLine, AF-019): the day streak. */
-const line = (n: number) => streakLine([{ value: n, label: 'day streak' }]);
+const line = (n: number) => streakLine([{ value: n, label: 'day streak' }], 'Borders');
 const json = (kv: KV, k: string) => JSON.parse(kv.getItem(k) || 'null') as unknown;
 
 export function simulate(

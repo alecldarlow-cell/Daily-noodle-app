@@ -239,7 +239,7 @@ export const rowText = (f: FinishInfo) => f.rows.map((r) => `${r.q}${r.line}${r.
 const sheetStats = (f: FinishInfo) => [f.time, String(f.streak), String(f.best)];
 
 /** The sheet's line under the score (finish.js streakLine, AF-019): the day streak. */
-const line = (n: number) => streakLine([{ value: n, label: 'day streak' }]);
+const line = (n: number) => streakLine([{ value: n, label: 'day streak' }], 'Reckon');
 
 /**
  * Play `sc` on a page opened at wall time `openAt`, whose clock reads `off` then; the
