@@ -136,48 +136,55 @@ export function ArchiveScreen() {
           );
         })}
       </ScrollView>
-      {calendarOn ? (
-        <View
-          style={[styles.seg, { borderColor: t.hair, backgroundColor: t.paper }]}
-          testID="archive-view">
-          {VIEWS.map((v) => {
-            const on = v.id === view;
-            return (
-              <Pressable
-                key={v.id}
-                accessibilityRole="button"
-                accessibilityState={{ selected: on }}
-                accessibilityLabel={`Show as a ${v.label.toLowerCase()}`}
-                testID={`view-${v.id}`}
-                onPress={() => setView(v.id)}
-                style={[styles.segBtn, on && { backgroundColor: t.accentSoft }]}>
-                <Text style={[styles.chipText, { color: on ? t.accent : t.muted }]}>{v.label}</Text>
-              </Pressable>
-            );
-          })}
-        </View>
-      ) : null}
-      {view === 'list' ? (
-        <View
-          style={[styles.seg, { borderColor: t.hair, backgroundColor: t.paper }]}
-          testID="archive-status">
-          {STATUS.map((s) => {
-            const on = s.id === status;
-            return (
-              <Pressable
-                key={s.id}
-                accessibilityRole="button"
-                accessibilityState={{ selected: on }}
-                accessibilityLabel={`Show ${s.label === 'All' ? 'all puzzles' : s.label.toLowerCase()}`}
-                testID={`status-${s.id}`}
-                onPress={() => setStatus(s.id)}
-                style={[styles.segBtn, on && { backgroundColor: t.accentSoft }]}>
-                <Text style={[styles.chipText, { color: on ? t.accent : t.muted }]}>{s.label}</Text>
-              </Pressable>
-            );
-          })}
-        </View>
-      ) : null}
+      {/* Alec, 6 Nov 2026: List | Calendar and All / Not done / Done share one row; it wraps at large text. */}
+      <View style={styles.segRow} testID="archive-switches">
+        {calendarOn ? (
+          <View
+            style={[styles.seg, { borderColor: t.hair, backgroundColor: t.paper }]}
+            testID="archive-view">
+            {VIEWS.map((v) => {
+              const on = v.id === view;
+              return (
+                <Pressable
+                  key={v.id}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: on }}
+                  accessibilityLabel={`Show as a ${v.label.toLowerCase()}`}
+                  testID={`view-${v.id}`}
+                  onPress={() => setView(v.id)}
+                  style={[styles.segBtn, on && { backgroundColor: t.accentSoft }]}>
+                  <Text style={[styles.chipText, { color: on ? t.accent : t.muted }]}>
+                    {v.label}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        ) : null}
+        {view === 'list' ? (
+          <View
+            style={[styles.seg, { borderColor: t.hair, backgroundColor: t.paper }]}
+            testID="archive-status">
+            {STATUS.map((s) => {
+              const on = s.id === status;
+              return (
+                <Pressable
+                  key={s.id}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: on }}
+                  accessibilityLabel={`Show ${s.label === 'All' ? 'all puzzles' : s.label.toLowerCase()}`}
+                  testID={`status-${s.id}`}
+                  onPress={() => setStatus(s.id)}
+                  style={[styles.segBtn, on && { backgroundColor: t.accentSoft }]}>
+                  <Text style={[styles.chipText, { color: on ? t.accent : t.muted }]}>
+                    {s.label}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        ) : null}
+      </View>
       {q.data && offline ? (
         <Note
           testID="archive-offline-kept"
@@ -268,6 +275,7 @@ const styles = StyleSheet.create({
   // A 46 pt press area round the site-sized ~30 pt chip (front.css .chip), so it is easy to hit;
   // the -8 margin above keeps the chip where it was.
   chipHit: { paddingVertical: 8, justifyContent: 'center' },
+  segRow: { flexDirection: 'row', flexWrap: 'wrap', columnGap: 8, rowGap: 8, marginBottom: 10 },
   // a three-way switch under the type chips: All, Not done, Done
   seg: {
     flexDirection: 'row',
@@ -276,7 +284,6 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     padding: 3,
     gap: 2,
-    marginBottom: 10,
   },
   // 40 pt buttons in a 3 pt-padded, bordered pill: 48 pt to tap, Material's minimum.
   segBtn: {
