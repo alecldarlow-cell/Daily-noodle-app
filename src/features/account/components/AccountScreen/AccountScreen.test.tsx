@@ -30,7 +30,7 @@ describe('GIVEN the Account tab in a build without sign-in', () => {
       expect(screen.queryByTestId('sync-card')).toBeNull();
       for (const name of ['Settings', 'Leagues', 'Privacy & data'])
         expect(screen.getByRole('header', { name })).toBeOnTheScreen();
-      expect(screen.getByText(/In a league already\? Join with your league’s code and PIN\./));
+      expect(screen.getByText(/In a league already\? Join with your league’s code\./));
       expect(screen.queryByText(/Sign in above/)).toBeNull();
       // Nothing synced, no account: neither data row.
       expect(screen.queryByTestId('account-delete')).toBeNull();
@@ -46,7 +46,7 @@ describe('GIVEN the Account tab in a build without sign-in', () => {
       await fireEvent.press(screen.getByRole('button', { name: 'Join with a code' }));
       expect(router.navigate).toHaveBeenCalledWith({
         pathname: '/leagues',
-        params: { go: 'claim', n: expect.any(String) },
+        params: { go: 'code', n: expect.any(String) },
       });
     });
   });
@@ -113,14 +113,12 @@ describe('GIVEN the app-wide settings on Account (AF-012)', () => {
 });
 
 describe('GIVEN a signed-out player in a build with sign-in', () => {
-  it('THEN the Leagues card points to signing in above, or the code and PIN', async () => {
+  it('THEN the Leagues card points to signing in above, not a PIN', async () => {
     const { client } = fakeClient();
     await render(<AccountScreen client={client} store={memoryStorage()} />);
     await flush();
     expect(
-      screen.getByText(
-        'In a league already? Sign in above with the same email, or join with your league’s code and PIN.',
-      ),
+      screen.getByText('In a league already? Sign in above with the same email.'),
     ).toBeOnTheScreen();
     expect(screen.getByRole('button', { name: 'Join with a code' })).toBeOnTheScreen();
     // Nothing to delete while signed out; an account can still be asked to be deleted.
@@ -146,7 +144,7 @@ describe('GIVEN a signed-in player', () => {
 
   it('THEN the Leagues card is “Join a league” with its short line', async () => {
     await signedIn();
-    expect(screen.getByText('Got an invite code and PIN? Join here.')).toBeOnTheScreen();
+    expect(screen.getByText('Got an invite code? Join here.')).toBeOnTheScreen();
     expect(screen.queryByText(/Already a player/)).toBeNull();
   });
 

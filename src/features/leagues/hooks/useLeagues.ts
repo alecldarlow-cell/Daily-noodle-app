@@ -30,6 +30,7 @@ import {
   boardOverall,
   boardPeek,
   boardPinSet,
+  boardSetNick,
   boardRecords,
   boardRemove,
   boardRename,
@@ -204,10 +205,15 @@ export function useJoinLeague() {
   });
 }
 
-export function useSetPin() {
+/** This league's nickname; the board and the leagues list follow. */
+export function useSetNick() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (pin: string) => setPin(pin),
+    mutationFn: async ({ code, nick }: { code: string; nick: string }) => {
+      const pid = getPid();
+      await boardSetNick(pid, code, nick);
+      await refreshLeagues(pid);
+    },
     onSettled: () => qc.invalidateQueries({ queryKey: BOARD_QUERY }),
   });
 }

@@ -4,6 +4,7 @@ import { appStorage } from '@/shared/storage';
 import { renderWithProviders } from '@/shared/testing';
 
 import * as board from '../api/board';
+import { BoardError } from '../api/errors';
 import { LeaguesScreen } from '../components/LeaguesScreen/LeaguesScreen';
 
 const mockParams: { current: Record<string, string> } = { current: {} };
@@ -109,5 +110,37 @@ describe('GIVEN a league with a champion', () => {
     await renderWithProviders(<LeaguesScreen />);
     await waitFor(() => expect(screen.getByTestId('crown-note')).toBeOnTheScreen());
     expect(screen.getByText('👑 Last week’s champion')).toBeOnTheScreen();
+  });
+});
+
+describe('GIVEN a player in a league', () => {
+  it('WHEN they change their nickname THEN it goes to the server and the board follows', async () => {
+    inFamily({ ...FAMILY, pin: true });
+    mine(true);
+    m.boardSetNick.mockResolvedValue('Alec' as never);
+    const view = await renderWithProviders(<LeaguesScreen />);
+    await fireEvent.press(await screen.findByRole('button', { name: /League settings/ }));
+    expect(screen.queryByRole('button', { name: /PIN/ })).toBeNull();
+    await fireEvent.press(screen.getByRole('button', { name: 'Change nickname' }));
+    await fireEvent.changeText(screen.getByLabelText('Nickname'), 'Alec');
+    m.boardMine.mockResolvedValue([{ ...FAMILY, nickname: 'Alec', pin: true }] as never);
+    await fireEvent.press(screen.getByRole('button', { name: 'Save' }));
+    await waitFor(() => expect(m.boardSetNick).toHaveBeenCalledWith('p1', 'ABCDEFGH', 'Alec'));
+    await waitFor(() => expect(screen.queryByTestId('nick-form')).toBeNull());
+    expect(JSON.parse(appStorage.getItem('noodle-board-v1')!).leagues[0].nick).toBe('Alec');
+    expect(view).toBeTruthy();
+  });
+
+  it('WHEN the name is taken THEN it says so and stays on the form', async () => {
+    inFamily({ ...FAMILY, pin: true });
+    mine(true);
+    m.boardSetNick.mockRejectedValue(new BoardError('nick_taken'));
+    await renderWithProviders(<LeaguesScreen />);
+    await fireEvent.press(await screen.findByRole('button', { name: /League settings/ }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Change nickname' }));
+    await fireEvent.changeText(screen.getByLabelText('Nickname'), 'Mum');
+    await fireEvent.press(screen.getByRole('button', { name: 'Save' }));
+    await waitFor(() => expect(screen.getByText(/already uses that nickname/)).toBeOnTheScreen());
+    expect(screen.getByTestId('nick-form')).toBeOnTheScreen();
   });
 });

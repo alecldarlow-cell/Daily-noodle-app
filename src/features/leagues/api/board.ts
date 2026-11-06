@@ -42,6 +42,9 @@ export const boardClose = (p_player: string, p_code: string) =>
 export const boardLetBack = (p_player: string, p_code: string, p_nick: string) =>
   rpc<boolean>('board_let_back', { p_player, p_code, p_nick });
 
+export const boardSetNick = (p_player: string, p_code: string, p_nick: string) =>
+  rpc<string>('board_set_nick', { p_player, p_code, p_nick });
+
 export const boardPinSet = (p_player: string, p_pin: string) =>
   rpc<boolean>('board_pin_set', { p_player, p_pin });
 

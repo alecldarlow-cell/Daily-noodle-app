@@ -85,10 +85,10 @@ export function AccountScreen({
             </Text>
             <Text style={[styles.p, { color: t.muted }]}>
               {signedIn
-                ? 'Got an invite code and PIN? Join here.'
+                ? 'Got an invite code? Join here.'
                 : syncOn
-                  ? 'In a league already? Sign in above with the same email, or join with your league’s code and PIN.'
-                  : 'In a league already? Join with your league’s code and PIN.'}
+                  ? 'In a league already? Sign in above with the same email.'
+                  : 'In a league already? Join with your league’s code.'}
             </Text>
             <Button
               variant="tonal"
@@ -96,7 +96,7 @@ export function AccountScreen({
               testID="account-claim"
               // A fresh `n` each tap, so Leagues opens the form again after its Back.
               onPress={() =>
-                router.navigate({ pathname: '/leagues', params: { go: 'claim', n: tapId() } })
+                router.navigate({ pathname: '/leagues', params: { go: 'code', n: tapId() } })
               }
             />
           </View>

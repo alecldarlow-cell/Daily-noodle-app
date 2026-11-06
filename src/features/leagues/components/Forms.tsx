@@ -1,5 +1,5 @@
 /* The intro and every form on the board page, in board.html's words ("browser" read as "app"). */
-import type { BoardPending } from '@noodle/core';
+import type { BoardLeague, BoardPending } from '@noodle/core';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { FONT, useTokens } from '@/shared/theme';
@@ -14,10 +14,10 @@ import {
   useCreateLeague,
   useJoinLeague,
   usePeek,
-  useSetPin,
+  useSetNick,
   useSettlePending,
 } from '../hooks/useLeagues';
-import { claimSchema, codeSchema, nicknameSchema, pinSchema, startSchema } from '../schemas';
+import { claimSchema, codeSchema, nicknameSchema, startSchema } from '../schemas';
 import { object } from 'yup';
 import { Acts, Btn, Card, Field, Msg, P, PinField, TextLink } from './ui';
 
@@ -314,14 +314,8 @@ export function ClaimForm({
           onPress={() =>
             f.submit(async (v) => {
               const r = await claim.mutateAsync({ code: v.code, nick: v.nick, pin: v.pin });
-              if (r.pending) {
-                flow.setNeedPin(r.needsPin);
-                flow.home();
-              } else if (r.needsPin) flow.setView({ k: 'pin', fresh: true });
-              else {
-                flow.setNotice({ k: 'claimed', nick: r.nick });
-                flow.home();
-              }
+              if (!r.pending) flow.setNotice({ k: 'claimed', nick: r.nick });
+              flow.home();
             })
           }
         />
@@ -331,32 +325,34 @@ export function ClaimForm({
   );
 }
 
-export function PinForm({ flow, fresh }: { flow: Flow; fresh: boolean }) {
-  const setPin = useSetPin();
-  const f = useForm({ pin: '' }, object({ pin: pinSchema }));
+/** League settings › You: this league's nickname. Results stay, as they're kept by player. */
+export function NickForm({ flow, league }: { flow: Flow; league: BoardLeague }) {
+  const setNick = useSetNick();
+  const f = useForm({ nick: league.nick }, object({ nick: nicknameSchema }));
   return (
-    <Card title={fresh ? 'Set a new PIN' : 'Set your PIN'} testID="pin-form">
-      <P>
-        {fresh
-          ? 'You’re back in. Choose a new PIN so you can do this yourself next time.'
-          : 'Then you can join as yourself from another phone or app.'}
-      </P>
-      <PinField value={f.values.pin} onChangeText={f.set('pin')} />
+    <Card title="Change your nickname" testID="nick-form">
+      <P>For {league.name}. Your results stay yours.</P>
+      <Field
+        label="Nickname"
+        value={f.values.nick}
+        onChangeText={f.set('nick')}
+        maxLength={16}
+        autoCapitalize="words"
+      />
       <Msg text={f.msg} />
       <Acts>
         <Btn
           variant="filled"
-          label="Save PIN"
+          label="Save"
           disabled={f.busy}
           onPress={() =>
             f.submit(async (v) => {
-              await setPin.mutateAsync(v.pin);
-              flow.setNotice({ k: 'pinSaved' });
+              await setNick.mutateAsync({ code: league.code, nick: v.nick });
               flow.home();
             })
           }
         />
-        {fresh ? null : <Btn label="Back" onPress={flow.back} />}
+        <Btn label="Back" onPress={flow.back} />
       </Acts>
     </Card>
   );
@@ -370,9 +366,7 @@ export function PendCard({ flow, pend }: { flow: Flow; pend: BoardPending }) {
     ls.map((l) => `${l.name} as ${l.nick}`).join(', ') || 'no leagues';
   // Decided before the change, since this card goes once the choice is saved.
   const choose = (take: boolean) => {
-    if (take && flow.needPin) flow.setView({ k: 'pin', fresh: true });
-    else if (take) flow.setNotice({ k: 'moved' });
-    flow.setNeedPin(false);
+    if (take) flow.setNotice({ k: 'moved' });
     settle.mutate(take);
   };
   return (

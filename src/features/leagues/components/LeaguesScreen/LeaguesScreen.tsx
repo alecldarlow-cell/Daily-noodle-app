@@ -9,7 +9,7 @@ import { Screen } from '@/shared/ui';
 import { asksAnything, useLeaguesFlow, type LeaguesParams } from '../../hooks/useLeaguesFlow';
 import { BOARD_QUERY, useMine } from '../../hooks/useLeagues';
 import { Board } from '../Board';
-import { ClaimForm, CodeForm, InviteForm, Intro, PendCard, PinForm, StartForm } from '../Forms';
+import { ClaimForm, CodeForm, InviteForm, Intro, PendCard, NickForm, StartForm } from '../Forms';
 
 const CLEARED = { join: undefined, go: undefined, p: undefined, d: undefined, n: undefined };
 
@@ -65,7 +65,7 @@ export function LeaguesScreen() {
         back={view.back}
       />
     );
-  else if (view.k === 'pin') body = <PinForm flow={flow} fresh={view.fresh} />;
+  else if (view.k === 'nick' && league) body = <NickForm flow={flow} league={league} />;
   else if (pending) body = <PendCard flow={flow} pend={pending} />;
   else if (league) body = <Board flow={flow} league={league} />;
   else body = <Intro flow={flow} />;
