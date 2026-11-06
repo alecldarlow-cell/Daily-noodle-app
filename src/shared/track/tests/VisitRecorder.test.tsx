@@ -8,7 +8,7 @@ describe('GIVEN the app’s root', () => {
   it('THEN the recorder listens while mounted, sends every 10 s and when the app is put away', async () => {
     jest.useFakeTimers();
     const off = jest.fn();
-    const recorder = { listen: jest.fn(() => off), screen: jest.fn() };
+    const recorder = { listen: jest.fn(() => off), screen: jest.fn(), event: jest.fn() };
     const tracker = { flush: jest.fn(), track: jest.fn(), pageView: jest.fn(), pending: () => 0 };
     let changed: (s: string) => void = () => {};
     const remove = jest.fn();
@@ -76,7 +76,7 @@ describe.each([
     it('THEN nothing queued is sent', async () => {
       jest.useFakeTimers();
       const { tracker, sent } = setup();
-      const recorder = { listen: jest.fn(() => () => {}), screen: jest.fn() };
+      const recorder = { listen: jest.fn(() => () => {}), screen: jest.fn(), event: jest.fn() };
       await render(<VisitRecorder recorder={recorder} tracker={tracker} />);
       jest.advanceTimersByTime(10_000);
       expect(sent).toEqual([]);
@@ -92,7 +92,7 @@ describe.each([
         return { remove: jest.fn() } as never;
       });
       const { tracker, sent } = setup();
-      const recorder = { listen: jest.fn(() => () => {}), screen: jest.fn() };
+      const recorder = { listen: jest.fn(() => () => {}), screen: jest.fn(), event: jest.fn() };
       await render(<VisitRecorder recorder={recorder} tracker={tracker} />);
       changed('background');
       expect(sent).toEqual([]);

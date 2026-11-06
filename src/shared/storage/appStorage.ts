@@ -17,6 +17,7 @@ export function isDisposableKey(key: string): boolean {
     key.startsWith('noodle-board-recap-') ||
     key === 'noodle-app-today' ||
     key === 'noodle-app-feed-lite' ||
+    key === 'noodle-app-features' ||
     key === 'noodle-app-sync' ||
     key === 'noodle-board-pinlater' ||
     key === 'digi.sid' ||

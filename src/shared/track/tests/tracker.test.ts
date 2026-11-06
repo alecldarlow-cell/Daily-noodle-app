@@ -107,6 +107,27 @@ describe('GIVEN a native puzzle played in the app', () => {
     });
   });
 
+  describe('WHEN an archive or stats screen sends its own event', () => {
+    it('THEN it carries only what was given, on the page it stands for, and honours opting out', () => {
+      const h = setup();
+      h.recorder.event('archive_play', { type: 'mini', id: 'DP·MINI·0034' }, 'archive.html');
+      h.recorder.event('stats_open', { from: '' }, 'stats.html');
+      const ev = h.all();
+      expect(ev.map((e) => [e.ev, e.p])).toEqual([
+        ['archive_play', 'archive.html'],
+        ['stats_open', 'stats.html'],
+      ]);
+      const { pv, ...rest } = ev[0]!.x;
+      expect(typeof pv).toBe('string');
+      expect(rest).toEqual({ type: 'mini', id: 'DP·MINI·0034' });
+      h.off();
+      const o = setup({ 'digi.optout': '1' });
+      o.recorder.event('stats_open', {}, 'stats.html');
+      o.off();
+      expect(o.all()).toEqual([]);
+    });
+  });
+
   describe('WHEN the player comes back after 30 idle minutes, a returning visitor', () => {
     it('THEN the same visitor code, a new session, and new is false', () => {
       const h = setup({ 'digi.aid': 'known', 'digi.sid': 'old', 'digi.last': '999000' });
