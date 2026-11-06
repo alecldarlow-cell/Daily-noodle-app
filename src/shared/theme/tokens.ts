@@ -19,7 +19,7 @@ export interface Tokens {
   /** A soft tint of `bad`: the fill of a tonal destructive button. */
   badSoft: string;
   /**
-   * The Daily Noodle mark (the launcher icon's green tile and white DN): the same in both
+   * The Daily Noodle mark (the launcher icon's green tile): the same in both
    * schemes, as the icon is.
    */
   brand: string;

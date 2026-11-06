@@ -1,199 +1,154 @@
 #!/usr/bin/env node
 /**
- * Draws the app's icons and splash as "DN" (Daily Noodle) in the in-app monogram's style (src/shared/ui/Screen's
- * masthead: Archivo ExtraBold capitals, white on the house green, as the site's front-page
- * .mono): the letters' outlines are read straight from assets/fonts/Archivo-ExtraBold.ttf
- * and filled with a small anti-aliased rasteriser, and the PNGs written with Node's zlib.
- * No dependencies, so it runs anywhere Node does:
+ * Draws the app's icons and splash: the Daily Noodle "noodle n" (Alec, 6 Nov 2026). One white
+ * noodle is drawn as an "n" (an arch, a U-turn on the same baseline, a climb back up) and ends in
+ * a marigold dot whose top is level with the top of the arch. It sits on a gentle vertical glow
+ * of the house green, with a soft shadow under it. The shapes are built as polygons and filled
+ * with a small anti-aliased rasteriser, and the PNGs written with Node's zlib. No dependencies,
+ * so it runs anywhere Node does:
  *
  *   node scripts/make-icons.js          writes the PNGs into assets/images
  *   node scripts/make-icons.js --check  fails if any committed PNG differs from what it draws
  *
  * What it makes (app.json points at each):
- * - icon.png             1024 opaque square, DN on green (iOS rounds it; it must be opaque).
+ * - icon.png             1024 opaque square: the mark on the green glow (iOS rounds it; it must
+ *   be opaque). The mark is 73% of the tile's height, centred.
  * - play-store-icon.png  512 opaque square, the same (the Play listing's icon).
- * - android-icon-foreground.png / -monochrome.png  1024, DN alone on a clear layer, 40% of
- *   the canvas wide, well inside the adaptive icon's 66/108 safe circle; app.json gives the
- *   green as its background colour.
- * - splash-icon.png / splash-icon-dark.png  the masthead's monogram itself: a rounded green
- *   square (radius 4/30, as the masthead's) with white DN; in dark mode the dark theme's
- *   brighter green with dark letters, as the masthead draws it there.
+ * - android-icon-background.png  1024 opaque, the green glow, spanning the 72 dp visible area.
+ * - android-icon-foreground.png  1024, the mark and its shadow on a clear layer, 5% smaller than
+ *   the full icon's mark so all of it sits well inside the adaptive icon's 66/108 safe circle.
+ * - android-icon-monochrome.png  1024, the mark alone in one colour (themed icons), same size.
+ * - splash-icon.png / splash-icon-dark.png  the icon itself on a rounded tile (radius 4/30), for
+ *   the light and dark splash.
  */
 const fs = require('fs');
 const path = require('path');
 const zlib = require('zlib');
 
 const ROOT = path.join(__dirname, '..');
-const FONT = path.join(ROOT, 'assets/fonts/Archivo-ExtraBold.ttf');
 
-/** The house green and the masthead's letter colours (src/shared/theme/tokens.ts accent). */
+/** The house green (src/shared/theme/tokens.ts accent): the adaptive icon's background colour. */
 const GREEN = '#0E7A4B';
-const GREEN_DARK = '#4CC793';
+/** The tile's glow, top to bottom; its midpoint is the house green. */
+const TILE_TOP = '#118553';
+const TILE_BOTTOM = '#0C6F44';
+/** The shadow under the noodle: deep green at 45%, 16 px down on a 1024 icon. */
+const SHADOW = '#0A5C38';
+const SHADOW_ALPHA = 0.45;
+const SHADOW_DROP = 16;
 const WHITE = '#FFFFFF';
-const INK_DARK = '#0B0D12';
-/** The launcher's letters: "DN" for Daily Noodle (Alec, 26 Oct 2026), in the masthead's face. */
-const LETTERS = 'DN';
-/** The masthead's "DP": 17 pt with -1 pt between letters, so -1/17 em. */
-const TRACKING = -1 / 17;
+/** The dot: the play marigold (tokens' play), the colour of the puzzles' active cell. */
+const MARIGOLD = '#FFD54A';
 
-// ---------- the font: just enough TrueType to read two simple glyphs ----------
+// ---------- the mark, in 1024-icon units ----------
 
-function readFont(file) {
-  const b = fs.readFileSync(file);
-  const tables = {};
-  for (let i = 0; i < b.readUInt16BE(4); i++) {
-    const at = 12 + i * 16;
-    tables[b.toString('latin1', at, at + 4)] = b.readUInt32BE(at + 8);
-  }
-  const head = tables.head;
-  const unitsPerEm = b.readUInt16BE(head + 18);
-  const longLoca = b.readInt16BE(head + 50) === 1;
-  const numberOfHMetrics = b.readUInt16BE(tables.hhea + 34);
+/**
+ * The noodle's centre line and its dot, as drawn on the 1024 icon before scaling: columns at x
+ * 352, 512, 672; the arch top at y 280 (a half circle, radius 80); the U-turn's bottom at the
+ * baseline, y 760; a 96-wide stroke with round ends; the dot (radius 66) at the top of the third
+ * column, its top level with the arch's outer edge (y 232).
+ */
+const STROKE = 96;
+const DOT_R = 66;
+const COLS = [352, 512, 672];
+const TOP = 280;
+const BASE = 760;
+const TURN = 80;
+const DOT = { x: COLS[2], y: TOP - STROKE / 2 + DOT_R };
+/** The mark's design box (its centre is the point scaled about) and the scale on the icon. */
+const BOX = {
+  x0: COLS[0] - STROKE / 2,
+  x1: COLS[2] + 70,
+  y0: TOP - STROKE / 2,
+  y1: BASE + STROKE / 2,
+};
+const MARK_SCALE = 1.3;
+/** The adaptive foreground's scale: the 72 dp view of 108 dp, then 5% smaller for margin. */
+const ADAPTIVE = (72 / 108) * 0.95;
 
-  // cmap: the Windows Unicode BMP subtable (format 4).
-  const cmap = tables.cmap;
-  let sub = -1;
-  for (let i = 0; i < b.readUInt16BE(cmap + 2); i++) {
-    const rec = cmap + 4 + i * 8;
-    const pid = b.readUInt16BE(rec);
-    const eid = b.readUInt16BE(rec + 2);
-    const off = cmap + b.readUInt32BE(rec + 4);
-    if (((pid === 3 && eid === 1) || pid === 0) && b.readUInt16BE(off) === 4) sub = off;
-  }
-  if (sub < 0) throw new Error('No format-4 cmap');
-  const segX2 = b.readUInt16BE(sub + 6);
-  const ends = sub + 14;
-  const starts = ends + segX2 + 2;
-  const deltas = starts + segX2;
-  const ranges = deltas + segX2;
-  const glyphId = (code) => {
-    for (let s = 0; s < segX2 / 2; s++) {
-      const end = b.readUInt16BE(ends + s * 2);
-      if (code > end) continue;
-      const start = b.readUInt16BE(starts + s * 2);
-      if (code < start) return 0;
-      const delta = b.readInt16BE(deltas + s * 2);
-      const ro = b.readUInt16BE(ranges + s * 2);
-      if (ro === 0) return (code + delta) & 0xffff;
-      const g = b.readUInt16BE(ranges + s * 2 + ro + (code - start) * 2);
-      return g === 0 ? 0 : (g + delta) & 0xffff;
+/** Points along the noodle's centre line, from the left foot to the dot. */
+function centreLine(steps = 48) {
+  const pts = [];
+  const line = (x0, y0, x1, y1) => pts.push([x0, y0], [x1, y1]);
+  const arc = (cx, cy, r, a0, a1) => {
+    for (let k = 1; k <= steps; k++) {
+      const a = a0 + ((a1 - a0) * k) / steps;
+      pts.push([cx + r * Math.cos(a), cy + r * Math.sin(a)]);
     }
-    return 0;
   };
-
-  const loca = (g) =>
-    longLoca ? b.readUInt32BE(tables.loca + g * 4) : b.readUInt16BE(tables.loca + g * 2) * 2;
-  const advance = (g) => b.readUInt16BE(tables.hmtx + Math.min(g, numberOfHMetrics - 1) * 4);
-
-  /** A glyph's contours as lists of {x, y, on} points, in font units (y up). */
-  const contours = (g) => {
-    const at = tables.glyf + loca(g);
-    const n = b.readInt16BE(at);
-    if (n < 0) throw new Error('Composite glyphs are not supported');
-    const endPts = [];
-    for (let i = 0; i < n; i++) endPts.push(b.readUInt16BE(at + 10 + i * 2));
-    const count = endPts[n - 1] + 1;
-    let p = at + 10 + n * 2;
-    p += 2 + b.readUInt16BE(p);
-    const flags = [];
-    while (flags.length < count) {
-      const f = b[p++];
-      flags.push(f);
-      if (f & 8) for (let r = b[p++]; r > 0; r--) flags.push(f);
-    }
-    const coords = (short, same) => {
-      const out = [];
-      let v = 0;
-      for (const f of flags) {
-        if (f & short) {
-          const d = b[p++];
-          v += f & same ? d : -d;
-        } else if (!(f & same)) {
-          v += b.readInt16BE(p);
-          p += 2;
-        }
-        out.push(v);
-      }
-      return out;
-    };
-    const xs = coords(2, 16);
-    const ys = coords(4, 32);
-    const out = [];
-    let from = 0;
-    for (const end of endPts) {
-      const c = [];
-      for (let i = from; i <= end; i++) c.push({ x: xs[i], y: ys[i], on: !!(flags[i] & 1) });
-      out.push(c);
-      from = end + 1;
-    }
-    return out;
-  };
-
-  return { unitsPerEm, glyphId, advance, contours };
+  line(COLS[0], BASE, COLS[0], TOP + TURN);
+  arc(COLS[0] + TURN, TOP + TURN, TURN, Math.PI, 2 * Math.PI); // over the top (y down)
+  pts.push([COLS[1], BASE - TURN]);
+  arc(COLS[1] + TURN, BASE - TURN, TURN, Math.PI, 0); // round the bottom
+  pts.push([COLS[2], DOT.y]);
+  // Drop repeated points.
+  return pts.filter(
+    (p, i) => i === 0 || Math.hypot(p[0] - pts[i - 1][0], p[1] - pts[i - 1][1]) > 1e-6,
+  );
 }
 
-/** A contour's quadratic spline flattened to a closed polygon, `steps` lines per curve. */
-function flatten(contour, steps = 24) {
-  const pts = contour.slice();
-  // Start on an on-curve point (or the midpoint of two off-curve ones).
-  let s = pts.findIndex((q) => q.on);
-  if (s < 0) {
-    pts.unshift({ x: (pts[0].x + pts.at(-1).x) / 2, y: (pts[0].y + pts.at(-1).y) / 2, on: true });
-    s = 0;
-  }
-  const ring = pts.slice(s).concat(pts.slice(0, s));
-  const out = [[ring[0].x, ring[0].y]];
-  let prev = ring[0];
-  for (let i = 1; i <= ring.length; i++) {
-    const cur = ring[i % ring.length];
-    if (cur.on) {
-      out.push([cur.x, cur.y]);
-      prev = cur;
-      continue;
+/** A polyline stroked `width` wide with round ends, as one closed polygon (the turns are wider than the stroke, so it never folds). */
+function stroke(pts, width, capSteps = 32) {
+  const h = width / 2;
+  const normal = (i) => {
+    const a = pts[Math.max(0, i - 1)];
+    const b = pts[Math.min(pts.length - 1, i + 1)];
+    const l = Math.hypot(b[0] - a[0], b[1] - a[1]);
+    return [-(b[1] - a[1]) / l, (b[0] - a[0]) / l];
+  };
+  const left = pts.map((p, i) => [p[0] + normal(i)[0] * h, p[1] + normal(i)[1] * h]);
+  const right = pts.map((p, i) => [p[0] - normal(i)[0] * h, p[1] - normal(i)[1] * h]);
+  const cap = (p, n, out) => {
+    const a0 = Math.atan2(n[1], n[0]);
+    for (let k = 1; k < capSteps; k++) {
+      const a = a0 + ((Math.PI * k) / capSteps) * out;
+      // Sweep from the left side round the end to the right side.
+      cap.pts.push([p[0] + h * Math.cos(a), p[1] + h * Math.sin(a)]);
     }
-    const next = ring[(i + 1) % ring.length];
-    const end = next.on ? next : { x: (cur.x + next.x) / 2, y: (cur.y + next.y) / 2, on: true };
-    for (let k = 1; k <= steps; k++) {
-      const t = k / steps;
-      const a = (1 - t) * (1 - t);
-      const m = 2 * (1 - t) * t;
-      const e = t * t;
-      out.push([a * prev.x + m * cur.x + e * end.x, a * prev.y + m * cur.y + e * end.y]);
-    }
-    prev = end;
-    if (next.on) i++;
+  };
+  cap.pts = [];
+  const poly = left.slice();
+  cap(pts.at(-1), normal(pts.length - 1), -1);
+  poly.push(...cap.pts);
+  cap.pts = [];
+  poly.push(...right.reverse());
+  const n0 = normal(0);
+  cap([pts[0][0], pts[0][1]], [-n0[0], -n0[1]], -1);
+  poly.push(...cap.pts);
+  return poly;
+}
+
+/** A circle as a polygon. */
+function circle(cx, cy, r, steps = 96) {
+  const out = [];
+  for (let k = 0; k < steps; k++) {
+    const a = (k / steps) * 2 * Math.PI;
+    out.push([cx + r * Math.cos(a), cy + r * Math.sin(a)]);
   }
   return out;
 }
 
-/** The letters (LETTERS) as polygons in em units (x right, y down, baseline at 0), and its ink box. */
-function monogram(font) {
-  const polys = [];
-  let x = 0;
-  for (const ch of LETTERS) {
-    const g = font.glyphId(ch.charCodeAt(0));
-    for (const c of font.contours(g))
-      polys.push(flatten(c).map(([px, py]) => [(x + px) / font.unitsPerEm, -py / font.unitsPerEm]));
-    x += font.advance(g) + TRACKING * font.unitsPerEm;
+/** The same winding for every polygon, so overlapping shapes in one layer fill as a union. */
+function clockwise(poly) {
+  let area = 0;
+  for (let i = 0; i < poly.length; i++) {
+    const [ax, ay] = poly[i];
+    const [bx, by] = poly[(i + 1) % poly.length];
+    area += ax * by - bx * ay;
   }
-  let [x0, y0, x1, y1] = [Infinity, Infinity, -Infinity, -Infinity];
-  for (const p of polys)
-    for (const [px, py] of p) {
-      x0 = Math.min(x0, px);
-      x1 = Math.max(x1, px);
-      y0 = Math.min(y0, py);
-      y1 = Math.max(y1, py);
-    }
-  return { polys, box: { x0, y0, x1, y1 } };
+  return area < 0 ? poly.slice().reverse() : poly;
 }
 
-/** The letters placed `width` pixels wide, centred on (cx, cy). */
-function place(mono, width, cx, cy) {
-  const { x0, y0, x1, y1 } = mono.box;
-  const k = width / (x1 - x0);
-  const ox = cx - ((x0 + x1) / 2) * k;
-  const oy = cy - ((y0 + y1) / 2) * k;
-  return mono.polys.map((p) => p.map(([x, y]) => [ox + x * k, oy + y * k]));
+/** The mark's parts, placed on a `size` canvas: icon units scaled by `scale` about the box's centre, then dropped `dy` px. */
+function mark(size, scale, dy = 0) {
+  const cx = (BOX.x0 + BOX.x1) / 2;
+  const cy = (BOX.y0 + BOX.y1) / 2;
+  const k = (size / 1024) * scale;
+  const at = ([x, y]) => [size / 2 + (x - cx) * k, size / 2 + (y - cy) * k + dy];
+  return {
+    line: [clockwise(stroke(centreLine(), STROKE).map(at))],
+    dot: [clockwise(circle(DOT.x, DOT.y, DOT_R).map(at))],
+  };
 }
 
 /** A rounded rectangle as a polygon. */
@@ -253,31 +208,50 @@ function cover(polys, size) {
 const rgb = (hex) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
 
 /**
- * A `size` square of RGBA pixels: `layers` painted in order over a clear (or `bg`) canvas,
- * each {polys, colour}.
+ * A vertical glow from `top` to `bottom`, running between rows `y0` and `y1` (clamped outside),
+ * as a function of the row.
  */
-function paint(size, layers, bg) {
+const glow = (top, bottom, y0, y1) => (y) => {
+  const t = Math.min(1, Math.max(0, (y + 0.5 - y0) / (y1 - y0)));
+  const a = rgb(top);
+  const b = rgb(bottom);
+  return a.map((v, k) => v + (b[k] - v) * t);
+};
+
+/**
+ * A `size` square of RGBA pixels: `layers` painted in order over a clear (or `bg`) canvas, each
+ * {polys, colour, alpha?}. `bg` is a colour or a function of the row (a glow); `clip` (polygons),
+ * if given, then cuts the whole picture to its shape.
+ */
+function paint(size, layers, bg, clip) {
   const px = new Float32Array(size * size * 4);
   if (bg) {
-    const [r, g, b] = rgb(bg);
-    for (let i = 0; i < size * size; i++) {
-      px[i * 4] = r;
-      px[i * 4 + 1] = g;
-      px[i * 4 + 2] = b;
-      px[i * 4 + 3] = 1;
+    for (let y = 0; y < size; y++) {
+      const [r, g, b] = typeof bg === 'function' ? bg(y) : rgb(bg);
+      for (let x = 0; x < size; x++) {
+        const i = y * size + x;
+        px[i * 4] = r;
+        px[i * 4 + 1] = g;
+        px[i * 4 + 2] = b;
+        px[i * 4 + 3] = 1;
+      }
     }
   }
-  for (const { polys, colour } of layers) {
+  for (const { polys, colour, alpha = 1 } of layers) {
     const cov = cover(polys, size);
     const c = rgb(colour);
     for (let i = 0; i < size * size; i++) {
-      const a = Math.min(1, cov[i]);
+      const a = Math.min(1, cov[i]) * alpha;
       if (a <= 0) continue;
       const da = px[i * 4 + 3];
       const oa = a + da * (1 - a);
       for (let k = 0; k < 3; k++) px[i * 4 + k] = (c[k] * a + px[i * 4 + k] * da * (1 - a)) / oa;
       px[i * 4 + 3] = oa;
     }
+  }
+  if (clip) {
+    const cov = cover(clip, size);
+    for (let i = 0; i < size * size; i++) px[i * 4 + 3] *= Math.min(1, cov[i]);
   }
   return px;
 }
@@ -335,29 +309,57 @@ function encodePng(px, size, alpha) {
 
 // ---------- the set ----------
 
+/** The mark's layers on a `size` canvas at `scale`: shadow (optional), noodle, dot. */
+function layers(size, scale, { shadow = true, line = WHITE, dot = MARIGOLD } = {}) {
+  const k = ((size / 1024) * scale) / MARK_SCALE;
+  const m = mark(size, scale);
+  const out = [];
+  if (shadow) {
+    const s = mark(size, scale, SHADOW_DROP * k);
+    out.push({ polys: [...s.line, ...s.dot], colour: SHADOW, alpha: SHADOW_ALPHA });
+  }
+  out.push({ polys: m.line, colour: line }, { polys: m.dot, colour: dot });
+  return out;
+}
+
 /** Every icon and splash image, as {file, size, alpha, px}. */
 function render() {
-  const mono = monogram(readFont(FONT));
-  const square = (size, letters) =>
-    paint(size, [{ polys: place(mono, size * 0.58, size / 2, size / 2), colour: letters }], GREEN);
-  const fg = paint(1024, [{ polys: place(mono, 1024 * 0.4, 512, 512), colour: WHITE }]);
-  // The masthead's monogram: a 30 pt square, radius 4, the letters about 80% of its width.
-  const splash = (bg, ink) =>
-    paint(512, [
-      { polys: roundRect(0, 0, 512, 512, (512 * 4) / 30), colour: bg },
-      { polys: place(mono, 512 * 0.66, 256, 256), colour: ink },
-    ]);
+  const tile = (size) => glow(TILE_TOP, TILE_BOTTOM, 0, size);
+  const square = (size) => paint(size, layers(size, MARK_SCALE), tile(size));
+  // The adaptive layers: 108 dp canvases whose middle 72 dp shows.
+  const view = [1024 / 6, (1024 * 5) / 6];
+  const fg = paint(1024, layers(1024, MARK_SCALE * ADAPTIVE));
+  const mono = paint(1024, layers(1024, MARK_SCALE * ADAPTIVE, { shadow: false, dot: WHITE }));
+  const bg = paint(1024, [], glow(TILE_TOP, TILE_BOTTOM, view[0], view[1]));
+  // The splash: the icon on a rounded tile (the masthead tile's radius, 4/30).
+  const splash = paint(
+    512,
+    layers(512, MARK_SCALE),
+    tile(512),
+    roundRect(0, 0, 512, 512, (512 * 4) / 30),
+  );
   return [
-    { file: 'icon.png', size: 1024, alpha: false, px: square(1024, WHITE) },
-    { file: 'play-store-icon.png', size: 512, alpha: false, px: square(512, WHITE) },
+    { file: 'icon.png', size: 1024, alpha: false, px: square(1024) },
+    { file: 'play-store-icon.png', size: 512, alpha: false, px: square(512) },
+    { file: 'android-icon-background.png', size: 1024, alpha: false, px: bg },
     { file: 'android-icon-foreground.png', size: 1024, alpha: true, px: fg },
-    { file: 'android-icon-monochrome.png', size: 1024, alpha: true, px: fg },
-    { file: 'splash-icon.png', size: 512, alpha: true, px: splash(GREEN, WHITE) },
-    { file: 'splash-icon-dark.png', size: 512, alpha: true, px: splash(GREEN_DARK, INK_DARK) },
+    { file: 'android-icon-monochrome.png', size: 1024, alpha: true, px: mono },
+    { file: 'splash-icon.png', size: 512, alpha: true, px: splash },
+    { file: 'splash-icon-dark.png', size: 512, alpha: true, px: splash },
   ];
 }
 
-module.exports = { render, encodePng, readFont, monogram, cover, GREEN, GREEN_DARK, LETTERS };
+module.exports = {
+  render,
+  encodePng,
+  cover,
+  GREEN,
+  TILE_TOP,
+  TILE_BOTTOM,
+  MARIGOLD,
+  MARK_SCALE,
+  ADAPTIVE,
+};
 
 /** The pixels of a PNG this script wrote (8-bit RGB or RGBA, unfiltered rows), as RGBA bytes. */
 function decodePng(buf) {

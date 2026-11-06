@@ -9,7 +9,12 @@ const { inflateSync } = require('zlib') as { inflateSync: (b: Uint8Array) => Uin
 const { execFileSync } = require('child_process') as {
   execFileSync: (cmd: string, args: string[], o: { encoding: 'utf8' }) => string;
 };
-const icons = require('../make-icons') as { GREEN: string; GREEN_DARK: string; LETTERS: string };
+const icons = require('../make-icons') as {
+  GREEN: string;
+  TILE_TOP: string;
+  TILE_BOTTOM: string;
+  MARIGOLD: string;
+};
 /* eslint-enable @typescript-eslint/no-require-imports */
 
 const read = (rel: string) => readFileSync(`${__dirname}/../../${rel.replace(/^\.\//, '')}`);
@@ -85,38 +90,72 @@ const isColour = (h: string) => {
 
 const GREEN = tokensFor('light').accent;
 
-describe('GIVEN the brand mark', () => {
-  it('THEN the icons’ greens are the app’s own accent, light and dark', () => {
+/** Channel-by-channel closeness of two colours. */
+const near = (a: string, b: string, tol: number) => {
+  const [x, y] = [rgbOf(a), rgbOf(b)];
+  return x.every((v, i) => Math.abs(v - y[i]!) <= tol);
+};
+/** Bright pixels: the white noodle and the marigold dot (red at full), never the greens. */
+const isMark = (r: number, _g: number, _b: number, a: number) => a > 0 && r > 200;
+const isWhite = isColour('#FFFFFF');
+
+describe('GIVEN the brand mark (the noodle n)', () => {
+  it('THEN its greens centre on the app’s own accent, and the dot is the play marigold', () => {
     expect(icons.GREEN).toBe(GREEN);
-    expect(icons.GREEN_DARK).toBe(tokensFor('dark').accent);
+    // The tile's glow runs either side of the house green: its midpoint is the accent.
+    const [t, b] = [rgbOf(icons.TILE_TOP), rgbOf(icons.TILE_BOTTOM)];
+    const mid =
+      '#' +
+      t
+        .map((v, i) =>
+          Math.round((v + b[i]!) / 2)
+            .toString(16)
+            .padStart(2, '0'),
+        )
+        .join('');
+    expect(near(mid, GREEN, 2)).toBe(true);
+    expect(icons.MARIGOLD).toBe(tokensFor('light').play);
   });
 });
 
 describe('GIVEN the app icon', () => {
   describe('WHEN Android draws it as an adaptive icon', () => {
-    it('THEN the letters sit on a clear layer over the house green, with a themed-icon version', () => {
+    it('THEN the mark sits on a clear layer over the green glow, with a themed-icon version', () => {
       const a = appJson.expo.android.adaptiveIcon;
       expect(a.backgroundColor).toBe(GREEN);
+      expect(png(a.backgroundImage)).toEqual({ w: 1024, h: 1024, colour: 2 });
       for (const f of [a.foregroundImage, a.monochromeImage])
         expect(png(f)).toEqual({ w: 1024, h: 1024, colour: 6 });
+      // The background glows from TILE_TOP to TILE_BOTTOM across the visible 72 dp.
+      const bg = pixels(a.backgroundImage);
+      expect(near(hex(bg.at(512, 172)), icons.TILE_TOP, 3)).toBe(true);
+      expect(near(hex(bg.at(512, 852)), icons.TILE_BOTTOM, 3)).toBe(true);
     });
 
-    it('THEN every letter pixel is inside the 66/108 safe circle, so no launcher mask clips it', () => {
-      const p = pixels(appJson.expo.android.adaptiveIcon.foregroundImage);
-      expect(p.at(0, 0)[3]).toBe(0);
-      const box = inkBox(p, (_r, _g, _b, a) => a > 0);
+    it('THEN every mark pixel, shadow included, is inside the 66/108 safe circle with room to spare', () => {
       const r = (1024 * 33) / 108;
-      for (const [x, y] of [
-        [box.x0, box.y0],
-        [box.x1, box.y0],
-        [box.x0, box.y1],
-        [box.x1, box.y1],
-      ])
-        expect(Math.hypot(x! - 512, y! - 512)).toBeLessThan(r);
-      // The letters are a real size, not a speck: about 40% of the canvas wide.
-      expect(box.x1 - box.x0).toBeGreaterThan(1024 * 0.38);
-      // White letters on the clear layer (the D's stem, at mid height).
-      expect(hex(p.at(box.x0 + 8, Math.round((box.y0 + box.y1) / 2)))).toBe('#FFFFFF');
+      for (const f of [
+        appJson.expo.android.adaptiveIcon.foregroundImage,
+        appJson.expo.android.adaptiveIcon.monochromeImage,
+      ]) {
+        const p = pixels(f);
+        expect(p.at(0, 0)[3]).toBe(0);
+        let far = 0;
+        for (let y = 0; y < p.h; y += 2)
+          for (let x = 0; x < p.w; x += 2)
+            if (p.at(x, y)[3]! > 0) far = Math.max(far, Math.hypot(x - 512, y - 512));
+        expect(far).toBeLessThan(r - 20);
+        // A real size, not a speck: the noodle is over 40% of the canvas tall.
+        const box = inkBox(p, isMark);
+        expect(box.y1 - box.y0).toBeGreaterThan(1024 * 0.4);
+      }
+    });
+
+    it('THEN the themed icon is one colour, and the full one has the marigold dot', () => {
+      const mono = pixels(appJson.expo.android.adaptiveIcon.monochromeImage);
+      const fg = pixels(appJson.expo.android.adaptiveIcon.foregroundImage);
+      expect(inkBox(mono, isColour(icons.MARIGOLD)).x1).toBe(-1);
+      expect(inkBox(fg, isColour(icons.MARIGOLD)).x1).toBeGreaterThan(0);
     });
   });
 
@@ -127,41 +166,48 @@ describe('GIVEN the app icon', () => {
       expect(png('assets/images/play-store-icon.png')).toEqual({ w: 512, h: 512, colour: 2 });
     });
 
-    it('THEN they are white DN (Daily Noodle) on the green, with no trace of the old blue', () => {
-      expect(icons.LETTERS).toBe('DN');
+    it('THEN they are the white noodle and marigold dot on the green glow, centred and 73% tall', () => {
       for (const f of ['assets/images/icon.png', 'assets/images/play-store-icon.png']) {
         const p = pixels(f);
-        expect(hex(p.at(0, 0))).toBe(GREEN);
-        expect(hex(p.at(p.w - 1, p.h - 1))).toBe(GREEN);
-        const green = isColour(GREEN);
-        const box = inkBox(p, (r, g, b, a) => !green(r, g, b, a));
-        // DN is wider than tall, centred, and white at its heart (the D's stem).
-        expect(box.x1 - box.x0).toBeGreaterThan((box.y1 - box.y0) * 1.5);
-        expect(Math.abs((box.x0 + box.x1) / 2 - p.w / 2)).toBeLessThan(2);
-        expect(hex(p.at(box.x0 + 8, Math.round((box.y0 + box.y1) / 2)))).toBe('#FFFFFF');
-        const blue = inkBox(p, isColour('#1C46C2'));
-        expect(blue.x1).toBe(-1);
+        // The glow: the top corner is TILE_TOP, the bottom corner TILE_BOTTOM.
+        expect(near(hex(p.at(0, 0)), icons.TILE_TOP, 3)).toBe(true);
+        expect(near(hex(p.at(p.w - 1, p.h - 1)), icons.TILE_BOTTOM, 3)).toBe(true);
+        // The mark: centred both ways, 70–76% of the tile tall, taller than it is wide.
+        const box = inkBox(p, isMark);
+        expect(Math.abs((box.x0 + box.x1) / 2 - p.w / 2)).toBeLessThan(p.w * 0.005);
+        expect(Math.abs((box.y0 + box.y1) / 2 - p.h / 2)).toBeLessThan(p.h * 0.005);
+        expect((box.y1 - box.y0) / p.h).toBeGreaterThan(0.7);
+        expect((box.y1 - box.y0) / p.h).toBeLessThan(0.76);
+        expect(box.y1 - box.y0).toBeGreaterThan(box.x1 - box.x0);
+        // White noodle: the first stroke at mid height.
+        const mid = Math.round((box.y0 + box.y1) / 2);
+        const s = p.w / 1024;
+        expect(hex(p.at(box.x0 + Math.round(40 * s), mid))).toBe('#FFFFFF');
+        // The dot is marigold, and its top is level with the top of the noodle's arch.
+        const dot = inkBox(p, isColour(icons.MARIGOLD));
+        const white = inkBox(p, isWhite);
+        expect(dot.x1).toBeGreaterThan(0);
+        expect(Math.abs(dot.y0 - white.y0)).toBeLessThanOrEqual(Math.ceil(3 * s));
+        expect(inkBox(p, isColour('#1C46C2')).x1).toBe(-1);
       }
     });
   });
 });
 
 describe('GIVEN the splash', () => {
-  it('THEN light and dark each show the masthead’s monogram in that theme’s green', () => {
+  it('THEN light and dark each show the icon on a rounded tile', () => {
     const entry = appJson.expo.plugins.find(
       (p) => Array.isArray(p) && p[0] === 'expo-splash-screen',
     ) as [string, { image: string; dark: { image: string } }];
     const s = entry[1];
-    const light = pixels(s.image);
-    const dark = pixels(s.dark.image);
-    expect(light.at(0, 0)[3]).toBe(0); // the rounded corner is clear
-    expect(hex(light.at(256, 40))).toBe(GREEN);
-    expect(hex(dark.at(256, 40))).toBe(tokensFor('dark').accent);
-    // Light: white letters; dark: the dark theme's ink on its brighter green (onAccent).
-    const lb = inkBox(light, isColour('#FFFFFF'));
-    expect(lb.x1 - lb.x0).toBeGreaterThan(256);
-    const db = inkBox(dark, isColour(tokensFor('dark').onAccent));
-    expect(db.x1 - db.x0).toBeGreaterThan(256);
+    for (const f of [s.image, s.dark.image]) {
+      const p = pixels(f);
+      expect(p.at(0, 0)[3]).toBe(0); // the rounded corner is clear
+      expect(near(hex(p.at(256, 4)), icons.TILE_TOP, 4)).toBe(true);
+      expect(inkBox(p, isWhite).x1).toBeGreaterThan(0);
+      expect(inkBox(p, isColour(icons.MARIGOLD)).x1).toBeGreaterThan(0);
+      expect(inkBox(p, isMark).y1 - inkBox(p, isMark).y0).toBeGreaterThan(512 * 0.7);
+    }
   });
 });
 
