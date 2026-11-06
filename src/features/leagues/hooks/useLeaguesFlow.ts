@@ -1,6 +1,6 @@
 /**
  * Which part of Leagues is showing, as board.html moves between them: the board (or the
- * intro for someone in no league), the start / join / invite / claim / PIN forms, and the
+ * intro for someone in no league), the start / join / invite / claim / nickname forms, and the
  * one-off card at the top of the board after something happened.
  */
 import { BOARD_TYPE } from '@noodle/core';
@@ -17,14 +17,13 @@ export type View =
   | { k: 'code' }
   | { k: 'invite'; code: string; typed?: boolean }
   | { k: 'claim'; code?: string; name?: string; players?: string[]; back?: View }
-  | { k: 'pin'; fresh: boolean };
+  | { k: 'nick' };
 
 export type Notice =
   | { k: 'created'; code: string }
   | { k: 'joined' }
   | { k: 'moved' }
-  | { k: 'claimed'; nick: string }
-  | { k: 'pinSaved' };
+  | { k: 'claimed'; nick: string };
 
 /**
  * Route parameters: an invite's `join` code, `go` straight to a form (or `home`, the
@@ -81,8 +80,6 @@ export function useLeaguesFlow(params: LeaguesParams) {
   const s = useBoardState();
   const [shown, setView] = useState<View>(() => fromParams(params) ?? { k: 'home' });
   const [notice, setNotice] = useState<Notice | null>(null);
-  /** After "Use my link" on a claim that needs a new PIN. */
-  const [needPin, setNeedPin] = useState(false);
 
   // A new invite or shortcut opened while the tab was already showing. The screen clears
   // the params once read, and app taps add `n`, so the same ask again is still new.
@@ -118,8 +115,6 @@ export function useLeaguesFlow(params: LeaguesParams) {
     back: home,
     notice,
     setNotice,
-    needPin,
-    setNeedPin,
   };
 }
 

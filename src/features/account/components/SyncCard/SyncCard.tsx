@@ -1,10 +1,10 @@
-import { readBoard } from '@noodle/core';
+import { BOARD_KEY, readBoard } from '@noodle/core';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 
-import { appStorage, type CachedStorage } from '@/shared/storage';
+import { appStorage, useStoredRaw, type CachedStorage } from '@/shared/storage';
 import { FONT, useTokens } from '@/shared/theme';
 import { Button, TextField } from '@/shared/ui';
 
@@ -12,6 +12,7 @@ import { authClient } from '../../api/authClient';
 import { AccountError, sayAccountError } from '../../hooks/authErrors';
 import { tapId } from '../../hooks/tap';
 import { lastSync, sendLink, signOut, syncNow, useAccount } from '../../hooks/useAccount';
+import { LAST_SYNC_KEY } from '../../hooks/syncEngine';
 import { emailSchema } from '../../schemas/email';
 
 /** Seconds before "Send again" can send another link (Supabase limits sign-in emails). */
@@ -54,6 +55,9 @@ export function SyncCard({
   store?: CachedStorage;
 }) {
   const t = useTokens();
+  // Read through the store's subscriptions, so the card follows a sync as it finishes.
+  useStoredRaw(LAST_SYNC_KEY, store);
+  useStoredRaw(BOARD_KEY, store);
   const account = useAccount(client);
   const [email, setEmail] = useState('');
   const [msg, setMsg] = useState<string | null>(null);

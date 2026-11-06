@@ -890,3 +890,9 @@ Alec ran an outside review of the app and asked for its findings to be checked a
 - **Monday card (Alec's call):** on Mondays the board opens with last week's top three, Share and Close, when at least two players took part. Close lasts the day (`noodle-board-recap-<code>`, a disposable key).
 - **Doku hint:** on an empty board the message line says "Tap a square, then tap letters to fill it", until the first letter is down. Controls are unchanged.
 - **Left, on Alec's call:** Path stays tap by tap; no reminders or iPhone build for now; no widget.
+
+### 6 Nov 2026 — Email replaces PINs, nickname change, Account card (website #74 first)
+
+- **Email only (Alec's call):** no PIN prompts or settings in the app; the sign-in card shows to anyone who hasn't synced. Existing PINs still work on Already in this league?, because 9 of 13 PIN holders have no account, and Let back in covers the rest. The Account screen's Join with a code now opens the code form, not the PIN claim form.
+- **Change nickname:** League settings › You, per league, through `board_set_nick` (migration `board_set_nick`).
+- **Account card:** follows the sync time and any pending choice as they change.

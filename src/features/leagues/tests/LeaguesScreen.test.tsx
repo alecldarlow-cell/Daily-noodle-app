@@ -328,7 +328,7 @@ describe('GIVEN an invite link opened in the app (?join=)', () => {
       expect(screen.getByRole('header', { name: 'Join Family' })).toBeOnTheScreen();
     });
 
-    it('THEN a player let back in without a PIN is asked to set a new one', async () => {
+    it('THEN a player let back in without a PIN is simply back in, with nothing to set', async () => {
       m.boardClaim.mockResolvedValue({
         ok: true,
         player: OTHER,
@@ -346,17 +346,11 @@ describe('GIVEN an invite link opened in the app (?join=)', () => {
       await fireEvent.press(screen.getByRole('radio', { name: 'Ma' }));
       await press('Play as me here');
       await waitFor(() =>
-        expect(screen.getByRole('header', { name: 'Set a new PIN' })).toBeOnTheScreen(),
+        expect(
+          screen.getByRole('header', { name: 'You’re playing as Ma here too' }),
+        ).toBeOnTheScreen(),
       );
-      await type('PIN', '12');
-      await press('Save PIN');
-      expect(screen.getByText('PINs are 4 numbers.')).toBeOnTheScreen();
-      await type('PIN', '2468');
-      await press('Save PIN');
-      await waitFor(() =>
-        expect(screen.getByRole('header', { name: 'PIN saved' })).toBeOnTheScreen(),
-      );
-      expect(m.boardPinSet).toHaveBeenCalledWith(OTHER, '2468');
+      expect(m.boardPinSet).not.toHaveBeenCalled();
     });
   });
 
@@ -542,16 +536,6 @@ describe('GIVEN a player in a league', () => {
       );
       expect(board().leagues).toEqual([]);
     });
-
-    it('THEN without a PIN they are nudged to set one, until Later', async () => {
-      inFamily({ leagues: [{ ...FAMILY, pin: false }] });
-      m.boardMine.mockResolvedValue([mineRow({ ...FAMILY, pin: false })]);
-      await renderWithProviders(<LeaguesScreen />);
-      await waitFor(() => expect(screen.getByTestId('pin-nudge')).toBeOnTheScreen());
-      await press('Later');
-      expect(screen.queryByTestId('pin-nudge')).toBeNull();
-      expect(appStorage.getItem('noodle-board-pinlater')).toBe(today);
-    });
   });
 
   describe('WHEN they open League settings', () => {
@@ -617,11 +601,11 @@ describe('GIVEN a player in a league', () => {
       await waitFor(() => expect(screen.getByText('You’re not in that league.')).toBeOnTheScreen());
     });
 
-    it('THEN “Play somewhere else too?” points to the PIN and sign-in, not a personal link', async () => {
+    it('THEN “Play somewhere else too?” points to sign-in, not a PIN or a personal link', async () => {
       env.EXPO_PUBLIC_SYNC = '1';
       await openSettings();
-      expect(screen.getByText(/pick your nickname and enter your PIN/)).toBeOnTheScreen();
-      expect(screen.getByText(/sign in on Account with your email/)).toBeOnTheScreen();
+      expect(screen.queryByText(/enter your PIN/)).toBeNull();
+      expect(screen.getByText(/Sign in on Account with your email/)).toBeOnTheScreen();
       expect(screen.queryByRole('button', { name: 'Send me my link' })).toBeNull();
       expect(screen.queryByRole('button', { name: 'Paste a link' })).toBeNull();
     });

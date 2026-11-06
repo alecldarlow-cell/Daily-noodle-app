@@ -1,4 +1,5 @@
 /* Polish C: house wording for sign-in failures, a choice left by sync, and a way out of /auth. */
+import { appStorage } from '@/shared/storage';
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import { router } from 'expo-router';
 
@@ -140,10 +141,24 @@ describe('GIVEN the Account tab', () => {
           (c) => c[0] as unknown as { pathname: string; params: { go: string; n: string } },
         );
       expect(asks.map((a) => [a.pathname, a.params.go])).toEqual([
-        ['/leagues', 'claim'],
-        ['/leagues', 'claim'],
+        ['/leagues', 'code'],
+        ['/leagues', 'code'],
       ]);
       expect(asks[0]!.params.n).not.toBe(asks[1]!.params.n);
     });
+  });
+});
+
+describe('GIVEN the Account card after signing in', () => {
+  it('WHEN a sync finishes with the card open THEN it shows the new time without being reopened', async () => {
+    appStorage.removeItem('noodle-app-sync');
+    await render(<SyncCard client={fakeClient({ email: 'a@b.co' }).client} />);
+    await act(async () => {});
+    expect(screen.getByTestId('sync-line')).toHaveTextContent(/^Not synced yet/);
+    await act(async () =>
+      appStorage.setItem('noodle-app-sync', JSON.stringify({ at: Date.now() })),
+    );
+    expect(screen.getByTestId('sync-line')).not.toHaveTextContent(/^Not synced yet/);
+    appStorage.removeItem('noodle-app-sync');
   });
 });

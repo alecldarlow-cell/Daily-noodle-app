@@ -10,7 +10,7 @@ import { FONT, useTokens } from '@/shared/theme';
 import { useLondonDay } from '@/shared/time';
 
 import { isOffline, sayError } from '../api/errors';
-import { hasPin, setLastType, useBoardState } from '../hooks/boardStore';
+import { setLastType, useBoardState } from '../hooks/boardStore';
 import {
   addDays,
   dayMonth,
@@ -62,7 +62,7 @@ const isView = (v: unknown): v is BoardView =>
  */
 const RecordsCtx = createContext<{ recs?: Records; open?: (nick: string) => void }>({});
 
-/** "Later" on the PIN card, for the rest of the London day (the site's key). */
+/** "Later" on the sign-in card, for the rest of the London day (the site's key). */
 const PIN_LATER = 'noodle-board-pinlater';
 /** Set by the first sync, so a player already signed in isn't asked to. */
 const SYNCED_KEY = 'noodle-app-sync';
@@ -227,7 +227,6 @@ function RecapCard({ league, today }: { league: BoardLeague; today: string }) {
 
 /** The one card at the top after something happened, else the PIN nudge (board.html topCard). */
 function TopCard({ flow, league }: { flow: Flow; league: BoardLeague }) {
-  const s = useBoardState();
   const today = useLondonDay();
   const later = useStoredRaw(PIN_LATER) === today;
   const n: Notice | null = flow.notice;
@@ -295,20 +294,11 @@ function TopCard({ flow, league }: { flow: Flow; league: BoardLeague }) {
         </P>
       </Card>
     );
-  if (n?.k === 'pinSaved')
-    return (
-      <Card title="PIN saved" testID="notice-pin">
-        <P>
-          To play as yourself in another browser or app, open the league’s invite link there and tap{' '}
-          <B>Already in this league?</B>
-        </P>
-      </Card>
-    );
   if (isMonday(today) && appStorage.getItem(`noodle-board-recap-${league.code}`) !== today)
     return <RecapCard league={league} today={today} />;
-  // Email sign-in is how leagues follow a player (5 Nov 2026, Alec's call); a PIN stays in
-  // League settings as the fallback, and is the only way in a build without sign-in.
-  if (syncOn() && !hasPin(s) && !later && !appStorage.getItem(SYNCED_KEY))
+  // Email sign-in is how leagues follow a player (Alec's call). A PIN already set still works
+  // on Already in this league?; nobody is asked to set one (6 Nov 2026).
+  if (syncOn() && !later && !appStorage.getItem(SYNCED_KEY))
     return (
       <Card title="Keep your leagues" testID="signin-nudge">
         <P>Sign in with your email and your leagues follow you to another phone or the website.</P>
@@ -317,20 +307,6 @@ function TopCard({ flow, league }: { flow: Flow; league: BoardLeague }) {
             variant="filled"
             label="Sign in on Account"
             onPress={() => router.navigate('/account')}
-          />
-          <Btn label="Later" onPress={() => appStorage.setItem(PIN_LATER, today)} />
-        </Acts>
-      </Card>
-    );
-  if (!syncOn() && !hasPin(s) && !later)
-    return (
-      <Card title="Set a PIN" testID="pin-nudge">
-        <P>Then you can join as yourself from another phone or app.</P>
-        <Acts>
-          <Btn
-            variant="filled"
-            label="Set a PIN"
-            onPress={() => flow.setView({ k: 'pin', fresh: false })}
           />
           <Btn label="Later" onPress={() => appStorage.setItem(PIN_LATER, today)} />
         </Acts>
@@ -613,7 +589,6 @@ function Settings({
   members: number;
 }) {
   const t = useTokens();
-  const s = useBoardState();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState(league.name);
   const [msg, setMsg] = useState<{ text: string; ok?: boolean }>({ text: '' });
@@ -628,7 +603,6 @@ function Settings({
   const leave = useLeaveLeague();
   const owner = useOwnerAction();
   const fail = (e: unknown) => setMsg({ text: sayError(e) });
-  const pin = hasPin(s);
   return (
     <View style={[styles.settings, { borderTopColor: t.hair }]} testID="league-settings">
       <Pressable
@@ -657,13 +631,10 @@ function Settings({
           </Acts>
           <Sub>You</Sub>
           <P>
-            Playing as <B>{league.nick}</B> · PIN {pin ? 'set' : 'not set'}
+            Playing as <B>{league.nick}</B>
           </P>
           <Acts>
-            <Btn
-              label={pin ? 'Change PIN' : 'Set a PIN'}
-              onPress={() => flow.setView({ k: 'pin', fresh: false })}
-            />
+            <Btn label="Change nickname" onPress={() => flow.setView({ k: 'nick' })} />
             <Btn
               variant="tonal"
               destructive
@@ -680,14 +651,10 @@ function Settings({
           </Acts>
           <Sub>Play somewhere else too?</Sub>
           <P>
-            Your leagues are kept in this app. Where else you play, open the league’s invite link,
-            tap <B>Already in this league?</B>, pick your nickname and enter your PIN.
+            {syncOn()
+              ? 'Your leagues are kept in this app. Sign in on Account with your email, and your leagues and streaks follow you.'
+              : 'Your leagues are kept in this app.'}
           </P>
-          {syncOn() ? (
-            <P fine>
-              Or sign in on Account with your email, and your leagues and streaks follow you.
-            </P>
-          ) : null}
           {league.owner ? (
             <>
               <Sub>League name</Sub>
@@ -769,7 +736,7 @@ function Settings({
               ))}
               <P fine>
                 Let back in: for a day, that player can join as themselves from another phone or app
-                without their PIN, then sets a new one.
+                without a PIN.
               </P>
               <Sub>Join code</Sub>
               <P>A new code stops the old link and code working; everyone already in stays in.</P>
