@@ -62,6 +62,14 @@ export function createRecorder(tracker: Tracker, uuid: () => string) {
     screen(path: string): void {
       tracker.pageView(path, pageId(uuid), '');
     },
+    /**
+     * An anonymous event of the app's own screens, as the site's pages send it (6 Nov 2026:
+     * archive_open, archive_play {type, id}, stats_open). Never a nickname, email or player id.
+     */
+    event(ev: string, props: Record<string, unknown>, path: string): void {
+      tracker.track(ev, props, path, pageId(uuid));
+      tracker.flush();
+    },
   };
 }
 

@@ -11,18 +11,27 @@ import {
   View,
 } from 'react-native';
 
+import { useFeatures } from '@/shared/features';
 import { isConnectionError } from '@/shared/net';
 import { openPuzzle, useKept, usePlayed } from '@/shared/played';
 import { useManualRefresh } from '@/shared/query';
 import { FONT, useTokens } from '@/shared/theme';
 import { relDay, useLondonDay } from '@/shared/time';
+import { appRecorder } from '@/shared/track';
 import { Note, PuzzleRow, PuzzleRowSkeleton, refreshColors, Screen } from '@/shared/ui';
 
 import { groupArchive, type DoneFilter } from '../../hooks/groupArchive';
+import { ArchiveCalendar } from '../ArchiveCalendar/ArchiveCalendar';
 import { useArchive } from '../../hooks/useArchive';
 import type { ArchiveItem } from '../../types';
 
 const NO_ITEMS: ArchiveItem[] = [];
+
+type View_ = 'list' | 'calendar';
+const VIEWS: { id: View_; label: string }[] = [
+  { id: 'list', label: 'List' },
+  { id: 'calendar', label: 'Calendar' },
+];
 
 const STATUS: { id: DoneFilter; label: string }[] = [
   { id: 'all', label: 'All' },
@@ -37,6 +46,11 @@ export function ArchiveScreen() {
   const q = useArchive();
   const [type, setType] = useState<PuzzleType | null>(null);
   const [status, setStatus] = useState<DoneFilter>('all');
+  // Alec, 6 Nov 2026: the list stays the default; the month calendar is one tap away.
+  const [chosen, setView] = useState<View_>('list');
+  // features.json's archive switch (Alec, 6 Nov 2026): off hides the calendar, with no app update.
+  const calendarOn = useFeatures().archive;
+  const view: View_ = calendarOn ? chosen : 'list';
   const items = q.data?.items ?? NO_ITEMS;
   const { byId, rounds, held } = usePlayed(items, day);
   // Finished, won or lost, counts as done; started but unfinished does not (as the cards' ✓).
@@ -54,6 +68,31 @@ export function ArchiveScreen() {
     for (const it of items) m[it.id] = it;
     return m;
   }, [items]);
+
+  const renderRow = (item: ArchiveItem) => (
+    <PuzzleRow
+      testID={`archive-${item.id}`}
+      type={item.type}
+      title={item.headline}
+      detail={item.standfirst}
+      mask={item.mask}
+      when={relDay(item.date, day)}
+      read={item.read}
+      played={byId[item.id] ?? null}
+      roundTime={rounds[item.id]?.time}
+      kept={kept.has(item.path)}
+      onHowTo={() => router.push({ pathname: '/how-to-play', params: { type: item.type } })}
+      onPress={() => {
+        appRecorder.event('archive_play', { type: item.type, id: item.id }, 'archive.html');
+        const other = held(item.type, item.id);
+        const o = other ? byIdItem[other] : undefined;
+        openPuzzle(
+          { type: item.type, name: item.headline, path: item.path },
+          other ? { name: o?.headline, path: o?.path } : null,
+        );
+      }}
+    />
+  );
 
   return (
     <Screen title="Archive" testID="archive-screen" scroll={false}>
@@ -97,25 +136,48 @@ export function ArchiveScreen() {
           );
         })}
       </ScrollView>
-      <View
-        style={[styles.seg, { borderColor: t.hair, backgroundColor: t.paper }]}
-        testID="archive-status">
-        {STATUS.map((s) => {
-          const on = s.id === status;
-          return (
-            <Pressable
-              key={s.id}
-              accessibilityRole="button"
-              accessibilityState={{ selected: on }}
-              accessibilityLabel={`Show ${s.label === 'All' ? 'all puzzles' : s.label.toLowerCase()}`}
-              testID={`status-${s.id}`}
-              onPress={() => setStatus(s.id)}
-              style={[styles.segBtn, on && { backgroundColor: t.accentSoft }]}>
-              <Text style={[styles.chipText, { color: on ? t.accent : t.muted }]}>{s.label}</Text>
-            </Pressable>
-          );
-        })}
-      </View>
+      {calendarOn ? (
+        <View
+          style={[styles.seg, { borderColor: t.hair, backgroundColor: t.paper }]}
+          testID="archive-view">
+          {VIEWS.map((v) => {
+            const on = v.id === view;
+            return (
+              <Pressable
+                key={v.id}
+                accessibilityRole="button"
+                accessibilityState={{ selected: on }}
+                accessibilityLabel={`Show as a ${v.label.toLowerCase()}`}
+                testID={`view-${v.id}`}
+                onPress={() => setView(v.id)}
+                style={[styles.segBtn, on && { backgroundColor: t.accentSoft }]}>
+                <Text style={[styles.chipText, { color: on ? t.accent : t.muted }]}>{v.label}</Text>
+              </Pressable>
+            );
+          })}
+        </View>
+      ) : null}
+      {view === 'list' ? (
+        <View
+          style={[styles.seg, { borderColor: t.hair, backgroundColor: t.paper }]}
+          testID="archive-status">
+          {STATUS.map((s) => {
+            const on = s.id === status;
+            return (
+              <Pressable
+                key={s.id}
+                accessibilityRole="button"
+                accessibilityState={{ selected: on }}
+                accessibilityLabel={`Show ${s.label === 'All' ? 'all puzzles' : s.label.toLowerCase()}`}
+                testID={`status-${s.id}`}
+                onPress={() => setStatus(s.id)}
+                style={[styles.segBtn, on && { backgroundColor: t.accentSoft }]}>
+                <Text style={[styles.chipText, { color: on ? t.accent : t.muted }]}>{s.label}</Text>
+              </Pressable>
+            );
+          })}
+        </View>
+      ) : null}
       {q.data && offline ? (
         <Note
           testID="archive-offline-kept"
@@ -137,7 +199,7 @@ export function ArchiveScreen() {
           action={{ label: 'Try again', onPress: refresh }}
         />
       ) : null}
-      {q.data && sections.length === 0 ? (
+      {q.data && view === 'list' && sections.length === 0 ? (
         <Note
           testID="archive-empty"
           title={
@@ -149,49 +211,46 @@ export function ArchiveScreen() {
           }
         />
       ) : null}
-      <SectionList
-        sections={sections}
-        keyExtractor={(it) => it.path}
-        stickySectionHeadersEnabled={false}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={refresh}
-            testID="archive-refresh"
-            {...refreshColors(t)}
-          />
-        }
-        initialNumToRender={20}
-        renderSectionHeader={({ section }) => (
-          <Text accessibilityRole="header" style={[styles.month, { color: t.faint }]}>
-            {section.title}
-          </Text>
-        )}
-        renderItem={({ item }) => (
-          <PuzzleRow
-            testID={`archive-${item.id}`}
-            type={item.type}
-            title={item.headline}
-            detail={item.standfirst}
-            mask={item.mask}
-            when={relDay(item.date, day)}
-            read={item.read}
-            played={byId[item.id] ?? null}
-            roundTime={rounds[item.id]?.time}
-            kept={kept.has(item.path)}
-            onHowTo={() => router.push({ pathname: '/how-to-play', params: { type: item.type } })}
-            onPress={() => {
-              const other = held(item.type, item.id);
-              const o = other ? byIdItem[other] : undefined;
-              openPuzzle(
-                { type: item.type, name: item.headline, path: item.path },
-                other ? { name: o?.headline, path: o?.path } : null,
-              );
-            }}
-          />
-        )}
-        ListFooterComponent={<View style={styles.footer} />}
-      />
+      {view === 'calendar' ? (
+        <ScrollView
+          testID="archive-calendar-scroll"
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={refresh} {...refreshColors(t)} />
+          }>
+          {q.data ? (
+            <ArchiveCalendar
+              items={items}
+              today={day}
+              type={type}
+              finished={finished}
+              renderRow={renderRow}
+            />
+          ) : null}
+          <View style={styles.footer} />
+        </ScrollView>
+      ) : (
+        <SectionList
+          sections={sections}
+          keyExtractor={(it) => it.path}
+          stickySectionHeadersEnabled={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={refresh}
+              testID="archive-refresh"
+              {...refreshColors(t)}
+            />
+          }
+          initialNumToRender={20}
+          renderSectionHeader={({ section }) => (
+            <Text accessibilityRole="header" style={[styles.month, { color: t.faint }]}>
+              {section.title}
+            </Text>
+          )}
+          renderItem={({ item }) => renderRow(item)}
+          ListFooterComponent={<View style={styles.footer} />}
+        />
+      )}
     </Screen>
   );
 }
