@@ -113,3 +113,24 @@ export {
   shareMessage,
 } from './share';
 export { acceptToday, type TodayItem, type TodayList } from './today';
+export {
+  STATS_TYPES,
+  STATS_MIN_SHOW,
+  STATS_MIN_TREND,
+  STATS_MIN_YEAR,
+  readStats,
+  statsRows,
+  statsSummary,
+  statsYearCard,
+  monthName,
+  yearShare,
+  type Saved as StatsSaved,
+  type StatsMode,
+  type StatsRow,
+  type StatsSummary,
+  type StatsOptions,
+  type TypeStats,
+  type SpreadBin,
+  type TrendPoint,
+  type YearCard,
+} from './stats';
