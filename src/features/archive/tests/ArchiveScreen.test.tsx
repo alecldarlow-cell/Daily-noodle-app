@@ -139,13 +139,18 @@ describe('GIVEN no connection', () => {
 
 describe('GIVEN the Archive’s two filters', () => {
   beforeEach(() => mockSite({ 'feed-lite.json': FEED_LITE }));
-  it('THEN the type chips come first and the done switch sits under them', async () => {
+  it('THEN the type chips come first, with List | Calendar and the done switch on one row under them', async () => {
+    // Alec, 6 Nov 2026: the two switches share a row (it wraps at large text).
     await renderWithProviders(<ArchiveScreen />);
     await waitFor(() => expect(screen.getByText('October 2026')).toBeOnTheScreen());
     const chips = screen.getByTestId('archive-chips');
-    const status = screen.getByTestId('archive-status');
+    const row = screen.getByTestId('archive-switches');
     const kids = chips.parent!.children as unknown[];
     expect(kids.indexOf(chips)).toBeGreaterThanOrEqual(0);
-    expect(kids.indexOf(chips)).toBeLessThan(kids.indexOf(status));
+    expect(kids.indexOf(chips)).toBeLessThan(kids.indexOf(row));
+    const inRow = row.children as unknown[];
+    expect(inRow.indexOf(screen.getByTestId('archive-view'))).toBe(0);
+    expect(inRow.indexOf(screen.getByTestId('archive-status'))).toBe(1);
+    expect(row).toHaveStyle({ flexDirection: 'row', flexWrap: 'wrap' });
   });
 });
