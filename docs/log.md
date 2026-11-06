@@ -909,3 +909,10 @@ Alec ran an outside review of the app and asked for its findings to be checked a
 - **Tests proved:** a differential test where the app's stats equal `dn-stats.js` on 150 random save sets, in every mode and on every date. Calendar unit and screen tests, Stats screen tests (read-only, modes, year card and share line, trend and spread labels), the tracker event, and features. `check` is green (1,548 tests) and every replay is green.
 - **Release:** Update production run [42218012726](https://github.com/alecldarlow-cell/Daily-noodle-app/actions/runs/42218012726) published `b5faeb9` at 12:30 London. JS only, 0.3.0 runtime.
 - **Still to do:** not yet seen on a real phone, including the tab icon (`chart.bar` / `bar_chart`), the calendar at large text sizes, and the trend lines drawn with Views.
+
+### 6 Nov 2026 — Stats switched off; Archive switches on one row
+
+- **Stats off** (Alec, after trying them live: they add little for players; he wants this kind of figure in admin, to calibrate puzzles). Website [#78](https://github.com/alecldarlow-cell/dailynoodle/pull/78) sets `features.json` `stats: false`, so the app hides its Stats tab with no update. No code was removed; set it back to `true` to restore.
+- **Archive:** List | Calendar and All / Not done / Done now share one row, wrapping at large text ([#110](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/110), Alec's call from his phone). The layout test was updated to the new structure.
+- **Release:** Update production run [42222260746](https://github.com/alecldarlow-cell/Daily-noodle-app/actions/runs/42222260746) published `47f3ead`. JS only, 0.3.0 runtime.
+- **Needs Alec:** say whether to build an admin Calibration view (per type: times by band, solve rate, outlier puzzles) from the existing `puzzle_end` events.
