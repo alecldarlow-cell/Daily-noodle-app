@@ -964,3 +964,9 @@ Alec ran an outside review of the app and asked for its findings to be checked a
 
 - **What (Alec picked F with the done tick, canvas https://claude.ai/artifact/WLfuqegackgFcJqoncctwT):** the type chips and the two segmented switches are replaced by one row: a picker button (tile or noodle mark, the type's name, ▾) that opens a bottom sheet of tiles (All and each puzzle, names under them); a "✓ Hide done" switch with the finished cards' green tick; and a round calendar button at the end (only when features.json allows the calendar). "Done only" is gone (Alec agreed). Hide done shows on the list only.
 - **Tests proved:** archive suites rewritten for the picker, the sheet (order, selection, scrim closes), Hide done alone and with a type, "All done here", tap sizes ≥ 44 pt, the row's order, calendar toggle and features switch. `check` green.
+
+### 7 Nov 2026 — Account: plain settings switches, Privacy without its sub-line
+
+- **What (Alec):** Settings are three plain on/off switches, Vibration, Sound and Animations, with no descriptions. Animations on = follow the phone (`motion: 'phone'`), off = reduced; the stored settings and key are unchanged. The Privacy row is just "Privacy".
+- **Signed-in card "S1" (Alec picked it 18:53):** one row: a 44 pt round avatar with the email's first letter, the email (one line) with the quiet sync line under it (accent dot, "Synced … · Sync now", error and Leagues-choice variants unchanged), and a small outlined Sign out pill on the right. No tick or "Signed in" heading; the card sits under a "Your account" section label, so the page reads Your account / Settings / Help & privacy.
+- **Tests proved:** AccountScreen (three switches in order, no description text; Animations off/on saves 'reduced'/'phone'; Privacy has no hint or sub-line; "Your account" label only when sign-in exists), SyncCard (avatar letter, one-line email, sync dot and line, outlined Sign out returns to the form). `check` green.

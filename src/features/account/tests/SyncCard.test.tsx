@@ -1,3 +1,4 @@
+import { StyleSheet } from 'react-native';
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
 
 import { ago, RESEND_AFTER_S, SyncCard } from '../components/SyncCard/SyncCard';
@@ -106,15 +107,19 @@ describe('GIVEN a player who isn’t signed in (AF-004, AF-018)', () => {
 });
 
 describe('GIVEN a signed-in player (AF-018, AF-003)', () => {
-  it('THEN “Signed in” is the heading with a tick, the email under it, and one quiet sync line', async () => {
+  it('THEN it is one row: an avatar with the email’s letter, the email, and one quiet sync line under it (S1)', async () => {
     const store = memoryStorage({ 'digi-mini-v1': { v: 1, done: { A: { s: 1 } } } });
     store.setItem(LAST_SYNC_KEY, JSON.stringify({ at: Date.now() - 54 * 60_000 }));
     const { client, calls } = fakeClient({ email: 'alec@example.com' });
     await render(<SyncCard client={client} store={store} />);
     await flush();
-    expect(screen.getByRole('header')).toHaveTextContent('Signed in');
-    expect(screen.getByTestId('sync-tick')).toBeOnTheScreen();
+    // Alec, 7 Nov 2026: no tick or "Signed in" heading; the section label says "Your account".
+    expect(screen.queryByText('Signed in')).toBeNull();
+    expect(screen.queryByTestId('sync-tick')).toBeNull();
+    expect(screen.getByTestId('sync-avatar')).toHaveTextContent('A');
     expect(screen.getByTestId('sync-signed-in')).toHaveTextContent('alec@example.com');
+    expect(screen.getByTestId('sync-signed-in').props.numberOfLines).toBe(1);
+    expect(screen.getByTestId('sync-dot')).toBeOnTheScreen();
     expect(screen.getByTestId('sync-line')).toHaveTextContent(/^Synced 54 min ago ·\s*Sync now$/);
     // Sync now is a text button on that line, not a big button; no delete here.
     expect(screen.getByRole('button', { name: 'Sync now' })).toBeOnTheScreen();
@@ -152,10 +157,15 @@ describe('GIVEN a signed-in player (AF-018, AF-003)', () => {
     expect(ago(now - 3 * 24 * 60 * 60_000, now)).toBe('Synced 3 d ago');
   });
 
-  it('THEN “Sign out” is a secondary button that returns to the sign-in form', async () => {
+  it('THEN “Sign out” is a small outlined pill on the right that returns to the sign-in form', async () => {
     const { client } = fakeClient({ email: 'a@b.co' });
     await render(<SyncCard client={client} store={memoryStorage()} />);
     await flush();
+    const out = screen.getByTestId('sync-signout');
+    expect(StyleSheet.flatten(out.props.style)).toMatchObject({
+      borderWidth: 1,
+      borderRadius: 999,
+    });
     expect(screen.getByTestId('sync-line')).toHaveTextContent(/^Not synced yet ·\s*Sync now$/);
     await act(async () => fireEvent.press(screen.getByRole('button', { name: 'Sign out' })));
     expect(await screen.findByTestId('sync-email')).toBeOnTheScreen();
@@ -172,7 +182,7 @@ describe('GIVEN a signed-in player (AF-018, AF-003)', () => {
     await act(async () => {
       await raw.auth.setSession({ access_token: 'x' });
     });
-    expect(screen.getByRole('header')).toHaveTextContent('Signed in');
+    expect(screen.getByTestId('sync-signed-in')).toBeOnTheScreen();
     await act(async () => fireEvent.press(screen.getByRole('button', { name: 'Sign out' })));
     expect(screen.getByTestId('sync-email')).toBeOnTheScreen();
   });
