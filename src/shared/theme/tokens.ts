@@ -31,6 +31,11 @@ export interface Tokens {
   tileFrame: string;
   tileCell: string;
   tileLock: string;
+  /**
+   * A switch's off track (Alec, 7 Nov 2026: hair was too faint): at least 3:1 against
+   * paper in both schemes, under a white thumb.
+   */
+  switchOff: string;
 }
 
 const light: Tokens = {
@@ -53,6 +58,7 @@ const light: Tokens = {
   tileFrame: '#15171C',
   tileCell: '#FFFFFF',
   tileLock: '#ECF0FC',
+  switchOff: '#80858F',
 };
 
 const dark: Tokens = {
@@ -75,6 +81,7 @@ const dark: Tokens = {
   tileFrame: '#050608',
   tileCell: '#2E3344',
   tileLock: '#3A4466',
+  switchOff: '#6B7186',
 };
 
 /** Tokens for a colour scheme; anything other than 'dark' gets the light set, as the site does. */

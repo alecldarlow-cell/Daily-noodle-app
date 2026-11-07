@@ -985,3 +985,8 @@ Alec ran an outside review of the app and asked for its findings to be checked a
 
 - **What (Alec, from his phone):** Today's cards no longer say "Today"; Archive cards drop "~3 min". Once a puzzle has a result (solved, scored, or "Continue · 1:12"), the result sits right-aligned where How to play was, and How to play goes. Unplayed cards keep How to play. So the rules stay reachable after a game, every finish sheet's footer now has "How to play <Type> ›" (opens /how-to-play at that type), one shared place for all types.
 - **Tests proved:** PuzzleRowLayout (result on the right, no How to play or room for it; How to play spacing for unplayed cards unchanged), PuzzleCard, TodayScreen/TodayRounds (labels without "Today", Continue on the right), ArchiveA8 (Continue on the right, no How to play), finishSheet (How to play link routes with the type). `check` green.
+
+### 7 Nov 2026 — Account: switches with contrast, account card as rows; Archive sheet title
+
+- **What (Alec, from the live 0.4.0 Account tab):** the settings switches' thumb is white and the off track uses a new `switchOff` token (≥ 3:1 against the card in both schemes; `hair` was barely visible). The signed-in card now reads like the page's other cards, label left and action right: avatar and email; **Sync** with "Just now" / "54 min ago" and a round refresh button (labelled "Sync now", 48 pt with slop); **Sign out ›** as a full-width row. Errors, "Choose on Leagues" and Syncing… show in the Sync row as before. Archive's type sheet is titled "Choose a puzzle".
+- **Tests proved:** switch thumb and off-track contrast in both schemes; the card's rows, short times (`agoShort`), refresh button size, Sign out row size and behaviour; sheet title. `check` green.

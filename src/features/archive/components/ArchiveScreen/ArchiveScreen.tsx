@@ -291,7 +291,7 @@ function TypeSheet({
       <View style={[styles.sheet, { backgroundColor: t.paper }]} testID="archive-type-sheet">
         <View style={[styles.grab, { backgroundColor: t.hair }]} />
         <Text accessibilityRole="header" style={[styles.sheetTitle, { color: t.ink }]}>
-          Show puzzles
+          Choose a puzzle
         </Text>
         <View style={styles.grid}>
           {[null, ...PUZZLE_TYPES].map((ty) => {

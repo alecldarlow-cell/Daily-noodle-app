@@ -60,7 +60,7 @@ describe('GIVEN the site’s archive list', () => {
       await waitFor(() => expect(screen.getByText('October 2026')).toBeOnTheScreen());
       expect(screen.getByTestId('archive-type')).toHaveTextContent('All');
       await fireEvent.press(screen.getByTestId('archive-type'));
-      expect(screen.getByRole('header', { name: 'Show puzzles' })).toBeOnTheScreen();
+      expect(screen.getByRole('header', { name: 'Choose a puzzle' })).toBeOnTheScreen();
       const cells = screen.getAllByTestId(/^chip-/).map((c) => c.props.testID as string);
       expect(cells[0]).toBe('chip-all');
       expect(cells).toEqual(expect.arrayContaining(['chip-mini', 'chip-path', 'chip-tally']));

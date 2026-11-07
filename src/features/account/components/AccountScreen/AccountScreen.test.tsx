@@ -8,6 +8,7 @@ import { appStorage } from '@/shared/storage';
 import { tokensFor } from '@/shared/theme';
 
 import { fakeClient, memoryStorage } from '../../tests/fakeClient';
+import { SWITCH_THUMB } from '../SettingsCard/SettingsCard';
 import { AccountScreen, CONTACT_EMAIL, deletionRequestUrl } from './AccountScreen';
 
 jest.mock('expo-router', () => ({ router: { navigate: jest.fn() } }));
@@ -87,6 +88,30 @@ describe('GIVEN the Account tab in a build without sign-in', () => {
         exact: false,
       });
     });
+  });
+});
+
+describe('GIVEN the settings switches (Alec, 7 Nov 2026: they lacked contrast)', () => {
+  const ratio = (a: string, b: string) => {
+    const lum = (h: string) => {
+      const c = [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16) / 255);
+      const l = c.map((x) => (x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4));
+      return 0.2126 * l[0]! + 0.7152 * l[1]! + 0.0722 * l[2]!;
+    };
+    const [x, y] = [lum(a), lum(b)];
+    return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05);
+  };
+
+  it('THEN the thumb is white and the off track stands out from the card (3:1) in both schemes', async () => {
+    await render(<AccountScreen client={null} />);
+    const sw = screen.getByLabelText('Vibration');
+    expect(sw.props.thumbTintColor ?? sw.props.thumbColor).toBe(SWITCH_THUMB);
+    expect(SWITCH_THUMB).toBe('#FFFFFF');
+    for (const s of ['light', 'dark'] as const) {
+      const t = tokensFor(s);
+      expect(ratio(t.switchOff, t.paper)).toBeGreaterThanOrEqual(3);
+      expect(t.switchOff).not.toBe(t.hair);
+    }
   });
 });
 
