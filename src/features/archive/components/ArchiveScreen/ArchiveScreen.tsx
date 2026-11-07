@@ -87,7 +87,6 @@ export function ArchiveScreen() {
       detail={item.standfirst}
       mask={item.mask}
       when={relDay(item.date, day)}
-      read={item.read}
       played={byId[item.id] ?? null}
       roundTime={rounds[item.id]?.time}
       kept={kept.has(item.path)}

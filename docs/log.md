@@ -964,3 +964,8 @@ Alec ran an outside review of the app and asked for its findings to be checked a
 
 - **What (Alec picked F with the done tick, canvas https://claude.ai/artifact/WLfuqegackgFcJqoncctwT):** the type chips and the two segmented switches are replaced by one row: a picker button (tile or noodle mark, the type's name, ▾) that opens a bottom sheet of tiles (All and each puzzle, names under them); a "✓ Hide done" switch with the finished cards' green tick; and a round calendar button at the end (only when features.json allows the calendar). "Done only" is gone (Alec agreed). Hide done shows on the list only.
 - **Tests proved:** archive suites rewritten for the picker, the sheet (order, selection, scrim closes), Hide done alone and with a type, "All done here", tap sizes ≥ 44 pt, the row's order, calendar toggle and features switch. `check` green.
+
+### 7 Nov 2026 — Puzzle cards: tidier meta line, result on the right
+
+- **What (Alec, from his phone):** Today's cards no longer say "Today"; Archive cards drop "~3 min". Once a puzzle has a result (solved, scored, or "Continue · 1:12"), the result sits right-aligned where How to play was, and How to play goes. Unplayed cards keep How to play. So the rules stay reachable after a game, every finish sheet's footer now has "How to play <Type> ›" (opens /how-to-play at that type), one shared place for all types.
+- **Tests proved:** PuzzleRowLayout (result on the right, no How to play or room for it; How to play spacing for unplayed cards unchanged), PuzzleCard, TodayScreen/TodayRounds (labels without "Today", Continue on the right), ArchiveA8 (Continue on the right, no How to play), finishSheet (How to play link routes with the type). `check` green.

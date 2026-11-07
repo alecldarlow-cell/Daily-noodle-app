@@ -101,7 +101,11 @@ describe('GIVEN a Mini left part-way', () => {
     it('THEN that Mini’s card says Continue with its time', async () => {
       await renderWithProviders(<ArchiveScreen />);
       await waitFor(() => expect(screen.getByTestId('archive-DP·MINI·0100')).toBeOnTheScreen());
-      expect(screen.getByTestId('archive-DP·MINI·0100-meta')).toHaveTextContent(/Continue · 1:12$/);
+      expect(screen.getByTestId('archive-DP·MINI·0100-result')).toHaveTextContent(
+        /^Continue · 1:12$/,
+      );
+      // A card with a result has no How to play; the rules are on the finish sheet.
+      expect(screen.queryByTestId('archive-DP·MINI·0100-howto')).toBeNull();
       expect(screen.getByTestId('archive-DP·MINI·0100-mark')).toBeOnTheScreen();
       expect(screen.queryByTestId('archive-DP·MINI·0105-mark')).toBeNull();
     });
