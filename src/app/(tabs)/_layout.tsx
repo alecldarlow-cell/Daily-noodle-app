@@ -8,6 +8,8 @@ import { tokensFor } from '@/shared/theme';
 export default function TabsLayout() {
   const scheme = useColorScheme();
   const t = tokensFor(scheme);
+  // Tab order by use (Alec, 7 Nov 2026): Today, Leagues, Archive, Account; Stats, when on,
+  // sits by the Archive.
   // features.json's stats switch (Alec, 6 Nov 2026): off hides the tab, with no app update.
   const features = useFeatures();
   return (
@@ -16,6 +18,10 @@ export default function TabsLayout() {
         <NativeTabs.Trigger.Label>Today</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon sf="square.grid.2x2" md="grid_view" />
       </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="leagues">
+        <NativeTabs.Trigger.Label>Leagues</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon sf="trophy" md="trophy" />
+      </NativeTabs.Trigger>
       <NativeTabs.Trigger name="archive">
         <NativeTabs.Trigger.Label>Archive</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon sf="calendar" md="calendar_month" />
@@ -23,10 +29,6 @@ export default function TabsLayout() {
       <NativeTabs.Trigger name="stats" hidden={!features.stats}>
         <NativeTabs.Trigger.Label>Stats</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon sf="chart.bar" md="bar_chart" />
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="leagues">
-        <NativeTabs.Trigger.Label>Leagues</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon sf="trophy" md="trophy" />
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="account">
         <NativeTabs.Trigger.Label>Account</NativeTabs.Trigger.Label>
