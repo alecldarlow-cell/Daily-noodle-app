@@ -69,6 +69,13 @@ describe('GIVEN the phone’s colour scheme', () => {
         expect(tokenValues.has(c)).toBe(true);
     });
 
+    it('THEN every tab keeps its label and there is no animated pill, so icons hold still (Alec, 7 Nov 2026)', () => {
+      expect(p.labelVisibilityMode).toBe('labeled');
+      expect(p.disableIndicator).toBe(true);
+      // The chosen tab still shows, by colour.
+      expect(p.iconColor.selected).not.toBe(p.iconColor.default);
+    });
+
     it('THEN the labels are in Archivo, chosen or not', () => {
       expect(p.labelStyle.default.fontFamily).toBe(FONT.sansSemi);
       expect(p.labelStyle.selected.fontFamily).toBe(FONT.sansSemi);

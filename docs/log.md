@@ -964,3 +964,8 @@ Alec ran an outside review of the app and asked for its findings to be checked a
 
 - **What (Alec picked F with the done tick, canvas https://claude.ai/artifact/WLfuqegackgFcJqoncctwT):** the type chips and the two segmented switches are replaced by one row: a picker button (tile or noodle mark, the type's name, ▾) that opens a bottom sheet of tiles (All and each puzzle, names under them); a "✓ Hide done" switch with the finished cards' green tick; and a round calendar button at the end (only when features.json allows the calendar). "Done only" is gone (Alec agreed). Hide done shows on the list only.
 - **Tests proved:** archive suites rewritten for the picker, the sheet (order, selection, scrim closes), Hide done alone and with a type, "All done here", tap sizes ≥ 44 pt, the row's order, calendar toggle and features switch. `check` green.
+
+### 7 Nov 2026 — Tab bar: icons hold still, selection shows at once
+
+- **What (Alec: the chosen icon jumps up and the highlight is slow):** `tabBarProps` sets `labelVisibilityMode: 'labeled'` (every tab keeps its label, so no icon lifts when chosen) and `disableIndicator: true` (no Material pill growing in). The chosen tab shows by colour: accent icon, ink label. Both are props expo-router's NativeTabs passes to the native view at runtime: JS only, no fingerprint change, ships over the air.
+- **Tests proved:** chrome.test (labelled, no indicator, chosen colour differs). `check` green.
