@@ -211,6 +211,16 @@ describe('GIVEN the splash', () => {
   });
 });
 
+describe('GIVEN the masthead mark', () => {
+  it('THEN it is the icon’s noodle on a rounded green tile, 120 px for the 30 pt masthead', () => {
+    const p = pixels('./assets/images/masthead-mark.png');
+    expect(p.at(0, 0)[3]).toBe(0); // the rounded corner is clear
+    expect(near(hex(p.at(60, 2)), icons.TILE_TOP, 6)).toBe(true);
+    expect(inkBox(p, isWhite).x1).toBeGreaterThan(0);
+    expect(inkBox(p, isColour(icons.MARIGOLD)).x1).toBeGreaterThan(0);
+  });
+});
+
 describe('GIVEN scripts/make-icons.js', () => {
   it('THEN the committed images are exactly what it draws (rerun it after changing the mark)', () => {
     // In plain Node: the rasteriser is far slower under Jest's transform.

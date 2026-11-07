@@ -937,3 +937,9 @@ Alec ran an outside review of the app and asked for its findings to be checked a
 - **Build:** EAS production Android build `45e8a37d`, 0.4.0 (version code 7), from main `f6d4e4e` ([#112](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/112)); its fingerprint is `e442790c`, matching `store/runtime.json`.
 - **Play:** Alec uploaded the `.aab`; release 7 (0.4.0) created on the Alpha track with en-GB notes ("A fresh new look: Daily Noodle has a new app icon and splash screen."), 0.3.0 not carried over, 100% rollout, no errors or warnings, no devices lost. Sent for review 7 Nov, about 15:15 London.
 - **Next:** once Google approves it, testers who update get the new icon and the production updates published since the merge.
+
+### 7 Nov 2026 — Archive drops the Today link; masthead carries the noodle n
+
+- **Archive** ([#115](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/115), Alec from his phone): the "Today's puzzles are on the Today tab ›" line above the filters is gone; the tab bar already leads to Today. The AF-030 test now proves the link is absent. The filter rows are unchanged (Alec still deciding whether to fold List/Calendar and Done into a filter button).
+- **Masthead** (Alec: the pages should match the new icon): the green DN monogram drawn in code is replaced by `assets/images/masthead-mark.png`, the launcher icon's noodle n on its rounded green tile, 120 px for the 30 pt box. `scripts/make-icons.js` draws it with the other icons, so `--check` guards it. Not in app.json, so the native fingerprint is unchanged: JS-and-asset only, reaches 0.4.0 by update.
+- **Tests proved:** `Screen.test.tsx` (the mark is the image at 30 pt, no "DN" text), `PuzzleCard.test.tsx` page masthead, `appIcon.test.ts` (masthead mark: clear rounded corner, the glow green, white noodle, marigold dot; matches the script). `check` green (1,550 tests).

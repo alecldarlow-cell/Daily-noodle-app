@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { FONT, useTokens, type Tokens } from '@/shared/theme';
@@ -18,9 +18,12 @@ interface ScreenProps {
   testID?: string;
 }
 
+/** The launcher icon's noodle "n" on its green tile (scripts/make-icons.js draws it). */
+const MARK = require('../../../../assets/images/masthead-mark.png') as number;
+
 /**
- * Largest text sizes for the masthead, which is a logo more than text: the monogram never
- * grows past its 30 pt box (at 2.0 the letters clipped in it), the wordmark grows a little, the
+ * Largest text sizes for the masthead, which is a logo more than text: the mark is an image
+ * fixed at 30 pt and never grows, the wordmark grows a little, the
  * kicker a little more. If the row still doesn't fit (large text, a narrow phone) the kicker
  * wraps under the wordmark, right-aligned, rather than running off the screen.
  */
@@ -32,7 +35,7 @@ export function refreshColors(t: Tokens) {
 }
 
 /**
- * The masthead: the Daily Noodle mark (the launcher icon's green DN tile, drawn in code) and
+ * The masthead: the Daily Noodle mark (the launcher icon's noodle "n", Alec, 7 Nov 2026) and
  * the Daily Noodle wordmark, with the page's name as the kicker on the right, over a 2 pt
  * ink rule (the site's front.css `.mast` layout).
  */
@@ -41,17 +44,13 @@ function Masthead({ title, subtitle }: { title: string; subtitle?: string }) {
   return (
     <View style={[styles.mast, { borderBottomColor: t.ink }]} testID="masthead">
       <View style={styles.brand}>
-        <View
-          style={[styles.mono, { backgroundColor: t.brand }]}
+        <Image
+          source={MARK}
+          style={styles.mono}
           accessible={false}
-          testID="masthead-mark">
-          <Text
-            maxFontSizeMultiplier={MAST_MAX_SCALE.mono}
-            style={[styles.monoText, { color: t.onBrand }]}
-            testID="masthead-mono">
-            DN
-          </Text>
-        </View>
+          resizeMode="contain"
+          testID="masthead-mark"
+        />
         <Text
           maxFontSizeMultiplier={MAST_MAX_SCALE.word}
           numberOfLines={1}
@@ -145,21 +144,7 @@ const styles = StyleSheet.create({
   },
   // The monogram and wordmark keep together; the wordmark shrinks before it would overflow.
   brand: { flexDirection: 'row', alignItems: 'center', gap: 11, flexShrink: 1, maxWidth: '100%' },
-  mono: {
-    width: 30,
-    height: 30,
-    borderRadius: 4,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  // includeFontPadding off and a set line height so "DN" sits in the middle on Android too.
-  monoText: {
-    fontFamily: FONT.displayHeavy,
-    fontSize: 17,
-    lineHeight: 20,
-    letterSpacing: -1,
-    includeFontPadding: false,
-  },
+  mono: { width: 30, height: 30, borderRadius: 4 },
   word: { fontFamily: FONT.displayHeavy, fontSize: 21, letterSpacing: -0.42, flexShrink: 1 },
   kick: { marginLeft: 'auto', alignItems: 'flex-end', flexShrink: 0 },
   kickText: {
