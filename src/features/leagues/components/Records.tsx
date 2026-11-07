@@ -1,15 +1,14 @@
 /* The Records pill and a player's card (board.html renderRecords, renderCard; data: board_records). */
 import { BOARD_TYPES, type BoardLeague, type BoardTypeId } from '@noodle/core';
 import { Fragment, type ReactNode } from 'react';
-import { Pressable, Share, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { FONT, useTokens } from '@/shared/theme';
 
-import { dayMonth, inviteLink, inviteText, result } from '../hooks/boardText';
+import { dayMonth, result } from '../hooks/boardText';
 import {
   byFinished,
   HONOURS,
-  isCrowned,
   leaders,
   playerLine,
   playerMark,
@@ -18,8 +17,6 @@ import {
 } from '../hooks/recordsText';
 import type { Records, RecordsPlayer } from '../types';
 import { Acts, Btn, ROW_INSET_RIGHT, Sub } from './ui';
-
-const share = (message: string) => Share.share({ message }).catch(() => {});
 
 /** A record, honour or player row: mark, title, a line under it, the figure on the right. */
 function RecRow({
@@ -149,7 +146,6 @@ export function RecordsView({
       <Sub>Players</Sub>
       <View style={[styles.rows, { borderTopColor: t.hair }]}>
         {byFinished(d.players).map((p) => {
-          const crown = isCrowned(d, p.nick);
           return (
             <RecRow
               key={p.nick}
@@ -158,7 +154,6 @@ export function RecordsView({
               title={
                 <>
                   {p.nick}
-                  {crown ? ' 👑' : ''}
                   {p.me ? <Text style={[styles.you, { color: t.accent }]}> YOU</Text> : null}
                 </>
               }
@@ -166,7 +161,7 @@ export function RecordsView({
               big={String(p.completed)}
               small="finished"
               me={p.me}
-              label={`${p.nick}${p.me ? ' (you)' : ''}${crown ? ', last week’s champion' : ''}: ${playerLine(p)}, ${p.completed} finished`}
+              label={`${p.nick}${p.me ? ' (you)' : ''}: ${playerLine(p)}, ${p.completed} finished`}
               onPress={() => setCard(p.nick)}
             />
           );
@@ -202,13 +197,6 @@ export function RecordsView({
       )}
 
       <Text style={[styles.how, { color: t.faint }]}>{RECORDS_HOW}</Text>
-      <Acts>
-        <Btn
-          variant="filled"
-          label="Invite people"
-          onPress={() => share(`${inviteText(league.name)}\n${inviteLink(league.code)}`)}
-        />
-      </Acts>
     </View>
   );
 }
@@ -216,15 +204,12 @@ export function RecordsView({
 /** One player's card: their honours, then their best on each puzzle (🏅 where it's the record). */
 function PlayerCard({ d, p, onBack }: { d: Records; p: RecordsPlayer; onBack: () => void }) {
   const t = useTokens();
-  const crown = isCrowned(d, p.nick);
   return (
     <View testID="player-card">
       <Text accessibilityRole="header" style={[styles.cardName, { color: t.ink }]}>
         {p.nick}
-        {crown ? ' 👑' : ''}
         {p.me ? <Text style={[styles.you, { color: t.accent }]}> YOU</Text> : null}
       </Text>
-      {crown ? <Text style={[styles.champ, { color: t.muted }]}>Last week’s champion.</Text> : null}
       <View style={styles.grid}>
         {HONOURS.map((h) => (
           <View

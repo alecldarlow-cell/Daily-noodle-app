@@ -56,4 +56,4 @@ export const RECORDS_HOW =
   'Records count finished puzzles only; on a tie, whoever set it first keeps it. A daily win needs at least one ' +
   'other player to have finished that puzzle, and a weekly title (the All puzzles week) at least two players. A perfect day is every ' +
   'puzzle that day finished; a clean sweep is a perfect day winning all of them. A streak is days in a row with a puzzle finished. ' +
-  '👑 marks last week’s champion. Tap a name to see their card.';
+  'Tap a name to see their card.';

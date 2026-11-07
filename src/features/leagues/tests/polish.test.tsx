@@ -2,7 +2,7 @@
 import { londonDay } from '@noodle/core';
 import { act, fireEvent, screen, waitFor } from '@testing-library/react-native';
 import { useLocalSearchParams } from 'expo-router';
-import { Alert, RefreshControl, type RefreshControlProps } from 'react-native';
+import { Alert } from 'react-native';
 
 import { QueryProvider } from '@/shared/query';
 import { renderWithProviders } from '@/shared/testing';
@@ -10,7 +10,7 @@ import { renderWithProviders } from '@/shared/testing';
 import * as api from '../api/board';
 import { BoardError } from '../api/errors';
 import { fetchPuzzleCards } from '../api/feed';
-import { LeaguesScreen } from '../components/LeaguesScreen/LeaguesScreen';
+import { AUTO_REFRESH_MS, LeaguesScreen } from '../components/LeaguesScreen/LeaguesScreen';
 import { leaguesParams } from '../hooks/useLeaguesFlow';
 import { board, clearStore, FAMILY, mineRow, OTHER, overall, PID, setBoard } from './helpers';
 
@@ -87,7 +87,8 @@ describe('GIVEN the owner of two leagues with League settings open', () => {
       await waitFor(() => expect(screen.getByTestId('overall-board')).toBeOnTheScreen());
       await switchTo(FAMILY.code);
       await waitFor(() => expect(board().cur).toBe(FAMILY.code));
-      await press('⚙︎ League settings');
+      await fireEvent.press(screen.getByTestId('league-picker'));
+      await fireEvent.press(screen.getByTestId('menu-settings'));
       expect(screen.getByLabelText('League name')).toHaveDisplayValue('Family');
       await switchTo(WORK.code);
       await waitFor(() => expect(board().cur).toBe(WORK.code));
@@ -107,28 +108,62 @@ describe('GIVEN a player in a league', () => {
     m.boardMine.mockResolvedValue([mineRow()]);
   };
 
-  describe('WHEN they pull to refresh', () => {
-    it('THEN the board is asked for again as well as the leagues, with the spinner held till it’s back', async () => {
+  // Alec, 7 Nov 2026: no pull-to-refresh (it fired on swipes); the tab refreshes itself.
+  describe('WHEN the Leagues tab is showing', () => {
+    it('THEN there is no pull-to-refresh', async () => {
       inFamily();
-      await renderWithProviders(<LeaguesScreen />);
+      await renderWithProviders(<LeaguesScreen focused />);
+      await waitFor(() => expect(screen.getByTestId('overall-board')).toBeOnTheScreen());
+      expect(screen.queryByTestId('leagues-screen-refresh')).toBeNull();
+    });
+
+    it('THEN every minute in view it asks for the leagues and the board again, and stops when the tab is left', async () => {
+      jest.useFakeTimers();
+      try {
+        inFamily();
+        const view = await renderWithProviders(<LeaguesScreen focused />);
+        await waitFor(() => expect(screen.getByTestId('overall-board')).toBeOnTheScreen());
+        const boards = m.boardOverall.mock.calls.length;
+        const lists = m.boardMine.mock.calls.length;
+        await act(async () => jest.advanceTimersByTime(AUTO_REFRESH_MS));
+        await waitFor(() => expect(m.boardOverall.mock.calls.length).toBe(boards + 1));
+        expect(m.boardMine.mock.calls.length).toBeGreaterThan(lists);
+        await act(async () =>
+          view.rerender(
+            <QueryProvider client={view.client}>
+              <LeaguesScreen focused={false} />
+            </QueryProvider>,
+          ),
+        );
+        const after = m.boardOverall.mock.calls.length;
+        await act(async () => jest.advanceTimersByTime(AUTO_REFRESH_MS * 2));
+        expect(m.boardOverall.mock.calls.length).toBe(after);
+      } finally {
+        jest.useRealTimers();
+      }
+    });
+
+    it('THEN coming back to the tab asks again at once (not on its first showing)', async () => {
+      inFamily();
+      const view = await renderWithProviders(<LeaguesScreen focused />);
       await waitFor(() => expect(screen.getByTestId('overall-board')).toBeOnTheScreen());
       const boards = m.boardOverall.mock.calls.length;
-      const lists = m.boardMine.mock.calls.length;
-      let release!: () => void;
-      m.boardOverall.mockImplementationOnce(
-        () => new Promise((r) => (release = () => r(overall()))),
+      expect(boards).toBe(1);
+      await act(async () =>
+        view.rerender(
+          <QueryProvider client={view.client}>
+            <LeaguesScreen focused={false} />
+          </QueryProvider>,
+        ),
       );
-      // React Native's test stand-in for RefreshControl keeps the one on screen.
-      const pull = () =>
-        (RefreshControl as unknown as { latestRef: { props: RefreshControlProps } }).latestRef;
-      expect(pull().props.refreshing).toBe(false);
-      await act(async () => pull().props.onRefresh!());
-      expect(pull().props.refreshing).toBe(true);
+      await act(async () =>
+        view.rerender(
+          <QueryProvider client={view.client}>
+            <LeaguesScreen focused />
+          </QueryProvider>,
+        ),
+      );
       await waitFor(() => expect(m.boardOverall.mock.calls.length).toBe(boards + 1));
-      expect(m.boardMine.mock.calls.length).toBeGreaterThan(lists);
-      await act(async () => release());
-      await waitFor(() => expect(pull().props.refreshing).toBe(false));
-      expect(screen.getByTestId('overall-board')).toBeOnTheScreen();
     });
   });
 
@@ -165,7 +200,8 @@ describe('GIVEN a player in a league', () => {
       m.boardLeave.mockRejectedValue(new TypeError('Network request failed at fetch'));
       await renderWithProviders(<LeaguesScreen />);
       await waitFor(() => expect(screen.getByTestId('overall-board')).toBeOnTheScreen());
-      await press('⚙︎ League settings');
+      await fireEvent.press(screen.getByTestId('league-picker'));
+      await fireEvent.press(screen.getByTestId('menu-settings'));
       await press('Leave league');
       await waitFor(() =>
         expect(screen.getByText('Something went wrong. Please try again.')).toBeOnTheScreen(),

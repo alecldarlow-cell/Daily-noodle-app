@@ -484,7 +484,7 @@ describe('GIVEN a player in a league', () => {
       // Alec, 7 Nov 2026: who hasn't played, on one line.
       expect(screen.getByTestId('board-notes')).toHaveTextContent('Not played yet: Piers');
       // Earlier days sit behind one tap (Alec, 7 Nov 2026): the arrows step puzzles.
-      await press('Earlier days');
+      await fireEvent.press(screen.getByTestId('pager-day-btn'));
       expect(screen.getByRole('button', { name: 'Next day' })).toBeDisabled();
       await press('Previous day');
       await waitFor(() =>
@@ -546,7 +546,8 @@ describe('GIVEN a player in a league', () => {
       inFamily();
       await renderWithProviders(<LeaguesScreen />);
       await waitFor(() => expect(screen.getByTestId('overall-board')).toBeOnTheScreen());
-      await press('⚙︎ League settings');
+      await fireEvent.press(screen.getByTestId('league-picker'));
+      await fireEvent.press(screen.getByTestId('menu-settings'));
     }
 
     it('THEN the owner can rename, let a player back in, remove, renew the code and close', async () => {
@@ -821,7 +822,8 @@ describe('GIVEN the button rule on Leagues (AF-019)', () => {
       inFamily();
       await renderWithProviders(<LeaguesScreen />);
       await waitFor(() => expect(screen.getByTestId('overall-board')).toBeOnTheScreen());
-      await press('⚙︎ League settings');
+      await fireEvent.press(screen.getByTestId('league-picker'));
+      await fireEvent.press(screen.getByTestId('menu-settings'));
       const t = tokensFor('light');
       const leave = StyleSheet.flatten(
         screen.getByRole('button', { name: 'Leave league' }).props.style,

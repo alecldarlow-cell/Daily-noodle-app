@@ -1,6 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { useLocalSearchParams, useNavigation } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, Text } from 'react-native';
 
 import { FONT, useTokens } from '@/shared/theme';
@@ -15,12 +15,20 @@ import { ClaimForm, CodeForm, InviteForm, Intro, PendCard, NickForm, StartForm }
 
 const CLEARED = { join: undefined, go: undefined, p: undefined, d: undefined, n: undefined };
 
+/** While the tab is in view, the league list and the boards showing refresh this often. */
+export const AUTO_REFRESH_MS = 60_000;
+
 /**
  * Leagues: the player's daily boards, or an intro inviting them to start or join one.
  * Opened with `?join=<code>` (an invite), `?go=claim|start|code|home`, or `?p=<type>&d=<day>`
  * (a puzzle's board on a day, as board.html; the finish sheet's "See today's board").
  */
-export function LeaguesScreen() {
+export function LeaguesScreen({
+  focused = false,
+}: {
+  /** The tab is in view (the route's focus effect): refresh on return, then every minute. */
+  focused?: boolean;
+} = {}) {
   const t = useTokens();
   const params = useLocalSearchParams<{
     join?: string;
@@ -44,15 +52,24 @@ export function LeaguesScreen() {
     if (ask) navigation.setParams(CLEARED as never);
   }, [ask, navigation]);
 
-  // Pull to refresh: the league list and every board showing, with the spinner held
-  // until they're back.
-  const [refreshing, setRefreshing] = useState(false);
-  const refresh = () => {
-    setRefreshing(true);
-    void Promise.all([mine.refetch(), qc.invalidateQueries({ queryKey: BOARD_QUERY })]).finally(
-      () => setRefreshing(false),
-    );
-  };
+  // Alec, 7 Nov 2026: no pull-to-refresh (it fired when he swiped the pager). Instead the
+  // league list and every board showing refresh when the tab comes back into view (not on
+  // its first showing, which is fetching already) and every minute while it stays in view.
+  const [settings, setSettings] = useState(false);
+  const shownOnce = useRef(false);
+  useEffect(() => {
+    if (!focused) return;
+    const refresh = () => {
+      void mine.refetch();
+      void qc.invalidateQueries({ queryKey: BOARD_QUERY });
+    };
+    if (shownOnce.current) refresh();
+    shownOnce.current = true;
+    const id = setInterval(refresh, AUTO_REFRESH_MS);
+    return () => clearInterval(id);
+    // mine.refetch is stable for the query's life; qc is the app's one client.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focused]);
 
   let body;
   if (view.k === 'start') body = <StartForm flow={flow} />;
@@ -80,9 +97,15 @@ export function LeaguesScreen() {
             league={league}
             leagues={leagues}
             onClose={() => setMenu(false)}
+            onSettings={() => setSettings(true)}
           />
         ) : null}
-        <Board flow={flow} league={league} />
+        <Board
+          flow={flow}
+          league={league}
+          settingsOpen={settings}
+          onSettingsClose={() => setSettings(false)}
+        />
       </>
     );
   else body = <Intro flow={flow} />;
@@ -97,13 +120,14 @@ export function LeaguesScreen() {
           <LeagueKicker league={league} open={menu} onPress={() => setMenu((m) => !m)} />
         ) : undefined
       }
-      testID="leagues-screen"
-      onRefresh={refresh}
-      refreshing={refreshing}>
+      testID="leagues-screen">
       {body}
-      <Text style={[styles.foot, { color: t.faint }]}>
-        Private leagues for friends and family. Only people in a league see its board.
-      </Text>
+      {/* On a board the footer is gone (Alec, 7 Nov 2026: the board was crowded). */}
+      {onBoard ? null : (
+        <Text style={[styles.foot, { color: t.faint }]} testID="leagues-foot">
+          Private leagues for friends and family. Only people in a league see its board.
+        </Text>
+      )}
     </Screen>
   );
 }
