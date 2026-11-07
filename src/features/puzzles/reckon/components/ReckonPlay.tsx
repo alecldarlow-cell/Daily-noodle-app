@@ -264,7 +264,7 @@ export function ReckonPlay({ state, c, dispatch }: Props) {
           onDrag={onDrag}
           onStep={(d) => dispatch({ t: 'nudge', d })}
         />
-        <View style={styles.ctl}>
+        <View style={styles.ctl} testID="reckon-ctl">
           {v.guessing ? (
             <Pressable
               accessibilityRole="button"
@@ -423,7 +423,9 @@ const styles = StyleSheet.create({
   rvTwo: { fontSize: 44, lineHeight: 50, letterSpacing: -0.5 },
   ru: { fontFamily: FONT.sansSemi, fontSize: 20, letterSpacing: 0 },
   tip: { marginHorizontal: 16, borderRadius: 12, padding: 12, fontFamily: FONT.sans, fontSize: 15 },
-  ctl: { flexDirection: 'row', gap: 12, paddingHorizontal: 16, alignItems: 'center' },
+  // 8 pt more between the scale's label strip and − / Lock in / + (7 Nov 2026): with the
+  // band in ReckonSlider, 44 pt of inert space separates the track band from the buttons.
+  ctl: { flexDirection: 'row', gap: 12, paddingHorizontal: 16, alignItems: 'center', marginTop: 8 },
   nb: {
     width: 56,
     height: 52,
