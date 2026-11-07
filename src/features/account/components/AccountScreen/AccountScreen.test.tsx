@@ -24,41 +24,66 @@ beforeEach(() => {
 
 describe('GIVEN the Account tab in a build without sign-in', () => {
   describe('WHEN it opens', () => {
-    it('THEN it shows Settings, Leagues and Privacy & data, then the version, and no sign-in', async () => {
+    it('THEN it shows Settings and Help & privacy, then the version: no sign-in, no Leagues card', async () => {
       await render(<AccountScreen client={null} />);
       expect(screen.getByRole('header', { name: 'Account' })).toBeOnTheScreen();
       expect(screen.queryByTestId('sync-card')).toBeNull();
-      for (const name of ['Settings', 'Leagues', 'Privacy & data'])
+      for (const name of ['Settings', 'Help & privacy'])
         expect(screen.getByRole('header', { name })).toBeOnTheScreen();
-      expect(screen.getByText(/In a league already\? Join with your league’s code\./));
-      expect(screen.queryByText(/Sign in above/)).toBeNull();
-      // Nothing synced, no account: neither data row.
+      // Alec, 7 Nov 2026: joining a league is on Leagues only.
+      expect(screen.queryByRole('header', { name: 'Leagues' })).toBeNull();
+      expect(screen.queryByRole('button', { name: 'Join with a code' })).toBeNull();
+      // Nothing synced, no account: no delete row.
       expect(screen.queryByTestId('account-delete')).toBeNull();
-      expect(screen.queryByTestId('account-request-deletion')).toBeNull();
       expect(screen.getByTestId('account-build')).toHaveTextContent(buildLine());
+    });
+
+    it('THEN Help & privacy is one card: How to play, Privacy, Contact us, in that order', async () => {
+      await render(<AccountScreen client={null} />);
+      const card = screen.getByTestId('account-help-card');
+      const links = within(card)
+        .getAllByRole('link')
+        .map((l) => l.props.accessibilityLabel);
+      expect(links).toEqual(['How to play', 'Privacy', 'Contact us']);
     });
   });
 
-  describe('WHEN someone already in a league taps “Join with a code”', () => {
-    it('THEN Leagues opens on its join form', async () => {
+  describe('WHEN the player taps How to play', () => {
+    it('THEN the guide opens inside the app, at the top', async () => {
       await render(<AccountScreen client={null} />);
-      expect(screen.getByRole('header', { name: 'Join a league' })).toBeOnTheScreen();
-      await fireEvent.press(screen.getByRole('button', { name: 'Join with a code' }));
-      expect(router.navigate).toHaveBeenCalledWith({
-        pathname: '/leagues',
-        params: { go: 'code', n: expect.any(String) },
-      });
+      await fireEvent.press(screen.getByRole('link', { name: 'How to play' }));
+      expect(router.navigate).toHaveBeenCalledWith('/how-to-play');
     });
   });
 
   describe('WHEN the player taps the privacy row (AF-001)', () => {
-    it('THEN it reads “how to change it”, and the privacy page opens inside the app', async () => {
+    it('THEN it says “how to change it”, and the privacy page opens inside the app', async () => {
       await render(<AccountScreen client={null} />);
-      await fireEvent.press(
-        screen.getByRole('link', { name: 'Privacy: what’s recorded and how to change it' }),
-      );
+      const row = screen.getByRole('link', { name: 'Privacy' });
+      expect(row.props.accessibilityHint).toBe('What’s recorded and how to change it');
+      await fireEvent.press(row);
       expect(router.navigate).toHaveBeenCalledWith('/privacy');
       expect(screen.queryByText(/how to stop it/)).toBeNull();
+    });
+  });
+
+  describe('WHEN the player taps Contact us', () => {
+    it('THEN an email to us opens', async () => {
+      const open = jest.spyOn(Linking, 'openURL').mockResolvedValue(undefined);
+      await render(<AccountScreen client={null} />);
+      await act(async () => fireEvent.press(screen.getByRole('link', { name: 'Contact us' })));
+      expect(open).toHaveBeenCalledWith(`mailto:${CONTACT_EMAIL}`);
+      expect(screen.queryByTestId('account-mail-failed')).toBeNull();
+    });
+
+    it('THEN with no email app, it gives the address instead', async () => {
+      jest.spyOn(Linking, 'openURL').mockRejectedValue(new Error('no handler'));
+      await render(<AccountScreen client={null} />);
+      await act(async () => fireEvent.press(screen.getByRole('link', { name: 'Contact us' })));
+      await flush();
+      expect(screen.getByTestId('account-mail-failed')).toHaveTextContent(CONTACT_EMAIL, {
+        exact: false,
+      });
     });
   });
 });
@@ -113,17 +138,16 @@ describe('GIVEN the app-wide settings on Account (AF-012)', () => {
 });
 
 describe('GIVEN a signed-out player in a build with sign-in', () => {
-  it('THEN the Leagues card points to signing in above, not a PIN', async () => {
+  it('THEN Delete my data offers only the account request: there is no saved copy to delete', async () => {
     const { client } = fakeClient();
     await render(<AccountScreen client={client} store={memoryStorage()} />);
     await flush();
-    expect(
-      screen.getByText('In a league already? Sign in above with the same email.'),
-    ).toBeOnTheScreen();
-    expect(screen.getByRole('button', { name: 'Join with a code' })).toBeOnTheScreen();
-    // Nothing to delete while signed out; an account can still be asked to be deleted.
-    expect(screen.queryByTestId('account-delete')).toBeNull();
+    await act(async () => fireEvent.press(screen.getByRole('button', { name: 'Delete my data' })));
+    expect(screen.getByRole('header', { name: 'Delete your account' })).toBeOnTheScreen();
+    expect(screen.queryByTestId('delete-confirm')).toBeNull();
     expect(screen.getByTestId('account-request-deletion')).toBeOnTheScreen();
+    await act(async () => fireEvent.press(screen.getByRole('button', { name: 'Cancel' })));
+    expect(screen.getByRole('header', { name: 'Settings' })).toBeOnTheScreen();
   });
 });
 
@@ -142,23 +166,20 @@ describe('GIVEN a signed-in player', () => {
     return r;
   };
 
-  it('THEN the Leagues card is “Join a league” with its short line', async () => {
-    await signedIn();
-    expect(screen.getByText('Got an invite code? Join here.')).toBeOnTheScreen();
-    expect(screen.queryByText(/Already a player/)).toBeNull();
-  });
-
-  describe('WHEN they open “Delete my saved data”', () => {
+  describe('WHEN they open “Delete my data”', () => {
     it('THEN it is a plain row, and the confirm screen says what goes and what stays', async () => {
       await signedIn();
-      const row = screen.getByRole('button', { name: 'Delete my saved data' });
+      const row = screen.getByRole('button', { name: 'Delete my data' });
       // A plain row in ink, not a red control.
-      expect(flat(within(row).getByText('Delete my saved data')).color).toBe(light.ink);
+      expect(flat(within(row).getByText('Delete my data')).color).toBe(light.ink);
       await act(async () => fireEvent.press(row));
       expect(screen.getByRole('header', { name: 'Delete your saved data?' })).toBeOnTheScreen();
       expect(screen.getByTestId('delete-goes')).toHaveTextContent(/kept for alec@example\.com/);
       expect(screen.getByTestId('delete-goes')).toHaveTextContent(/signed out/);
       expect(screen.getByTestId('delete-stays')).toHaveTextContent(/Everything on this phone/);
+      // Both kinds of deleting, each saying what it does.
+      expect(screen.getByRole('header', { name: 'Delete your account' })).toBeOnTheScreen();
+      expect(screen.getByTestId('delete-account-says')).toHaveTextContent(/sign-in email/);
       const del = screen.getByRole('button', { name: 'Delete' });
       // Red, and never the filled accent.
       expect(flat(del).backgroundColor).toBe(light.badSoft);
@@ -169,7 +190,7 @@ describe('GIVEN a signed-in player', () => {
     it('THEN Cancel goes back and deletes nothing', async () => {
       const { remote } = await signedIn();
       await act(async () =>
-        fireEvent.press(screen.getByRole('button', { name: 'Delete my saved data' })),
+        fireEvent.press(screen.getByRole('button', { name: 'Delete my data' })),
       );
       await act(async () => fireEvent.press(screen.getByRole('button', { name: 'Cancel' })));
       expect(screen.getByRole('header', { name: 'Settings' })).toBeOnTheScreen();
@@ -179,7 +200,7 @@ describe('GIVEN a signed-in player', () => {
     it('THEN Delete removes the synced copy, signs out, and says what happened', async () => {
       const { remote, raw } = await signedIn();
       await act(async () =>
-        fireEvent.press(screen.getByRole('button', { name: 'Delete my saved data' })),
+        fireEvent.press(screen.getByRole('button', { name: 'Delete my data' })),
       );
       await act(async () => fireEvent.press(screen.getByRole('button', { name: 'Delete' })));
       await flush();
@@ -194,7 +215,7 @@ describe('GIVEN a signed-in player', () => {
     it('THEN a failure stays on the confirm screen and says why in the house’s words', async () => {
       const { raw } = await signedIn({ fail: 'TypeError: Network request failed' });
       await act(async () =>
-        fireEvent.press(screen.getByRole('button', { name: 'Delete my saved data' })),
+        fireEvent.press(screen.getByRole('button', { name: 'Delete my data' })),
       );
       await act(async () => fireEvent.press(screen.getByRole('button', { name: 'Delete' })));
       await flush();
@@ -209,7 +230,10 @@ describe('GIVEN a signed-in player', () => {
       const open = jest.spyOn(Linking, 'openURL').mockResolvedValue(undefined);
       await signedIn();
       await act(async () =>
-        fireEvent.press(screen.getByRole('link', { name: 'Request account deletion' })),
+        fireEvent.press(screen.getByRole('button', { name: 'Delete my data' })),
+      );
+      await act(async () =>
+        fireEvent.press(screen.getByRole('button', { name: 'Request account deletion' })),
       );
       const url = open.mock.calls[0]![0];
       expect(url).toBe(deletionRequestUrl('alec@example.com'));
@@ -224,7 +248,10 @@ describe('GIVEN a signed-in player', () => {
       jest.spyOn(Linking, 'openURL').mockRejectedValue(new Error('no handler'));
       await signedIn();
       await act(async () =>
-        fireEvent.press(screen.getByRole('link', { name: 'Request account deletion' })),
+        fireEvent.press(screen.getByRole('button', { name: 'Delete my data' })),
+      );
+      await act(async () =>
+        fireEvent.press(screen.getByRole('button', { name: 'Request account deletion' })),
       );
       await flush();
       expect(screen.getByTestId('account-mail-failed')).toHaveTextContent(CONTACT_EMAIL, {
