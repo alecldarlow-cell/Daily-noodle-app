@@ -45,15 +45,19 @@ export function SettingsCard({ store = appStorage }: { store?: CachedStorage }) 
             testID={`set-${r.key}`}
             value={r.on}
             onValueChange={(on) => void saveSettings(r.set(on), store)}
-            trackColor={{ true: t.accent, false: t.hair }}
-            thumbColor={t.paper}
-            ios_backgroundColor={t.hair}
+            // Alec, 7 Nov 2026: a white thumb, and an off track that stands out from the card.
+            trackColor={{ true: t.accent, false: t.switchOff }}
+            thumbColor={SWITCH_THUMB}
+            ios_backgroundColor={t.switchOff}
           />
         </View>
       ))}
     </Card>
   );
 }
+
+/** The switches' thumb: white in both schemes, so on and off both read clearly. */
+export const SWITCH_THUMB = '#FFFFFF';
 
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: TAP, paddingVertical: 8 },

@@ -1,7 +1,7 @@
 import { StyleSheet } from 'react-native';
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
 
-import { ago, RESEND_AFTER_S, SyncCard } from '../components/SyncCard/SyncCard';
+import { ago, agoShort, RESEND_AFTER_S, SyncCard } from '../components/SyncCard/SyncCard';
 import { LAST_SYNC_KEY } from '../hooks/syncEngine';
 import { fakeClient, memoryStorage } from './fakeClient';
 
@@ -107,28 +107,29 @@ describe('GIVEN a player who isn’t signed in (AF-004, AF-018)', () => {
 });
 
 describe('GIVEN a signed-in player (AF-018, AF-003)', () => {
-  it('THEN it is one row: an avatar with the email’s letter, the email, and one quiet sync line under it (S1)', async () => {
+  // Alec, 7 Nov 2026 (second pass): label on the left, action on the right, as the page's
+  // other cards: the avatar and email; Sync with when it ran and a refresh button; Sign out ›.
+  it('THEN it reads as rows: avatar and email, then Sync with its time and a refresh button', async () => {
     const store = memoryStorage({ 'digi-mini-v1': { v: 1, done: { A: { s: 1 } } } });
     store.setItem(LAST_SYNC_KEY, JSON.stringify({ at: Date.now() - 54 * 60_000 }));
     const { client, calls } = fakeClient({ email: 'alec@example.com' });
     await render(<SyncCard client={client} store={store} />);
     await flush();
-    // Alec, 7 Nov 2026: no tick or "Signed in" heading; the section label says "Your account".
     expect(screen.queryByText('Signed in')).toBeNull();
-    expect(screen.queryByTestId('sync-tick')).toBeNull();
     expect(screen.getByTestId('sync-avatar')).toHaveTextContent('A');
     expect(screen.getByTestId('sync-signed-in')).toHaveTextContent('alec@example.com');
     expect(screen.getByTestId('sync-signed-in').props.numberOfLines).toBe(1);
-    expect(screen.getByTestId('sync-dot')).toBeOnTheScreen();
-    expect(screen.getByTestId('sync-line')).toHaveTextContent(/^Synced 54 min ago ·\s*Sync now$/);
-    // Sync now is a text button on that line, not a big button; no delete here.
-    expect(screen.getByRole('button', { name: 'Sync now' })).toBeOnTheScreen();
+    expect(screen.getByTestId('sync-line')).toHaveTextContent(/^Sync\s*54 min ago$/);
+    // The refresh button is round, labelled for screen readers, and 48 pt to tap with its slop.
+    const now = screen.getByRole('button', { name: 'Sync now' });
+    const st = StyleSheet.flatten(now.props.style);
+    expect(st).toMatchObject({ width: 36, height: 36 });
+    expect(36 + 2 * (now.props.hitSlop as number)).toBeGreaterThanOrEqual(48);
     expect(screen.queryByText(/Delete/)).toBeNull();
     await act(async () => fireEvent.press(screen.getByTestId('sync-now')));
     expect(calls.map((c) => c.fn)).toEqual(['sync_pull_rev', 'sync_push_rev']);
-    // One status only: no second “Up to date.” line.
     expect(screen.queryByText('Up to date.')).toBeNull();
-    expect(screen.getByTestId('sync-line')).toHaveTextContent(/^Synced just now ·\s*Sync now$/);
+    expect(screen.getByTestId('sync-line')).toHaveTextContent(/^Sync\s*Just now$/);
   });
 
   it('THEN while it syncs the line says so', async () => {
@@ -147,7 +148,7 @@ describe('GIVEN a signed-in player (AF-018, AF-003)', () => {
     expect(screen.getByTestId('sync-progress')).toHaveTextContent('Syncing…');
     await act(async () => release());
     await flush();
-    expect(screen.getByTestId('sync-line')).toHaveTextContent(/^Synced just now ·\s*Sync now$/);
+    expect(screen.getByTestId('sync-line')).toHaveTextContent(/^Sync\s*Just now$/);
   });
 
   it('THEN older syncs read in hours and days', async () => {
@@ -155,19 +156,22 @@ describe('GIVEN a signed-in player (AF-018, AF-003)', () => {
     const now = Date.now();
     expect(ago(now - 180 * 60_000, now)).toBe('Synced 3 h ago');
     expect(ago(now - 3 * 24 * 60 * 60_000, now)).toBe('Synced 3 d ago');
+    // The row's short form drops "Synced ".
+    expect(agoShort(null)).toBe('Not synced yet');
+    expect(agoShort(now - 20_000, now)).toBe('Just now');
+    expect(agoShort(now - 180 * 60_000, now)).toBe('3 h ago');
   });
 
-  it('THEN “Sign out” is a small outlined pill on the right that returns to the sign-in form', async () => {
+  it('THEN “Sign out” is a full-width row with a chevron, 48 pt+, that returns to the sign-in form', async () => {
     const { client } = fakeClient({ email: 'a@b.co' });
     await render(<SyncCard client={client} store={memoryStorage()} />);
     await flush();
-    const out = screen.getByTestId('sync-signout');
-    expect(StyleSheet.flatten(out.props.style)).toMatchObject({
-      borderWidth: 1,
-      borderRadius: 999,
-    });
-    expect(screen.getByTestId('sync-line')).toHaveTextContent(/^Not synced yet ·\s*Sync now$/);
-    await act(async () => fireEvent.press(screen.getByRole('button', { name: 'Sign out' })));
+    const out = screen.getByRole('button', { name: 'Sign out' });
+    const st = StyleSheet.flatten(out.props.style) as { minHeight: number; borderTopWidth: number };
+    expect(st.minHeight).toBeGreaterThanOrEqual(48);
+    expect(st.borderTopWidth).toBeGreaterThan(0);
+    expect(screen.getByTestId('sync-line')).toHaveTextContent(/^Sync\s*Not synced yet$/);
+    await act(async () => fireEvent.press(out));
     expect(await screen.findByTestId('sync-email')).toBeOnTheScreen();
     expect(screen.getByRole('header')).toHaveTextContent('Sign in or create an account');
   });

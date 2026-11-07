@@ -6,7 +6,7 @@ import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-nati
 
 import { appStorage, useStoredRaw, type CachedStorage } from '@/shared/storage';
 import { FONT, useTokens } from '@/shared/theme';
-import { Button, TextField } from '@/shared/ui';
+import { Button, Chevron, TAP, TextField } from '@/shared/ui';
 
 import { authClient } from '../../api/authClient';
 import { AccountError, sayAccountError } from '../../hooks/authErrors';
@@ -27,12 +27,33 @@ export function ago(at: number | null, now = Date.now()): string {
   return h < 24 ? `Synced ${h} h ago` : `Synced ${Math.round(h / 24)} d ago`;
 }
 
-/** A green disc with a white tick: the signed-in state's mark, drawn from views. */
+/** The sync row's status: ago() without its leading "Synced " ("Just now", "54 min ago"). */
+export function agoShort(at: number | null, now = Date.now()): string {
+  const s = ago(at, now).replace(/^Synced /, '');
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+/** A circular arrow (refresh), drawn from views: the app has no icon font. */
+function RefreshGlyph({ color }: { color: string }) {
+  return (
+    <View style={styles.glyph} accessible={false} importantForAccessibility="no">
+      <View
+        style={[
+          styles.arc,
+          { borderColor: color, borderTopColor: 'transparent', transform: [{ rotate: '45deg' }] },
+        ]}
+      />
+      <View style={[styles.head, { borderBottomColor: color }]} />
+    </View>
+  );
+}
+
 /**
  * Optional sign-in, so streaks and leagues follow the player to another phone or the
- * website (tracker AF-018, AF-003, AF-004). Signed out it offers the email link; signed in
- * it is a status (S1, Alec 7 Nov 2026): an avatar with the email's first letter, the email,
- * a quiet sync line under it, and a small outlined Sign out on the right.
+ * website (tracker AF-018, AF-003, AF-004). Signed out it offers the email link. Signed in
+ * (Alec, 7 Nov 2026) it reads like the page's other cards, label on the left and the action
+ * on the right: the avatar and email; Sync with when it last ran and a refresh button; then
+ * Sign out with a chevron.
  * Hidden when the build has sync off.
  */
 export function SyncCard({
@@ -187,9 +208,36 @@ export function SyncCard({
 
   // Signed in: a status, not a form.
   const doSync = () => act('sync', () => syncNow(store, client));
-  const line =
-    busy === 'sync' ? null : msg ? (
+  const right =
+    busy === 'sync' ? (
       <>
+        <ActivityIndicator color={t.muted} size="small" />
+        <Text style={[styles.small, { color: t.faint }]} testID="sync-progress">
+          Syncing…
+        </Text>
+      </>
+    ) : msg || waiting ? null : (
+      <>
+        <Text style={[styles.small, { color: t.faint }]} testID="sync-last">
+          {agoShort(lastSync(store))}
+        </Text>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Sync now"
+          hitSlop={6}
+          onPress={() => void doSync()}
+          testID="sync-now"
+          style={({ pressed }) => [
+            styles.round,
+            { borderColor: t.hair, backgroundColor: pressed ? t.accentSoft : 'transparent' },
+          ]}>
+          <RefreshGlyph color={t.ink} />
+        </Pressable>
+      </>
+    );
+  const note =
+    busy === 'sync' ? null : msg ? (
+      <View style={styles.note}>
         <Text
           style={[styles.small, { color: t.bad }]}
           testID="sync-msg"
@@ -197,9 +245,9 @@ export function SyncCard({
           {msg}
         </Text>
         <Button variant="text" label="Try again" onPress={() => doSync()} testID="sync-now" />
-      </>
+      </View>
     ) : waiting ? (
-      <>
+      <View style={styles.note}>
         <Text style={[styles.small, { color: t.ink }]} testID="sync-waiting">
           Your account plays in other leagues than this phone.
         </Text>
@@ -211,19 +259,12 @@ export function SyncCard({
             router.navigate({ pathname: '/leagues', params: { go: 'home', n: tapId() } })
           }
         />
-      </>
-    ) : (
-      <>
-        <Text style={[styles.small, { color: t.faint }]} testID="sync-last">
-          {ago(lastSync(store))} ·
-        </Text>
-        <Button variant="text" label="Sync now" onPress={() => doSync()} testID="sync-now" />
-      </>
-    );
+      </View>
+    ) : null;
 
   return (
     <View
-      style={[styles.card, { backgroundColor: t.paper, borderColor: t.hair }]}
+      style={[styles.list, { backgroundColor: t.paper, borderColor: t.hair }]}
       testID="sync-card">
       <View style={styles.me}>
         <View
@@ -235,52 +276,43 @@ export function SyncCard({
             {(account.email[0] ?? '?').toUpperCase()}
           </Text>
         </View>
-        <View style={styles.who}>
-          <Text
-            style={[styles.email, { color: t.ink }]}
-            numberOfLines={1}
-            ellipsizeMode="tail"
-            testID="sync-signed-in"
-            selectable>
-            {account.email}
-          </Text>
-          <View style={styles.line} testID="sync-line">
-            {busy === 'sync' ? (
-              <>
-                <ActivityIndicator color={t.muted} size="small" />
-                <Text style={[styles.small, { color: t.faint }]} testID="sync-progress">
-                  Syncing…
-                </Text>
-              </>
-            ) : (
-              <>
-                {!msg && !waiting ? (
-                  <View style={[styles.dot, { backgroundColor: t.accent }]} testID="sync-dot" />
-                ) : null}
-                {line}
-              </>
-            )}
-          </View>
-        </View>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Sign out"
-          accessibilityState={{ disabled: busy === 'sync' || busy === 'signout' }}
-          disabled={busy === 'sync' || busy === 'signout'}
-          hitSlop={6}
-          onPress={() => void act('signout', () => signOut(client))}
-          testID="sync-signout"
-          style={({ pressed }) => [
-            styles.out,
-            { borderColor: t.hair, backgroundColor: pressed ? t.accentSoft : 'transparent' },
-          ]}>
-          {busy === 'signout' ? (
-            <ActivityIndicator color={t.muted} size="small" />
-          ) : (
-            <Text style={[styles.outText, { color: t.ink }]}>Sign out</Text>
-          )}
-        </Pressable>
+        <Text
+          style={[styles.email, { color: t.ink }]}
+          numberOfLines={1}
+          ellipsizeMode="tail"
+          testID="sync-signed-in"
+          selectable>
+          {account.email}
+        </Text>
       </View>
+      <View style={[styles.rule, { borderTopColor: t.hair }]} testID="sync-line">
+        <View style={styles.item}>
+          <Text style={[styles.label, { color: t.ink }]}>Sync</Text>
+          <View style={styles.right}>{right}</View>
+        </View>
+        {note}
+      </View>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Sign out"
+        accessibilityState={{ disabled: busy === 'sync' || busy === 'signout' }}
+        disabled={busy === 'sync' || busy === 'signout'}
+        onPress={() => void act('signout', () => signOut(client))}
+        testID="sync-signout"
+        style={({ pressed }) => [
+          styles.item,
+          styles.rule,
+          styles.press,
+          { borderTopColor: t.hair },
+          pressed ? { backgroundColor: t.accentSoft } : null,
+        ]}>
+        <Text style={[styles.label, { color: t.ink }]}>Sign out</Text>
+        {busy === 'signout' ? (
+          <ActivityIndicator color={t.muted} size="small" />
+        ) : (
+          <Chevron color={t.faint} />
+        )}
+      </Pressable>
     </View>
   );
 }
@@ -291,7 +323,9 @@ const styles = StyleSheet.create({
   p: { fontFamily: FONT.body, fontSize: 15, lineHeight: 22 },
   small: { fontFamily: FONT.body, fontSize: 13.5, lineHeight: 19, flexShrink: 1 },
   row: { flexDirection: 'row', gap: 8, flexWrap: 'wrap', alignItems: 'center' },
-  me: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  // Signed in: the page's list-card shape (AccountParts Card and Row).
+  list: { borderWidth: 1, borderRadius: 12, paddingHorizontal: 16 },
+  me: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12 },
   avatar: {
     width: 44,
     height: 44,
@@ -300,23 +334,36 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   avatarText: { fontFamily: FONT.displayHeavy, fontSize: 19 },
-  who: { flex: 1, minWidth: 0 },
-  email: { fontFamily: FONT.bodySemi, fontSize: 16, lineHeight: 21 },
-  line: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flexWrap: 'wrap',
-    columnGap: 2,
-    minHeight: 36,
-  },
-  dot: { width: 7, height: 7, borderRadius: 3.5, marginRight: 4 },
-  out: {
-    minHeight: 36,
-    paddingHorizontal: 14,
+  email: { flex: 1, minWidth: 0, fontFamily: FONT.bodySemi, fontSize: 16, lineHeight: 21 },
+  rule: { borderTopWidth: StyleSheet.hairlineWidth },
+  item: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: TAP + 4 },
+  // The whole Sign out row is the button, its press tint running to the card's edges.
+  press: { marginHorizontal: -16, paddingHorizontal: 16 },
+  label: { flex: 1, fontFamily: FONT.bodySemi, fontSize: 15.5, lineHeight: 21 },
+  right: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  note: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', paddingBottom: 8 },
+  // A 36 pt round button, 48 to tap with its slop.
+  round: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     borderWidth: 1,
-    borderRadius: 999,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  outText: { fontFamily: FONT.bodySemi, fontSize: 13.5 },
+  glyph: { width: 16, height: 16 },
+  arc: { position: 'absolute', inset: 1, borderWidth: 2, borderRadius: 8 },
+  head: {
+    position: 'absolute',
+    top: -1,
+    right: 0,
+    width: 0,
+    height: 0,
+    borderLeftWidth: 4,
+    borderRightWidth: 4,
+    borderBottomWidth: 5,
+    borderLeftColor: 'transparent',
+    borderRightColor: 'transparent',
+    transform: [{ rotate: '45deg' }],
+  },
 });

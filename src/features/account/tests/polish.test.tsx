@@ -142,11 +142,11 @@ describe('GIVEN the Account card after signing in', () => {
     appStorage.removeItem('noodle-app-sync');
     await render(<SyncCard client={fakeClient({ email: 'a@b.co' }).client} />);
     await act(async () => {});
-    expect(screen.getByTestId('sync-line')).toHaveTextContent(/^Not synced yet/);
+    expect(screen.getByTestId('sync-line')).toHaveTextContent(/Not synced yet/);
     await act(async () =>
       appStorage.setItem('noodle-app-sync', JSON.stringify({ at: Date.now() })),
     );
-    expect(screen.getByTestId('sync-line')).not.toHaveTextContent(/^Not synced yet/);
+    expect(screen.getByTestId('sync-line')).not.toHaveTextContent(/Not synced yet/);
     appStorage.removeItem('noodle-app-sync');
   });
 });
