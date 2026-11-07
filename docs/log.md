@@ -954,3 +954,8 @@ Alec ran an outside review of the app and asked for its findings to be checked a
 
 - **What (Alec chose A from the canvas https://claude.ai/artifact/WLfuqegackgFcJqoncctwT):** the emoji chip row is gone. Under the league name, a pager: ‹ [puzzle tile] Mini 119 / Today · Sat 7 Nov ›. The arrows (44 pt) and a sideways swipe on the board step All puzzles → Mini → Doku … → Tally; a row of dots under it shows where you are, each a tap straight there. On a puzzle's board a line says your place overall today and this week ("Today overall 3rd · 12 pts · Week 3rd · 52 pts"). The date arrows hide behind an "Earlier days" link (then "Back to today"); Records is a "🏅 League records" link beside it. All puzzles and Records show the noodle mark; puzzles their tile from Today/Archive. Share texts keep their emoji.
 - **Tests proved:** controls.test (pager stops and order, arrows step and stop at the ends, 44 pt targets, swipe thresholds, the puzzle's headline in the pager, the You line, Earlier days / Back to today, ordinals), LeaguesScreen and records suites updated to reach days and Records the new way. `check` green (1,556 tests).
+
+### 7 Nov 2026 — Tab order: Today, Leagues, Archive, Account
+
+- Alec: order the tabs by use. Leagues moves to second, before Archive (Stats, when switched on, sits after Archive). `scripts/tests/tabOrder.test.ts` pins the order. `check` green (1,557 tests). JS only.
+- Archive filter options mocked (D tile chips + filter button, E icon strip, F one picker with a sheet) on the canvas https://claude.ai/artifact/WLfuqegackgFcJqoncctwT; waiting on Alec's pick.
