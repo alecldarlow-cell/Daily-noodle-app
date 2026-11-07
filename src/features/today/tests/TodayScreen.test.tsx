@@ -39,17 +39,17 @@ describe('GIVEN the site has published today’s list', () => {
       await renderWithProviders(<TodayScreen />);
       await waitFor(() => expect(screen.getByTestId('today-reckon')).toBeOnTheScreen());
       const cards = screen.getAllByRole('button', {
-        name: /^(Mini 105|Doku 103|Sweep 100|Path 98|Link 77|Tangle 18|Borders 20|Reckon 5), Today$/,
+        name: /^(Mini 105|Doku 103|Sweep 100|Path 98|Link 77|Tangle 18|Borders 20|Reckon 5)$/,
       });
       expect(cards.map((c) => c.props.accessibilityLabel)).toEqual([
-        'Mini 105, Today',
-        'Doku 103, Today',
-        'Sweep 100, Today',
-        'Path 98, Today',
-        'Link 77, Today',
-        'Tangle 18, Today',
-        'Borders 20, Today',
-        'Reckon 5, Today',
+        'Mini 105',
+        'Doku 103',
+        'Sweep 100',
+        'Path 98',
+        'Link 77',
+        'Tangle 18',
+        'Borders 20',
+        'Reckon 5',
       ]);
       expect(screen.getAllByText('How to play')).toHaveLength(8);
       expect(screen.getByTestId('today-count')).toHaveTextContent('8 puzzles');

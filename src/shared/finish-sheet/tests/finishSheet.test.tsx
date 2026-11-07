@@ -24,7 +24,7 @@ import {
   toMidnight,
 } from '../rules';
 
-jest.mock('expo-router', () => ({ router: { dismissTo: jest.fn() } }));
+jest.mock('expo-router', () => ({ router: { dismissTo: jest.fn(), push: jest.fn() } }));
 
 const played = (Audio as unknown as { __played: unknown[] }).__played;
 const jingles = () => played.filter((f) => f === SOUND_FILES.jingle).length;
@@ -348,6 +348,36 @@ describe('GIVEN a result with a unit (splitHero)', () => {
       expect(splitHero('1 point')).toEqual(['1', 'point']);
       expect(splitHero('1:27')).toEqual(['1:27', '']);
       expect(splitHero('7 of 10')).toEqual(['7 of 10', '']);
+    });
+  });
+});
+
+// Alec, 7 Nov 2026: a played card shows its result where How to play was, so the rules sit here.
+describe('GIVEN any finished puzzle', () => {
+  describe('WHEN its finish sheet shows', () => {
+    it('THEN its footer has How to play for that type, opening the guide at its section', async () => {
+      mockSite({});
+      await renderWithProviders(
+        <FinishSheet
+          type="mini"
+          n="105"
+          date="2026-10-24"
+          title="Solved"
+          hero="1:27"
+          share="Mini 105 1:27"
+          stats={[{ value: 1, label: 'day streak' }]}
+          boardSlot={<Text>board</Text>}
+          onBack={jest.fn()}
+          onNext={jest.fn()}
+        />,
+      );
+      const link = screen.getByRole('link', { name: 'How to play Mini' });
+      expect(link).toHaveTextContent('How to play Mini');
+      await fireEvent.press(link);
+      expect(router.push).toHaveBeenCalledWith({
+        pathname: '/how-to-play',
+        params: { type: 'mini' },
+      });
     });
   });
 });

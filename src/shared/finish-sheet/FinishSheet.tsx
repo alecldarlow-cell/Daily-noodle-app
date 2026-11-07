@@ -261,6 +261,20 @@ export function FinishSheet(props: FinishSheetProps) {
           <Text style={[styles.day, { color: soft }]}>
             {`${TYPE_LABEL[type]} ${n}, ${longDate(date)}`}
           </Text>
+          {/* Alec, 7 Nov 2026: a played card shows its result where How to play was, so the
+              rules live here, after the game, for every type. */}
+          <Pressable
+            accessibilityRole="link"
+            accessibilityLabel={`How to play ${TYPE_LABEL[type]}`}
+            hitSlop={10}
+            onPress={() => router.push({ pathname: '/how-to-play', params: { type } })}
+            style={pressable(styles.howTo)}
+            testID="finish-howto">
+            <Text style={[styles.howToText, { color: pt.ink }]}>
+              How to play {TYPE_LABEL[type]}
+            </Text>
+            <Chevron color={soft} size={7} />
+          </Pressable>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -318,4 +332,13 @@ const styles = StyleSheet.create({
   clock: { fontSize: 14, lineHeight: 21, fontFamily: FONT.sans },
   day: { fontSize: 13, lineHeight: 19, fontFamily: FONT.sans },
   bold: { fontFamily: FONT.sansSemi },
+  howTo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    alignSelf: 'flex-start',
+    minHeight: 44,
+    marginTop: 6,
+  },
+  howToText: { fontSize: 15, fontFamily: FONT.sansSemi },
 });
