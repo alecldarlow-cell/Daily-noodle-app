@@ -13,7 +13,6 @@ const row = () => (
     type="mini"
     title="Mini 105"
     when="Yesterday"
-    read="~3 min"
     played={null}
     onPress={() => undefined}
     onHowTo={() => undefined}
@@ -60,7 +59,7 @@ describe('GIVEN a card with “How to play” beside its meta line', () => {
       expect(metaRow().paddingRight).toBeUndefined();
       // room below for the whole link, so it sits under the meta line, not on it
       expect(metaRow().paddingBottom).toBe(52);
-      expect(screen.getByTestId('r-meta')).toHaveTextContent('Yesterday  ·  ~3 min');
+      expect(screen.getByTestId('r-meta')).toHaveTextContent(/^Yesterday$/);
     });
   });
 
