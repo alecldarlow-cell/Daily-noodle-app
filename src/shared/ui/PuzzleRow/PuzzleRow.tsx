@@ -14,7 +14,7 @@ interface PuzzleRowProps {
   detail?: string;
   /** The tile's grid (feed-lite `mask`); picture types and older cards have none. */
   mask?: string;
-  /** "Today", "Yesterday" or a short date: the meta line's first word. */
+  /** "Yesterday" or a short date: the meta line's first word (none on Today, Alec 7 Nov 2026). */
   when?: string;
   /** Reading time ("~3 min"), shown until the puzzle is played. */
   read?: string;
@@ -50,7 +50,9 @@ export function howToRoom(bodyWidth: number, howToWidth: number, howToHeight: nu
 /**
  * One puzzle as the site's front-page card (front.css `.card`, front.js `card`): the
  * 96 pt preview tile with a played mark on its corner, the headline, the standfirst, and
- * a meta line of when · result (or reading time), with "How to play" at its end.
+ * a meta line of when (and reading time) with "How to play" at its end. Once there is a
+ * result (Alec, 7 Nov 2026), the result takes How to play's place on the right; How to play
+ * is then on the puzzle's finish sheet.
  */
 export function PuzzleRow({
   type,
@@ -79,7 +81,9 @@ export function PuzzleRow({
   const time = played && !played.done ? roundTime : undefined;
   const offline = kept ? 'Downloaded' : undefined;
   const label = [title, result ?? when, time, offline?.toLowerCase()].filter(Boolean).join(', ');
-  const meta = [when, result ?? read, time, offline].filter((s): s is string => !!s);
+  const meta = [when, result ? undefined : read, offline].filter((s): s is string => !!s);
+  const right = result ? [result, time].filter(Boolean).join(' · ') : null;
+  const howToShown = !!onHowTo && !result;
   const resultColour = played?.done
     ? played.lost
       ? t.muted
@@ -126,9 +130,9 @@ export function PuzzleRow({
             />
           ) : null}
           <View
-            style={[styles.meta, onHowTo ? howToRoom(bodyW, howTo.w, howTo.h) : null]}
+            style={[styles.meta, howToShown ? howToRoom(bodyW, howTo.w, howTo.h) : null]}
             testID={testID ? `${testID}-metarow` : undefined}>
-            {/* One line: "Yesterday · Solved in 1:20" shrinks a touch to fit beside How to play
+            {/* One line: "Yesterday · Downloaded" shrinks a touch to fit beside How to play
                 rather than breaking in two (seen at a large text size on a Pixel). */}
             <Text
               style={styles.metaItem}
@@ -139,20 +143,26 @@ export function PuzzleRow({
               {meta.map((m, i) => (
                 <Text key={i}>
                   {i > 0 ? <Text style={{ color: t.hair }}>{'  ·  '}</Text> : null}
-                  <Text
-                    style={[
-                      { color: m === result ? resultColour : t.faint },
-                      m === result && !(played?.done && played.lost) ? styles.resultText : null,
-                    ]}>
-                    {m}
-                  </Text>
+                  <Text style={{ color: t.faint }}>{m}</Text>
                 </Text>
               ))}
             </Text>
+            {right ? (
+              <Text
+                numberOfLines={1}
+                style={[
+                  styles.result,
+                  { color: resultColour },
+                  !(played?.done && played.lost) ? styles.resultText : null,
+                ]}
+                testID={testID ? `${testID}-result` : undefined}>
+                {right}
+              </Text>
+            ) : null}
           </View>
         </View>
       </Pressable>
-      {onHowTo ? (
+      {howToShown ? (
         <Pressable
           accessibilityRole="link"
           accessibilityLabel={`How to play ${title.replace(/\s*\d+$/, '')}`}
@@ -190,6 +200,8 @@ const styles = StyleSheet.create({
   meta: { flexDirection: 'row', alignItems: 'center', marginTop: 9, minHeight: 24 },
   metaItem: { flexShrink: 1, fontFamily: FONT.bodySemi, fontSize: 12 },
   resultText: { fontFamily: FONT.bodyBold },
+  // The result, right-aligned where How to play sits on an unplayed card.
+  result: { marginLeft: 'auto', paddingLeft: 8, fontFamily: FONT.bodySemi, fontSize: 12 },
   howTo: {
     position: 'absolute',
     right: 0,

@@ -13,7 +13,8 @@ const row = () => (
     type="mini"
     title="Mini 105"
     when="Yesterday"
-    played={{ done: true, lost: false, text: 'Solved in 2:03' }}
+    read="~3 min"
+    played={null}
     onPress={() => undefined}
     onHowTo={() => undefined}
   />
@@ -59,7 +60,7 @@ describe('GIVEN a card with “How to play” beside its meta line', () => {
       expect(metaRow().paddingRight).toBeUndefined();
       // room below for the whole link, so it sits under the meta line, not on it
       expect(metaRow().paddingBottom).toBe(52);
-      expect(screen.getByTestId('r-meta')).toHaveTextContent('Yesterday  ·  Solved in 2:03');
+      expect(screen.getByTestId('r-meta')).toHaveTextContent('Yesterday  ·  ~3 min');
     });
   });
 
@@ -73,9 +74,40 @@ describe('GIVEN a card with “How to play” beside its meta line', () => {
     });
   });
 
+  // Alec, 7 Nov 2026: once played, the result takes How to play's place on the right.
+  describe('WHEN the card has a result', () => {
+    it('THEN the result sits on the right, How to play is gone, and no room is kept for it', async () => {
+      await render(
+        <PuzzleRow
+          testID="r"
+          type="mini"
+          title="Mini 105"
+          when="Yesterday"
+          played={{ done: true, lost: false, text: 'Solved in 2:03' }}
+          onPress={() => undefined}
+          onHowTo={() => undefined}
+        />,
+      );
+      expect(screen.queryByTestId('r-howto')).toBeNull();
+      expect(metaRow().paddingRight).toBeUndefined();
+      expect(screen.getByTestId('r-meta')).toHaveTextContent('Yesterday');
+      const res = screen.getByTestId('r-result');
+      expect(res).toHaveTextContent('Solved in 2:03');
+      expect(StyleSheet.flatten(res.props.style).marginLeft).toBe('auto');
+    });
+  });
+
   describe('WHEN a finished card is drawn at a large text size', () => {
     it('THEN the tick in its little circle never grows', async () => {
-      await render(row());
+      await render(
+        <PuzzleRow
+          testID="r"
+          type="mini"
+          title="Mini 105"
+          played={{ done: true, lost: false, text: 'Solved in 2:03' }}
+          onPress={() => undefined}
+        />,
+      );
       expect(screen.getByText('✓').props.maxFontSizeMultiplier).toBe(1);
     });
   });

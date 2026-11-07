@@ -120,7 +120,8 @@ describe('GIVEN a puzzle card', () => {
       await render(
         <PuzzleRow {...base} played={{ done: false }} roundTime="4:05" onPress={jest.fn()} />,
       );
-      expect(screen.getByTestId('c-meta')).toHaveTextContent('Today  ·  Continue  ·  4:05');
+      expect(screen.getByTestId('c-meta')).toHaveTextContent('Today');
+      expect(screen.getByTestId('c-result')).toHaveTextContent('Continue · 4:05');
       expect(screen.getByRole('button', { name: 'Mini 106, Continue, 4:05' })).toBeOnTheScreen();
     });
   });
@@ -135,7 +136,7 @@ describe('GIVEN a puzzle card', () => {
           onPress={jest.fn()}
         />,
       );
-      expect(screen.getByTestId('c-meta')).toHaveTextContent('Today  ·  Solved in 1:27');
+      expect(screen.getByTestId('c-result')).toHaveTextContent(/^Solved in 1:27$/);
     });
   });
 
@@ -171,8 +172,8 @@ describe('GIVEN a page', () => {
   });
 });
 
-describe('GIVEN a row with a long day and result beside How to play', () => {
-  it('THEN when and result stay on one line, shrinking to fit rather than breaking', async () => {
+describe('GIVEN a row with a long day and a result', () => {
+  it('THEN the day stays on one line, shrinking to fit, with the result on the right on one line', async () => {
     await render(
       <PuzzleRow
         testID="row"
@@ -185,9 +186,11 @@ describe('GIVEN a row with a long day and result beside How to play', () => {
       />,
     );
     const meta = screen.getByTestId('row-meta');
-    expect(meta).toHaveTextContent('Yesterday · Solved in 1:20');
+    expect(meta).toHaveTextContent('Yesterday');
     expect(meta.props.numberOfLines).toBe(1);
     expect(meta.props.adjustsFontSizeToFit).toBe(true);
+    expect(screen.getByTestId('row-result')).toHaveTextContent('Solved in 1:20');
+    expect(screen.getByTestId('row-result').props.numberOfLines).toBe(1);
   });
 });
 
