@@ -482,12 +482,14 @@ describe('GIVEN a player in a league', () => {
       expect(screen.getByLabelText('– Jo, Revealed')).toBeOnTheScreen();
       expect(screen.getByText('🔥 3-day streak')).toBeOnTheScreen();
       expect(screen.getByText('Piers')).toBeOnTheScreen();
+      // Earlier days sit behind one tap (Alec, 7 Nov 2026): the arrows step puzzles.
+      await press('Earlier days');
       expect(screen.getByRole('button', { name: 'Next day' })).toBeDisabled();
       await press('Previous day');
       await waitFor(() =>
         expect(m.boardDay).toHaveBeenCalledWith(PID, 'ABCD2345', 'mini', addDays(today, -1)),
       );
-      // One slim line now (AF-017): the day, its date and the puzzle.
+      // The pager's line under the puzzle: the day and its date.
       await waitFor(() =>
         expect(screen.getByTestId('day-line')).toHaveTextContent(/^Yesterday · /),
       );
