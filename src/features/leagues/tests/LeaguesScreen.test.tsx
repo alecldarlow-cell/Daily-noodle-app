@@ -834,3 +834,21 @@ describe('GIVEN the button rule on Leagues (AF-019)', () => {
     });
   });
 });
+
+describe('GIVEN a player on the podium', () => {
+  describe('WHEN the board shows', () => {
+    it('THEN the top three wear medal discs and your row takes your medal’s tint', async () => {
+      inFamily();
+      await renderWithProviders(<LeaguesScreen />);
+      await waitFor(() => expect(screen.getByTestId('overall-board')).toBeOnTheScreen());
+      expect(
+        screen.getAllByTestId('medal-1-Ma', { includeHiddenElements: true }).length,
+      ).toBeGreaterThan(0);
+      expect(
+        screen.getAllByTestId('medal-2-Alec', { includeHiddenElements: true }).length,
+      ).toBeGreaterThan(0);
+      const mine = StyleSheet.flatten(screen.getAllByTestId('row-Alec')[0]!.props.style);
+      expect(mine.backgroundColor).toBe('#C3CAD622');
+    });
+  });
+});

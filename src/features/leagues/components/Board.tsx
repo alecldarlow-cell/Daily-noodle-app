@@ -35,6 +35,7 @@ import {
   weekLabel,
 } from '../hooks/boardText';
 import type { Flow, Notice } from '../hooks/useLeaguesFlow';
+import { isPlace, PlaceMedal, placeTint } from './PlaceMedal';
 import {
   useBoardData,
   useBoardRecords,
@@ -379,6 +380,8 @@ function Row({
   streak,
   dim,
   record,
+  place,
+  shine,
 }: {
   rank: string;
   nick: string;
@@ -389,14 +392,19 @@ function Row({
   dim?: boolean;
   /** This result is the league's record (set on the day shown). */
   record?: boolean;
+  /** 1–3: shown as a medal disc instead of the number. */
+  place?: number | null;
+  /** Your podium place on today's board: pop and shine the medal once (see PlaceMedal). */
+  shine?: { key: string; day: string };
 }) {
   const t = useTokens();
   const { open } = useContext(RecordsCtx);
+  const medal = !dim && isPlace(place) ? place : null;
   const label = `${rank} ${nick}${me ? ' (you)' : ''}, ${big}${small ? `, ${small}` : ''}${record ? ', new league record' : ''}`;
   const style = [
     styles.row,
     { borderBottomColor: t.hair },
-    me && { backgroundColor: t.accentSoft },
+    me && { backgroundColor: medal ? placeTint(medal) : t.accentSoft },
   ];
   const Box = open ? Pressable : View;
   return (
@@ -408,7 +416,17 @@ function Row({
       onPress={open ? () => open(nick) : undefined}
       testID={`row-${nick}`}
       style={style}>
-      <Text style={[styles.rk, { color: t.muted }]}>{rank}</Text>
+      {medal ? (
+        <View style={styles.rkBox}>
+          <PlaceMedal
+            place={medal}
+            shine={me ? shine : undefined}
+            testID={`medal-${medal}-${nick}`}
+          />
+        </View>
+      ) : (
+        <Text style={[styles.rk, { color: t.muted }]}>{rank}</Text>
+      )}
       <View style={styles.who}>
         <Text numberOfLines={1} style={[styles.nick, { color: dim ? t.muted : t.ink }]}>
           {nick}
@@ -497,6 +515,8 @@ function DayView({
         streak={r.streak}
         dim={dim}
         record={!dim && !!R && R.nick === r.nick && R.date === date}
+        place={r.rank}
+        shine={date === today ? { key: `${league.code}:${type}`, day: today } : undefined}
       />
     );
   };
@@ -550,7 +570,7 @@ function OverallView({
   showDay: boolean;
 }) {
   const t = useTokens();
-  const row = (r: OverallRow, of: number) => (
+  const row = (r: OverallRow, of: number, shine?: { key: string; day: string }) => (
     <Row
       key={r.nick}
       rank={MEDAL[r.rank] ?? String(r.rank)}
@@ -558,8 +578,11 @@ function OverallView({
       me={r.me}
       big={pts(r.points)}
       small={`${r.completed} of ${of} done`}
+      place={r.rank}
+      shine={shine}
     />
   );
+  const dayShine = date === today ? { key: `${league.code}:all`, day: today } : undefined;
   return (
     <View testID="overall-board">
       {showDay ? (
@@ -570,7 +593,7 @@ function OverallView({
           Nobody in {league.name} has played {date === today ? 'yet today' : 'on this day'}.
         </Text>
       ) : (
-        <View style={styles.rowsTop}>{d.day.map((r) => row(r, dayCount(date)))}</View>
+        <View style={styles.rowsTop}>{d.day.map((r) => row(r, dayCount(date), dayShine))}</View>
       )}
       <NotesLine rows={d.not_yet} />
       <Sub>This week · {weekLabel(d.week_from, d.week_to)}</Sub>
@@ -833,6 +856,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
   },
   rk: { fontFamily: FONT.displayHeavy, width: 34, textAlign: 'center', fontSize: 17 },
+  rkBox: { width: 34, alignItems: 'center' },
   who: { flex: 1, minWidth: 0 },
   nick: { fontFamily: FONT.bodySemi, fontSize: 16 },
   you: { fontFamily: FONT.bodyBold, fontSize: 11, letterSpacing: 0.7 },
