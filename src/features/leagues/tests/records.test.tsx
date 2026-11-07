@@ -66,11 +66,13 @@ const openRecords = async () => {
 
 describe('GIVEN a player in a league', () => {
   describe('WHEN they pick the Records pill', () => {
-    it('THEN it sits after All puzzles, fetches board_records only, and is remembered', async () => {
+    it('THEN it is a link under the boards, off the pager’s row, fetches board_records only, and is remembered', async () => {
       await openRecords();
-      const pills = screen.getAllByTestId(/^pill-/).map((p) => p.props.testID as string);
-      expect(pills.slice(0, 3)).toEqual(['pill-all', 'pill-records', 'pill-mini']);
+      const dots = screen.getAllByTestId(/^pill-/).map((p) => p.props.testID as string);
+      expect(dots.slice(0, 2)).toEqual(['pill-all', 'pill-mini']);
+      expect(dots).toContain('pill-records');
       expect(screen.getByRole('button', { name: 'Records' })).toBeSelected();
+      expect(screen.getByRole('header', { name: 'Records' })).toBeOnTheScreen();
       expect(m.boardRecords).toHaveBeenCalledWith(PID, 'ABCD2345');
       expect(m.boardOverall).toHaveBeenCalledTimes(1); // the opening All puzzles view only
       expect(board().ptype).toBe('records');

@@ -1,8 +1,17 @@
-/* A league's boards: league picker, puzzle pills, day bar, rows, actions and settings (board.html). */
+/* A league's boards: league picker, puzzle pager, rows, actions and settings (board.html). */
 import { BOARD_TYPE, BOARD_TYPES, type BoardLeague, type BoardTypeId } from '@noodle/core';
 import { router } from 'expo-router';
-import { createContext, useContext, useState } from 'react';
-import { ActivityIndicator, Alert, Pressable, Share, StyleSheet, Text, View } from 'react-native';
+import { createContext, useContext, useMemo, useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  PanResponder,
+  Pressable,
+  Share,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 
 import { BUILD_ENV } from '@/shared/env';
 import { appStorage, useStoredRaw } from '@/shared/storage';
@@ -40,18 +49,28 @@ import {
 import { useBackfill } from '../hooks/useResults';
 import { leagueNameSchema, firstError } from '../schemas';
 import type { BoardView, DayBoard, DayRow, NotYet, Overall, OverallRow, Records } from '../types';
-import { DayLine, LeaguePicker, PuzzleChips } from './BoardControls';
+import { DayLine, dayText, LeaguePicker, TypePager, viewName } from './BoardControls';
 import { RecordsView } from './Records';
 import { Acts, B, Btn, Card, Field, Msg, P, ROW_INSET_RIGHT, Sub } from './ui';
 
 /** Sign-in sync is in this build: then joining points to it, for playing on another phone. */
 const syncOn = (): boolean => BUILD_ENV.EXPO_PUBLIC_SYNC === '1';
 
-const PILLS: { id: BoardView; emoji: string; name: string }[] = [
-  { id: 'all', emoji: '🏆', name: 'All puzzles' },
-  { id: 'records', emoji: '🏅', name: 'Records' },
-  ...BOARD_TYPES.map((t) => ({ id: t.id as BoardView, emoji: t.emoji, name: t.name })),
-];
+/** The pager's stops, in the arrows' order: All puzzles, then each puzzle in the daily order. */
+const STOPS: BoardView[] = ['all', ...BOARD_TYPES.map((t) => t.id as BoardView)];
+
+/** A sideways drag takes the board once it is clearly sideways (so lists still scroll). */
+export const claimsSwipe = (dx: number, dy: number): boolean =>
+  Math.abs(dx) > 24 && Math.abs(dx) > 2 * Math.abs(dy);
+/** Where a finished swipe goes: left to the next puzzle, right to the previous, short to none. */
+export const swipeStep = (dx: number): 1 | -1 | 0 => (dx < -60 ? 1 : dx > 60 ? -1 : 0);
+
+/** 1st, 2nd, 3rd, 4th … 11th, 12th, 13th, 21st. */
+export function ordinal(n: number): string {
+  const ten = n % 100;
+  const s = ten >= 11 && ten <= 13 ? 'th' : (['th', 'st', 'nd', 'rd'][n % 10] ?? 'th');
+  return `${n}${n % 10 > 3 ? 'th' : s}`;
+}
 const isView = (v: unknown): v is BoardView =>
   v === 'all' || v === 'records' || (typeof v === 'string' && v in BOARD_TYPE);
 
@@ -114,60 +133,128 @@ export function Board({ flow, league }: { flow: Flow; league: BoardLeague }) {
     setChosen(null);
     setLastType(v);
   };
+  // Alec, 7 Nov 2026: the arrows step through the puzzles; earlier days are one tap away.
+  const [dayOpen, setDayOpen] = useState(false);
+  const showDay = dayOpen || day !== today;
+  const isType = view !== 'all' && view !== 'records';
+  // On a puzzle's board, the player's place today and this week overall, from the All board.
+  const overall = useBoardData(filling || !isType ? undefined : league.code, 'all', day);
+  // A sideways swipe over the board does what the arrows do.
+  const swipe = useMemo(() => {
+    const step = (dir: 1 | -1) => {
+      const at = STOPS.indexOf(view);
+      const to = at < 0 ? (dir > 0 ? STOPS[1] : STOPS[0]) : STOPS[at + dir];
+      if (!to) return;
+      setCard(null);
+      setChosen(null);
+      setLastType(to);
+    };
+    return PanResponder.create({
+      onMoveShouldSetPanResponder: (_e, g) => claimsSwipe(g.dx, g.dy),
+      onPanResponderRelease: (_e, g) => {
+        const dir = swipeStep(g.dx);
+        if (dir) step(dir);
+      },
+    });
+  }, [view]);
+  const headline = isType ? (puzzleOn(cards.data, view, day)?.headline ?? null) : null;
 
   return (
     <RecordsCtx.Provider value={{ recs: rec.data, open: rec.data ? openCard : undefined }}>
       <View testID="league-board">
         <LeaguePicker flow={flow} league={league} leagues={s.leagues || []} />
-        <PuzzleChips
-          pills={PILLS}
+        <TypePager
+          stops={STOPS}
           view={view}
+          title={headline ?? viewName(view)}
+          sub={dayText(day, today)}
           onPick={(v) => {
             setCard(null);
             pick(v);
           }}
         />
+        {isType && overall.data ? (
+          <YouLine d={overall.data as Overall} today={day === today} />
+        ) : null}
 
         <TopCard flow={flow} league={league} />
 
-        {filling ? (
-          <Text style={[styles.loading, { color: t.faint }]}>Adding your earlier results…</Text>
-        ) : shown.isPending ? (
-          <ActivityIndicator style={styles.spin} color={t.muted} />
-        ) : shown.isError || !shown.data ? (
-          <BoardFailed
-            error={shown.error}
-            busy={shown.isFetching}
-            retry={() => void shown.refetch()}
-          />
-        ) : records ? (
-          <RecordsView
-            key={league.code}
-            league={league}
-            d={rec.data!}
-            card={card}
-            setCard={setCard}
-          />
-        ) : view === 'all' ? (
-          <OverallView
-            league={league}
-            d={data.data as Overall}
-            date={day}
-            today={today}
-            setDate={setDate}
-          />
-        ) : (
-          <DayView
-            league={league}
-            type={view}
-            d={data.data as DayBoard}
-            date={day}
-            today={today}
-            setDate={setDate}
-            headline={puzzleOn(cards.data, view, day)?.headline ?? null}
-            path={puzzleOn(cards.data, view, day)?.path ?? null}
-          />
-        )}
+        <View {...swipe.panHandlers} testID="board-swipe">
+          {filling ? (
+            <Text style={[styles.loading, { color: t.faint }]}>Adding your earlier results…</Text>
+          ) : shown.isPending ? (
+            <ActivityIndicator style={styles.spin} color={t.muted} />
+          ) : shown.isError || !shown.data ? (
+            <BoardFailed
+              error={shown.error}
+              busy={shown.isFetching}
+              retry={() => void shown.refetch()}
+            />
+          ) : records ? (
+            <RecordsView
+              key={league.code}
+              league={league}
+              d={rec.data!}
+              card={card}
+              setCard={setCard}
+            />
+          ) : view === 'all' ? (
+            <OverallView
+              league={league}
+              d={data.data as Overall}
+              date={day}
+              today={today}
+              setDate={setDate}
+              showDay={showDay}
+            />
+          ) : (
+            <DayView
+              league={league}
+              type={view}
+              d={data.data as DayBoard}
+              date={day}
+              today={today}
+              setDate={setDate}
+              headline={headline}
+              path={puzzleOn(cards.data, view, day)?.path ?? null}
+              showDay={showDay}
+            />
+          )}
+        </View>
+
+        <View style={styles.links}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityState={{ expanded: showDay }}
+            testID="day-open"
+            hitSlop={8}
+            onPress={() => {
+              if (showDay) {
+                setDayOpen(false);
+                setDate(today);
+              } else setDayOpen(true);
+            }}>
+            <Text style={[styles.linkText, { color: t.accent }]}>
+              {showDay ? 'Back to today' : 'Earlier days'}
+            </Text>
+          </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Records"
+            accessibilityState={{ selected: records }}
+            testID="pill-records"
+            hitSlop={8}
+            onPress={() => {
+              // From a player's card, back to the list of records; from the list, the boards.
+              setCard(null);
+              if (!records) pick('records');
+              else if (!card) pick('all');
+            }}>
+            <Text style={[styles.linkText, { color: t.accent }]}>
+              {!records ? '🏅 League records' : card ? 'All records' : 'Back to the boards'}
+            </Text>
+          </Pressable>
+        </View>
 
         {roster ? (
           <Settings flow={flow} league={league} players={roster.players} members={roster.members} />
@@ -403,6 +490,29 @@ function NotYetList({ rows }: { rows: NotYet[] }) {
   );
 }
 
+/** On a puzzle's board: the player's place overall that day and this week ("3rd · 12 pts"). */
+function YouLine({ d, today }: { d: Overall; today: boolean }) {
+  const t = useTokens();
+  const day = d.day.find((r) => r.me);
+  const week = d.week.find((r) => r.me);
+  if (!day && !week) return null;
+  const part = (label: string, r: OverallRow | undefined) =>
+    r ? (
+      <Text style={[styles.youText, { color: t.muted }]}>
+        {label}{' '}
+        <Text style={[styles.youBold, { color: t.ink }]}>
+          {ordinal(r.rank)} · {pts(r.points)}
+        </Text>
+      </Text>
+    ) : null;
+  return (
+    <View style={styles.youLine} testID="you-line">
+      {part(today ? 'Today overall' : 'That day overall', day)}
+      {part('Week', week)}
+    </View>
+  );
+}
+
 function DayView({
   league,
   type,
@@ -412,6 +522,7 @@ function DayView({
   setDate,
   headline,
   path,
+  showDay,
 }: {
   league: BoardLeague;
   type: BoardTypeId;
@@ -421,6 +532,8 @@ function DayView({
   setDate: (d: string) => void;
   headline: string | null;
   path: string | null;
+  /** The date line, only while looking back (the pager says which day). */
+  showDay: boolean;
 }) {
   const t = useTokens();
   const T = BOARD_TYPE[type];
@@ -447,13 +560,9 @@ function DayView({
   const file = path?.replace(/^reports\//, '').replace(/\.html$/, '');
   return (
     <View testID="day-board">
-      <DayLine
-        what={`${T.emoji} ${headline ?? T.name}`}
-        date={date}
-        first={d.first || date}
-        today={today}
-        setDate={setDate}
-      />
+      {showDay ? (
+        <DayLine date={date} first={d.first || date} today={today} setDate={setDate} />
+      ) : null}
       {!played && headline && file ? (
         <Pressable
           accessibilityRole="button"
@@ -507,12 +616,14 @@ function OverallView({
   date,
   today,
   setDate,
+  showDay,
 }: {
   league: BoardLeague;
   d: Overall;
   date: string;
   today: string;
   setDate: (d: string) => void;
+  showDay: boolean;
 }) {
   const t = useTokens();
   const row = (r: OverallRow, of: number) => (
@@ -527,7 +638,9 @@ function OverallView({
   );
   return (
     <View testID="overall-board">
-      <DayLine date={date} first={d.first || date} today={today} setDate={setDate} />
+      {showDay ? (
+        <DayLine date={date} first={d.first || date} today={today} setDate={setDate} />
+      ) : null}
       {!d.day.length ? (
         <Text style={[styles.nobody, { color: t.muted }]}>
           Nobody in {league.name} has played {date === today ? 'yet today' : 'on this day'}.
@@ -816,6 +929,24 @@ const styles = StyleSheet.create({
   resSmall: { fontFamily: FONT.body, fontSize: 12, textAlign: 'right' },
   notyet: { fontFamily: FONT.body, marginTop: 6, fontSize: 14.5 },
   how: { fontFamily: FONT.body, marginTop: 14, fontSize: 13 },
+  youLine: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    columnGap: 12,
+    marginTop: 6,
+    marginBottom: 2,
+  },
+  youText: { fontFamily: FONT.body, fontSize: 13 },
+  youBold: { fontFamily: FONT.bodyBold },
+  links: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    gap: 12,
+    marginTop: 18,
+  },
+  linkText: { fontFamily: FONT.bodySemi, fontSize: 14, lineHeight: 22 },
   reline: { fontFamily: FONT.body, marginTop: 12, fontSize: 14 },
   relineBold: { fontFamily: FONT.bodyBold },
   settings: { marginTop: 26, borderTopWidth: 1, paddingTop: 12 },

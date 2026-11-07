@@ -9,7 +9,8 @@ import { shortDate } from '@/shared/time';
 
 import * as api from '../api/board';
 import { fetchPuzzleCards } from '../api/feed';
-import { CHIP_H, CHIP_SLOP, GUTTER } from '../components/BoardControls';
+import { GUTTER } from '../components/BoardControls';
+import { claimsSwipe, ordinal, swipeStep } from '../components/Board';
 import { LeaguesScreen } from '../components/LeaguesScreen/LeaguesScreen';
 import { ROW_INSET_RIGHT } from '../components/ui';
 import {
@@ -129,40 +130,63 @@ describe('GIVEN a player in two leagues (AF-017)', () => {
     });
   });
 
-  describe('WHEN the puzzle chips and the date show', () => {
-    it('THEN the chips are about 32 tall in one scrolling row, each still a 44 pt target', async () => {
+  // Alec, 7 Nov 2026: the arrows step through the puzzles, not the days.
+  describe('WHEN the puzzle pager shows', () => {
+    it('THEN it opens on All puzzles, today, with a dot for All and each puzzle', async () => {
       await open();
-      expect(CHIP_H).toBe(32);
-      const row = screen.getByTestId('puzzle-chips');
-      expect(row.props.horizontal).toBe(true);
-      const chips = screen.getAllByTestId(/^pill-/);
-      expect(chips.length).toBe(11);
-      for (const c of chips) {
-        const s = flat(c);
-        expect(s.minHeight).toBe(32);
-        // No fixed height: at large text sizes a chip grows rather than clips.
-        expect(s.height).toBeUndefined();
-        const slop = c.props.hitSlop as { top: number; bottom: number };
-        expect(32 + slop.top + slop.bottom).toBeGreaterThanOrEqual(44);
-      }
-      // The row has room for that slop, so a tap at its edge still lands.
-      expect(flat({ props: { style: row.props.contentContainerStyle } }).paddingVertical).toBe(
-        CHIP_SLOP,
+      expect(screen.getByTestId('pager-title')).toHaveTextContent(
+        `All puzzles${'Today · ' + shortDate(today)}`,
       );
+      const dots = within(screen.getByTestId('puzzle-chips')).getAllByTestId(/^pill-/);
+      expect(dots.map((d) => d.props.testID)).toEqual([
+        'pill-all',
+        'pill-mini',
+        'pill-doku',
+        'pill-path',
+        'pill-sweep',
+        'pill-link',
+        'pill-tangle',
+        'pill-borders',
+        'pill-reckon',
+        'pill-tally',
+      ]);
+      expect(screen.getByRole('button', { name: 'All puzzles' })).toBeSelected();
+      // No day arrows until asked for; no emoji chips.
+      expect(screen.queryByRole('button', { name: 'Previous day' })).toBeNull();
+      expect(screen.queryByText(/✏️/)).toBeNull();
     });
 
-    it('THEN the day is one slim line, “Today · <date>”, without “All eight puzzles”', async () => {
+    it('THEN the arrows step through the puzzles, each a 44 pt target, stopping at the ends', async () => {
       await open();
-      expect(screen.getByTestId('day-line')).toHaveTextContent(`Today · ${shortDate(today)}`);
-      expect(screen.queryByText(/All eight puzzles/)).toBeNull();
-      for (const name of ['Previous day', 'Next day']) {
-        const b = screen.getByRole('button', { name });
-        const slop = b.props.hitSlop as number;
-        expect((flat(b).height as number) + 2 * slop).toBeGreaterThanOrEqual(44);
-      }
+      const prev = screen.getByRole('button', { name: 'Previous puzzle' });
+      const next = screen.getByRole('button', { name: 'Next puzzle' });
+      expect(prev).toBeDisabled();
+      expect(next.props.accessibilityHint).toBe('Mini');
+      for (const b of [prev, next]) expect(flat(b).width).toBeGreaterThanOrEqual(44);
+      await fireEvent.press(next);
+      await waitFor(() => expect(screen.getByTestId('day-board')).toBeOnTheScreen());
+      expect(screen.getByRole('button', { name: 'Mini' })).toBeSelected();
+      expect(screen.getByTestId('pager-tile-mini')).toBeOnTheScreen();
+      await fireEvent.press(screen.getByRole('button', { name: 'Next puzzle' }));
+      expect(screen.getByRole('button', { name: 'Doku' })).toBeSelected();
+      await fireEvent.press(screen.getByTestId('pill-tally'));
+      expect(screen.getByRole('button', { name: 'Next puzzle' })).toBeDisabled();
+      await fireEvent.press(screen.getByRole('button', { name: 'Previous puzzle' }));
+      expect(screen.getByRole('button', { name: 'Reckon' })).toBeSelected();
     });
 
-    it('THEN a puzzle’s board names the puzzle on the same line', async () => {
+    it('THEN a sideways swipe on the board steps too; a mostly-vertical drag doesn’t', async () => {
+      await open();
+      expect(screen.getByTestId('board-swipe').props.onMoveShouldSetResponder).toBeDefined();
+      expect(claimsSwipe(40, 10)).toBe(true);
+      expect(claimsSwipe(40, 30)).toBe(false); // a scroll that drifts sideways
+      expect(claimsSwipe(10, 0)).toBe(false);
+      expect(swipeStep(-80)).toBe(1); // swipe left: next puzzle
+      expect(swipeStep(80)).toBe(-1);
+      expect(swipeStep(40)).toBe(0);
+    });
+
+    it('THEN a puzzle’s board names the puzzle in the pager, with the date under it', async () => {
       jest.mocked(fetchPuzzleCards).mockResolvedValue([
         {
           path: `reports/${today}-crossword-mini-0105.html`,
@@ -176,22 +200,62 @@ describe('GIVEN a player in two leagues (AF-017)', () => {
       await fireEvent.press(screen.getByTestId('pill-mini'));
       await waitFor(() => expect(screen.getByTestId('day-board')).toBeOnTheScreen());
       await waitFor(() =>
-        expect(screen.getByTestId('day-line')).toHaveTextContent(
-          `Today · ${shortDate(today)} · ✏️ Mini 105`,
-        ),
+        expect(screen.getByRole('header', { name: 'Mini 105' })).toBeOnTheScreen(),
+      );
+      expect(screen.getByTestId('pager-day')).toHaveTextContent(`Today · ${shortDate(today)}`);
+    });
+
+    it('THEN a puzzle’s board says where you stand overall today and this week', async () => {
+      m.boardOverall.mockResolvedValue(
+        overall({
+          week: [
+            { rank: 1, nick: 'Ma', me: false, points: 30, played: 12, completed: 11 },
+            { rank: 2, nick: 'Alec', me: true, points: 12, played: 9, completed: 9 },
+          ],
+        }),
+      );
+      await open();
+      expect(screen.queryByTestId('you-line')).toBeNull(); // All puzzles is the overall board
+      await fireEvent.press(screen.getByTestId('pill-mini'));
+      await waitFor(() => expect(screen.getByTestId('you-line')).toBeOnTheScreen());
+      expect(screen.getByTestId('you-line')).toHaveTextContent(
+        'Today overall 2nd · 1 ptWeek 2nd · 12 pts',
       );
     });
+
+    it('THEN earlier days are one tap away, and Back to today returns', async () => {
+      await open();
+      await fireEvent.press(screen.getByRole('button', { name: 'Earlier days' }));
+      expect(screen.getByRole('button', { name: 'Next day' })).toBeDisabled();
+      await fireEvent.press(screen.getByRole('button', { name: 'Previous day' }));
+      await waitFor(() =>
+        expect(screen.getByTestId('day-line')).toHaveTextContent(/^Yesterday · /),
+      );
+      expect(screen.getByTestId('pager-day')).toHaveTextContent(/^Yesterday · /);
+      await fireEvent.press(screen.getByRole('button', { name: 'Back to today' }));
+      expect(screen.getByTestId('pager-day')).toHaveTextContent(`Today · ${shortDate(today)}`);
+      expect(screen.queryByRole('button', { name: 'Previous day' })).toBeNull();
+    });
+  });
+
+  it('THEN places read 1st, 2nd, 3rd, 4th, 11th, 12th, 13th, 21st, 22nd', () => {
+    expect([1, 2, 3, 4, 11, 12, 13, 21, 22, 101].map(ordinal)).toEqual([
+      '1st',
+      '2nd',
+      '3rd',
+      '4th',
+      '11th',
+      '12th',
+      '13th',
+      '21st',
+      '22nd',
+      '101st',
+    ]);
   });
 });
 
 describe('GIVEN the margins on Leagues (AF-007)', () => {
-  it('THEN the chip row runs edge to edge with the gutter as its inner padding', async () => {
-    await open();
-    const row = screen.getByTestId('puzzle-chips');
-    expect(flat(row).marginHorizontal).toBe(-GUTTER);
-    expect(flat({ props: { style: row.props.contentContainerStyle } }).paddingHorizontal).toBe(
-      GUTTER,
-    );
+  it('THEN the page keeps its 16 pt gutter', () => {
     expect(GUTTER).toBe(16);
   });
 

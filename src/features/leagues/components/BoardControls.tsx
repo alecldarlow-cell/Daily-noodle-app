@@ -1,27 +1,27 @@
 /*
  * The controls above a league's board, kept compact so the rows show sooner (tracker
- * AF-017): the league picker in the heading, one row of short puzzle chips, and one
- * slim date line. Chip rows run to the screen's edges with the gutter as inner padding,
- * as Archive's do (AF-007).
+ * AF-017): the league picker in the heading, then the puzzle pager (Alec, 7 Nov 2026): the
+ * arrows step through All puzzles and each puzzle, with its tile and a dot for each stop.
+ * The date line shows only when looking at an earlier day.
  */
-import type { BoardLeague } from '@noodle/core';
+import { BOARD_TYPE, type BoardLeague, type BoardTypeId } from '@noodle/core';
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { FONT, useTokens } from '@/shared/theme';
 import { shortDate } from '@/shared/time';
-import { Chevron, TAP } from '@/shared/ui';
+import { Chevron, PuzzleTile, TAP } from '@/shared/ui';
 
 import { setCurrent } from '../hooks/boardStore';
 import { addDays, dayName } from '../hooks/boardText';
 import type { Flow } from '../hooks/useLeaguesFlow';
 import type { BoardView } from '../types';
 
-/** The page's side gutter (Screen's 16 pt), which edge-to-edge rows pad back in. */
+/** The page's side gutter (Screen's 16 pt). */
 export const GUTTER = 16;
-/** Puzzle chips are this tall (the site's ~32 pt), with their tap area grown to 44 by hitSlop. */
-export const CHIP_H = 32;
-export const CHIP_SLOP = (44 - CHIP_H) / 2;
+
+/** The app's noodle mark, for All puzzles and Records (which have no puzzle tile). */
+const MARK = require('../../../../assets/images/masthead-mark.png') as number;
 
 /**
  * The league's name as the heading, "Noodlers ▾": tap for the menu of leagues, with
@@ -133,47 +133,110 @@ function MenuItem({
   );
 }
 
-/** One scrolling row of short puzzle chips, out to the screen's edges. */
-export function PuzzleChips({
-  pills,
+/** "Today · Sat 7 Nov", "Yesterday · Fri 6 Nov", or the date alone further back. */
+export function dayText(date: string, today: string): string {
+  const day = dayName(date, today);
+  return day === shortDate(date) ? day : `${day} · ${shortDate(date)}`;
+}
+
+/** A view's name in the pager: "All puzzles", "Records", or the puzzle type's. */
+export function viewName(v: BoardView): string {
+  return v === 'all' ? 'All puzzles' : v === 'records' ? 'Records' : BOARD_TYPE[v].name;
+}
+
+/**
+ * The puzzle pager: ‹ [tile] Mini 119 / Today · Sat 7 Nov ›. The arrows step along `stops`
+ * (All puzzles, then each puzzle); under it a dot for each stop, the current one long, each
+ * a tap straight to it. Records sits off the row: from it, the arrows lead back in.
+ */
+export function TypePager({
+  stops,
   view,
+  title,
+  sub,
   onPick,
 }: {
-  pills: { id: BoardView; emoji: string; name: string }[];
+  stops: BoardView[];
   view: BoardView;
+  /** The big line: the puzzle's headline ("Mini 119"), else the view's name. */
+  title: string;
+  sub: string;
   onPick: (v: BoardView) => void;
 }) {
   const t = useTokens();
+  const at = stops.indexOf(view);
+  const prev = at > 0 ? stops[at - 1] : null;
+  const next = at < 0 ? stops[1] : at < stops.length - 1 ? stops[at + 1] : null;
+  const back = at < 0 ? stops[0] : prev;
+  const btn = (to: BoardView | null | undefined, dir: 'left' | 'right') => (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={dir === 'left' ? 'Previous puzzle' : 'Next puzzle'}
+      accessibilityHint={to ? viewName(to) : undefined}
+      accessibilityState={{ disabled: !to }}
+      disabled={!to}
+      testID={dir === 'left' ? 'pager-prev' : 'pager-next'}
+      onPress={() => to && onPick(to)}
+      style={({ pressed }) => [
+        styles.pagerArrow,
+        { opacity: to ? 1 : 0.3 },
+        pressed ? { backgroundColor: t.accentSoft } : null,
+      ]}>
+      <Chevron color={t.ink} dir={dir} size={9} />
+    </Pressable>
+  );
   return (
-    <ScrollView
-      horizontal
-      testID="puzzle-chips"
-      showsHorizontalScrollIndicator={false}
-      style={styles.bleed}
-      contentContainerStyle={styles.chips}>
-      {pills.map((p) => {
-        const on = p.id === view;
-        return (
-          <Pressable
-            key={p.id}
-            accessibilityRole="button"
-            accessibilityState={{ selected: on }}
-            accessibilityLabel={p.name}
-            testID={`pill-${p.id}`}
-            hitSlop={{ top: CHIP_SLOP, bottom: CHIP_SLOP }}
-            onPress={() => onPick(p.id)}
-            style={({ pressed }) => [
-              styles.chip,
-              { borderColor: on ? t.ink : t.hair, backgroundColor: on ? t.ink : t.paper },
-              pressed && !on ? { backgroundColor: t.accentSoft } : null,
-            ]}>
-            <Text style={[styles.chipText, { color: on ? t.canvas : t.ink }]}>
-              {p.emoji} {p.name}
+    <View testID="type-pager">
+      <View style={[styles.pager, { borderColor: t.hair }]}>
+        {btn(back, 'left')}
+        <View style={styles.pagerMid} testID="pager-title">
+          {view === 'all' || view === 'records' ? (
+            <Image source={MARK} style={styles.pagerIcon} accessible={false} />
+          ) : (
+            <View style={styles.pagerIcon}>
+              <PuzzleTile type={view as BoardTypeId} size={36} testID={`pager-tile-${view}`} />
+            </View>
+          )}
+          <View style={styles.pagerText}>
+            <Text
+              accessibilityRole="header"
+              numberOfLines={1}
+              style={[styles.pagerTitle, { color: t.ink }]}>
+              {title}
             </Text>
-          </Pressable>
-        );
-      })}
-    </ScrollView>
+            <Text
+              numberOfLines={1}
+              style={[styles.pagerSub, { color: t.muted }]}
+              testID="pager-day">
+              {sub}
+            </Text>
+          </View>
+        </View>
+        {btn(next, 'right')}
+      </View>
+      <View style={styles.dots} testID="puzzle-chips">
+        {stops.map((v) => {
+          const on = v === view;
+          return (
+            <Pressable
+              key={v}
+              accessibilityRole="button"
+              accessibilityLabel={viewName(v)}
+              accessibilityState={{ selected: on }}
+              testID={`pill-${v}`}
+              onPress={() => onPick(v)}
+              style={styles.dotHit}>
+              <View
+                style={[
+                  styles.dot,
+                  { width: on ? 16 : 6, backgroundColor: on ? t.accent : t.hair },
+                ]}
+              />
+            </Pressable>
+          );
+        })}
+      </View>
+    </View>
   );
 }
 
@@ -242,19 +305,37 @@ const styles = StyleSheet.create({
     borderTopWidth: StyleSheet.hairlineWidth,
   },
   itemText: { fontSize: 15 },
-  // Out to the screen's edges; the gutter comes back as the row's inner padding, so the
-  // last chip slides off the edge rather than being cut in mid-air.
-  bleed: { flexGrow: 0, flexShrink: 0, marginHorizontal: -GUTTER },
-  chips: { gap: 6, paddingHorizontal: GUTTER, paddingVertical: CHIP_SLOP, alignItems: 'center' },
-  chip: {
-    minHeight: CHIP_H,
-    justifyContent: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 999,
-    borderWidth: 1,
+  pager: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingVertical: 8,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    marginTop: 4,
   },
-  chipText: { fontFamily: FONT.bodySemi, fontSize: 13.5 },
+  pagerArrow: {
+    width: TAP,
+    height: TAP,
+    borderRadius: TAP / 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  pagerMid: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+  },
+  pagerIcon: { width: 36, height: 36, borderRadius: 6, overflow: 'hidden' },
+  pagerText: { flexShrink: 1 },
+  pagerTitle: { fontFamily: FONT.displayHeavy, fontSize: 18, lineHeight: 23 },
+  pagerSub: { fontFamily: FONT.bodySemi, fontSize: 12.5, lineHeight: 17 },
+  // A 28 pt tap target round each dot; ten fit across a small phone.
+  dots: { flexDirection: 'row', justifyContent: 'center', marginTop: 2, marginBottom: 2 },
+  dotHit: { width: 26, height: 28, alignItems: 'center', justifyContent: 'center' },
+  dot: { height: 6, borderRadius: 3 },
   dayLine: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4, marginBottom: 2 },
   arrow: {
     width: 36,
