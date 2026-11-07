@@ -130,22 +130,10 @@ describe('GIVEN the sign-in screen is waiting', () => {
 });
 
 describe('GIVEN the Account tab', () => {
-  describe('WHEN “Join with a code” is tapped twice (Back on Leagues in between)', () => {
-    it('THEN each tap is a new ask for Leagues', async () => {
-      await render(<AccountScreen />);
-      await fireEvent.press(screen.getByRole('button', { name: 'Join with a code' }));
-      await fireEvent.press(screen.getByRole('button', { name: 'Join with a code' }));
-      const asks = jest
-        .mocked(router.navigate)
-        .mock.calls.map(
-          (c) => c[0] as unknown as { pathname: string; params: { go: string; n: string } },
-        );
-      expect(asks.map((a) => [a.pathname, a.params.go])).toEqual([
-        ['/leagues', 'code'],
-        ['/leagues', 'code'],
-      ]);
-      expect(asks[0]!.params.n).not.toBe(asks[1]!.params.n);
-    });
+  it('THEN joining a league is left to the Leagues tab (Alec, 7 Nov 2026)', async () => {
+    await render(<AccountScreen />);
+    expect(screen.queryByRole('button', { name: 'Join with a code' })).toBeNull();
+    expect(screen.queryByRole('header', { name: 'Leagues' })).toBeNull();
   });
 });
 

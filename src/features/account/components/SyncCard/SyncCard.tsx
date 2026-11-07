@@ -242,6 +242,17 @@ export function SyncCard({
         <Text accessibilityRole="header" style={[styles.h2, { color: t.ink }]}>
           Signed in
         </Text>
+        {/* Alec, 7 Nov 2026: a quiet Sign out on the heading row, not a big button. */}
+        <View style={styles.out}>
+          <Button
+            variant="text"
+            label="Sign out"
+            onPress={() => act('signout', () => signOut(client))}
+            loading={busy === 'signout'}
+            disabled={busy === 'sync'}
+            testID="sync-signout"
+          />
+        </View>
       </View>
       <Text style={[styles.p, { color: t.ink }]} testID="sync-signed-in" selectable>
         {account.email}
@@ -258,14 +269,6 @@ export function SyncCard({
           line
         )}
       </View>
-      <Button
-        variant="tonal"
-        label="Sign out"
-        onPress={() => act('signout', () => signOut(client))}
-        loading={busy === 'signout'}
-        disabled={busy === 'sync'}
-        testID="sync-signout"
-      />
     </View>
   );
 }
@@ -277,6 +280,7 @@ const styles = StyleSheet.create({
   small: { fontFamily: FONT.body, fontSize: 13.5, lineHeight: 19, flexShrink: 1 },
   row: { flexDirection: 'row', gap: 8, flexWrap: 'wrap', alignItems: 'center' },
   status: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  out: { marginLeft: 'auto' },
   line: {
     flexDirection: 'row',
     alignItems: 'center',
