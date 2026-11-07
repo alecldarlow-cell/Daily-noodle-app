@@ -931,3 +931,9 @@ Alec ran an outside review of the app and asked for its findings to be checked a
 - **Fix:** `ReckonSlider` moves the responder from the box to a 44 pt band around the track (18 above, 14 below: the knob and the ticks); the label strip is `pointerEvents="none"`, hidden from screen readers (the band carries the slider's value), and the box has no handler. `ReckonPlay`'s − / Lock in / + row sits 8 pt lower. The track and labels keep their places; nothing else changes. Website: the same change in `engines/reckon.js`/`.css` ([#83](https://github.com/alecldarlow-cell/dailynoodle/pull/83)).
 - **Tests proved:** `ReckonScreen.test.tsx` — a touch on the label strip or the box leaves the guess alone, a touch on the band moves it, the band is 44 pt and the controls row 8 pt lower; red on the old components. `check` green (1,550 tests).
 - **Release:** JS only. Merging publishes to preview; the Play build gets it from an Update production run (Alec's call).
+
+### 7 Nov 2026 — 0.4.0 store build uploaded (noodle-n icon)
+
+- **Build:** EAS production Android build `45e8a37d`, 0.4.0 (version code 7), from main `f6d4e4e` ([#112](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/112)); its fingerprint is `e442790c`, matching `store/runtime.json`.
+- **Play:** Alec uploaded the `.aab`; release 7 (0.4.0) created on the Alpha track with en-GB notes ("A fresh new look: Daily Noodle has a new app icon and splash screen."), 0.3.0 not carried over, 100% rollout, no errors or warnings, no devices lost. Sent for review 7 Nov, about 15:15 London.
+- **Next:** once Google approves it, testers who update get the new icon and the production updates published since the merge.
