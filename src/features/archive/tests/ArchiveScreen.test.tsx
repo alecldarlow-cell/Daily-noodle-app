@@ -22,6 +22,12 @@ afterEach(async () => {
   });
 });
 
+/** Opens the type picker and picks one (Alec, 7 Nov 2026: a sheet of tiles). */
+const pickType = async (name: string) => {
+  await fireEvent.press(screen.getByTestId('archive-type'));
+  await fireEvent.press(screen.getByRole('button', { name }));
+};
+
 describe('GIVEN the site’s archive list', () => {
   beforeEach(() => mockSite({ 'feed-lite.json': FEED_LITE }));
 
@@ -39,17 +45,28 @@ describe('GIVEN the site’s archive list', () => {
     it('THEN only that type is listed', async () => {
       await renderWithProviders(<ArchiveScreen />);
       await waitFor(() => expect(screen.getByTestId('archive-DP·PATH·0050')).toBeOnTheScreen());
-      await fireEvent.press(screen.getByRole('button', { name: 'Mini' }));
+      await pickType('Mini');
       expect(screen.queryByTestId('archive-DP·PATH·0050')).toBeNull();
       expect(screen.getByTestId('archive-DP·MINI·0010')).toBeOnTheScreen();
+      // The sheet closes, and the picker names the type with its tile.
+      expect(screen.getByTestId('archive-type')).toHaveTextContent('Mini');
+      expect(screen.getByRole('button', { name: 'Puzzles: Mini' })).toBeOnTheScreen();
     });
   });
 
-  describe('WHEN the Archive lays out its type chips', () => {
-    it('THEN the chip row never shrinks, so large text isn’t clipped', async () => {
+  describe('WHEN the type picker is opened', () => {
+    it('THEN a sheet shows All and every puzzle, the current one selected; the scrim closes it', async () => {
       await renderWithProviders(<ArchiveScreen />);
       await waitFor(() => expect(screen.getByText('October 2026')).toBeOnTheScreen());
-      expect(screen.getByTestId('archive-chips')).toHaveStyle({ flexGrow: 0, flexShrink: 0 });
+      expect(screen.getByTestId('archive-type')).toHaveTextContent('All');
+      await fireEvent.press(screen.getByTestId('archive-type'));
+      expect(screen.getByRole('header', { name: 'Show puzzles' })).toBeOnTheScreen();
+      const cells = screen.getAllByTestId(/^chip-/).map((c) => c.props.testID as string);
+      expect(cells[0]).toBe('chip-all');
+      expect(cells).toEqual(expect.arrayContaining(['chip-mini', 'chip-path', 'chip-tally']));
+      expect(screen.getByTestId('chip-all')).toBeSelected();
+      await fireEvent.press(screen.getByTestId('archive-type-close'));
+      expect(screen.queryByTestId('archive-type-sheet')).toBeNull();
     });
   });
 
@@ -62,39 +79,44 @@ describe('GIVEN the site’s archive list', () => {
     });
   });
 
-  describe('WHEN Done, Not done or All is picked, with a type chip too', () => {
-    it('THEN the list keeps only the puzzles that match both, and says so when none do', async () => {
+  describe('WHEN Hide done is switched on, with a type picked too', () => {
+    it('THEN the list keeps only unfinished puzzles of that type, and says so when none are left', async () => {
       appStorage.setItem(
         'digi-mini-v1',
         JSON.stringify({ v: 1, done: { 'DP·MINI·0105': { s: 87, d: '2026-10-24' } } }),
       );
       await renderWithProviders(<ArchiveScreen />);
       await waitFor(() => expect(screen.getByTestId('archive-DP·MINI·0105')).toBeOnTheScreen());
-      expect(screen.getByTestId('status-all')).toBeSelected();
+      const hide = screen.getByRole('switch', { name: 'Hide done' });
+      expect(hide).not.toBeChecked();
 
-      await fireEvent.press(screen.getByTestId('status-done'));
-      expect(screen.getByTestId('archive-DP·MINI·0105')).toBeOnTheScreen();
-      expect(screen.queryByTestId('archive-DP·MINI·0010')).toBeNull();
-      expect(screen.queryByTestId('archive-DP·PATH·0050')).toBeNull();
-
-      await fireEvent.press(screen.getByTestId('status-todo'));
+      await fireEvent.press(hide);
+      expect(screen.getByRole('switch', { name: 'Hide done' })).toBeChecked();
       expect(screen.queryByTestId('archive-DP·MINI·0105')).toBeNull();
       expect(screen.getByTestId('archive-DP·MINI·0010')).toBeOnTheScreen();
       expect(screen.getByTestId('archive-DP·PATH·0050')).toBeOnTheScreen();
 
       // both filters together: Minis not yet done
-      await fireEvent.press(screen.getByRole('button', { name: 'Mini' }));
+      await pickType('Mini');
       expect(screen.getByTestId('archive-DP·MINI·0010')).toBeOnTheScreen();
       expect(screen.queryByTestId('archive-DP·PATH·0050')).toBeNull();
       expect(screen.queryByTestId('archive-DP·MINI·0105')).toBeNull();
 
-      // Paths done: none yet
-      await fireEvent.press(screen.getByRole('button', { name: 'Path' }));
-      await fireEvent.press(screen.getByTestId('status-done'));
-      expect(screen.getByTestId('archive-empty')).toHaveTextContent('Nothing finished here yet');
+      // Off again: everything of that type is back.
+      await fireEvent.press(screen.getByRole('switch', { name: 'Hide done' }));
+      expect(screen.getByTestId('archive-DP·MINI·0105')).toBeOnTheScreen();
+    });
 
-      await fireEvent.press(screen.getByTestId('status-all'));
-      expect(screen.getByTestId('archive-DP·PATH·0050')).toBeOnTheScreen();
+    it('THEN with every puzzle of a type done, it says “All done here”', async () => {
+      appStorage.setItem(
+        'digi-path-v1',
+        JSON.stringify({ v: 1, done: { 'DP·PATH·0050': { t: '01:42', d: '2026-09-01' } } }),
+      );
+      await renderWithProviders(<ArchiveScreen />);
+      await waitFor(() => expect(screen.getByTestId('archive-DP·PATH·0050')).toBeOnTheScreen());
+      await pickType('Path');
+      await fireEvent.press(screen.getByRole('switch', { name: 'Hide done' }));
+      expect(screen.getByTestId('archive-empty')).toHaveTextContent('All done here');
     });
   });
 
@@ -139,18 +161,16 @@ describe('GIVEN no connection', () => {
 
 describe('GIVEN the Archive’s two filters', () => {
   beforeEach(() => mockSite({ 'feed-lite.json': FEED_LITE }));
-  it('THEN the type chips come first, with List | Calendar and the done switch on one row under them', async () => {
-    // Alec, 6 Nov 2026: the two switches share a row (it wraps at large text).
+  it('THEN they are one row: the type picker, Hide done, then the calendar at the end', async () => {
+    // Alec, 7 Nov 2026: one row of controls (it wraps at large text).
     await renderWithProviders(<ArchiveScreen />);
     await waitFor(() => expect(screen.getByText('October 2026')).toBeOnTheScreen());
-    const chips = screen.getByTestId('archive-chips');
     const row = screen.getByTestId('archive-switches');
-    const kids = chips.parent!.children as unknown[];
-    expect(kids.indexOf(chips)).toBeGreaterThanOrEqual(0);
-    expect(kids.indexOf(chips)).toBeLessThan(kids.indexOf(row));
     const inRow = row.children as unknown[];
-    expect(inRow.indexOf(screen.getByTestId('archive-view'))).toBe(0);
-    expect(inRow.indexOf(screen.getByTestId('archive-status'))).toBe(1);
+    expect(inRow.indexOf(screen.getByTestId('archive-type'))).toBe(0);
+    expect(inRow.indexOf(screen.getByTestId('archive-hide-done'))).toBe(1);
+    expect(inRow.indexOf(screen.getByTestId('view-calendar'))).toBe(2);
     expect(row).toHaveStyle({ flexDirection: 'row', flexWrap: 'wrap' });
+    expect(screen.queryByTestId('archive-chips')).toBeNull();
   });
 });

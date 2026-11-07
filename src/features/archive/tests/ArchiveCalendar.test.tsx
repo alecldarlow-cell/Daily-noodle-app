@@ -25,7 +25,7 @@ describe('GIVEN the Archive', () => {
     it('THEN the list is the default and Calendar is one tap away', async () => {
       await renderWithProviders(<ArchiveScreen />);
       await waitFor(() => expect(screen.getByText('October 2026')).toBeOnTheScreen());
-      expect(screen.getByTestId('view-list')).toBeSelected();
+      expect(screen.getByRole('button', { name: 'Show as a calendar' })).not.toBeSelected();
       expect(screen.queryByTestId('archive-calendar')).toBeNull();
     });
   });
@@ -43,7 +43,9 @@ describe('GIVEN the Archive', () => {
       await waitFor(() =>
         expect(screen.getByTestId('calendar-month')).toHaveTextContent('October 2026'),
       );
-      expect(screen.queryByTestId('archive-status')).toBeNull();
+      // Hide done is for the list; the calendar shows done days its own way.
+      expect(screen.queryByTestId('archive-hide-done')).toBeNull();
+      expect(screen.getByRole('button', { name: 'Show as a list' })).toBeSelected();
       expect(screen.getByTestId('calendar-2026-10-24-sub')).toHaveTextContent('1/2');
       expect(screen.getByTestId('calendar-2026-10-19-sub')).toHaveTextContent('0/1');
       expect(screen.getByTestId('calendar-next')).toBeDisabled();
@@ -60,7 +62,7 @@ describe('GIVEN the Archive', () => {
     });
   });
 
-  describe('WHEN a type chip is picked in the calendar, and an earlier month is opened', () => {
+  describe('WHEN a type is picked in the calendar, and an earlier month is opened', () => {
     it('THEN days show a tick for that type only, and the month steps back', async () => {
       appStorage.setItem(
         'digi-mini-v1',
@@ -69,8 +71,10 @@ describe('GIVEN the Archive', () => {
       await renderWithProviders(<ArchiveScreen />);
       await waitFor(() => expect(screen.getByTestId('view-calendar')).toBeOnTheScreen());
       await fireEvent.press(screen.getByTestId('view-calendar'));
+      await fireEvent.press(screen.getByTestId('archive-type'));
       await fireEvent.press(screen.getByRole('button', { name: 'Sweep' }));
       expect(screen.getByTestId('calendar-2026-10-24-sub')).toHaveTextContent('');
+      await fireEvent.press(screen.getByTestId('archive-type'));
       await fireEvent.press(screen.getByRole('button', { name: 'Mini' }));
       expect(screen.getByTestId('calendar-2026-10-24-sub')).toHaveTextContent('✓');
       await fireEvent.press(screen.getByTestId('calendar-prev'));
@@ -86,6 +90,6 @@ describe('GIVEN features.json switches the archive calendar off', () => {
     await renderWithProviders(<ArchiveScreen />);
     await waitFor(() => expect(screen.getByText('October 2026')).toBeOnTheScreen());
     await waitFor(() => expect(screen.queryByTestId('view-calendar')).toBeNull());
-    expect(screen.getByTestId('archive-status')).toBeOnTheScreen();
+    expect(screen.getByTestId('archive-hide-done')).toBeOnTheScreen();
   });
 });

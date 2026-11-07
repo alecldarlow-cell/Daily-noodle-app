@@ -959,3 +959,8 @@ Alec ran an outside review of the app and asked for its findings to be checked a
 
 - Alec: order the tabs by use. Leagues moves to second, before Archive (Stats, when switched on, sits after Archive). `scripts/tests/tabOrder.test.ts` pins the order. `check` green (1,557 tests). JS only.
 - Archive filter options mocked (D tile chips + filter button, E icon strip, F one picker with a sheet) on the canvas https://claude.ai/artifact/WLfuqegackgFcJqoncctwT; waiting on Alec's pick.
+
+### 7 Nov 2026 — Archive: one row of controls (option F + the tick)
+
+- **What (Alec picked F with the done tick, canvas https://claude.ai/artifact/WLfuqegackgFcJqoncctwT):** the type chips and the two segmented switches are replaced by one row: a picker button (tile or noodle mark, the type's name, ▾) that opens a bottom sheet of tiles (All and each puzzle, names under them); a "✓ Hide done" switch with the finished cards' green tick; and a round calendar button at the end (only when features.json allows the calendar). "Done only" is gone (Alec agreed). Hide done shows on the list only.
+- **Tests proved:** archive suites rewritten for the picker, the sheet (order, selection, scrim closes), Hide done alone and with a type, "All done here", tap sizes ≥ 44 pt, the row's order, calendar toggle and features switch. `check` green.
