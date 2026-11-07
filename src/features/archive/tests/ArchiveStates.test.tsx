@@ -1,4 +1,4 @@
-import { act, screen, waitFor } from '@testing-library/react-native';
+import { act, fireEvent, screen, waitFor } from '@testing-library/react-native';
 import { RefreshControl, StyleSheet, type RefreshControlProps } from 'react-native';
 
 import { appStorage } from '@/shared/storage';
@@ -44,28 +44,21 @@ describe('GIVEN the Archive’s filters', () => {
   beforeEach(() => mockSite({ 'feed-lite.json': FEED_LITE }));
 
   describe('WHEN they are laid out', () => {
-    it('THEN each type chip has a 46 pt press area round its site-sized pill', async () => {
+    it('THEN the type picker, Hide done and the calendar are each at least 44 pt to tap', async () => {
       await renderWithProviders(<ArchiveScreen />);
       await waitFor(() => expect(screen.getByText('October 2026')).toBeOnTheScreen());
-      const hit = flat('chip-mini');
-      // the pill: 6 + ~16 text + 6 + 2 border ≈ 30 pt, with 8 pt of press area above and below
-      expect(hit.paddingVertical).toBe(8);
-      expect(30 + 2 * hit.paddingVertical).toBeGreaterThanOrEqual(44);
-      expect(flat('chip-all').paddingVertical).toBe(8);
+      expect(flat('archive-type').minHeight).toBeGreaterThanOrEqual(44);
+      expect(flat('archive-hide-done').minHeight).toBeGreaterThanOrEqual(44);
+      expect(flat('view-calendar').height).toBeGreaterThanOrEqual(44);
+      expect(flat('view-calendar').width).toBeGreaterThanOrEqual(44);
     });
 
-    it('THEN the Done / Not done switch is 48 pt tall to tap', async () => {
+    it('THEN each tile in the type sheet is at least 44 pt tall to tap', async () => {
       await renderWithProviders(<ArchiveScreen />);
       await waitFor(() => expect(screen.getByText('October 2026')).toBeOnTheScreen());
-      const seg = flat('archive-status');
-      const btn = flat('status-done');
-      expect(btn.minHeight + 2 * seg.padding + 2 * seg.borderWidth).toBeGreaterThanOrEqual(48);
-    });
-
-    it('THEN the chip row runs to the screen’s edges, past the page gutter', async () => {
-      await renderWithProviders(<ArchiveScreen />);
-      await waitFor(() => expect(screen.getByText('October 2026')).toBeOnTheScreen());
-      expect(flat('archive-chips').marginHorizontal).toBe(-16);
+      await fireEvent.press(screen.getByTestId('archive-type'));
+      expect(flat('chip-mini').minHeight).toBeGreaterThanOrEqual(44);
+      expect(flat('chip-all').minHeight).toBeGreaterThanOrEqual(44);
     });
   });
 

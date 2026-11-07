@@ -55,8 +55,9 @@ describe('GIVEN the archive list includes today’s puzzles', () => {
     it('THEN the filters work as before, still without today’s', async () => {
       await renderWithProviders(<ArchiveScreen />);
       await waitFor(() => expect(screen.getByTestId('archive-DP·MINI·0105')).toBeOnTheScreen());
+      await fireEvent.press(screen.getByTestId('archive-type'));
       await fireEvent.press(screen.getByTestId('chip-mini'));
-      await fireEvent.press(screen.getByTestId('status-todo'));
+      await fireEvent.press(screen.getByTestId('archive-hide-done'));
       expect(screen.getByTestId('archive-DP·MINI·0010')).toBeOnTheScreen();
       expect(screen.queryByTestId('archive-DP·MINI·0110')).toBeNull();
       expect(screen.queryByTestId('archive-DP·PATH·0050')).toBeNull();

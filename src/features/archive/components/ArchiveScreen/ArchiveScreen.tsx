@@ -2,6 +2,8 @@ import { PUZZLE_TYPES, TYPE_LABEL, type PuzzleType } from '@noodle/core';
 import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
 import {
+  Image,
+  Modal,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -18,7 +20,16 @@ import { useManualRefresh } from '@/shared/query';
 import { FONT, useTokens } from '@/shared/theme';
 import { relDay, useLondonDay } from '@/shared/time';
 import { appRecorder } from '@/shared/track';
-import { Note, PuzzleRow, PuzzleRowSkeleton, refreshColors, Screen } from '@/shared/ui';
+import {
+  Chevron,
+  Note,
+  PuzzleRow,
+  PuzzleRowSkeleton,
+  PuzzleTile,
+  refreshColors,
+  Screen,
+  TAP,
+} from '@/shared/ui';
 
 import { groupArchive, type DoneFilter } from '../../hooks/groupArchive';
 import { ArchiveCalendar } from '../ArchiveCalendar/ArchiveCalendar';
@@ -28,24 +39,23 @@ import type { ArchiveItem } from '../../types';
 const NO_ITEMS: ArchiveItem[] = [];
 
 type View_ = 'list' | 'calendar';
-const VIEWS: { id: View_; label: string }[] = [
-  { id: 'list', label: 'List' },
-  { id: 'calendar', label: 'Calendar' },
-];
 
-const STATUS: { id: DoneFilter; label: string }[] = [
-  { id: 'all', label: 'All' },
-  { id: 'todo', label: 'Not done' },
-  { id: 'done', label: 'Done' },
-];
+/** The app's noodle mark, the picker's icon for All. */
+const MARK = require('../../../../../assets/images/masthead-mark.png') as number;
 
-/** Every released puzzle before today, by month, newest first; filter by type, then by done or not. */
+/**
+ * Every released puzzle before today, by month, newest first. One row of controls (Alec,
+ * 7 Nov 2026): a picker for the puzzle type (a sheet of tiles), "✓ Hide done" with the
+ * finished cards' tick, and the calendar.
+ */
 export function ArchiveScreen() {
   const t = useTokens();
   const day = useLondonDay();
   const q = useArchive();
   const [type, setType] = useState<PuzzleType | null>(null);
-  const [status, setStatus] = useState<DoneFilter>('all');
+  const [hideDone, setHideDone] = useState(false);
+  const [picking, setPicking] = useState(false);
+  const status: DoneFilter = hideDone ? 'todo' : 'all';
   // Alec, 6 Nov 2026: the list stays the default; the month calendar is one tap away.
   const [chosen, setView] = useState<View_>('list');
   // features.json's archive switch (Alec, 6 Nov 2026): off hides the calendar, with no app update.
@@ -96,85 +106,73 @@ export function ArchiveScreen() {
 
   return (
     <Screen title="Archive" testID="archive-screen" scroll={false}>
-      <ScrollView
-        horizontal
-        testID="archive-chips"
-        showsHorizontalScrollIndicator={false}
-        style={styles.chips}
-        contentContainerStyle={styles.chipsRow}>
-        {[null, ...PUZZLE_TYPES].map((ty) => {
-          const on = ty === type;
-          const label = ty ? TYPE_LABEL[ty] : 'All';
-          return (
-            <Pressable
-              key={label}
-              accessibilityRole="button"
-              accessibilityState={{ selected: on }}
-              onPress={() => setType(ty)}
-              testID={`chip-${ty ?? 'all'}`}
-              style={styles.chipHit}>
-              <View
-                style={[
-                  styles.chip,
-                  on
-                    ? { borderColor: t.accent, backgroundColor: t.accentSoft }
-                    : { borderColor: t.hair, backgroundColor: t.paper },
-                ]}>
-                <Text style={[styles.chipText, { color: on ? t.accent : t.muted }]}>{label}</Text>
-              </View>
-            </Pressable>
-          );
-        })}
-      </ScrollView>
-      {/* Alec, 6 Nov 2026: List | Calendar and All / Not done / Done share one row; it wraps at large text. */}
-      <View style={styles.segRow} testID="archive-switches">
-        {calendarOn ? (
-          <View
-            style={[styles.seg, { borderColor: t.hair, backgroundColor: t.paper }]}
-            testID="archive-view">
-            {VIEWS.map((v) => {
-              const on = v.id === view;
-              return (
-                <Pressable
-                  key={v.id}
-                  accessibilityRole="button"
-                  accessibilityState={{ selected: on }}
-                  accessibilityLabel={`Show as a ${v.label.toLowerCase()}`}
-                  testID={`view-${v.id}`}
-                  onPress={() => setView(v.id)}
-                  style={[styles.segBtn, on && { backgroundColor: t.accentSoft }]}>
-                  <Text style={[styles.chipText, { color: on ? t.accent : t.muted }]}>
-                    {v.label}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
-        ) : null}
+      <View style={styles.bar} testID="archive-switches">
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`Puzzles: ${type ? TYPE_LABEL[type] : 'All'}`}
+          accessibilityHint="Choose which puzzle to show"
+          accessibilityState={{ expanded: picking }}
+          testID="archive-type"
+          onPress={() => setPicking(true)}
+          style={({ pressed }) => [
+            styles.pill,
+            { borderColor: t.hair, backgroundColor: pressed ? t.accentSoft : t.paper },
+          ]}>
+          <TypeIcon type={type} size={26} />
+          <Text style={[styles.pillText, { color: t.ink }]} numberOfLines={1}>
+            {type ? TYPE_LABEL[type] : 'All'}
+          </Text>
+          <Chevron color={t.ink} dir="down" size={7} />
+        </Pressable>
         {view === 'list' ? (
-          <View
-            style={[styles.seg, { borderColor: t.hair, backgroundColor: t.paper }]}
-            testID="archive-status">
-            {STATUS.map((s) => {
-              const on = s.id === status;
-              return (
-                <Pressable
-                  key={s.id}
-                  accessibilityRole="button"
-                  accessibilityState={{ selected: on }}
-                  accessibilityLabel={`Show ${s.label === 'All' ? 'all puzzles' : s.label.toLowerCase()}`}
-                  testID={`status-${s.id}`}
-                  onPress={() => setStatus(s.id)}
-                  style={[styles.segBtn, on && { backgroundColor: t.accentSoft }]}>
-                  <Text style={[styles.chipText, { color: on ? t.accent : t.muted }]}>
-                    {s.label}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
+          <Pressable
+            accessibilityRole="switch"
+            accessibilityLabel="Hide done"
+            accessibilityState={{ checked: hideDone }}
+            testID="archive-hide-done"
+            onPress={() => setHideDone((h) => !h)}
+            style={[
+              styles.pill,
+              hideDone
+                ? { borderColor: t.accent, backgroundColor: t.accentSoft }
+                : { borderColor: t.hair, backgroundColor: t.paper },
+            ]}>
+            <View style={[styles.tick, { backgroundColor: t.accent, borderColor: t.canvas }]}>
+              <Text maxFontSizeMultiplier={1} style={[styles.tickText, { color: t.onAccent }]}>
+                ✓
+              </Text>
+            </View>
+            <Text style={[styles.pillText, { color: hideDone ? t.accent : t.muted }]}>
+              Hide done
+            </Text>
+          </Pressable>
+        ) : null}
+        {calendarOn ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={view === 'calendar' ? 'Show as a list' : 'Show as a calendar'}
+            accessibilityState={{ selected: view === 'calendar' }}
+            testID="view-calendar"
+            onPress={() => setView(view === 'calendar' ? 'list' : 'calendar')}
+            style={[
+              styles.round,
+              view === 'calendar'
+                ? { borderColor: t.accent, backgroundColor: t.accentSoft }
+                : { borderColor: t.hair, backgroundColor: t.paper },
+            ]}>
+            <CalendarGlyph color={view === 'calendar' ? t.accent : t.ink} />
+          </Pressable>
         ) : null}
       </View>
+      <TypeSheet
+        open={picking}
+        type={type}
+        onClose={() => setPicking(false)}
+        onPick={(ty) => {
+          setType(ty);
+          setPicking(false);
+        }}
+      />
       {q.data && offline ? (
         <Note
           testID="archive-offline-kept"
@@ -197,16 +195,7 @@ export function ArchiveScreen() {
         />
       ) : null}
       {q.data && view === 'list' && sections.length === 0 ? (
-        <Note
-          testID="archive-empty"
-          title={
-            status === 'done'
-              ? 'Nothing finished here yet'
-              : status === 'todo'
-                ? 'All done here'
-                : 'No puzzles match'
-          }
-        />
+        <Note testID="archive-empty" title={hideDone ? 'All done here' : 'No puzzles match'} />
       ) : null}
       {view === 'calendar' ? (
         <ScrollView
@@ -252,37 +241,155 @@ export function ArchiveScreen() {
   );
 }
 
+/** A type's tile, or the noodle mark for All. */
+function TypeIcon({ type, size }: { type: PuzzleType | null; size: number }) {
+  return (
+    <View style={{ width: size, height: size, borderRadius: size / 6, overflow: 'hidden' }}>
+      {type ? (
+        <PuzzleTile type={type} size={size} />
+      ) : (
+        <Image source={MARK} style={{ width: size, height: size }} accessible={false} />
+      )}
+    </View>
+  );
+}
+
+/** A small calendar drawn from views (the app has no icon font): a box, its top bar, two rings. */
+function CalendarGlyph({ color }: { color: string }) {
+  return (
+    <View accessible={false} importantForAccessibility="no" style={styles.cal}>
+      <View style={[styles.calBox, { borderColor: color }]}>
+        <View style={[styles.calBar, { backgroundColor: color }]} />
+      </View>
+      <View style={[styles.calRing, { left: 4, backgroundColor: color }]} />
+      <View style={[styles.calRing, { right: 4, backgroundColor: color }]} />
+    </View>
+  );
+}
+
+/** The type picker: a sheet from the bottom with All and each puzzle as a tile and its name. */
+function TypeSheet({
+  open,
+  type,
+  onClose,
+  onPick,
+}: {
+  open: boolean;
+  type: PuzzleType | null;
+  onClose: () => void;
+  onPick: (t: PuzzleType | null) => void;
+}) {
+  const t = useTokens();
+  return (
+    <Modal visible={open} transparent animationType="slide" onRequestClose={onClose}>
+      <Pressable
+        style={styles.scrim}
+        accessibilityRole="button"
+        accessibilityLabel="Close"
+        testID="archive-type-close"
+        onPress={onClose}
+      />
+      <View style={[styles.sheet, { backgroundColor: t.paper }]} testID="archive-type-sheet">
+        <View style={[styles.grab, { backgroundColor: t.hair }]} />
+        <Text accessibilityRole="header" style={[styles.sheetTitle, { color: t.ink }]}>
+          Show puzzles
+        </Text>
+        <View style={styles.grid}>
+          {[null, ...PUZZLE_TYPES].map((ty) => {
+            const on = ty === type;
+            const label = ty ? TYPE_LABEL[ty] : 'All';
+            return (
+              <Pressable
+                key={label}
+                accessibilityRole="button"
+                accessibilityLabel={label}
+                accessibilityState={{ selected: on }}
+                testID={`chip-${ty ?? 'all'}`}
+                onPress={() => onPick(ty)}
+                style={styles.cell}>
+                <View style={[styles.ring, { borderColor: on ? t.accent : 'transparent' }]}>
+                  <TypeIcon type={ty} size={48} />
+                </View>
+                <Text
+                  numberOfLines={1}
+                  style={[styles.cellText, { color: on ? t.accent : t.muted }]}>
+                  {label}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
 const styles = StyleSheet.create({
-  // flexShrink 0: the list below takes the rest of the column, and on Android it otherwise
-  // squeezed this row, clipping the chip labels (seen at 115% font size on a Pixel 10 Pro).
-  // Out to the screen's edges (the page has a 16 pt gutter), so the last chip slides off the
-  // edge rather than being cut in mid-air.
-  chips: { flexGrow: 0, flexShrink: 0, marginHorizontal: -16, marginTop: -8 },
-  chipsRow: { gap: 6, paddingHorizontal: 16 },
-  // A 46 pt press area round the site-sized ~30 pt chip (front.css .chip), so it is easy to hit;
-  // the -8 margin above keeps the chip where it was.
-  chipHit: { paddingVertical: 8, justifyContent: 'center' },
-  segRow: { flexDirection: 'row', flexWrap: 'wrap', columnGap: 8, rowGap: 8, marginBottom: 10 },
-  // a three-way switch under the type chips: All, Not done, Done
-  seg: {
+  // One row of controls; it wraps under large text rather than clipping.
+  bar: {
     flexDirection: 'row',
-    alignSelf: 'flex-start',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: -4,
+    marginBottom: 6,
+  },
+  pill: {
+    minHeight: TAP,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingLeft: 8,
+    paddingRight: 14,
     borderWidth: 1,
     borderRadius: 999,
-    padding: 3,
-    gap: 2,
   },
-  // 40 pt buttons in a 3 pt-padded, bordered pill: 48 pt to tap, Material's minimum.
-  segBtn: {
-    borderRadius: 999,
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    minHeight: 40,
+  pillText: { fontFamily: FONT.bodySemi, fontSize: 14 },
+  // The finished cards' mark (PuzzleRow), smaller.
+  tick: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    borderWidth: 2,
+    alignItems: 'center',
     justifyContent: 'center',
   },
-  // front.css .chip: 12.5 px semibold, 6 × 12 padding, a hairline; the chosen one in the accent.
-  chip: { borderWidth: 1, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6 },
-  chipText: { fontFamily: FONT.bodySemi, fontSize: 12.5 },
+  tickText: { fontFamily: FONT.bodyBold, fontSize: 12, lineHeight: 14 },
+  round: {
+    width: TAP,
+    height: TAP,
+    borderRadius: TAP / 2,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 'auto',
+  },
+  cal: { width: 18, height: 18 },
+  calBox: {
+    position: 'absolute',
+    top: 2,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderWidth: 1.8,
+    borderRadius: 3,
+  },
+  calBar: { height: 3.5 },
+  calRing: { position: 'absolute', top: 0, width: 2, height: 5, borderRadius: 1 },
+  scrim: { flex: 1, backgroundColor: 'rgba(5,6,8,0.6)' },
+  sheet: {
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingHorizontal: 20,
+    paddingTop: 10,
+    paddingBottom: 40,
+  },
+  grab: { width: 40, height: 4, borderRadius: 2, alignSelf: 'center', marginBottom: 14 },
+  sheetTitle: { fontFamily: FONT.displayHeavy, fontSize: 18, marginBottom: 10 },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', rowGap: 12 },
+  cell: { width: '20%', alignItems: 'center', gap: 6, minHeight: TAP },
+  ring: { padding: 2, borderWidth: 2, borderRadius: 12 },
+  cellText: { fontFamily: FONT.bodySemi, fontSize: 12 },
   // front.css .count: the list's small uppercase label.
   month: {
     fontFamily: FONT.bodySemi,
