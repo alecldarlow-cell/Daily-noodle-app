@@ -98,7 +98,8 @@ describe('GIVEN a build with sign-in', () => {
 });
 
 describe('GIVEN a league with a champion', () => {
-  it('WHEN its board shows THEN the crown is explained, and not without one', async () => {
+  // Alec, 7 Nov 2026: last week's champion is no longer shown anywhere (the data stays).
+  it('WHEN its board shows THEN no crown and no champion note appear', async () => {
     inFamily({ ...FAMILY, pin: true });
     mine(true);
     m.boardRecords.mockResolvedValue({
@@ -108,9 +109,9 @@ describe('GIVEN a league with a champion', () => {
       today: '2026-11-05',
     } as never);
     await renderWithProviders(<LeaguesScreen />);
-    await waitFor(() =>
-      expect(screen.getByTestId('board-notes')).toHaveTextContent(/👑 last week’s champion/),
-    );
+    await waitFor(() => expect(m.boardRecords).toHaveBeenCalled());
+    await waitFor(() => expect(screen.getByTestId('overall-board')).toBeOnTheScreen());
+    expect(screen.queryByText(/👑|champion/)).toBeNull();
   });
 });
 
@@ -120,7 +121,8 @@ describe('GIVEN a player in a league', () => {
     mine(true);
     m.boardSetNick.mockResolvedValue('Alec' as never);
     const view = await renderWithProviders(<LeaguesScreen />);
-    await fireEvent.press(await screen.findByRole('button', { name: /League settings/ }));
+    await fireEvent.press(await screen.findByTestId('league-picker'));
+    await fireEvent.press(screen.getByTestId('menu-settings'));
     expect(screen.queryByRole('button', { name: /PIN/ })).toBeNull();
     await fireEvent.press(screen.getByRole('button', { name: 'Change nickname' }));
     await fireEvent.changeText(screen.getByLabelText('Nickname'), 'Alec');
@@ -137,7 +139,8 @@ describe('GIVEN a player in a league', () => {
     mine(true);
     m.boardSetNick.mockRejectedValue(new BoardError('nick_taken'));
     await renderWithProviders(<LeaguesScreen />);
-    await fireEvent.press(await screen.findByRole('button', { name: /League settings/ }));
+    await fireEvent.press(await screen.findByTestId('league-picker'));
+    await fireEvent.press(screen.getByTestId('menu-settings'));
     await fireEvent.press(screen.getByRole('button', { name: 'Change nickname' }));
     await fireEvent.changeText(screen.getByLabelText('Nickname'), 'Mum');
     await fireEvent.press(screen.getByRole('button', { name: 'Save' }));

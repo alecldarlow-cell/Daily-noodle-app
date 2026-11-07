@@ -220,34 +220,27 @@ describe('GIVEN a player in two leagues (AF-017)', () => {
       expect(screen.getByTestId('pager-day')).toHaveTextContent(`Today · ${shortDate(today)}`);
     });
 
-    it('THEN a puzzle’s board says where you stand overall today and this week', async () => {
-      m.boardOverall.mockResolvedValue(
-        overall({
-          week: [
-            { rank: 1, nick: 'Ma', me: false, points: 30, played: 12, completed: 11 },
-            { rank: 2, nick: 'Alec', me: true, points: 12, played: 9, completed: 9 },
-          ],
-        }),
-      );
+    // Alec, 7 Nov 2026: no standing line on puzzle boards; All puzzles has the totals.
+    it('THEN a puzzle’s board has no overall standing line, and asks only for its own board', async () => {
       await open();
-      expect(screen.queryByTestId('you-line')).toBeNull(); // All puzzles is the overall board
+      const overalls = m.boardOverall.mock.calls.length;
       await fireEvent.press(screen.getByTestId('pill-mini'));
-      await waitFor(() => expect(screen.getByTestId('you-line')).toBeOnTheScreen());
-      expect(screen.getByTestId('you-line')).toHaveTextContent(
-        'Today overall 2nd · 1 ptWeek 2nd · 12 pts',
-      );
+      await waitFor(() => expect(screen.getByTestId('day-board')).toBeOnTheScreen());
+      expect(screen.queryByTestId('you-line')).toBeNull();
+      expect(screen.queryByText(/Today overall/)).toBeNull();
+      expect(m.boardOverall.mock.calls.length).toBe(overalls);
     });
 
     it('THEN earlier days are one tap away, and Back to today returns', async () => {
       await open();
-      await fireEvent.press(screen.getByRole('button', { name: 'Earlier days' }));
+      await fireEvent.press(screen.getByTestId('pager-day-btn'));
       expect(screen.getByRole('button', { name: 'Next day' })).toBeDisabled();
       await fireEvent.press(screen.getByRole('button', { name: 'Previous day' }));
       await waitFor(() =>
         expect(screen.getByTestId('day-line')).toHaveTextContent(/^Yesterday · /),
       );
       expect(screen.getByTestId('pager-day')).toHaveTextContent(/^Yesterday · /);
-      await fireEvent.press(screen.getByRole('button', { name: 'Back to today' }));
+      await fireEvent.press(screen.getByTestId('pager-day-btn'));
       expect(screen.getByTestId('pager-day')).toHaveTextContent(`Today · ${shortDate(today)}`);
       expect(screen.queryByRole('button', { name: 'Previous day' })).toBeNull();
     });
@@ -266,6 +259,52 @@ describe('GIVEN a player in two leagues (AF-017)', () => {
       '22nd',
       '101st',
     ]);
+  });
+});
+
+// Alec, 7 Nov 2026: a less crowded board.
+describe('GIVEN a board in the decluttered layout', () => {
+  it('THEN the league menu holds the leagues, then Invite, League settings, Start and Join', async () => {
+    await open();
+    await fireEvent.press(screen.getByTestId('league-picker'));
+    const menu = screen.getByTestId('league-menu');
+    const items = within(menu)
+      .getAllByRole(/button|radio/)
+      .map((b) => b.props.accessibilityLabel as string);
+    expect(items).toEqual([
+      'Family',
+      'Work',
+      'Invite people',
+      'League settings',
+      'Start a new league',
+      'Join with a code',
+    ]);
+    await fireEvent.press(screen.getByTestId('menu-settings'));
+    expect(screen.queryByTestId('league-menu')).toBeNull();
+    expect(screen.getByTestId('league-settings')).toBeOnTheScreen();
+    await fireEvent.press(screen.getByTestId('settings-done'));
+    expect(screen.queryByTestId('league-settings')).toBeNull();
+  });
+
+  it('THEN Share is the only action under the board: no Invite button, no Earlier days link, no footer', async () => {
+    await open();
+    expect(screen.getByRole('button', { name: 'Share leaderboard' })).toBeOnTheScreen();
+    expect(screen.queryByRole('button', { name: 'Invite people' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Earlier days' })).toBeNull();
+    expect(screen.queryByRole('button', { name: /League settings/ })).toBeNull();
+    expect(screen.queryByTestId('leagues-foot')).toBeNull();
+    expect(screen.queryByText(/Private leagues for friends and family/)).toBeNull();
+  });
+
+  it('THEN the date is a 44 pt button that opens the earlier days', async () => {
+    await open();
+    const day = screen.getByTestId('pager-day-btn');
+    expect(day.props.accessibilityLabel).toBe(`Today · ${shortDate(today)}, choose an earlier day`);
+    const slop = day.props.hitSlop as { top: number; bottom: number };
+    expect(17 + slop.top + slop.bottom).toBeGreaterThanOrEqual(44);
+    await fireEvent.press(day);
+    expect(screen.getByRole('button', { name: 'Previous day' })).toBeOnTheScreen();
+    expect(screen.getByTestId('pager-day-btn').props.accessibilityLabel).toMatch(/back to today$/);
   });
 });
 

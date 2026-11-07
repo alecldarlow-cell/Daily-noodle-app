@@ -17,22 +17,19 @@ import { BUILD_ENV } from '@/shared/env';
 import { appStorage, useStoredRaw } from '@/shared/storage';
 import { FONT, useTokens } from '@/shared/theme';
 import { useLondonDay } from '@/shared/time';
+import { Button } from '@/shared/ui';
 
 import { isOffline, sayError } from '../api/errors';
 import { setLastType, useBoardState } from '../hooks/boardStore';
 import {
-  addDays,
   inviteLink,
-  isMonday,
   inviteText,
   MEDAL,
   pts,
   puzzleOn,
-  recapRows,
   result,
   shareAll,
   shareDay,
-  shareRecap,
   dayCount,
   weekDays,
   weekLabel,
@@ -80,8 +77,8 @@ const isView = (v: unknown): v is BoardView =>
   v === 'all' || v === 'records' || (typeof v === 'string' && v in BOARD_TYPE);
 
 /**
- * The league's records, read alongside every view as the site does (loadRecords): for 👑
- * after last week's champion, "🏆 New league record" on a row, the record line under a
+ * The league's records, read alongside every view as the site does (loadRecords): for
+ * "🏆 New league record" on a row, the record line under a
  * day's board, and a name's card on a tap. Absent until they load, or if they can't.
  */
 const RecordsCtx = createContext<{ recs?: Records; open?: (nick: string) => void }>({});
@@ -93,7 +90,18 @@ const SYNCED_KEY = 'noodle-app-sync';
 
 const share = (message: string) => Share.share({ message }).catch(() => {});
 
-export function Board({ flow, league }: { flow: Flow; league: BoardLeague }) {
+export function Board({
+  flow,
+  league,
+  settingsOpen = false,
+  onSettingsClose = () => {},
+}: {
+  flow: Flow;
+  league: BoardLeague;
+  /** League settings, opened from the league menu (Alec, 7 Nov 2026: off the board). */
+  settingsOpen?: boolean;
+  onSettingsClose?: () => void;
+}) {
   const t = useTokens();
   const today = useLondonDay();
   const s = useBoardState();
@@ -143,7 +151,6 @@ export function Board({ flow, league }: { flow: Flow; league: BoardLeague }) {
   const showDay = dayOpen || day !== today;
   const isType = view !== 'all' && view !== 'records';
   // On a puzzle's board, the player's place today and this week overall, from the All board.
-  const overall = useBoardData(filling || !isType ? undefined : league.code, 'all', day);
   // A sideways swipe over the board does what the arrows do.
   const swipe = useMemo(() => {
     const step = (dir: 1 | -1) => {
@@ -171,6 +178,15 @@ export function Board({ flow, league }: { flow: Flow; league: BoardLeague }) {
   return (
     <RecordsCtx.Provider value={{ recs: rec.data, open: rec.data ? openCard : undefined }}>
       <View testID="league-board">
+        {settingsOpen && roster ? (
+          <Settings
+            flow={flow}
+            league={league}
+            players={roster.players}
+            members={roster.members}
+            onClose={onSettingsClose}
+          />
+        ) : null}
         <View {...swipe.panHandlers} testID="board-swipe">
           <TypePager
             stops={STOPS}
@@ -181,10 +197,18 @@ export function Board({ flow, league }: { flow: Flow; league: BoardLeague }) {
               setCard(null);
               pick(v);
             }}
+            dayOpen={showDay}
+            onDay={
+              records
+                ? undefined
+                : () => {
+                    if (showDay) {
+                      setDayOpen(false);
+                      setDate(today);
+                    } else setDayOpen(true);
+                  }
+            }
           />
-          {isType && overall.data ? (
-            <YouLine d={overall.data as Overall} today={day === today} />
-          ) : null}
 
           <TopCard flow={flow} league={league} />
 
@@ -229,29 +253,6 @@ export function Board({ flow, league }: { flow: Flow; league: BoardLeague }) {
             />
           )}
         </View>
-
-        {records ? null : (
-          <Pressable
-            accessibilityRole="button"
-            accessibilityState={{ expanded: showDay }}
-            testID="day-open"
-            hitSlop={8}
-            style={styles.links}
-            onPress={() => {
-              if (showDay) {
-                setDayOpen(false);
-                setDate(today);
-              } else setDayOpen(true);
-            }}>
-            <Text style={[styles.linkText, { color: t.accent }]}>
-              {showDay ? 'Back to today' : 'Earlier days'}
-            </Text>
-          </Pressable>
-        )}
-
-        {roster ? (
-          <Settings flow={flow} league={league} players={roster.players} members={roster.members} />
-        ) : null}
       </View>
     </RecordsCtx.Provider>
   );
@@ -281,30 +282,6 @@ function BoardFailed({ error, busy, retry }: { error: unknown; busy: boolean; re
 }
 
 /** The league in the masthead: switch, start or join another. */
-/** Mondays: last week's top three, to share, until closed for the day (board.html fillRecap). */
-function RecapCard({ league, today }: { league: BoardLeague; today: string }) {
-  const key = `noodle-board-recap-${league.code}`;
-  const closed = useStoredRaw(key) === today;
-  const q = useBoardData(closed ? undefined : league.code, 'all', addDays(today, -1));
-  const d = q.data as Overall | undefined;
-  if (closed || !d?.week || d.week.length < 2) return null;
-  return (
-    <Card title={`🏆 Last week in ${league.name}`} testID="recap-card">
-      {recapRows(d.week).map((r) => (
-        <P key={r.nick}>{`${MEDAL[r.rank] ?? `${r.rank}.`} ${r.nick} · ${pts(r.points)}`}</P>
-      ))}
-      <Acts>
-        <Btn
-          variant="filled"
-          label="Share"
-          onPress={() => share(shareRecap(league, d.week_from, d.week_to, d.week))}
-        />
-        <Btn label="Close" onPress={() => appStorage.setItem(key, today)} />
-      </Acts>
-    </Card>
-  );
-}
-
 /** The one card at the top after something happened, else the PIN nudge (board.html topCard). */
 function TopCard({ flow, league }: { flow: Flow; league: BoardLeague }) {
   const today = useLondonDay();
@@ -374,8 +351,6 @@ function TopCard({ flow, league }: { flow: Flow; league: BoardLeague }) {
         </P>
       </Card>
     );
-  if (isMonday(today) && appStorage.getItem(`noodle-board-recap-${league.code}`) !== today)
-    return <RecapCard league={league} today={today} />;
   // Email sign-in is how leagues follow a player (Alec's call). A PIN already set still works
   // on Already in this league?; nobody is asked to set one (6 Nov 2026).
   if (syncOn() && !later && !appStorage.getItem(SYNCED_KEY))
@@ -416,9 +391,8 @@ function Row({
   record?: boolean;
 }) {
   const t = useTokens();
-  const { recs, open } = useContext(RecordsCtx);
-  const crown = !!recs?.crown?.includes(nick);
-  const label = `${rank} ${nick}${me ? ' (you)' : ''}${crown ? ', last week’s champion' : ''}, ${big}${small ? `, ${small}` : ''}${record ? ', new league record' : ''}`;
+  const { open } = useContext(RecordsCtx);
+  const label = `${rank} ${nick}${me ? ' (you)' : ''}, ${big}${small ? `, ${small}` : ''}${record ? ', new league record' : ''}`;
   const style = [
     styles.row,
     { borderBottomColor: t.hair },
@@ -438,7 +412,6 @@ function Row({
       <View style={styles.who}>
         <Text numberOfLines={1} style={[styles.nick, { color: dim ? t.muted : t.ink }]}>
           {nick}
-          {crown ? ' 👑' : ''}
           {me ? <Text style={[styles.you, { color: t.accent }]}> YOU</Text> : null}
         </Text>
         {record ? (
@@ -458,47 +431,28 @@ function Row({
   );
 }
 
-/** Says what a 👑 means: last week's champion, not whoever is leading now. */
 /**
- * Under the board, one small line (Alec, 7 Nov 2026): who hasn't played yet, and what a 👑
- * means (last week's champion, not whoever leads now) when someone wears one.
+ * Under the board, one small line: who hasn't played yet. (Alec, 7 Nov 2026: last week's
+ * champion is no longer shown anywhere; the data stays.)
  */
 function NotesLine({ rows }: { rows: NotYet[] }) {
   const t = useTokens();
-  const { recs } = useContext(RecordsCtx);
-  const parts = [
-    rows.length
-      ? `Not played yet: ${rows.map((r) => `${r.nick}${r.me ? ' (you)' : ''}`).join(', ')}`
-      : '',
-    recs?.crown?.length ? '👑 last week’s champion' : '',
-  ].filter(Boolean);
-  if (!parts.length) return null;
+  if (!rows.length) return null;
   return (
     <Text style={[styles.notes, { color: t.muted }]} testID="board-notes">
-      {parts.join(' · ')}
+      Not played yet: {rows.map((r) => `${r.nick}${r.me ? ' (you)' : ''}`).join(', ')}
     </Text>
   );
 }
 
-/** On a puzzle's board: the player's place overall that day and this week ("3rd · 12 pts"). */
-function YouLine({ d, today }: { d: Overall; today: boolean }) {
-  const t = useTokens();
-  const day = d.day.find((r) => r.me);
-  const week = d.week.find((r) => r.me);
-  if (!day && !week) return null;
-  const part = (label: string, r: OverallRow | undefined) =>
-    r ? (
-      <Text style={[styles.youText, { color: t.muted }]}>
-        {label}{' '}
-        <Text style={[styles.youBold, { color: t.ink }]}>
-          {ordinal(r.rank)} · {pts(r.points)}
-        </Text>
-      </Text>
-    ) : null;
+/**
+ * The one action under a board (Alec, 7 Nov 2026): a quiet, compact Share; Invite and League
+ * settings live in the league menu.
+ */
+function ShareBtn({ onPress }: { onPress: () => unknown }) {
   return (
-    <View style={styles.youLine} testID="you-line">
-      {part(today ? 'Today overall' : 'That day overall', day)}
-      {part('Week', week)}
+    <View style={styles.shareRow} testID="share-board">
+      <Button variant="tonal" label="Share leaderboard" onPress={onPress} />
     </View>
   );
 }
@@ -573,20 +527,9 @@ function DayView({
         </View>
       )}
       <NotesLine rows={d.not_yet} />
-      <Acts>
-        {d.ranked.length ? (
-          <Btn
-            variant="filled"
-            label="Share leaderboard"
-            onPress={() => share(shareDay(type, headline, date, d.ranked, league))}
-          />
-        ) : null}
-        <Btn
-          variant={d.ranked.length ? 'tonal' : 'filled'}
-          label="Invite people"
-          onPress={() => share(`${inviteText(league.name)}\n${inviteLink(league.code)}`)}
-        />
-      </Acts>
+      {d.ranked.length ? (
+        <ShareBtn onPress={() => share(shareDay(type, headline, date, d.ranked, league))} />
+      ) : null}
     </View>
   );
 }
@@ -644,20 +587,7 @@ function OverallView({
         Each puzzle you finish scores 1 point for every player you beat. Equal points: more puzzles
         finished goes first.
       </Text>
-      <Acts>
-        {d.day.length ? (
-          <Btn
-            variant="filled"
-            label="Share leaderboard"
-            onPress={() => share(shareAll(date, d.day, league))}
-          />
-        ) : null}
-        <Btn
-          variant={d.day.length ? 'tonal' : 'filled'}
-          label="Invite people"
-          onPress={() => share(`${inviteText(league.name)}\n${inviteLink(league.code)}`)}
-        />
-      </Acts>
+      {d.day.length ? <ShareBtn onPress={() => share(shareAll(date, d.day, league))} /> : null}
     </View>
   );
 }
@@ -675,14 +605,15 @@ function Settings({
   league,
   players,
   members,
+  onClose,
 }: {
   flow: Flow;
   league: BoardLeague;
   players: string[];
   members: number;
+  onClose: () => void;
 }) {
   const t = useTokens();
-  const [open, setOpen] = useState(false);
   const [name, setName] = useState(league.name);
   const [msg, setMsg] = useState<{ text: string; ok?: boolean }>({ text: '' });
   // Another league picked: its own name in the rename box, and no message left from the
@@ -697,15 +628,16 @@ function Settings({
   const owner = useOwnerAction();
   const fail = (e: unknown) => setMsg({ text: sayError(e) });
   return (
-    <View style={[styles.settings, { borderTopColor: t.hair }]} testID="league-settings">
-      <Pressable
-        accessibilityRole="button"
-        accessibilityState={{ expanded: open }}
-        onPress={() => setOpen(!open)}
-        style={styles.summaryBtn}>
-        <Text style={[styles.summary, { color: t.muted }]}>⚙︎ League settings</Text>
-      </Pressable>
-      {open ? (
+    <View
+      style={[styles.settings, { backgroundColor: t.paper, borderColor: t.hair }]}
+      testID="league-settings">
+      <View style={styles.settingsHead}>
+        <Text accessibilityRole="header" style={[styles.settingsTitle, { color: t.ink }]}>
+          League settings
+        </Text>
+        <Button variant="text" label="Done" onPress={onClose} testID="settings-done" />
+      </View>
+      {
         <View>
           <Sub>Invite</Sub>
           <P>
@@ -867,7 +799,7 @@ function Settings({
           ) : null}
           <Msg text={msg.text} ok={msg.ok} />
         </View>
-      ) : null}
+      }
     </View>
   );
 }
@@ -887,6 +819,7 @@ const styles = StyleSheet.create({
   playLink: { fontFamily: FONT.bodyBold, fontSize: 14.5 },
   // The leaderboard is the key information: room above and below it.
   rows: { marginTop: 14, marginBottom: 6, borderTopWidth: 1 },
+  shareRow: { flexDirection: 'row', marginTop: 14 },
   notes: { fontFamily: FONT.body, marginTop: 12, fontSize: 13.5, lineHeight: 19 },
   row: {
     flexDirection: 'row',
@@ -929,9 +862,10 @@ const styles = StyleSheet.create({
     marginTop: 18,
   },
   linkText: { fontFamily: FONT.bodySemi, fontSize: 14, lineHeight: 22 },
-  settings: { marginTop: 26, borderTopWidth: 1, paddingTop: 12 },
-  summaryBtn: { minHeight: 44, justifyContent: 'center', alignSelf: 'flex-start' },
-  summary: { fontFamily: FONT.bodySemi, fontSize: 14.5, paddingVertical: 4 },
+  // Opened from the league menu, at the top of the board until Done.
+  settings: { marginBottom: 16, borderWidth: 1, borderRadius: 12, padding: 16 },
+  settingsHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  settingsTitle: { fontFamily: FONT.displayHeavy, fontSize: 18 },
   code: { fontFamily: FONT.display, letterSpacing: 1.6 },
   plist: {
     flexDirection: 'row',

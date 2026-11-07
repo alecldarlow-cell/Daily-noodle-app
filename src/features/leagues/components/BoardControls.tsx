@@ -5,14 +5,14 @@
  * The date line shows only when looking at an earlier day.
  */
 import { BOARD_TYPE, type BoardLeague, type BoardTypeId } from '@noodle/core';
-import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, Share, StyleSheet, Text, View } from 'react-native';
 
 import { FONT, useTokens } from '@/shared/theme';
 import { shortDate } from '@/shared/time';
 import { Chevron, PuzzleTile, TAP } from '@/shared/ui';
 
 import { setCurrent } from '../hooks/boardStore';
-import { addDays, dayName } from '../hooks/boardText';
+import { addDays, dayName, inviteLink, inviteText } from '../hooks/boardText';
 import type { Flow } from '../hooks/useLeaguesFlow';
 import type { BoardView } from '../types';
 
@@ -58,17 +58,23 @@ export function LeagueKicker({
   );
 }
 
-/** The menu of leagues, with "Start a new league" and "Join with a code" inside it. */
+/**
+ * The league menu: the player's leagues, then (Alec, 7 Nov 2026, off the crowded board)
+ * "Invite people" and "League settings", then "Start a new league" and "Join with a code".
+ */
 export function LeagueMenu({
   flow,
   league,
   leagues,
   onClose,
+  onSettings,
 }: {
   flow: Flow;
   league: BoardLeague;
   leagues: BoardLeague[];
   onClose: () => void;
+  /** Opens this league's settings on the board. */
+  onSettings: () => void;
 }) {
   const t = useTokens();
   const go = (fn: () => void) => () => {
@@ -89,6 +95,25 @@ export function LeagueMenu({
         />
       ))}
       <MenuItem
+        label="Invite people"
+        accent
+        plus={false}
+        testID="menu-invite"
+        onPress={go(
+          () =>
+            void Share.share({
+              message: `${inviteText(league.name)}\n${inviteLink(league.code)}`,
+            }).catch(() => {}),
+        )}
+      />
+      <MenuItem
+        label="League settings"
+        accent
+        plus={false}
+        testID="menu-settings"
+        onPress={go(onSettings)}
+      />
+      <MenuItem
         label="Start a new league"
         accent
         onPress={go(() => flow.setView({ k: 'start' }))}
@@ -102,12 +127,15 @@ function MenuItem({
   label,
   selected,
   accent,
+  plus = true,
   onPress,
   testID,
 }: {
   label: string;
   selected?: boolean;
   accent?: boolean;
+  /** An accent item that adds something ("＋ Start a new league"); not Invite or Settings. */
+  plus?: boolean;
   onPress: () => void;
   testID?: string;
 }) {
@@ -133,7 +161,7 @@ function MenuItem({
             fontFamily: selected ? FONT.bodyBold : FONT.bodySemi,
           },
         ]}>
-        {accent ? `＋ ${label}` : label}
+        {accent && plus ? `＋ ${label}` : label}
       </Text>
     </Pressable>
   );
@@ -161,6 +189,8 @@ export function TypePager({
   title,
   sub,
   onPick,
+  onDay,
+  dayOpen = false,
 }: {
   stops: BoardView[];
   view: BoardView;
@@ -168,6 +198,10 @@ export function TypePager({
   title: string;
   sub: string;
   onPick: (v: BoardView) => void;
+  /** A tap on the date: open the earlier-days line, or close it back to today. */
+  onDay?: () => void;
+  /** The earlier-days line is showing. */
+  dayOpen?: boolean;
 }) {
   const t = useTokens();
   const at = stops.indexOf(view);
@@ -210,12 +244,24 @@ export function TypePager({
               style={[styles.pagerTitle, { color: t.ink }]}>
               {title}
             </Text>
-            <Text
-              numberOfLines={1}
-              style={[styles.pagerSub, { color: t.muted }]}
-              testID="pager-day">
-              {sub}
-            </Text>
+            {/* The date opens the earlier days (Alec, 7 Nov 2026: no separate link). */}
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={`${sub}, ${dayOpen ? 'back to today' : 'choose an earlier day'}`}
+              accessibilityState={{ expanded: dayOpen }}
+              disabled={!onDay}
+              onPress={onDay}
+              hitSlop={{ top: 14, bottom: 14, left: 8, right: 8 }}
+              testID="pager-day-btn"
+              style={({ pressed }) => [styles.dayBtn, pressed ? { opacity: 0.6 } : null]}>
+              <Text
+                numberOfLines={1}
+                style={[styles.pagerSub, { color: t.muted }]}
+                testID="pager-day">
+                {sub}
+              </Text>
+              {onDay ? <Chevron color={t.muted} dir={dayOpen ? 'up' : 'down'} size={5} /> : null}
+            </Pressable>
           </View>
         </View>
         {btn(next, 'right')}
@@ -342,6 +388,7 @@ const styles = StyleSheet.create({
   pagerIcon: { width: 36, height: 36, borderRadius: 6, overflow: 'hidden' },
   pagerText: { flexShrink: 1 },
   pagerTitle: { fontFamily: FONT.displayHeavy, fontSize: 18, lineHeight: 23 },
+  dayBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start' },
   pagerSub: { fontFamily: FONT.bodySemi, fontSize: 12.5, lineHeight: 17 },
   // A 28 pt tap target round each dot; ten fit across a small phone.
   dots: { flexDirection: 'row', justifyContent: 'center', marginTop: 2, marginBottom: 2 },

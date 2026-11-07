@@ -104,17 +104,20 @@ describe('GIVEN a player in a league', () => {
       const players = screen.getAllByTestId(/^player-/).map((r) => r.props.testID as string);
       expect(players).toEqual(['player-Ma', 'player-Alec', 'player-Jo']);
       expect(screen.getByTestId('player-Ma')).toHaveTextContent(
-        /Ma 👑.*9 wins · 1 title · best streak 5.*30.*finished/,
+        /Ma.*9 wins · 1 title · best streak 5.*30.*finished/,
       );
       expect(screen.getByTestId('player-Alec')).toHaveTextContent(/YOU/);
       expect(screen.getByText(/Tap a name to see their card\./)).toBeOnTheScreen();
-      await fireEvent.press(screen.getByText('⚙︎ League settings'));
+      await fireEvent.press(screen.getByTestId('league-picker'));
+      await fireEvent.press(screen.getByTestId('menu-settings'));
       expect(screen.getByTestId('league-settings')).toHaveTextContent(/3 players/);
     });
 
-    it('THEN Invite shares the league’s link', async () => {
+    it('THEN there is no Invite button on Records: it lives in the league menu', async () => {
       await openRecords();
-      await fireEvent.press(screen.getByRole('button', { name: 'Invite people' }));
+      expect(screen.queryByRole('button', { name: 'Invite people' })).toBeNull();
+      await fireEvent.press(screen.getByTestId('league-picker'));
+      await fireEvent.press(screen.getByTestId('menu-invite'));
       expect(shared[0]).toContain('join.html?c=ABCD2345');
     });
   });
@@ -124,8 +127,8 @@ describe('GIVEN a player in a league', () => {
       await openRecords();
       await fireEvent.press(screen.getByTestId('player-Ma'));
       const card = screen.getByTestId('player-card');
-      expect(within(card).getByRole('header')).toHaveTextContent('Ma 👑');
-      expect(within(card).getByText('Last week’s champion.')).toBeOnTheScreen();
+      expect(within(card).getByRole('header')).toHaveTextContent(/^Ma$/);
+      expect(within(card).queryByText(/champion/)).toBeNull();
       expect(screen.getByTestId('card-wins')).toHaveTextContent(/9.*Daily wins/);
       expect(screen.getByTestId('card-longest')).toHaveTextContent(/5.*Longest streak \(days\)/);
       expect(screen.getByTestId('best-mini')).toHaveTextContent(/18 Oct · 🏅 league record.*0:30/);
@@ -194,7 +197,7 @@ describe('GIVEN a player in a league', () => {
 
 describe('GIVEN a puzzle’s daily board, with the league’s records loaded', () => {
   describe('WHEN it shows the day a record was set', () => {
-    it('THEN the row says so and last week’s champion wears 👑; the record itself lives on Records', async () => {
+    it('THEN the row says so; no 👑 for last week’s champion; the record itself lives on Records', async () => {
       params.mockReturnValue({ p: 'mini', d: '2026-10-18' });
       await renderWithProviders(<LeaguesScreen />);
       await waitFor(() => expect(screen.getByTestId('new-record-Ma')).toBeOnTheScreen());
@@ -203,8 +206,8 @@ describe('GIVEN a puzzle’s daily board, with the league’s records loaded', (
       expect(screen.queryByTestId('record-line')).toBeNull();
       expect(screen.getByTestId('new-record-Ma')).toHaveTextContent('🏆 New league record');
       expect(screen.queryByTestId('new-record-Alec')).toBeNull();
-      expect(screen.getByTestId('row-Ma')).toHaveTextContent(/Ma 👑/);
-      expect(screen.getByTestId('row-Alec')).not.toHaveTextContent(/👑/);
+      expect(screen.getByTestId('row-Ma')).not.toHaveTextContent(/👑/);
+      expect(screen.getByTestId('row-Ma').props.accessibilityLabel).not.toMatch(/champion/);
     });
   });
 
@@ -227,7 +230,7 @@ describe('GIVEN a puzzle’s daily board, with the league’s records loaded', (
       await fireEvent.press(screen.getByTestId('row-Ma'));
       await waitFor(() => expect(screen.getByTestId('player-card')).toBeOnTheScreen());
       expect(within(screen.getByTestId('player-card')).getByRole('header')).toHaveTextContent(
-        'Ma 👑',
+        /^Ma$/,
       );
       await fireEvent.press(screen.getByTestId('pill-records'));
       expect(screen.getByTestId('records-board')).toBeOnTheScreen();
