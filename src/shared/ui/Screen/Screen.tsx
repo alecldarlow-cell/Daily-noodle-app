@@ -9,6 +9,8 @@ interface ScreenProps {
   title: string;
   /** A second kicker line under the title (Today's date). */
   subtitle?: string;
+  /** In place of the title, a control as the kicker (Leagues: the league picker). */
+  kicker?: ReactNode;
   /** Pull-to-refresh. */
   onRefresh?: () => void;
   refreshing?: boolean;
@@ -39,7 +41,15 @@ export function refreshColors(t: Tokens) {
  * the Daily Noodle wordmark, with the page's name as the kicker on the right, over a 2 pt
  * ink rule (the site's front.css `.mast` layout).
  */
-function Masthead({ title, subtitle }: { title: string; subtitle?: string }) {
+function Masthead({
+  title,
+  subtitle,
+  kicker,
+}: {
+  title: string;
+  subtitle?: string;
+  kicker?: ReactNode;
+}) {
   const t = useTokens();
   return (
     <View style={[styles.mast, { borderBottomColor: t.ink }]} testID="masthead">
@@ -63,12 +73,14 @@ function Masthead({ title, subtitle }: { title: string; subtitle?: string }) {
         </Text>
       </View>
       <View style={styles.kick} testID="masthead-kicker">
-        <Text
-          accessibilityRole="header"
-          maxFontSizeMultiplier={MAST_MAX_SCALE.kick}
-          style={[styles.kickText, { color: t.faint }]}>
-          {title}
-        </Text>
+        {kicker ?? (
+          <Text
+            accessibilityRole="header"
+            maxFontSizeMultiplier={MAST_MAX_SCALE.kick}
+            style={[styles.kickText, { color: t.faint }]}>
+            {title}
+          </Text>
+        )}
         {subtitle ? (
           <Text
             maxFontSizeMultiplier={MAST_MAX_SCALE.kick}
@@ -85,6 +97,7 @@ function Masthead({ title, subtitle }: { title: string; subtitle?: string }) {
 export function Screen({
   title,
   subtitle,
+  kicker,
   onRefresh,
   refreshing = false,
   scroll = true,
@@ -114,12 +127,12 @@ export function Screen({
               />
             ) : undefined
           }>
-          <Masthead title={title} subtitle={subtitle} />
+          <Masthead title={title} subtitle={subtitle} kicker={kicker} />
           {children}
         </ScrollView>
       ) : (
         <View style={[styles.content, styles.fill]}>
-          <Masthead title={title} subtitle={subtitle} />
+          <Masthead title={title} subtitle={subtitle} kicker={kicker} />
           {children}
         </View>
       )}
