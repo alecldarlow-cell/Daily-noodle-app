@@ -69,7 +69,11 @@ export function AccountScreen({
 
   return (
     <Screen title="Account" testID="account-screen">
-      <SyncCard client={client} store={store} />
+      {syncOn ? (
+        <Section label="Your account">
+          <SyncCard client={client} store={store} />
+        </Section>
+      ) : null}
 
       <Section label="Settings">
         <SettingsCard store={store} />
@@ -95,7 +99,6 @@ export function AccountScreen({
           <Row
             role="link"
             label="Privacy"
-            sub="What’s recorded and how to change it"
             testID="account-privacy"
             onPress={() => router.navigate('/privacy')}
           />

@@ -28,6 +28,7 @@ describe('GIVEN the Account tab in a build without sign-in', () => {
       await render(<AccountScreen client={null} />);
       expect(screen.getByRole('header', { name: 'Account' })).toBeOnTheScreen();
       expect(screen.queryByTestId('sync-card')).toBeNull();
+      expect(screen.queryByRole('header', { name: 'Your account' })).toBeNull();
       for (const name of ['Settings', 'Help & privacy'])
         expect(screen.getByRole('header', { name })).toBeOnTheScreen();
       // Alec, 7 Nov 2026: joining a league is on Leagues only.
@@ -57,10 +58,11 @@ describe('GIVEN the Account tab in a build without sign-in', () => {
   });
 
   describe('WHEN the player taps the privacy row (AF-001)', () => {
-    it('THEN it says “how to change it”, and the privacy page opens inside the app', async () => {
+    it('THEN it reads just “Privacy” (Alec, 7 Nov 2026), and the privacy page opens inside the app', async () => {
       await render(<AccountScreen client={null} />);
       const row = screen.getByRole('link', { name: 'Privacy' });
-      expect(row.props.accessibilityHint).toBe('What’s recorded and how to change it');
+      expect(row.props.accessibilityHint).toBeUndefined();
+      expect(screen.queryByText(/What’s recorded/)).toBeNull();
       await fireEvent.press(row);
       expect(router.navigate).toHaveBeenCalledWith('/privacy');
       expect(screen.queryByText(/how to stop it/)).toBeNull();
@@ -105,20 +107,33 @@ describe('GIVEN the app-wide settings on Account (AF-012)', () => {
     });
   });
 
-  describe('WHEN the player picks Reduced animations, then Follow phone', () => {
-    it('THEN the choice is a radio pair, saved, and shown as chosen', async () => {
+  describe('WHEN the player switches Animations off, then on', () => {
+    it('THEN it is a plain switch: on follows the phone, off is reduced, and each is saved', async () => {
       await render(<AccountScreen client={null} />);
-      const phone = screen.getByRole('radio', { name: 'Follow phone' });
-      const reduced = screen.getByRole('radio', { name: 'Reduced' });
-      expect(phone.props.accessibilityState).toMatchObject({ checked: true });
-      expect(reduced.props.accessibilityState).toMatchObject({ checked: false });
-      await act(async () => fireEvent.press(reduced));
+      const sw = screen.getByLabelText('Animations');
+      expect(sw.props.value).toBe(true);
+      expect(screen.queryByRole('radio')).toBeNull();
+      await act(async () => fireEvent(sw, 'valueChange', false));
       expect(readSettings().motion).toBe('reduced');
-      expect(screen.getByRole('radio', { name: 'Reduced' }).props.accessibilityState).toMatchObject(
-        { checked: true },
-      );
-      await act(async () => fireEvent.press(screen.getByRole('radio', { name: 'Follow phone' })));
+      expect(JSON.parse(appStorage.getItem(APP_SETTINGS_KEY)!)).toMatchObject({
+        motion: 'reduced',
+      });
+      expect(screen.getByLabelText('Animations').props.value).toBe(false);
+      await act(async () => fireEvent(screen.getByLabelText('Animations'), 'valueChange', true));
       expect(readSettings().motion).toBe('phone');
+    });
+  });
+
+  describe('WHEN the settings show', () => {
+    it('THEN they are three switches, Vibration, Sound and Animations, with no descriptions', async () => {
+      await render(<AccountScreen client={null} />);
+      const card = screen.getByTestId('settings-card');
+      expect(
+        within(card)
+          .getAllByRole('switch')
+          .map((s) => s.props.accessibilityLabel),
+      ).toEqual(['Vibration', 'Sound', 'Animations']);
+      expect(card).toHaveTextContent(/^VibrationSoundAnimations$/);
     });
   });
 
@@ -138,6 +153,14 @@ describe('GIVEN the app-wide settings on Account (AF-012)', () => {
 });
 
 describe('GIVEN a signed-out player in a build with sign-in', () => {
+  it('THEN the sign-in card sits under a “Your account” section label, as Settings and Help & privacy do', async () => {
+    const { client } = fakeClient();
+    await render(<AccountScreen client={client} store={memoryStorage()} />);
+    await flush();
+    expect(screen.getByRole('header', { name: 'Your account' })).toBeOnTheScreen();
+    expect(screen.getByTestId('sync-card')).toBeOnTheScreen();
+  });
+
   it('THEN Delete my data offers only the account request: there is no saved copy to delete', async () => {
     const { client } = fakeClient();
     await render(<AccountScreen client={client} store={memoryStorage()} />);
