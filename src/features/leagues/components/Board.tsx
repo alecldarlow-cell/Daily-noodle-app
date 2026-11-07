@@ -22,7 +22,6 @@ import { isOffline, sayError } from '../api/errors';
 import { setLastType, useBoardState } from '../hooks/boardStore';
 import {
   addDays,
-  dayMonth,
   inviteLink,
   isMonday,
   inviteText,
@@ -49,21 +48,27 @@ import {
 import { useBackfill } from '../hooks/useResults';
 import { leagueNameSchema, firstError } from '../schemas';
 import type { BoardView, DayBoard, DayRow, NotYet, Overall, OverallRow, Records } from '../types';
-import { DayLine, dayText, LeaguePicker, TypePager, viewName } from './BoardControls';
+import { DayLine, dayText, TypePager, viewName } from './BoardControls';
 import { RecordsView } from './Records';
 import { Acts, B, Btn, Card, Field, Msg, P, ROW_INSET_RIGHT, Sub } from './ui';
 
 /** Sign-in sync is in this build: then joining points to it, for playing on another phone. */
 const syncOn = (): boolean => BUILD_ENV.EXPO_PUBLIC_SYNC === '1';
 
-/** The pager's stops, in the arrows' order: All puzzles, then each puzzle in the daily order. */
-const STOPS: BoardView[] = ['all', ...BOARD_TYPES.map((t) => t.id as BoardView)];
+/**
+ * The pager's stops, in the arrows' order: All puzzles, each puzzle in the daily order, then
+ * Records (Alec, 7 Nov 2026: a stop of its own, not a link).
+ */
+const STOPS: BoardView[] = ['all', ...BOARD_TYPES.map((t) => t.id as BoardView), 'records'];
 
-/** A sideways drag takes the board once it is clearly sideways (so lists still scroll). */
+/**
+ * A sideways drag takes the board once it leans sideways (so the page still scrolls). Alec,
+ * 7 Nov 2026: the scroll won too often, so it now claims sooner and at a shallower angle.
+ */
 export const claimsSwipe = (dx: number, dy: number): boolean =>
-  Math.abs(dx) > 24 && Math.abs(dx) > 2 * Math.abs(dy);
+  Math.abs(dx) > 12 && Math.abs(dx) > 1.2 * Math.abs(dy);
 /** Where a finished swipe goes: left to the next puzzle, right to the previous, short to none. */
-export const swipeStep = (dx: number): 1 | -1 | 0 => (dx < -60 ? 1 : dx > 60 ? -1 : 0);
+export const swipeStep = (dx: number): 1 | -1 | 0 => (dx < -50 ? 1 : dx > 50 ? -1 : 0);
 
 /** 1st, 2nd, 3rd, 4th … 11th, 12th, 13th, 21st. */
 export function ordinal(n: number): string {
@@ -150,7 +155,11 @@ export function Board({ flow, league }: { flow: Flow; league: BoardLeague }) {
       setLastType(to);
     };
     return PanResponder.create({
+      // Capture: the page's scroll view would otherwise take the touch first, so a sideways
+      // swipe never reached the board.
+      onMoveShouldSetPanResponderCapture: (_e, g) => claimsSwipe(g.dx, g.dy),
       onMoveShouldSetPanResponder: (_e, g) => claimsSwipe(g.dx, g.dy),
+      onPanResponderTerminationRequest: () => false,
       onPanResponderRelease: (_e, g) => {
         const dir = swipeStep(g.dx);
         if (dir) step(dir);
@@ -162,24 +171,23 @@ export function Board({ flow, league }: { flow: Flow; league: BoardLeague }) {
   return (
     <RecordsCtx.Provider value={{ recs: rec.data, open: rec.data ? openCard : undefined }}>
       <View testID="league-board">
-        <LeaguePicker flow={flow} league={league} leagues={s.leagues || []} />
-        <TypePager
-          stops={STOPS}
-          view={view}
-          title={headline ?? viewName(view)}
-          sub={dayText(day, today)}
-          onPick={(v) => {
-            setCard(null);
-            pick(v);
-          }}
-        />
-        {isType && overall.data ? (
-          <YouLine d={overall.data as Overall} today={day === today} />
-        ) : null}
-
-        <TopCard flow={flow} league={league} />
-
         <View {...swipe.panHandlers} testID="board-swipe">
+          <TypePager
+            stops={STOPS}
+            view={view}
+            title={headline ?? viewName(view)}
+            sub={dayText(day, today)}
+            onPick={(v) => {
+              setCard(null);
+              pick(v);
+            }}
+          />
+          {isType && overall.data ? (
+            <YouLine d={overall.data as Overall} today={day === today} />
+          ) : null}
+
+          <TopCard flow={flow} league={league} />
+
           {filling ? (
             <Text style={[styles.loading, { color: t.faint }]}>Adding your earlier results…</Text>
           ) : shown.isPending ? (
@@ -222,12 +230,13 @@ export function Board({ flow, league }: { flow: Flow; league: BoardLeague }) {
           )}
         </View>
 
-        <View style={styles.links}>
+        {records ? null : (
           <Pressable
             accessibilityRole="button"
             accessibilityState={{ expanded: showDay }}
             testID="day-open"
             hitSlop={8}
+            style={styles.links}
             onPress={() => {
               if (showDay) {
                 setDayOpen(false);
@@ -238,23 +247,7 @@ export function Board({ flow, league }: { flow: Flow; league: BoardLeague }) {
               {showDay ? 'Back to today' : 'Earlier days'}
             </Text>
           </Pressable>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Records"
-            accessibilityState={{ selected: records }}
-            testID="pill-records"
-            hitSlop={8}
-            onPress={() => {
-              // From a player's card, back to the list of records; from the list, the boards.
-              setCard(null);
-              if (!records) pick('records');
-              else if (!card) pick('all');
-            }}>
-            <Text style={[styles.linkText, { color: t.accent }]}>
-              {!records ? '🏅 League records' : card ? 'All records' : 'Back to the boards'}
-            </Text>
-          </Pressable>
-        </View>
+        )}
 
         {roster ? (
           <Settings flow={flow} league={league} players={roster.players} members={roster.members} />
@@ -466,27 +459,24 @@ function Row({
 }
 
 /** Says what a 👑 means: last week's champion, not whoever is leading now. */
-function CrownNote() {
+/**
+ * Under the board, one small line (Alec, 7 Nov 2026): who hasn't played yet, and what a 👑
+ * means (last week's champion, not whoever leads now) when someone wears one.
+ */
+function NotesLine({ rows }: { rows: NotYet[] }) {
   const t = useTokens();
   const { recs } = useContext(RecordsCtx);
-  if (!recs?.crown?.length) return null;
+  const parts = [
+    rows.length
+      ? `Not played yet: ${rows.map((r) => `${r.nick}${r.me ? ' (you)' : ''}`).join(', ')}`
+      : '',
+    recs?.crown?.length ? '👑 last week’s champion' : '',
+  ].filter(Boolean);
+  if (!parts.length) return null;
   return (
-    <Text style={[styles.notyet, { color: t.muted }]} testID="crown-note">
-      👑 Last week’s champion
+    <Text style={[styles.notes, { color: t.muted }]} testID="board-notes">
+      {parts.join(' · ')}
     </Text>
-  );
-}
-
-function NotYetList({ rows }: { rows: NotYet[] }) {
-  const t = useTokens();
-  if (!rows.length) return null;
-  return (
-    <>
-      <Sub>Not played yet</Sub>
-      <Text style={[styles.notyet, { color: t.muted }]}>
-        {rows.map((r) => `${r.nick}${r.me ? ' (you)' : ''}`).join(', ')}
-      </Text>
-    </>
   );
 }
 
@@ -540,7 +530,6 @@ function DayView({
   const played = [...d.ranked, ...d.unranked].some((r) => r.me);
   const { recs } = useContext(RecordsCtx);
   const R = recs?.records?.[type];
-  const rec = R ? result(type, R) : null;
   const row = (r: DayRow, dim: boolean) => {
     const res = result(type, r);
     return (
@@ -583,15 +572,7 @@ function DayView({
           {d.unranked.map((r) => row(r, true))}
         </View>
       )}
-      <NotYetList rows={d.not_yet} />
-      <CrownNote />
-      {R && rec ? (
-        <Text style={[styles.reline, { color: t.muted }]} testID="record-line">
-          {'🏅 League record '}
-          <Text style={[styles.relineBold, { color: t.ink }]}>{rec.big}</Text>
-          {`${rec.small ? ` (${rec.small})` : ''} · ${R.nick} · ${dayMonth(R.date)}`}
-        </Text>
-      ) : null}
+      <NotesLine rows={d.not_yet} />
       <Acts>
         {d.ranked.length ? (
           <Btn
@@ -650,8 +631,7 @@ function OverallView({
           {d.day.map((r) => row(r, dayCount(date)))}
         </View>
       )}
-      <NotYetList rows={d.not_yet} />
-      <CrownNote />
+      <NotesLine rows={d.not_yet} />
       <Sub>This week · {weekLabel(d.week_from, d.week_to)}</Sub>
       {!d.week.length ? (
         <Text style={[styles.notyet, { color: t.muted }]}>No results yet this week.</Text>
@@ -905,7 +885,9 @@ const styles = StyleSheet.create({
   play: { marginTop: 10, marginBottom: 4, padding: 12, borderRadius: 10, gap: 4 },
   playText: { fontFamily: FONT.body, fontSize: 14.5 },
   playLink: { fontFamily: FONT.bodyBold, fontSize: 14.5 },
-  rows: { marginTop: 10, borderTopWidth: 1 },
+  // The leaderboard is the key information: room above and below it.
+  rows: { marginTop: 14, marginBottom: 6, borderTopWidth: 1 },
+  notes: { fontFamily: FONT.body, marginTop: 12, fontSize: 13.5, lineHeight: 19 },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -947,8 +929,6 @@ const styles = StyleSheet.create({
     marginTop: 18,
   },
   linkText: { fontFamily: FONT.bodySemi, fontSize: 14, lineHeight: 22 },
-  reline: { fontFamily: FONT.body, marginTop: 12, fontSize: 14 },
-  relineBold: { fontFamily: FONT.bodyBold },
   settings: { marginTop: 26, borderTopWidth: 1, paddingTop: 12 },
   summaryBtn: { minHeight: 44, justifyContent: 'center', alignSelf: 'flex-start' },
   summary: { fontFamily: FONT.bodySemi, fontSize: 14.5, paddingVertical: 4 },

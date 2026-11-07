@@ -72,7 +72,13 @@ describe('GIVEN a player in two leagues (AF-017)', () => {
       const picker = screen.getByRole('button', { name: 'League: Family' });
       expect(within(picker).getByRole('header', { name: 'Family' })).toBeOnTheScreen();
       expect(picker.props.accessibilityState).toMatchObject({ expanded: false });
-      expect(flat(picker).minHeight).toBeGreaterThanOrEqual(44);
+      // In the masthead's kicker (Alec, 7 Nov 2026), its tap area grown to 44+ by hitSlop.
+      expect(within(screen.getByTestId('masthead-kicker')).getByTestId('league-picker')).toBe(
+        picker,
+      );
+      expect(
+        (flat(picker).minHeight as number) + 2 * (picker.props.hitSlop as number),
+      ).toBeGreaterThanOrEqual(44);
       expect(screen.queryByText(/^Leaderboard$/i)).toBeNull();
       // The menu (and so the other league) shows only once asked for.
       expect(screen.queryByTestId('league-menu')).toBeNull();
@@ -149,6 +155,7 @@ describe('GIVEN a player in two leagues (AF-017)', () => {
         'pill-borders',
         'pill-reckon',
         'pill-tally',
+        'pill-records',
       ]);
       expect(screen.getByRole('button', { name: 'All puzzles' })).toBeSelected();
       // No day arrows until asked for; no emoji chips.
@@ -170,17 +177,25 @@ describe('GIVEN a player in two leagues (AF-017)', () => {
       await fireEvent.press(screen.getByRole('button', { name: 'Next puzzle' }));
       expect(screen.getByRole('button', { name: 'Doku' })).toBeSelected();
       await fireEvent.press(screen.getByTestId('pill-tally'));
+      // Records is the last stop (Alec, 7 Nov 2026).
+      expect(screen.getByRole('button', { name: 'Next puzzle' }).props.accessibilityHint).toBe(
+        'Records',
+      );
+      await fireEvent.press(screen.getByRole('button', { name: 'Next puzzle' }));
+      await waitFor(() => expect(screen.getByTestId('records-board')).toBeOnTheScreen());
       expect(screen.getByRole('button', { name: 'Next puzzle' })).toBeDisabled();
       await fireEvent.press(screen.getByRole('button', { name: 'Previous puzzle' }));
-      expect(screen.getByRole('button', { name: 'Reckon' })).toBeSelected();
+      expect(screen.getByRole('button', { name: 'Tally' })).toBeSelected();
     });
 
     it('THEN a sideways swipe on the board steps too; a mostly-vertical drag doesn’t', async () => {
       await open();
       expect(screen.getByTestId('board-swipe').props.onMoveShouldSetResponder).toBeDefined();
       expect(claimsSwipe(40, 10)).toBe(true);
-      expect(claimsSwipe(40, 30)).toBe(false); // a scroll that drifts sideways
+      expect(claimsSwipe(30, 20)).toBe(true); // leans sideways: the board takes it
+      expect(claimsSwipe(40, 40)).toBe(false); // a scroll that drifts sideways
       expect(claimsSwipe(10, 0)).toBe(false);
+      expect(screen.getByTestId('board-swipe').props.onMoveShouldSetResponderCapture).toBeDefined();
       expect(swipeStep(-80)).toBe(1); // swipe left: next puzzle
       expect(swipeStep(80)).toBe(-1);
       expect(swipeStep(40)).toBe(0);

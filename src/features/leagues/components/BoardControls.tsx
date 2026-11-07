@@ -5,7 +5,6 @@
  * The date line shows only when looking at an earlier day.
  */
 import { BOARD_TYPE, type BoardLeague, type BoardTypeId } from '@noodle/core';
-import { useState } from 'react';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { FONT, useTokens } from '@/shared/theme';
@@ -24,70 +23,77 @@ export const GUTTER = 16;
 const MARK = require('../../../../assets/images/masthead-mark.png') as number;
 
 /**
- * The league's name as the heading, "Noodlers ▾": tap for the menu of leagues, with
- * "Start a new league" and "Join with a code" inside it.
+ * The league's name as the masthead's kicker, "NOODLERS ▾" (Alec, 7 Nov 2026: top right,
+ * so the board starts a row higher): tap for the menu of leagues, which opens under the
+ * masthead.
  */
-export function LeaguePicker({
+export function LeagueKicker({
+  league,
+  open,
+  onPress,
+}: {
+  league: BoardLeague;
+  open: boolean;
+  onPress: () => void;
+}) {
+  const t = useTokens();
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={`League: ${league.name}`}
+      accessibilityHint="Choose a league, or start a new one"
+      accessibilityState={{ expanded: open }}
+      testID="league-picker"
+      hitSlop={8}
+      onPress={onPress}
+      style={({ pressed }) => [styles.kickBtn, pressed ? { opacity: 0.7 } : null]}>
+      <Text
+        accessibilityRole="header"
+        numberOfLines={1}
+        style={[styles.kickName, { color: t.ink }]}>
+        {league.name}
+      </Text>
+      <Chevron color={t.ink} dir={open ? 'up' : 'down'} size={6} />
+    </Pressable>
+  );
+}
+
+/** The menu of leagues, with "Start a new league" and "Join with a code" inside it. */
+export function LeagueMenu({
   flow,
   league,
   leagues,
+  onClose,
 }: {
   flow: Flow;
   league: BoardLeague;
   leagues: BoardLeague[];
+  onClose: () => void;
 }) {
   const t = useTokens();
-  const [open, setOpen] = useState(false);
   const go = (fn: () => void) => () => {
-    setOpen(false);
+    onClose();
     fn();
   };
   return (
-    <View style={styles.picker}>
-      <Pressable
-        accessibilityRole="button"
-        accessibilityLabel={`League: ${league.name}`}
-        accessibilityHint="Choose a league, or start a new one"
-        accessibilityState={{ expanded: open }}
-        testID="league-picker"
-        onPress={() => setOpen((o) => !o)}
-        style={({ pressed }) => [styles.pickerBtn, pressed ? { opacity: 0.7 } : null]}>
-        <Text
-          accessibilityRole="header"
-          numberOfLines={1}
-          style={[styles.leagueName, { color: t.ink }]}>
-          {league.name}
-        </Text>
-        <Chevron color={t.ink} dir={open ? 'up' : 'down'} size={8} />
-      </Pressable>
-      {open ? (
-        <View
-          style={[styles.menu, { backgroundColor: t.paper, borderColor: t.hair }]}
-          testID="league-menu">
-          {leagues.map((l) => {
-            const on = l.code === league.code;
-            return (
-              <MenuItem
-                key={l.code}
-                label={l.name}
-                selected={on}
-                testID={`league-${l.code}`}
-                onPress={go(() => setCurrent(l.code))}
-              />
-            );
-          })}
-          <MenuItem
-            label="Start a new league"
-            accent
-            onPress={go(() => flow.setView({ k: 'start' }))}
-          />
-          <MenuItem
-            label="Join with a code"
-            accent
-            onPress={go(() => flow.setView({ k: 'code' }))}
-          />
-        </View>
-      ) : null}
+    <View
+      style={[styles.menu, { backgroundColor: t.paper, borderColor: t.hair }]}
+      testID="league-menu">
+      {leagues.map((l) => (
+        <MenuItem
+          key={l.code}
+          label={l.name}
+          selected={l.code === league.code}
+          testID={`league-${l.code}`}
+          onPress={go(() => setCurrent(l.code))}
+        />
+      ))}
+      <MenuItem
+        label="Start a new league"
+        accent
+        onPress={go(() => flow.setView({ k: 'start' }))}
+      />
+      <MenuItem label="Join with a code" accent onPress={go(() => flow.setView({ k: 'code' }))} />
     </View>
   );
 }
@@ -286,17 +292,22 @@ export function DayLine({
 }
 
 const styles = StyleSheet.create({
-  picker: { marginBottom: 2 },
-  pickerBtn: {
+  // The masthead kicker's size (Screen's kickText), a little bolder and in ink: it's a control.
+  kickBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    alignSelf: 'flex-start',
-    minHeight: TAP,
-    maxWidth: '100%',
+    gap: 6,
+    minHeight: 32,
+    maxWidth: 170,
   },
-  leagueName: { fontFamily: FONT.displayHeavy, fontSize: 22, letterSpacing: -0.3, flexShrink: 1 },
-  menu: { borderWidth: 1, borderRadius: 12, overflow: 'hidden', marginBottom: 8 },
+  kickName: {
+    fontFamily: FONT.bodyBold,
+    fontSize: 12,
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+    flexShrink: 1,
+  },
+  menu: { borderWidth: 1, borderRadius: 12, overflow: 'hidden', marginBottom: 12 },
   item: {
     minHeight: TAP,
     justifyContent: 'center',

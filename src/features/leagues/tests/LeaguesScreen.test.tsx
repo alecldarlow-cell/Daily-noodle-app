@@ -481,7 +481,8 @@ describe('GIVEN a player in a league', () => {
       expect(screen.getByLabelText('🥈 Alec (you), 1:27')).toBeOnTheScreen();
       expect(screen.getByLabelText('– Jo, Revealed')).toBeOnTheScreen();
       expect(screen.getByText('🔥 3-day streak')).toBeOnTheScreen();
-      expect(screen.getByText('Piers')).toBeOnTheScreen();
+      // Alec, 7 Nov 2026: who hasn't played, on one line.
+      expect(screen.getByTestId('board-notes')).toHaveTextContent('Not played yet: Piers');
       // Earlier days sit behind one tap (Alec, 7 Nov 2026): the arrows step puzzles.
       await press('Earlier days');
       expect(screen.getByRole('button', { name: 'Next day' })).toBeDisabled();

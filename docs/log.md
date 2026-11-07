@@ -964,3 +964,8 @@ Alec ran an outside review of the app and asked for its findings to be checked a
 
 - **What (Alec picked F with the done tick, canvas https://claude.ai/artifact/WLfuqegackgFcJqoncctwT):** the type chips and the two segmented switches are replaced by one row: a picker button (tile or noodle mark, the type's name, ▾) that opens a bottom sheet of tiles (All and each puzzle, names under them); a "✓ Hide done" switch with the finished cards' green tick; and a round calendar button at the end (only when features.json allows the calendar). "Done only" is gone (Alec agreed). Hide done shows on the list only.
 - **Tests proved:** archive suites rewritten for the picker, the sheet (order, selection, scrim closes), Hide done alone and with a type, "All done here", tap sizes ≥ 44 pt, the row's order, calendar toggle and features switch. `check` green.
+
+### 7 Nov 2026 — Leagues clean-up
+
+- **What (Alec, from his phone):** Records is the pager's last stop (after Tally), not a link; inside it Honours, then Players, then League records. The league's name moves to the masthead's kicker ("NOODLERS ▾"), its menu opening under the masthead, so the board starts a row higher. Swipe now captures the touch before the page's scroll (it often lost) and claims sooner. "Not played yet: …" and the 👑 note share one small line; the standing league-record line under each board and the Records link are gone (a row still says 🏆 New league record). More room above and below the table.
+- **Tests proved:** controls (kicker in the masthead, 44 pt with slop; stops end at Records; swipe thresholds and capture), records (last stop; section order), LeaguesScreen, emailFirst (notes line). `check` green.

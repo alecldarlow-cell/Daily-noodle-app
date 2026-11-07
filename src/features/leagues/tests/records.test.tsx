@@ -66,13 +66,17 @@ const openRecords = async () => {
 
 describe('GIVEN a player in a league', () => {
   describe('WHEN they pick the Records pill', () => {
-    it('THEN it is a link under the boards, off the pager’s row, fetches board_records only, and is remembered', async () => {
+    it('THEN it is the pager’s last stop, fetches board_records only, and is remembered', async () => {
       await openRecords();
       const dots = screen.getAllByTestId(/^pill-/).map((p) => p.props.testID as string);
       expect(dots.slice(0, 2)).toEqual(['pill-all', 'pill-mini']);
-      expect(dots).toContain('pill-records');
+      expect(dots[dots.length - 1]).toBe('pill-records');
       expect(screen.getByRole('button', { name: 'Records' })).toBeSelected();
       expect(screen.getByRole('header', { name: 'Records' })).toBeOnTheScreen();
+      // Honours first, then players, then each puzzle's record (Alec, 7 Nov 2026).
+      expect(screen.getByTestId('records-board')).toHaveTextContent(
+        /^Honours.*Players.*League records/s,
+      );
       expect(m.boardRecords).toHaveBeenCalledWith(PID, 'ABCD2345');
       expect(m.boardOverall).toHaveBeenCalledTimes(1); // the opening All puzzles view only
       expect(board().ptype).toBe('records');
@@ -190,14 +194,13 @@ describe('GIVEN a player in a league', () => {
 
 describe('GIVEN a puzzle’s daily board, with the league’s records loaded', () => {
   describe('WHEN it shows the day a record was set', () => {
-    it('THEN the record line closes the board, the row says so, and last week’s champion wears 👑', async () => {
+    it('THEN the row says so and last week’s champion wears 👑; the record itself lives on Records', async () => {
       params.mockReturnValue({ p: 'mini', d: '2026-10-18' });
       await renderWithProviders(<LeaguesScreen />);
-      await waitFor(() => expect(screen.getByTestId('record-line')).toBeOnTheScreen());
+      await waitFor(() => expect(screen.getByTestId('new-record-Ma')).toBeOnTheScreen());
       expect(m.boardRecords).toHaveBeenCalledWith(PID, 'ABCD2345');
-      expect(screen.getByTestId('record-line')).toHaveTextContent(
-        '🏅 League record 0:30 · Ma · 18 Oct',
-      );
+      // Alec, 7 Nov 2026: no standing record line under each board.
+      expect(screen.queryByTestId('record-line')).toBeNull();
       expect(screen.getByTestId('new-record-Ma')).toHaveTextContent('🏆 New league record');
       expect(screen.queryByTestId('new-record-Alec')).toBeNull();
       expect(screen.getByTestId('row-Ma')).toHaveTextContent(/Ma 👑/);
@@ -206,10 +209,11 @@ describe('GIVEN a puzzle’s daily board, with the league’s records loaded', (
   });
 
   describe('WHEN it shows another day', () => {
-    it('THEN the record line still shows, but no row claims it', async () => {
+    it('THEN no row claims the record', async () => {
       params.mockReturnValue({ p: 'mini', d: '2026-10-20' });
       await renderWithProviders(<LeaguesScreen />);
-      await waitFor(() => expect(screen.getByTestId('record-line')).toBeOnTheScreen());
+      await waitFor(() => expect(screen.getByTestId('row-Ma')).toBeOnTheScreen());
+      await waitFor(() => expect(m.boardRecords).toHaveBeenCalled());
       expect(screen.queryByTestId('new-record-Ma')).toBeNull();
     });
   });
@@ -219,7 +223,7 @@ describe('GIVEN a puzzle’s daily board, with the league’s records loaded', (
       params.mockReturnValue({ p: 'mini', d: '2026-10-18' });
       await renderWithProviders(<LeaguesScreen />);
       await waitFor(() => expect(screen.getByTestId('row-Ma')).toBeOnTheScreen());
-      await waitFor(() => expect(screen.getByTestId('record-line')).toBeOnTheScreen());
+      await waitFor(() => expect(screen.getByTestId('new-record-Ma')).toBeOnTheScreen());
       await fireEvent.press(screen.getByTestId('row-Ma'));
       await waitFor(() => expect(screen.getByTestId('player-card')).toBeOnTheScreen());
       expect(within(screen.getByTestId('player-card')).getByRole('header')).toHaveTextContent(

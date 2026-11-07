@@ -108,8 +108,9 @@ describe('GIVEN a league with a champion', () => {
       today: '2026-11-05',
     } as never);
     await renderWithProviders(<LeaguesScreen />);
-    await waitFor(() => expect(screen.getByTestId('crown-note')).toBeOnTheScreen());
-    expect(screen.getByText('👑 Last week’s champion')).toBeOnTheScreen();
+    await waitFor(() =>
+      expect(screen.getByTestId('board-notes')).toHaveTextContent(/👑 last week’s champion/),
+    );
   });
 });
 

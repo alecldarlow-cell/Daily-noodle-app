@@ -104,7 +104,10 @@ function Names({ names, open }: { names: string[]; open: (n: string) => void }) 
   );
 }
 
-/** The Records pill: each puzzle's record, the honours, and every player. Names open cards. */
+/**
+ * The Records stop: the honours, every player, then each puzzle's record (Alec, 7 Nov 2026:
+ * honours first). Names open cards.
+ */
 export function RecordsView({
   league,
   d,
@@ -124,34 +127,6 @@ export function RecordsView({
   const recs = recordRows(d);
   return (
     <View testID="records-board">
-      <Sub>League records</Sub>
-      {recs.length ? (
-        <View style={[styles.rows, { borderTopColor: t.hair }]}>
-          {recs.map(({ type, emoji, name, r }) => {
-            const res = result(type, r);
-            const when = `${r.nick} · ${dayMonth(r.date)}${r.date === d.today ? ' · 🏆 today' : ''}`;
-            return (
-              <RecRow
-                key={type}
-                testID={`record-${type}`}
-                mark={emoji}
-                title={name}
-                line={when}
-                big={res.big}
-                small={res.small}
-                me={r.me}
-                label={`${name} record: ${res.big}${res.small ? `, ${res.small}` : ''}, ${when}`}
-                onPress={() => setCard(r.nick)}
-              />
-            );
-          })}
-        </View>
-      ) : (
-        <Text style={[styles.empty, { color: t.muted }]} testID="records-empty">
-          No records yet: finish a puzzle to set the first.
-        </Text>
-      )}
-
       <Sub>Honours</Sub>
       <View style={[styles.rows, { borderTopColor: t.hair }]}>
         {HONOURS.map((h) => {
@@ -197,6 +172,34 @@ export function RecordsView({
           );
         })}
       </View>
+
+      <Sub>League records</Sub>
+      {recs.length ? (
+        <View style={[styles.rows, { borderTopColor: t.hair }]}>
+          {recs.map(({ type, emoji, name, r }) => {
+            const res = result(type, r);
+            const when = `${r.nick} · ${dayMonth(r.date)}${r.date === d.today ? ' · 🏆 today' : ''}`;
+            return (
+              <RecRow
+                key={type}
+                testID={`record-${type}`}
+                mark={emoji}
+                title={name}
+                line={when}
+                big={res.big}
+                small={res.small}
+                me={r.me}
+                label={`${name} record: ${res.big}${res.small ? `, ${res.small}` : ''}, ${when}`}
+                onPress={() => setCard(r.nick)}
+              />
+            );
+          })}
+        </View>
+      ) : (
+        <Text style={[styles.empty, { color: t.muted }]} testID="records-empty">
+          No records yet: finish a puzzle to set the first.
+        </Text>
+      )}
 
       <Text style={[styles.how, { color: t.faint }]}>{RECORDS_HOW}</Text>
       <Acts>

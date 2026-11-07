@@ -7,8 +7,10 @@ import { FONT, useTokens } from '@/shared/theme';
 import { Screen } from '@/shared/ui';
 
 import { asksAnything, useLeaguesFlow, type LeaguesParams } from '../../hooks/useLeaguesFlow';
+import { useBoardState } from '../../hooks/boardStore';
 import { BOARD_QUERY, useMine } from '../../hooks/useLeagues';
 import { Board } from '../Board';
+import { LeagueKicker, LeagueMenu } from '../BoardControls';
 import { ClaimForm, CodeForm, InviteForm, Intro, PendCard, NickForm, StartForm } from '../Forms';
 
 const CLEARED = { join: undefined, go: undefined, p: undefined, d: undefined, n: undefined };
@@ -31,6 +33,8 @@ export function LeaguesScreen() {
   const mine = useMine(true);
   const qc = useQueryClient();
   const { view, league, pending } = flow;
+  const leagues = useBoardState().leagues || [];
+  const [menu, setMenu] = useState(false);
 
   // Once read, the ask is cleared from this tab's route, so the same invite or shortcut
   // opened again (an invite after "Not now", "Bring my leagues here" after Back) is new.
@@ -67,11 +71,35 @@ export function LeaguesScreen() {
     );
   else if (view.k === 'nick' && league) body = <NickForm flow={flow} league={league} />;
   else if (pending) body = <PendCard flow={flow} pend={pending} />;
-  else if (league) body = <Board flow={flow} league={league} />;
+  else if (league)
+    body = (
+      <>
+        {menu ? (
+          <LeagueMenu
+            flow={flow}
+            league={league}
+            leagues={leagues}
+            onClose={() => setMenu(false)}
+          />
+        ) : null}
+        <Board flow={flow} league={league} />
+      </>
+    );
   else body = <Intro flow={flow} />;
+  // On a board, the league's name is the masthead's kicker, a menu of leagues.
+  const onBoard = view.k === 'home' && !pending && !!league;
 
   return (
-    <Screen title="Leagues" testID="leagues-screen" onRefresh={refresh} refreshing={refreshing}>
+    <Screen
+      title="Leagues"
+      kicker={
+        onBoard && league ? (
+          <LeagueKicker league={league} open={menu} onPress={() => setMenu((m) => !m)} />
+        ) : undefined
+      }
+      testID="leagues-screen"
+      onRefresh={refresh}
+      refreshing={refreshing}>
       {body}
       <Text style={[styles.foot, { color: t.faint }]}>
         Private leagues for friends and family. Only people in a league see its board.
