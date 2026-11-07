@@ -122,6 +122,30 @@ describe('GIVEN a Reckon not yet played', () => {
       expect(text('reckon-score')).not.toBe('0');
     });
 
+    // 7 Nov 2026: a thumb aimed at Lock in landed on the label strip and the scale, which
+    // then took any touch in its box, jumped the guess from 300 to 4,600.
+    it('THEN a touch on the label strip or the box around the scale leaves the guess alone', async () => {
+      await renderWithProviders(<ReckonScreen file={file2} deps={deps} />);
+      await press('reckon-play-button');
+      await press('reckon-plus');
+      const first = index();
+      const farRight = { nativeEvent: { locationX: 26.9 } }; // where 4,600 sat on the scale
+      const hidden = { includeHiddenElements: true }; // the labels are hidden from screen readers
+      for (const id of ['reckon-labels', 'reckon-scale']) {
+        await fireEvent(screen.getByTestId(id, hidden), 'responderGrant', farRight);
+        await fireEvent(screen.getByTestId(id, hidden), 'responderRelease', farRight);
+      }
+      expect(index()).toBe(first);
+      // The track band is the only part that does, and it is a 44 pt touch target.
+      const band = screen.getByTestId('reckon-slider');
+      await fireEvent(band, 'responderGrant', farRight);
+      await fireEvent(band, 'responderRelease', farRight);
+      expect(index()).toBeGreaterThan(first);
+      expect(band).toHaveStyle({ paddingTop: 18, paddingBottom: 14 });
+      expect(screen.getByTestId('reckon-labels', hidden)).toHaveProp('pointerEvents', 'none');
+      expect(screen.getByTestId('reckon-ctl')).toHaveStyle({ marginTop: 8 });
+    });
+
     it('THEN a held − repeats after a moment and the press after it does nothing', async () => {
       jest.useFakeTimers();
       try {
