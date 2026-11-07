@@ -62,14 +62,12 @@ describe('GIVEN the archive list includes today’s puzzles', () => {
       expect(screen.queryByTestId('archive-DP·PATH·0050')).toBeNull();
     });
 
-    it('THEN a quiet link at the top goes to the Today tab', async () => {
+    // Alec, 7 Nov 2026: the tab bar already leads to Today, so the Archive has no link to it.
+    it('THEN there is no link to the Today tab above the filters', async () => {
       await renderWithProviders(<ArchiveScreen />);
       await waitFor(() => expect(screen.getByTestId('archive-DP·MINI·0105')).toBeOnTheScreen());
-      const link = screen.getByRole('link', { name: 'Today’s puzzles are on the Today tab' });
-      expect(link).toHaveTextContent('Today’s puzzles are on the Today tab ›');
-      await fireEvent.press(link);
-      expect(router.navigate).toHaveBeenCalledWith('/');
-      expect(router.push).not.toHaveBeenCalled();
+      expect(screen.queryByTestId('archive-to-today')).toBeNull();
+      expect(screen.queryByText(/on the Today tab/)).toBeNull();
     });
   });
 });

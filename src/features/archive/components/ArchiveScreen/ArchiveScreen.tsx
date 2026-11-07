@@ -96,16 +96,6 @@ export function ArchiveScreen() {
 
   return (
     <Screen title="Archive" testID="archive-screen" scroll={false}>
-      <Pressable
-        accessibilityRole="link"
-        accessibilityLabel="Today’s puzzles are on the Today tab"
-        onPress={() => router.navigate('/')}
-        testID="archive-to-today"
-        style={({ pressed }) => [styles.toToday, { opacity: pressed ? 0.6 : 1 }]}>
-        <Text style={[styles.toTodayText, { color: t.muted }]}>
-          Today’s puzzles are on the Today tab ›
-        </Text>
-      </Pressable>
       <ScrollView
         horizontal
         testID="archive-chips"
@@ -263,9 +253,6 @@ export function ArchiveScreen() {
 }
 
 const styles = StyleSheet.create({
-  // A quiet text link, 44 pt to tap, above the filters (AF-030).
-  toToday: { alignSelf: 'flex-start', minHeight: 44, justifyContent: 'center', marginTop: -10 },
-  toTodayText: { fontFamily: FONT.bodySemi, fontSize: 13 },
   // flexShrink 0: the list below takes the rest of the column, and on Android it otherwise
   // squeezed this row, clipping the chip labels (seen at 115% font size on a Pixel 10 Pro).
   // Out to the screen's edges (the page has a 16 pt gutter), so the last chip slides off the
