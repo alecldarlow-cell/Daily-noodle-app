@@ -58,8 +58,13 @@ export function stackScreenOptions(t: Tokens) {
 }
 
 /**
- * The native tab bar in the house colours: muted until chosen, then ink, with the brand's
- * soft green for Android's active pill (Material's default is lavender) and a hairline ripple.
+ * The native tab bar in the house colours: muted until chosen, then ink, with a hairline
+ * ripple.
+ *
+ * Alec, 7 Nov 2026: the icons must not move and a tap should show at once. So every tab
+ * keeps its label ('labeled': Material's default shows only the chosen one's, lifting its
+ * icon), and Android's active pill is off: it grew in with a slow animation. The chosen tab
+ * shows by colour alone (accent icon, ink label). indicatorColor stays, should it come back.
  *
  * Back is the tabs' default: on Archive, Leagues or Account it goes to Today first, then out
  * of the app. A late second Back as a puzzle closes can't reach it: the players swallow it
@@ -74,6 +79,8 @@ export function tabBarProps(t: Tokens) {
       default: { ...label, color: t.muted },
       selected: { ...label, color: t.ink },
     },
+    labelVisibilityMode: 'labeled',
+    disableIndicator: true,
     indicatorColor: t.accentSoft,
     rippleColor: t.hair,
     badgeBackgroundColor: t.accent,
