@@ -974,3 +974,9 @@ Alec ran an outside review of the app and asked for its findings to be checked a
 
 - **What (Alec: the chosen icon jumps up and the highlight is slow):** `tabBarProps` sets `labelVisibilityMode: 'labeled'` (every tab keeps its label, so no icon lifts when chosen) and `disableIndicator: true` (no Material pill growing in). The chosen tab shows by colour: accent icon, ink label. Both are props expo-router's NativeTabs passes to the native view at runtime: JS only, no fingerprint change, ships over the air.
 - **Tests proved:** chrome.test (labelled, no indicator, chosen colour differs). `check` green.
+
+### 7 Nov 2026 — Account: plain settings switches, Privacy without its sub-line
+
+- **What (Alec):** Settings are three plain on/off switches, Vibration, Sound and Animations, with no descriptions. Animations on = follow the phone (`motion: 'phone'`), off = reduced; the stored settings and key are unchanged. The Privacy row is just "Privacy".
+- **Signed-in card "S1" (Alec picked it 18:53):** one row: a 44 pt round avatar with the email's first letter, the email (one line) with the quiet sync line under it (accent dot, "Synced … · Sync now", error and Leagues-choice variants unchanged), and a small outlined Sign out pill on the right. No tick or "Signed in" heading; the card sits under a "Your account" section label, so the page reads Your account / Settings / Help & privacy.
+- **Tests proved:** AccountScreen (three switches in order, no description text; Animations off/on saves 'reduced'/'phone'; Privacy has no hint or sub-line; "Your account" label only when sign-in exists), SyncCard (avatar letter, one-line email, sync dot and line, outlined Sign out returns to the form). `check` green.

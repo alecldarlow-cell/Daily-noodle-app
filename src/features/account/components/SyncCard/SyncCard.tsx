@@ -2,7 +2,7 @@ import { BOARD_KEY, readBoard } from '@noodle/core';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { appStorage, useStoredRaw, type CachedStorage } from '@/shared/storage';
 import { FONT, useTokens } from '@/shared/theme';
@@ -28,23 +28,11 @@ export function ago(at: number | null, now = Date.now()): string {
 }
 
 /** A green disc with a white tick: the signed-in state's mark, drawn from views. */
-function Tick() {
-  const t = useTokens();
-  return (
-    <View
-      style={[styles.disc, { backgroundColor: t.accent }]}
-      accessible={false}
-      importantForAccessibility="no"
-      testID="sync-tick">
-      <View style={[styles.tick, { borderColor: t.onAccent }]} />
-    </View>
-  );
-}
-
 /**
  * Optional sign-in, so streaks and leagues follow the player to another phone or the
  * website (tracker AF-018, AF-003, AF-004). Signed out it offers the email link; signed in
- * it is a status: a tick and "Signed in", the email, and one quiet line for the sync.
+ * it is a status (S1, Alec 7 Nov 2026): an avatar with the email's first letter, the email,
+ * a quiet sync line under it, and a small outlined Sign out on the right.
  * Hidden when the build has sync off.
  */
 export function SyncCard({
@@ -237,37 +225,61 @@ export function SyncCard({
     <View
       style={[styles.card, { backgroundColor: t.paper, borderColor: t.hair }]}
       testID="sync-card">
-      <View style={styles.status}>
-        <Tick />
-        <Text accessibilityRole="header" style={[styles.h2, { color: t.ink }]}>
-          Signed in
-        </Text>
-        {/* Alec, 7 Nov 2026: a quiet Sign out on the heading row, not a big button. */}
-        <View style={styles.out}>
-          <Button
-            variant="text"
-            label="Sign out"
-            onPress={() => act('signout', () => signOut(client))}
-            loading={busy === 'signout'}
-            disabled={busy === 'sync'}
-            testID="sync-signout"
-          />
+      <View style={styles.me}>
+        <View
+          style={[styles.avatar, { backgroundColor: t.accentSoft }]}
+          accessible={false}
+          importantForAccessibility="no"
+          testID="sync-avatar">
+          <Text maxFontSizeMultiplier={1} style={[styles.avatarText, { color: t.accent }]}>
+            {(account.email[0] ?? '?').toUpperCase()}
+          </Text>
         </View>
-      </View>
-      <Text style={[styles.p, { color: t.ink }]} testID="sync-signed-in" selectable>
-        {account.email}
-      </Text>
-      <View style={styles.line} testID="sync-line">
-        {busy === 'sync' ? (
-          <>
+        <View style={styles.who}>
+          <Text
+            style={[styles.email, { color: t.ink }]}
+            numberOfLines={1}
+            ellipsizeMode="tail"
+            testID="sync-signed-in"
+            selectable>
+            {account.email}
+          </Text>
+          <View style={styles.line} testID="sync-line">
+            {busy === 'sync' ? (
+              <>
+                <ActivityIndicator color={t.muted} size="small" />
+                <Text style={[styles.small, { color: t.faint }]} testID="sync-progress">
+                  Syncing…
+                </Text>
+              </>
+            ) : (
+              <>
+                {!msg && !waiting ? (
+                  <View style={[styles.dot, { backgroundColor: t.accent }]} testID="sync-dot" />
+                ) : null}
+                {line}
+              </>
+            )}
+          </View>
+        </View>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Sign out"
+          accessibilityState={{ disabled: busy === 'sync' || busy === 'signout' }}
+          disabled={busy === 'sync' || busy === 'signout'}
+          hitSlop={6}
+          onPress={() => void act('signout', () => signOut(client))}
+          testID="sync-signout"
+          style={({ pressed }) => [
+            styles.out,
+            { borderColor: t.hair, backgroundColor: pressed ? t.accentSoft : 'transparent' },
+          ]}>
+          {busy === 'signout' ? (
             <ActivityIndicator color={t.muted} size="small" />
-            <Text style={[styles.small, { color: t.faint }]} testID="sync-progress">
-              Syncing…
-            </Text>
-          </>
-        ) : (
-          line
-        )}
+          ) : (
+            <Text style={[styles.outText, { color: t.ink }]}>Sign out</Text>
+          )}
+        </Pressable>
       </View>
     </View>
   );
@@ -279,22 +291,32 @@ const styles = StyleSheet.create({
   p: { fontFamily: FONT.body, fontSize: 15, lineHeight: 22 },
   small: { fontFamily: FONT.body, fontSize: 13.5, lineHeight: 19, flexShrink: 1 },
   row: { flexDirection: 'row', gap: 8, flexWrap: 'wrap', alignItems: 'center' },
-  status: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  out: { marginLeft: 'auto' },
+  me: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  avatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarText: { fontFamily: FONT.displayHeavy, fontSize: 19 },
+  who: { flex: 1, minWidth: 0 },
+  email: { fontFamily: FONT.bodySemi, fontSize: 16, lineHeight: 21 },
   line: {
     flexDirection: 'row',
     alignItems: 'center',
     flexWrap: 'wrap',
     columnGap: 2,
-    minHeight: 48,
+    minHeight: 36,
   },
-  disc: { width: 24, height: 24, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  tick: {
-    width: 7,
-    height: 12,
-    borderRightWidth: 2.5,
-    borderBottomWidth: 2.5,
-    transform: [{ rotate: '45deg' }],
-    marginTop: -3,
+  dot: { width: 7, height: 7, borderRadius: 3.5, marginRight: 4 },
+  out: {
+    minHeight: 36,
+    paddingHorizontal: 14,
+    borderWidth: 1,
+    borderRadius: 999,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
+  outText: { fontFamily: FONT.bodySemi, fontSize: 13.5 },
 });

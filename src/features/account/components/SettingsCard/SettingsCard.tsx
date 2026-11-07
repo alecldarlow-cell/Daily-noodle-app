@@ -1,6 +1,6 @@
-import { Pressable, StyleSheet, Switch, Text, View } from 'react-native';
+import { StyleSheet, Switch, Text, View } from 'react-native';
 
-import { saveSettings, useAppSettings, type MotionChoice } from '@/shared/settings';
+import { saveSettings, useAppSettings, type AppSettings } from '@/shared/settings';
 import type { CachedStorage } from '@/shared/storage';
 import { appStorage } from '@/shared/storage';
 import { FONT, useTokens } from '@/shared/theme';
@@ -8,109 +8,55 @@ import { TAP } from '@/shared/ui';
 
 import { Card } from '../AccountParts/AccountParts';
 
-const MOTION: { value: MotionChoice; label: string }[] = [
-  { value: 'phone', label: 'Follow phone' },
-  { value: 'reduced', label: 'Reduced' },
-];
-
 /**
- * The app-wide switches (tracker AF-012), for every puzzle: Vibration on or off, Sound on or
- * off (AF-013), and Animations following the phone's setting or always reduced. No
- * per-puzzle choices.
+ * The app-wide switches (tracker AF-012), for every puzzle: Vibration, Sound (AF-013) and
+ * Animations, each plainly on or off with no description (Alec, 7 Nov 2026). Animations on
+ * follows the phone's setting; off is always reduced. The stored settings are unchanged.
  */
 export function SettingsCard({ store = appStorage }: { store?: CachedStorage }) {
   const t = useTokens();
   const s = useAppSettings(store);
+  const rows: {
+    key: string;
+    label: string;
+    on: boolean;
+    set: (on: boolean) => Partial<AppSettings>;
+  }[] = [
+    { key: 'vibration', label: 'Vibration', on: s.vibration, set: (on) => ({ vibration: on }) },
+    { key: 'sound', label: 'Sound', on: s.sound, set: (on) => ({ sound: on }) },
+    {
+      key: 'motion',
+      label: 'Animations',
+      on: s.motion !== 'reduced',
+      set: (on) => ({ motion: on ? 'phone' : 'reduced' }),
+    },
+  ];
   return (
     <Card testID="settings-card">
-      <View style={styles.row}>
-        <View style={styles.text}>
-          <Text style={[styles.label, { color: t.ink }]} nativeID="set-vibration">
-            Vibration
+      {rows.map((r, i) => (
+        <View
+          key={r.key}
+          style={[styles.row, i > 0 ? [styles.rule, { borderTopColor: t.hair }] : null]}>
+          <Text style={[styles.label, { color: t.ink }]} nativeID={`set-${r.key}`}>
+            {r.label}
           </Text>
-          <Text style={[styles.sub, { color: t.faint }]}>
-            A short buzz on taps, wrong answers and wins
-          </Text>
+          <Switch
+            accessibilityLabel={r.label}
+            testID={`set-${r.key}`}
+            value={r.on}
+            onValueChange={(on) => void saveSettings(r.set(on), store)}
+            trackColor={{ true: t.accent, false: t.hair }}
+            thumbColor={t.paper}
+            ios_backgroundColor={t.hair}
+          />
         </View>
-        <Switch
-          accessibilityLabel="Vibration"
-          testID="set-vibration"
-          value={s.vibration}
-          onValueChange={(on) => void saveSettings({ vibration: on }, store)}
-          trackColor={{ true: t.accent, false: t.hair }}
-          thumbColor={t.paper}
-          ios_backgroundColor={t.hair}
-        />
-      </View>
-      <View style={[styles.row, styles.rule, { borderTopColor: t.hair }]}>
-        <View style={styles.text}>
-          <Text style={[styles.label, { color: t.ink }]} nativeID="set-sound">
-            Sound
-          </Text>
-          <Text style={[styles.sub, { color: t.faint }]}>
-            Tones in Tangle, Borders and Reckon, and a jingle when you solve the others, unless the
-            phone is on silent
-          </Text>
-        </View>
-        <Switch
-          accessibilityLabel="Sound"
-          testID="set-sound"
-          value={s.sound}
-          onValueChange={(on) => void saveSettings({ sound: on }, store)}
-          trackColor={{ true: t.accent, false: t.hair }}
-          thumbColor={t.paper}
-          ios_backgroundColor={t.hair}
-        />
-      </View>
-      <View style={[styles.row, styles.rule, { borderTopColor: t.hair }]}>
-        <View style={styles.text}>
-          <Text style={[styles.label, { color: t.ink }]}>Animations</Text>
-          <Text style={[styles.sub, { color: t.faint }]}>Wins, confetti and moving tiles</Text>
-        </View>
-      </View>
-      <View style={styles.seg} accessibilityRole="radiogroup" accessibilityLabel="Animations">
-        {MOTION.map((m) => {
-          const on = s.motion === m.value;
-          return (
-            <Pressable
-              key={m.value}
-              accessibilityRole="radio"
-              accessibilityState={{ checked: on }}
-              accessibilityLabel={m.label}
-              testID={`set-motion-${m.value}`}
-              onPress={() => saveSettings({ motion: m.value }, store)}
-              style={({ pressed }) => [
-                styles.opt,
-                {
-                  borderColor: on ? t.accent : t.hair,
-                  backgroundColor: on ? t.accentSoft : t.paper,
-                },
-                pressed ? { opacity: 0.75 } : null,
-              ]}>
-              <Text style={[styles.optText, { color: on ? t.accent : t.ink }]}>{m.label}</Text>
-            </Pressable>
-          );
-        })}
-      </View>
+      ))}
     </Card>
   );
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: TAP, paddingVertical: 10 },
-  rule: { borderTopWidth: StyleSheet.hairlineWidth, paddingBottom: 4 },
-  text: { flex: 1, gap: 2 },
-  label: { fontFamily: FONT.bodySemi, fontSize: 15.5, lineHeight: 21 },
-  sub: { fontFamily: FONT.body, fontSize: 13, lineHeight: 18 },
-  seg: { flexDirection: 'row', gap: 8, paddingBottom: 12 },
-  opt: {
-    flex: 1,
-    minHeight: TAP,
-    borderWidth: 1.5,
-    borderRadius: 999,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 12,
-  },
-  optText: { fontFamily: FONT.display, fontSize: 14.5, textAlign: 'center' },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: TAP, paddingVertical: 8 },
+  rule: { borderTopWidth: StyleSheet.hairlineWidth },
+  label: { flex: 1, fontFamily: FONT.bodySemi, fontSize: 15.5, lineHeight: 21 },
 });
