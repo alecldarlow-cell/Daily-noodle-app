@@ -1,5 +1,5 @@
 {
   "note": "The native fingerprint (EAS runtime version) of the build testers have from Google Play. EAS Updates reach a phone only when they match it. Change this only after shipping a new store build, to that build's runtime version.",
   "android": "e442790c15876e84624e6aac990cd33687cfd668",
-  "build": "0.4.0 (the noodle-n icon), pending Play upload: production Android build to be queued from main after this PR merges. After the upload, confirm the build runtime is e442790c and drop \"pending\"."
+  "build": "0.4.0 (version code 7, the noodle-n icon): uploaded to the Play Alpha track and sent for review on 7 Nov 2026. Runtime e442790c confirmed on the EAS build page."
 }
