@@ -20,6 +20,7 @@ export function isDisposableKey(key: string): boolean {
     key === 'noodle-app-features' ||
     key === 'noodle-app-sync' ||
     key === 'noodle-board-pinlater' ||
+    key === 'noodle-board-medal-shine' ||
     key === 'digi.sid' ||
     key === 'digi.last'
   );

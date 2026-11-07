@@ -1004,3 +1004,10 @@ Alec ran an outside review of the app and asked for its findings to be checked a
 ### 7 Nov 2026 — Leagues spacing
 
 - Alec: one rule only between the masthead and the table (the pager's top rule and the first table's top rule removed), the table close to the dots, and room round Share (24 pt above, 32 below). Pager stays at the top (Alec considered the bottom for thumb reach; the swipe covers that). `controls.test.tsx` pins it. `check` green.
+
+## 2026-11-07 — Podium medals (P4)
+
+- Leagues boards: places 1–3 are struck-metal discs (gold, silver, bronze, with a rim, a highlight and the number) instead of the 🥇🥈🥉 emoji. Share texts keep the emoji; accessibility labels unchanged.
+- Your own row, when you place, takes a faint tint of your medal's colour instead of the green.
+- The first time you see today's board for a league and puzzle (or All puzzles) on which you placed, your medal pops and a shine sweeps across it, once. New disposable key `noodle-board-medal-shine` (`{ day, keys }`); no key renamed. Reduced motion (app switch or phone) skips it.
+- Tests: medal.test.tsx (disc colours, tint, once-a-day claim, unreadable store, animation once, reduced motion) and a LeaguesScreen podium test.
