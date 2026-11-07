@@ -163,7 +163,7 @@ describe('GIVEN a page', () => {
   describe('WHEN it is drawn', () => {
     it('THEN the Daily Noodle masthead leads it, with the page’s name as the header', async () => {
       await render(<Screen title="Archive" subtitle="Sun 25 Oct" />);
-      expect(screen.getByText('DN')).toBeOnTheScreen();
+      expect(screen.getByTestId('masthead-mark')).toBeOnTheScreen();
       expect(screen.getByText('Daily Noodle')).toBeOnTheScreen();
       expect(screen.getByRole('header', { name: 'Archive' })).toBeOnTheScreen();
       expect(screen.getByText('Sun 25 Oct')).toBeOnTheScreen();

@@ -20,6 +20,8 @@
  * - android-icon-monochrome.png  1024, the mark alone in one colour (themed icons), same size.
  * - splash-icon.png / splash-icon-dark.png  the icon itself on a rounded tile (radius 4/30), for
  *   the light and dark splash.
+ * - masthead-mark.png    120 (the 30 pt masthead tile at 4x): the same rounded tile, shown at the
+ *   top of every screen (Alec, 7 Nov 2026), so the app's pages carry the launcher icon's mark.
  */
 const fs = require('fs');
 const path = require('path');
@@ -338,6 +340,8 @@ function render() {
     tile(512),
     roundRect(0, 0, 512, 512, (512 * 4) / 30),
   );
+  // The masthead: the same rounded tile, small (30 pt at 4x).
+  const mast = paint(120, layers(120, MARK_SCALE), tile(120), roundRect(0, 0, 120, 120, 16));
   return [
     { file: 'icon.png', size: 1024, alpha: false, px: square(1024) },
     { file: 'play-store-icon.png', size: 512, alpha: false, px: square(512) },
@@ -346,6 +350,7 @@ function render() {
     { file: 'android-icon-monochrome.png', size: 1024, alpha: true, px: mono },
     { file: 'splash-icon.png', size: 512, alpha: true, px: splash },
     { file: 'splash-icon-dark.png', size: 512, alpha: true, px: splash },
+    { file: 'masthead-mark.png', size: 120, alpha: true, px: mast },
   ];
 }
 
