@@ -52,12 +52,12 @@ describe('GIVEN rounds left part-way', () => {
       );
       // No "Today" on the Today tab, and the round on the right (Alec, 7 Nov 2026).
       expect(screen.getByTestId('today-mini-result')).toHaveTextContent('Continue · 4:05');
-      expect(screen.getByTestId('today-mini-meta')).not.toHaveTextContent(/Today/);
+      expect(screen.getByTestId('today-mini-meta')).toHaveTextContent(/^Today$/);
       expect(screen.getByTestId('today-mini-mark')).not.toHaveTextContent('✓');
       expect(
         screen.getByRole('button', { name: 'Tangle 18, Continue, 0:49 left' }),
       ).toBeOnTheScreen();
-      expect(screen.getByRole('button', { name: 'Doku 103' })).toBeOnTheScreen();
+      expect(screen.getByRole('button', { name: 'Doku 103, Today' })).toBeOnTheScreen();
       // A round in progress isn't "played" in the count.
       expect(screen.getByTestId('today-count')).toHaveTextContent(/^8 puzzles$/);
     });
@@ -112,7 +112,7 @@ describe('GIVEN yesterday’s Mini is kept part-way', () => {
       const alert = jest.spyOn(Alert, 'alert').mockImplementation(() => undefined);
       await renderWithProviders(<TodayScreen />);
       await waitFor(() => expect(screen.getByTestId('today-mini')).toBeOnTheScreen());
-      expect(screen.getByRole('button', { name: 'Mini 105' })).toBeOnTheScreen();
+      expect(screen.getByRole('button', { name: 'Mini 105, Today' })).toBeOnTheScreen();
       await waitFor(() => expect(screen.queryByText('Yesterday.')).toBeNull());
       await fireEvent.press(screen.getByTestId('today-mini'));
       expect(router.push).not.toHaveBeenCalled();
@@ -163,7 +163,7 @@ describe('GIVEN no connection and today’s list kept from earlier', () => {
       expect(screen.getByTestId('today-mini-meta')).toHaveTextContent(/Downloaded/);
       expect(screen.getByTestId('today-borders-meta')).toHaveTextContent(/Downloaded/);
       expect(screen.getByTestId('today-doku-meta')).not.toHaveTextContent(/Downloaded/);
-      expect(screen.getByRole('button', { name: 'Mini 105, downloaded' })).toBeOnTheScreen();
+      expect(screen.getByRole('button', { name: 'Mini 105, Today, downloaded' })).toBeOnTheScreen();
     });
   });
 

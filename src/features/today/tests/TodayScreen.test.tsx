@@ -39,17 +39,17 @@ describe('GIVEN the site has published today’s list', () => {
       await renderWithProviders(<TodayScreen />);
       await waitFor(() => expect(screen.getByTestId('today-reckon')).toBeOnTheScreen());
       const cards = screen.getAllByRole('button', {
-        name: /^(Mini 105|Doku 103|Sweep 100|Path 98|Link 77|Tangle 18|Borders 20|Reckon 5)$/,
+        name: /^(Mini 105|Doku 103|Sweep 100|Path 98|Link 77|Tangle 18|Borders 20|Reckon 5), Today$/,
       });
       expect(cards.map((c) => c.props.accessibilityLabel)).toEqual([
-        'Mini 105',
-        'Doku 103',
-        'Sweep 100',
-        'Path 98',
-        'Link 77',
-        'Tangle 18',
-        'Borders 20',
-        'Reckon 5',
+        'Mini 105, Today',
+        'Doku 103, Today',
+        'Sweep 100, Today',
+        'Path 98, Today',
+        'Link 77, Today',
+        'Tangle 18, Today',
+        'Borders 20, Today',
+        'Reckon 5, Today',
       ]);
       expect(screen.getAllByText('How to play')).toHaveLength(8);
       expect(screen.getByTestId('today-count')).toHaveTextContent('8 puzzles');
@@ -100,12 +100,14 @@ describe('GIVEN the site has published today’s list', () => {
       }),
     );
 
-    it('THEN the card shows its standfirst, reading time and type icon', async () => {
+    // Alec, 7 Nov 2026: no reading time on cards; the callout row is "Today" | How to play.
+    it('THEN the card shows its standfirst and type icon, with Today on the left and no reading time', async () => {
       await renderWithProviders(<TodayScreen />);
       await waitFor(() =>
         expect(screen.getByText('A Bramley or a Cox. Medium.')).toBeOnTheScreen(),
       );
-      expect(screen.getByText('~3 min')).toBeOnTheScreen();
+      expect(screen.queryByText('~3 min')).toBeNull();
+      expect(screen.getByTestId('today-mini-meta')).toHaveTextContent(/^Today$/);
       expect(screen.getByTestId('today-mini-tile').type).toBe('Image');
     });
   });

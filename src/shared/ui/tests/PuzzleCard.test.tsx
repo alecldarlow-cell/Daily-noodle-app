@@ -79,21 +79,21 @@ describe('GIVEN a puzzle card', () => {
     detail: 'A Bramley or a Cox.',
     mask: '.'.repeat(25),
     when: 'Today',
-    read: '~3 min',
     testID: 'c',
   };
 
   describe('WHEN it hasn’t been played', () => {
-    it('THEN its meta line gives the day and reading time, and it has no mark', async () => {
+    it('THEN its callout row gives the day (no reading time), and it has no mark', async () => {
       await render(<PuzzleRow {...base} played={null} onPress={jest.fn()} />);
       expect(screen.getByRole('button', { name: 'Mini 106, Today' })).toBeOnTheScreen();
-      expect(screen.getByText('~3 min')).toBeOnTheScreen();
+      expect(screen.getByTestId('c-meta')).toHaveTextContent(/^Today$/);
+      expect(screen.queryByText(/min$/)).toBeNull();
       expect(screen.queryByTestId('c-mark')).toBeNull();
     });
   });
 
   describe('WHEN it has been solved', () => {
-    it('THEN the result replaces the reading time and the tile carries a tick', async () => {
+    it('THEN the result shows on the right and the tile carries a tick', async () => {
       await render(
         <PuzzleRow
           {...base}
@@ -102,7 +102,7 @@ describe('GIVEN a puzzle card', () => {
         />,
       );
       expect(screen.getByRole('button', { name: 'Mini 106, Solved in 0:54' })).toBeOnTheScreen();
-      expect(screen.queryByText('~3 min')).toBeNull();
+      expect(screen.getByTestId('c-result')).toHaveTextContent('Solved in 0:54');
       expect(screen.getByTestId('c-mark')).toHaveTextContent('✓');
     });
   });
@@ -143,7 +143,7 @@ describe('GIVEN a puzzle card', () => {
   describe('WHEN the phone is offline and the puzzle is downloaded', () => {
     it('THEN the meta line says Downloaded, and so does its label', async () => {
       await render(<PuzzleRow {...base} played={null} kept onPress={jest.fn()} />);
-      expect(screen.getByTestId('c-meta')).toHaveTextContent('Today  ·  ~3 min  ·  Downloaded');
+      expect(screen.getByTestId('c-meta')).toHaveTextContent('Today  ·  Downloaded');
       expect(screen.getByRole('button', { name: 'Mini 106, Today, downloaded' })).toBeOnTheScreen();
     });
   });

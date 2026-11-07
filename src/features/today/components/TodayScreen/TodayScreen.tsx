@@ -167,7 +167,7 @@ export function TodayScreen({ open, onOpened }: { open?: PuzzleType; onOpened?: 
             title={title}
             detail={card?.standfirst}
             mask={card?.mask}
-            read={card?.read}
+            when="Today"
             played={byId[it.id] ?? null}
             roundTime={rounds[it.id]?.time}
             kept={kept.has(it.path)}

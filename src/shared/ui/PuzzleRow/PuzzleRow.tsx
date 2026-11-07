@@ -14,10 +14,8 @@ interface PuzzleRowProps {
   detail?: string;
   /** The tile's grid (feed-lite `mask`); picture types and older cards have none. */
   mask?: string;
-  /** "Yesterday" or a short date: the meta line's first word (none on Today, Alec 7 Nov 2026). */
+  /** "Today", "Yesterday" or a short date: the callout row's left side. */
   when?: string;
-  /** Reading time ("~3 min"), shown until the puzzle is played. */
-  read?: string;
   played: PlayedState | null;
   /** The time a round left part-way shows beside Continue ("4:05", "1:12 left"). */
   roundTime?: string;
@@ -28,6 +26,11 @@ interface PuzzleRowProps {
   onHowTo?: () => void;
   testID?: string;
 }
+
+/** The tile's size, and so the text column's height. */
+export const TILE = 96;
+/** Space above and below each card. */
+export const CARD_PAD = 20;
 
 /** Space kept between the meta line and "How to play". */
 const HOWTO_GAP = 8;
@@ -49,10 +52,11 @@ export function howToRoom(bodyWidth: number, howToWidth: number, howToHeight: nu
 
 /**
  * One puzzle as the site's front-page card (front.css `.card`, front.js `card`): the
- * 96 pt preview tile with a played mark on its corner, the headline, the standfirst, and
- * a meta line of when (and reading time) with "How to play" at its end. Once there is a
- * result (Alec, 7 Nov 2026), the result takes How to play's place on the right; How to play
- * is then on the puzzle's finish sheet.
+ * 96 pt preview tile with a played mark on its corner, and beside it a column the tile's
+ * height (Alec, 7 Nov 2026): the headline, the standfirst in two lines, and at the bottom
+ * a callout row: when on the left ("Today", "Yesterday", a date), and on the right exactly
+ * one thing, the result once there is one, else "How to play" (then also on the finish
+ * sheet). No reading time. At large text the column grows rather than clips.
  */
 export function PuzzleRow({
   type,
@@ -60,7 +64,6 @@ export function PuzzleRow({
   detail,
   mask,
   when,
-  read,
   played,
   roundTime,
   kept,
@@ -81,7 +84,7 @@ export function PuzzleRow({
   const time = played && !played.done ? roundTime : undefined;
   const offline = kept ? 'Downloaded' : undefined;
   const label = [title, result ?? when, time, offline?.toLowerCase()].filter(Boolean).join(', ');
-  const meta = [when, result ? undefined : read, offline].filter((s): s is string => !!s);
+  const meta = [when, offline].filter((s): s is string => !!s);
   const right = result ? [result, time].filter(Boolean).join(' · ') : null;
   const howToShown = !!onHowTo && !result;
   const resultColour = played?.done
@@ -124,7 +127,7 @@ export function PuzzleRow({
           {detail ? (
             <Standfirst
               text={detail}
-              max={3}
+              max={2}
               style={[styles.detail, { color: t.muted }]}
               testID={testID ? `${testID}-detail` : undefined}
             />
@@ -180,7 +183,8 @@ export function PuzzleRow({
 
 const styles = StyleSheet.create({
   card: { borderBottomWidth: StyleSheet.hairlineWidth, position: 'relative' },
-  press: { flexDirection: 'row', alignItems: 'flex-start', gap: 14, paddingVertical: 18 },
+  // 20 pt above and below every card, so the tiles (and the text beside them) stream evenly.
+  press: { flexDirection: 'row', alignItems: 'flex-start', gap: 14, paddingVertical: CARD_PAD },
   mark: {
     position: 'absolute',
     top: -7,
@@ -194,10 +198,17 @@ const styles = StyleSheet.create({
   },
   tick: { fontFamily: FONT.bodyBold, fontSize: 13, lineHeight: 15 },
   dot: { width: 7, height: 7, borderRadius: 3.5 },
-  body: { flex: 1 },
+  // The tile's height, with the callout row pinned to its foot.
+  body: { flex: 1, minHeight: TILE },
   title: { fontFamily: FONT.display, fontSize: 19, lineHeight: 23, letterSpacing: -0.19 },
-  detail: { fontFamily: FONT.body, fontSize: 14, lineHeight: 20, marginTop: 7 },
-  meta: { flexDirection: 'row', alignItems: 'center', marginTop: 9, minHeight: 24 },
+  detail: { fontFamily: FONT.body, fontSize: 14, lineHeight: 20, marginTop: 4 },
+  meta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 'auto',
+    paddingTop: 4,
+    minHeight: 24,
+  },
   metaItem: { flexShrink: 1, fontFamily: FONT.bodySemi, fontSize: 12 },
   resultText: { fontFamily: FONT.bodyBold },
   // The result, right-aligned where How to play sits on an unplayed card.
@@ -205,7 +216,7 @@ const styles = StyleSheet.create({
   howTo: {
     position: 'absolute',
     right: 0,
-    bottom: 18,
+    bottom: CARD_PAD,
     minHeight: 24,
     justifyContent: 'center',
     paddingLeft: 8,
