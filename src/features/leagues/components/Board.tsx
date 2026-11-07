@@ -521,7 +521,7 @@ function DayView({
           .
         </Text>
       ) : (
-        <View style={[styles.rows, { borderTopColor: t.hair }]}>
+        <View style={styles.rowsTop}>
           {d.ranked.map((r) => row(r, false))}
           {d.unranked.map((r) => row(r, true))}
         </View>
@@ -570,9 +570,7 @@ function OverallView({
           Nobody in {league.name} has played {date === today ? 'yet today' : 'on this day'}.
         </Text>
       ) : (
-        <View style={[styles.rows, { borderTopColor: t.hair }]}>
-          {d.day.map((r) => row(r, dayCount(date)))}
-        </View>
+        <View style={styles.rowsTop}>{d.day.map((r) => row(r, dayCount(date)))}</View>
       )}
       <NotesLine rows={d.not_yet} />
       <Sub>This week · {weekLabel(d.week_from, d.week_to)}</Sub>
@@ -819,7 +817,11 @@ const styles = StyleSheet.create({
   playLink: { fontFamily: FONT.bodyBold, fontSize: 14.5 },
   // The leaderboard is the key information: room above and below it.
   rows: { marginTop: 14, marginBottom: 6, borderTopWidth: 1 },
-  shareRow: { flexDirection: 'row', marginTop: 14 },
+  // The table straight under the pager: no rule of its own (the pager's is above it) and
+  // close to the dots (Alec, 7 Nov 2026).
+  rowsTop: { marginTop: 2, marginBottom: 6 },
+  // Room round the one action (Alec, 7 Nov 2026: it felt cramped).
+  shareRow: { flexDirection: 'row', marginTop: 24, marginBottom: 32 },
   notes: { fontFamily: FONT.body, marginTop: 12, fontSize: 13.5, lineHeight: 19 },
   row: {
     flexDirection: 'row',

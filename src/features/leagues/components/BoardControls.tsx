@@ -367,9 +367,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 4,
     paddingVertical: 8,
-    borderTopWidth: StyleSheet.hairlineWidth,
+    // Alec, 7 Nov 2026: one rule only under the pager (the masthead's rule is just above).
     borderBottomWidth: StyleSheet.hairlineWidth,
-    marginTop: 4,
   },
   pagerArrow: {
     width: TAP,

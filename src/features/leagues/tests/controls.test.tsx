@@ -313,6 +313,18 @@ describe('GIVEN the margins on Leagues (AF-007)', () => {
     expect(GUTTER).toBe(16);
   });
 
+  // Alec, 7 Nov 2026: one rule under the pager, the table close to the dots, room round Share.
+  it('THEN only one rule sits between the masthead and the table, and Share has room', async () => {
+    await open();
+    const pager = screen.getByTestId('type-pager').children[0] as unknown as {
+      props: { style?: unknown };
+    };
+    expect(flat(pager).borderTopWidth).toBeUndefined();
+    expect(flat(pager).borderBottomWidth).toBeGreaterThan(0);
+    const share = screen.getByTestId('share-board');
+    expect(flat(share)).toMatchObject({ marginTop: 24, marginBottom: 32 });
+  });
+
   it('THEN a highlighted board row has inner padding on the right as well as the left', async () => {
     await open();
     const mine = screen.getByLabelText('🥈 Alec (you), 1 pt, 1 of 9 done');
