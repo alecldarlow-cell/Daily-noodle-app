@@ -1,5 +1,5 @@
 import { dnNum } from '@noodle/core';
-import { useRef, type ComponentRef } from 'react';
+import { useRef, useState, type ComponentRef } from 'react';
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -15,7 +15,7 @@ import { useMiniGame } from '../hooks/useMiniGame';
 import type { MiniData } from '../model';
 import { ClueBar } from './ClueBar';
 import { MiniBoard } from './MiniBoard';
-import { MiniControls } from './MiniControls';
+import { MiniHelp } from './MiniHelp';
 import { SolvedGrid } from './MiniGrids';
 import { MiniKeyboard } from './MiniKeyboard';
 
@@ -34,6 +34,7 @@ export function MiniScreen({ file }: { file: PuzzleFile<MiniData> }) {
   const fit = useBoardFit(fitBoard(win, 400, 420), 420);
   const n = dnNum(file.data.id).slice(1);
   const { state, dispatch } = game;
+  const [help, setHelp] = useState(false);
 
   if (game.phase === 'start')
     return (
@@ -72,8 +73,8 @@ export function MiniScreen({ file }: { file: PuzzleFile<MiniData> }) {
       />
     );
 
-  // Board, clue bar, the checks and keyboard on one screen, in the page's order (.gridwrap,
-  // .cluebar, .controls, .kb; Alec's call 25 Oct 2026 to match it).
+  // Board, clue bar and keyboard on one screen. The page's row of checks moved into Help,
+  // the keyboard's bottom-left key, so the keys could grow (Alec, 8 Nov 2026).
   return (
     <SafeAreaView style={[styles.fill, { backgroundColor: pt.paper }]} testID="mini-screen">
       <View style={styles.in}>
@@ -103,14 +104,19 @@ export function MiniScreen({ file }: { file: PuzzleFile<MiniData> }) {
           onNext={() => dispatch({ t: 'step', delta: 1 })}
           onToggle={() => dispatch({ t: 'bar' })}
         />
-        <MiniControls
-          onCheckWord={() => dispatch({ t: 'checkWord' })}
-          onCheckAll={() => dispatch({ t: 'checkAll' })}
-          onRevealWord={() => dispatch({ t: 'revealWord' })}
-        />
         <MiniKeyboard
           onKey={(ch) => dispatch({ t: 'key', ch })}
           onDelete={() => dispatch({ t: 'del' })}
+          onHelp={() => setHelp(true)}
+        />
+        <MiniHelp
+          open={help}
+          word={game.bar?.label}
+          onClose={() => setHelp(false)}
+          onCheckCell={() => dispatch({ t: 'checkCell' })}
+          onCheckWord={() => dispatch({ t: 'checkWord' })}
+          onCheckAll={() => dispatch({ t: 'checkAll' })}
+          onRevealWord={() => dispatch({ t: 'revealWord' })}
         />
       </View>
     </SafeAreaView>

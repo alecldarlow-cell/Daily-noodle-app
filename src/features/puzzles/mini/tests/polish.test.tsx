@@ -48,6 +48,7 @@ describe('GIVEN a Mini on the board', () => {
       await press('cell-0-1');
       await press('key-X');
       await press('cell-0-1'); // back onto the X
+      await press('key-help');
       await fireEvent.press(screen.getByRole('button', { name: 'Check word' }));
       const cell = screen.getByTestId('cell-0-1');
       expect(cell).toHaveAccessibleName(/X, wrong$/);
@@ -60,13 +61,20 @@ describe('GIVEN a Mini on the board', () => {
   });
 
   describe('WHEN the controls are held', () => {
-    it('THEN Check word, Check all, Reveal word, the clue arrows and back all show the pressed look', async () => {
+    it('THEN Help, the clue arrows and back show the pressed look, and so does every Help option', async () => {
       await renderWithProviders(<MiniScreen file={file105} />);
       await play();
+      // Help is a key: held, it takes the keys' pressed shade.
+      expect(await heldStyle(screen.getByRole('button', { name: 'Help' }))).toMatchObject({
+        backgroundColor: pt.activeWord,
+      });
+      await press('key-help');
       for (const name of [
+        'Check square',
         'Check word',
         'Check all',
         'Reveal word',
+        'Close help',
         'Previous clue',
         'Next clue',
         'Back to Puzzles',

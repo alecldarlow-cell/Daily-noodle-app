@@ -77,7 +77,7 @@ describe('GIVEN a Reckon not yet played', () => {
       await renderWithProviders(<ReckonScreen file={file2} deps={deps} />);
       await press('reckon-play-button');
       expect(screen.getByTestId('reckon-tip')).toBeOnTheScreen();
-      expect(text('reckon-qn')).toBe('1/10');
+      expect(text('reckon-qn')).toBe('1 of 10');
       for (let i = 0; i < 10; i++) await lockAndNext();
       expect(screen.getByTestId('finish-sheet')).toBeOnTheScreen();
       expect(screen.getByTestId('finish-title')).toHaveTextContent('Reckoned');
@@ -93,10 +93,10 @@ describe('GIVEN a Reckon not yet played', () => {
       expect(save.cur).toBeNull();
       // a row of the recap reopens that question; Back to results returns, with nothing announced
       await press('reckon-row-2');
-      expect(text('reckon-qn')).toBe('3/10');
+      expect(text('reckon-qn')).toBe('3 of 10');
       expect(screen.getByText('Reviewing your round')).toBeOnTheScreen();
-      await press('reckon-fwd');
-      expect(text('reckon-qn')).toBe('4/10');
+      await press('reckon-pip-3');
+      expect(text('reckon-qn')).toBe('4 of 10');
       await press('reckon-act');
       expect(screen.getByTestId('finish-sheet')).toBeOnTheScreen();
       expect(screen.getByTestId('finish-title')).toHaveTextContent('Reckoned');
@@ -124,11 +124,14 @@ describe('GIVEN a Reckon not yet played', () => {
       expect(screen.getByTestId('reckon-feedback')).toBeOnTheScreen();
       t += 100;
       await press('reckon-act');
-      expect(text('reckon-qn')).toBe('1/10');
+      expect(text('reckon-qn')).toBe('1 of 10');
       t += 1000;
       await press('reckon-act');
-      expect(text('reckon-qn')).toBe('2/10');
-      expect(text('reckon-score')).not.toBe('0');
+      expect(text('reckon-qn')).toBe('2 of 10');
+      expect(screen.getByTestId('puzzle-score')).not.toHaveProp(
+        'accessibilityLabel',
+        '0 points so far',
+      );
     });
 
     // 7 Nov 2026: a thumb aimed at Lock in landed on the label strip and the scale, which
@@ -180,25 +183,22 @@ describe('GIVEN a Reckon not yet played', () => {
     });
   });
 
-  describe('WHEN it is paused and left', () => {
-    it('THEN Back to start keeps the round and Resume returns to it', async () => {
+  describe('WHEN it is left mid-round with back', () => {
+    it('THEN the round is kept, its start screen offers Resume, and Resume returns to it', async () => {
       await renderWithProviders(<ReckonScreen file={file2} deps={deps} />);
       await press('reckon-play-button');
       await lockAndNext();
-      await press('reckon-pause');
-      expect(screen.getByTestId('reckon-paused')).toBeOnTheScreen();
-      await press('reckon-resume');
-      expect(screen.queryByTestId('reckon-paused')).toBeNull();
-      await press('reckon-pause');
-      await press('reckon-quit');
+      expect(screen.queryByTestId('reckon-pause')).toBeNull(); // back replaced the pause button
+      await fireEvent.press(screen.getByRole('button', { name: 'Back to Puzzles' }));
+      expect(saved().cur).toMatchObject({ id: reckon2.id, i: 1 });
       expect(screen.getByText(/^Question 2 of 10, \d+ points so far\.$/)).toBeOnTheScreen();
       expect(screen.getByText('Resume')).toBeOnTheScreen();
       await press('reckon-play-button');
-      expect(text('reckon-qn')).toBe('2/10');
-      await press('reckon-prev');
+      expect(text('reckon-qn')).toBe('2 of 10');
+      await press('reckon-pip-0');
       expect(screen.getByText('Back to question 2')).toBeOnTheScreen();
       await press('reckon-pip-1');
-      expect(text('reckon-qn')).toBe('2/10');
+      expect(text('reckon-qn')).toBe('2 of 10');
     });
 
     it('THEN closing the screen saves the round where it stands', async () => {

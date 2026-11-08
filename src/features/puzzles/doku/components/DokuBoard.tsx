@@ -87,7 +87,7 @@ export function DokuBoard({ state, side, onCell, celebrating = false }: DokuBoar
                 : green
                   ? pt.good
                   : given
-                    ? pt.inkSoft
+                    ? pt.ink
                     : word
                       ? pt.onWord
                       : pt.ink;
@@ -122,7 +122,13 @@ export function DokuBoard({ state, side, onCell, celebrating = false }: DokuBoar
                     ) : null}
                     <Text
                       maxFontSizeMultiplier={1.2}
-                      style={[styles.ltr, { fontSize: cell * 0.46, color: ink }]}>
+                      style={[
+                        styles.ltr,
+                        // Given letters are the clues: full ink, heaviest weight, on their
+                        // shaded square, never fainter than a guess (Alec, 8 Nov 2026).
+                        given && !green ? styles.givenLtr : null,
+                        { fontSize: cell * 0.46, color: ink },
+                      ]}>
                       {letter}
                     </Text>
                   </Animated.View>
@@ -143,4 +149,5 @@ const styles = StyleSheet.create({
   fill: { flex: 1, alignSelf: 'stretch', alignItems: 'center', justifyContent: 'center' },
   num: { position: 'absolute', top: 2, left: 4, fontFamily: FONT.sansMedium },
   ltr: { fontFamily: FONT.display },
+  givenLtr: { fontFamily: FONT.displayHeavy },
 });

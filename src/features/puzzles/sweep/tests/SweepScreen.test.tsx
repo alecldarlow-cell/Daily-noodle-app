@@ -1,5 +1,5 @@
 import { londonDay } from '@noodle/core';
-import { act, fireEvent, screen, waitFor } from '@testing-library/react-native';
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react-native';
 import * as Audio from 'expo-audio';
 
 import { onFinish, type PuzzleFinish } from '@/shared/results';
@@ -81,10 +81,18 @@ describe('GIVEN a Sweep not yet played', () => {
       expect(screen.getByTestId('sweep-msg')).toHaveTextContent('');
       await fireEvent(sq(4), 'longPress');
       expect(screen.getByTestId('sweep-left')).toHaveTextContent('6');
-      await fireEvent.press(screen.getByRole('button', { name: '⚑ Flag' }));
+      await fireEvent.press(screen.getByTestId('sweep-mode-flag'));
       await tap(4); // off again in Flag mode
       expect(screen.getByTestId('sweep-left')).toHaveTextContent('7');
-      await fireEvent.press(screen.getByRole('button', { name: '⛏ Dig' }));
+      // the count rides in the Flag button, which says it; Hint shares the row
+      expect(
+        within(screen.getByTestId('sweep-mode-flag')).getByTestId('sweep-left'),
+      ).toBeOnTheScreen();
+      expect(screen.getByRole('button', { name: 'Flag, 7 mines left' })).toBeOnTheScreen();
+      expect(screen.getByTestId('sweep-hint').parent).toBe(
+        screen.getByTestId('sweep-mode-flag').parent,
+      );
+      await fireEvent.press(screen.getByRole('button', { name: 'Dig' }));
       await fireEvent.press(screen.getByRole('button', { name: 'Hint' }));
       expect(screen.getByTestId('sweep-msg')).toHaveTextContent(
         'This 1 has only one hidden square next to it, so that square is a mine.',

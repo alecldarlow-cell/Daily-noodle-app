@@ -16,9 +16,11 @@ const light: SweepColors = {
   n: { 1: '#2E5BFF', 2: '#1F9E6B', 3: '#E4483B', 4: '#1B3B9E', 5: '#9A6B00' },
 };
 
+// Hidden squares a step lighter than the page's #4A5068, so they stand clear of the dug
+// ones on the dark card (Alec, 8 Nov 2026).
 const dark: SweepColors = {
-  hidden: '#4A5068',
-  locked: '#444A60',
+  hidden: '#555C78',
+  locked: '#4C5269',
   flag: '#1B3B9E',
   why: '#A9BBFF',
   n: { 1: '#8EA6FF', 2: '#4CC793', 3: '#FF7A6E', 4: '#C9D3FF', 5: '#E0A92E' },

@@ -42,6 +42,8 @@ export function tileLines(w: string): 1 | 2 {
 
 /** The tile text's largest multiple of the phone's text size (as everywhere on the board). */
 const TILE_SCALE = 1.3;
+/** Room kept clear inside a tile's edge, each side: about a tenth of a phone's tile. */
+export const TILE_PAD = 8;
 
 /**
  * THE ONE tile font size (link.css --tf, link.js fitFont): every tile on the board shares
@@ -54,9 +56,10 @@ export function boardFont(words: readonly string[], tileW: number, scale = 1): n
   const s = Math.min(Math.max(scale, 1), TILE_SCALE);
   if (!(tileW > 0) || !words.length) return 15;
   const n = Math.max(...words.flatMap((w) => w.trim().split(/\s+/)).map((p) => p.length));
-  // Archivo Bold capitals average 0.7 em; 0.3 pt of letter spacing each; 5 pt padding a side.
-  const room = tileW - 12 - 0.3 * n;
-  const fit = room / (0.7 * n);
+  // Archivo Bold capitals average 0.7 em, wide ones (M, W) more, so 0.72; 0.3 pt of letter
+  // spacing each; TILE_PAD a side (8 Nov 2026: seven-letter words touched the edges at 4).
+  const room = tileW - 2 * TILE_PAD - 0.3 * n;
+  const fit = room / (0.72 * n);
   return Math.min(Math.max(fit, 12), 18 * s) / s;
 }
 
@@ -285,7 +288,7 @@ const styles = StyleSheet.create({
     borderRadius: 11,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 4,
+    paddingHorizontal: TILE_PAD,
   },
   lift: { zIndex: 2 },
   bandSlot: { flex: 1, maxHeight: 96, minHeight: 56 },

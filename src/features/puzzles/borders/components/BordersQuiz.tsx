@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useReduceMotion } from '@/shared/motion';
 import { FONT } from '@/shared/theme';
+import { PuzzleBar } from '@/shared/start-card';
 import { PRESSED, pressable } from '@/shared/ui';
 
 import { useAnnounce } from '../../link/hooks/announce';
@@ -16,6 +17,11 @@ interface Props {
   state: BordersState;
   c: BordersColors;
   dispatch: (m: Move) => void;
+  /** "Borders 41", for the bar. */
+  name: string;
+  streak: number;
+  /** Back: keeps the round where it is (the pause sheet's Back to start) and leaves. */
+  onBack: () => void;
 }
 
 /** Text grows with the phone's text size up to these multiples, so Next always fits. */
@@ -30,11 +36,12 @@ export function verdictOf(state: BordersState): string {
 }
 
 /**
- * A question: the outline, the four names, Show on map, Next; and the pause sheet. The
+ * A question: the bar (back, name, streak, score), the progress ticks, the outline, the four
+ * names, Show on map, Next. The
  * column scrolls when it can't fit (a short phone at a large text size), the map giving
  * way first, so Next is always reachable.
  */
-export function BordersQuiz({ state, c, dispatch }: Props) {
+export function BordersQuiz({ state, c, dispatch, name, streak, onBack }: Props) {
   const v = quizView(state);
   const verdict = verdictOf(state);
   useAnnounce(verdict, `${state.cur?.i ?? 0}|${verdict}`);
@@ -47,18 +54,14 @@ export function BordersQuiz({ state, c, dispatch }: Props) {
         contentContainerStyle={styles.wrap}
         bounces={false}
         testID="borders-scroll">
+        <PuzzleBar
+          name={name}
+          streak={streak}
+          score={v.pts}
+          colors={{ ink: c.ink, inkSoft: c.ink2, card: c.paper, line: c.edge }}
+          onBack={onBack}
+        />
         <View style={styles.qtop}>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Pause"
-            testID="borders-pause"
-            onPress={() => dispatch({ t: 'pause' })}
-            style={pressable([styles.iconbtn, { borderColor: c.edge }])}>
-            <View style={styles.bars}>
-              <View style={[styles.bar, { backgroundColor: c.ink }]} />
-              <View style={[styles.bar, { backgroundColor: c.ink }]} />
-            </View>
-          </Pressable>
           <View
             style={styles.ticks}
             accessibilityElementsHidden
@@ -76,16 +79,6 @@ export function BordersQuiz({ state, c, dispatch }: Props) {
               />
             ))}
           </View>
-          <Text
-            maxFontSizeMultiplier={CAP_BIG}
-            style={[styles.pts, { color: c.ink }]}
-            testID="borders-points"
-            accessibilityLiveRegion="polite">
-            {v.pts}
-            <Text maxFontSizeMultiplier={CAP_BIG} style={styles.ptsSmall}>
-              {' pts'}
-            </Text>
-          </Text>
         </View>
         <View style={[styles.sheet, { backgroundColor: c.sea, borderColor: c.edge }]}>
           <Picture
@@ -305,21 +298,9 @@ const styles = StyleSheet.create({
     padding: 14,
     gap: 12,
   },
-  qtop: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  iconbtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    borderWidth: 1.5,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  bars: { flexDirection: 'row', gap: 3 },
-  bar: { width: 3.5, height: 12 },
+  qtop: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 20 },
   ticks: { flex: 1, flexDirection: 'row', gap: 4 },
   tick: { flex: 1, height: 8, borderWidth: 1.25, borderRadius: 2 },
-  pts: { fontFamily: FONT.serif, fontSize: 28, minWidth: 70, textAlign: 'right' },
-  ptsSmall: { fontFamily: FONT.sans, fontSize: 13 },
   // The map fills what the column leaves; past its floor the column scrolls instead.
   sheet: { flex: 1, borderWidth: 1.5, borderRadius: 3, overflow: 'hidden', minHeight: 150 },
   map: { ...StyleSheet.absoluteFill },

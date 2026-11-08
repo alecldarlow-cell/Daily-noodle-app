@@ -14,6 +14,12 @@ interface PuzzleBarProps {
   clock?: string;
   /** The clock hasn't started yet (or is paused): drawn dimmed (link.css #timer.waiting). */
   waiting?: boolean;
+  /** The clock is running out (Tangle's last ten seconds): drawn in the boards' red. */
+  urgent?: boolean;
+  /** Points so far, for the types scored rather than timed (Reckon, Borders): shown where the clock would be. */
+  score?: number;
+  /** A type's own palette (Reckon, Borders, Tangle), over the boards' tokens. */
+  colors?: { ink: string; inkSoft: string; card: string; line: string };
   onBack: () => void;
 }
 
@@ -31,11 +37,32 @@ export function clockLabel(clock: string): string {
 
 /**
  * The slim bar over a board (engines/house.js): back, name and number, difficulty, streak,
- * clock. The name is the board screen's heading for screen readers.
+ * and one thing that matters for the type: the clock, or the score (Alec, 8 Nov 2026: the
+ * same left side on every puzzle, only what matters on the right). The name is the
+ * board screen's heading for screen readers.
  */
-export function PuzzleBar({ name, sub, streak, clock, waiting, onBack }: PuzzleBarProps) {
-  const pt = usePuzzleTokens();
-  const shown = clock;
+export function PuzzleBar({
+  name,
+  sub,
+  streak,
+  clock,
+  waiting,
+  urgent,
+  score,
+  colors,
+  onBack,
+}: PuzzleBarProps) {
+  const tokens = usePuzzleTokens();
+  const pt = colors
+    ? {
+        ...tokens,
+        ink: colors.ink,
+        inkSoft: colors.inkSoft,
+        card: colors.card,
+        lineSoft: colors.line,
+      }
+    : tokens;
+  const shown = score === undefined ? clock : undefined;
   return (
     <View style={styles.bar} testID="puzzle-bar">
       <Pressable
@@ -64,7 +91,7 @@ export function PuzzleBar({ name, sub, streak, clock, waiting, onBack }: PuzzleB
       ) : null}
       {shown !== undefined ? (
         <Text
-          style={[styles.clock, { color: pt.ink }, waiting && styles.waiting]}
+          style={[styles.clock, { color: urgent ? pt.bad : pt.ink }, waiting && styles.waiting]}
           accessibilityRole="timer"
           accessibilityLabel={clockLabel(shown)}
           accessibilityLiveRegion="none"
@@ -73,11 +100,23 @@ export function PuzzleBar({ name, sub, streak, clock, waiting, onBack }: PuzzleB
           {shown}
         </Text>
       ) : null}
+      {score !== undefined ? (
+        <Text
+          style={[styles.score, { color: pt.inkSoft }]}
+          accessibilityLabel={`${score} points so far`}
+          maxFontSizeMultiplier={1.3}
+          testID="puzzle-score">
+          <Text style={[styles.scoreN, { color: pt.ink }]}>{score}</Text>
+          {' pts'}
+        </Text>
+      ) : null}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  score: { fontSize: 13, fontFamily: FONT.sans, minWidth: 54, textAlign: 'right' },
+  scoreN: { fontSize: 17, fontFamily: FONT.sansSemi, fontVariant: ['tabular-nums'] },
   waiting: { opacity: 0.42 },
   bar: { flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 52, marginBottom: 6 },
   back: {

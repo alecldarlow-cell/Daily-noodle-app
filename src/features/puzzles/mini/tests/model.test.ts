@@ -206,6 +206,17 @@ describe('GIVEN letters on the board', () => {
     });
   });
 
+  describe('WHEN Help › Check square is pressed', () => {
+    it('THEN only the square under the cursor is marked, counted as a check', () => {
+      const wrong = play(s0, { t: 'cell', r: 0, c: 1 }, { t: 'checkCell' });
+      expect(wrong.checked[0]).toEqual([null, 'bad', null, null, null]);
+      const right = play(s0, { t: 'cell', r: 0, c: 0 }, { t: 'checkCell' });
+      expect(right.checked[0]).toEqual(['good', null, null, null, null]);
+      expect(right.used.checks).toBe(1);
+      expect(right.track.checks).toBe(1);
+    });
+  });
+
   describe('WHEN Check all is pressed and a marked letter retyped', () => {
     it('THEN empty squares stay unmarked and the retyped square loses its mark', () => {
       let s = play(s0, { t: 'checkAll' });

@@ -5,7 +5,7 @@ import * as RN from 'react-native';
 import { appStorage } from '@/shared/storage';
 import { mockSite, renderWithProviders } from '@/shared/testing';
 
-import { boardFont } from '../components/LinkBoard';
+import { boardFont, TILE_PAD } from '../components/LinkBoard';
 import { useBoardColors } from '../components/LinkParts';
 import { LinkScreen } from '../components/LinkScreen';
 import { useAnnounce } from '../hooks/announce';
@@ -203,13 +203,19 @@ describe('GIVEN Link’s board in play', () => {
 describe('GIVEN the one tile font size (link.js fitFont)', () => {
   it('THEN it is set by the longest word, between 12 and 18 pt, and the same for every tile', () => {
     // A 375 pt phone's tile is about 80 pt wide.
-    expect(boardFont(['AXE', 'BOW', 'SWORD'], 80)).toBe(18);
+    expect(boardFont(['AXE', 'BOW', 'MACE'], 80)).toBe(18);
     const long = boardFont(['MARROW', 'KOHLRABI', 'LEEK'], 80);
     expect(long).toBeLessThan(15);
     expect(long).toBeGreaterThanOrEqual(12);
     expect(boardFont(['SPINNAKER', 'MARROW'], 80)).toBe(boardFont(['SPINNAKER'], 80));
     expect(boardFont(['ICE CREAM'], 80)).toBe(boardFont(['CREAM'], 80));
     expect(boardFont(['SPINNAKERS'], 40)).toBe(12);
+  });
+  it('THEN a seven-letter word (DENMARK, CLICHED) clears the tile edge by TILE_PAD on a 360 pt phone', () => {
+    const tileW = 78; // (360 − 24 screen padding − 3 gaps of 8) / 4
+    const f = boardFont(['DENMARK', 'CLICHED', 'GLACIER', 'ICELAND'], tileW);
+    expect(0.72 * 7 * f + 0.3 * 7 + 2 * TILE_PAD).toBeLessThanOrEqual(tileW + 1); // at the 12 pt floor; past it the text shrinks on its own
+    expect(TILE_PAD).toBeGreaterThanOrEqual(8);
   });
   it('THEN before the board is measured it is 15 pt, and at a large text size it leaves room for it', () => {
     expect(boardFont(['AXE'], 0)).toBe(15);
