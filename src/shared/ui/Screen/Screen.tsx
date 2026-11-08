@@ -14,7 +14,10 @@ interface ScreenProps {
   /** Pull-to-refresh. */
   onRefresh?: () => void;
   refreshing?: boolean;
-  /** False when the page brings its own list (a SectionList scrolls itself). */
+  /**
+   * False when the page brings its own scrolling (Archive's SectionList, a Leagues board):
+   * the children then fill the space under the masthead.
+   */
   scroll?: boolean;
   children?: ReactNode;
   testID?: string;
@@ -110,13 +113,19 @@ export function Screen({
       style={[styles.safe, { backgroundColor: t.canvas }]}
       edges={['top', 'left', 'right']}
       testID={testID}>
+      {/* Frozen on every tab (Alec, 8 Nov 2026): the masthead stays put; the page scrolls under it. */}
+      <View style={styles.head}>
+        <Masthead title={title} subtitle={subtitle} kicker={kicker} />
+      </View>
       {scroll ? (
         <ScrollView
+          style={styles.fill}
           contentContainerStyle={styles.content}
           // A tap on a button while the keyboard is up acts at once, rather than only
           // closing the keyboard; on iOS the content moves up clear of the keyboard.
           keyboardShouldPersistTaps="handled"
           automaticallyAdjustKeyboardInsets
+          testID={testID ? `${testID}-scroll` : undefined}
           refreshControl={
             onRefresh ? (
               <RefreshControl
@@ -127,14 +136,10 @@ export function Screen({
               />
             ) : undefined
           }>
-          <Masthead title={title} subtitle={subtitle} kicker={kicker} />
           {children}
         </ScrollView>
       ) : (
-        <View style={[styles.content, styles.fill]}>
-          <Masthead title={title} subtitle={subtitle} kicker={kicker} />
-          {children}
-        </View>
+        <View style={[styles.content, styles.fill]}>{children}</View>
       )}
     </SafeAreaView>
   );
@@ -142,7 +147,8 @@ export function Screen({
 
 const styles = StyleSheet.create({
   safe: { flex: 1 },
-  content: { paddingHorizontal: 16, paddingBottom: 72 },
+  head: { paddingHorizontal: 16 },
+  content: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 72 },
   fill: { flex: 1, paddingBottom: 0 },
   mast: {
     flexDirection: 'row',
@@ -153,7 +159,6 @@ const styles = StyleSheet.create({
     paddingTop: 14,
     paddingBottom: 10,
     borderBottomWidth: 2,
-    marginBottom: 12,
   },
   // The monogram and wordmark keep together; the wordmark shrinks before it would overflow.
   brand: { flexDirection: 'row', alignItems: 'center', gap: 11, flexShrink: 1, maxWidth: '100%' },

@@ -7,6 +7,7 @@ import {
   Alert,
   PanResponder,
   Pressable,
+  ScrollView,
   Share,
   StyleSheet,
   Text,
@@ -162,33 +163,29 @@ export function Board({
       setChosen(null);
       setLastType(to);
     };
+    // Not over the settings card or a player's card: those are read and typed in, not swiped.
+    const claims = (dx: number, dy: number) =>
+      !settingsOpen && !(view === 'records' && card) && claimsSwipe(dx, dy);
     return PanResponder.create({
-      // Capture: the page's scroll view would otherwise take the touch first, so a sideways
+      // Capture: the board's scroll view would otherwise take the touch first, so a sideways
       // swipe never reached the board.
-      onMoveShouldSetPanResponderCapture: (_e, g) => claimsSwipe(g.dx, g.dy),
-      onMoveShouldSetPanResponder: (_e, g) => claimsSwipe(g.dx, g.dy),
+      onMoveShouldSetPanResponderCapture: (_e, g) => claims(g.dx, g.dy),
+      onMoveShouldSetPanResponder: (_e, g) => claims(g.dx, g.dy),
       onPanResponderTerminationRequest: () => false,
       onPanResponderRelease: (_e, g) => {
         const dir = swipeStep(g.dx);
         if (dir) step(dir);
       },
     });
-  }, [view]);
+  }, [view, settingsOpen, card]);
   const headline = isType ? (puzzleOn(cards.data, view, day)?.headline ?? null) : null;
 
   return (
     <RecordsCtx.Provider value={{ recs: rec.data, open: rec.data ? openCard : undefined }}>
-      <View testID="league-board">
-        {settingsOpen && roster ? (
-          <Settings
-            flow={flow}
-            league={league}
-            players={roster.players}
-            members={roster.members}
-            onClose={onSettingsClose}
-          />
-        ) : null}
-        <View {...swipe.panHandlers} testID="board-swipe">
+      <View testID="league-board" style={styles.board}>
+        {/* The swipe area fills the space down to the tab bar, so an empty board swipes
+            too (Alec, 8 Nov 2026). The pager stays put; the board scrolls under it. */}
+        <View {...swipe.panHandlers} testID="board-swipe" style={styles.board}>
           <TypePager
             stops={STOPS}
             view={view}
@@ -211,48 +208,64 @@ export function Board({
             }
           />
 
-          <TopCard flow={flow} league={league} />
+          <ScrollView
+            style={styles.board}
+            contentContainerStyle={styles.boardScroll}
+            keyboardShouldPersistTaps="handled"
+            automaticallyAdjustKeyboardInsets
+            testID="board-scroll">
+            {settingsOpen && roster ? (
+              <Settings
+                flow={flow}
+                league={league}
+                players={roster.players}
+                members={roster.members}
+                onClose={onSettingsClose}
+              />
+            ) : null}
+            <TopCard flow={flow} league={league} />
 
-          {filling ? (
-            <Text style={[styles.loading, { color: t.faint }]}>Adding your earlier results…</Text>
-          ) : shown.isPending ? (
-            <ActivityIndicator style={styles.spin} color={t.muted} />
-          ) : shown.isError || !shown.data ? (
-            <BoardFailed
-              error={shown.error}
-              busy={shown.isFetching}
-              retry={() => void shown.refetch()}
-            />
-          ) : records ? (
-            <RecordsView
-              key={league.code}
-              league={league}
-              d={rec.data!}
-              card={card}
-              setCard={setCard}
-            />
-          ) : view === 'all' ? (
-            <OverallView
-              league={league}
-              d={data.data as Overall}
-              date={day}
-              today={today}
-              setDate={setDate}
-              showDay={showDay}
-            />
-          ) : (
-            <DayView
-              league={league}
-              type={view}
-              d={data.data as DayBoard}
-              date={day}
-              today={today}
-              setDate={setDate}
-              headline={headline}
-              path={puzzleOn(cards.data, view, day)?.path ?? null}
-              showDay={showDay}
-            />
-          )}
+            {filling ? (
+              <Text style={[styles.loading, { color: t.faint }]}>Adding your earlier results…</Text>
+            ) : shown.isPending ? (
+              <ActivityIndicator style={styles.spin} color={t.muted} />
+            ) : shown.isError || !shown.data ? (
+              <BoardFailed
+                error={shown.error}
+                busy={shown.isFetching}
+                retry={() => void shown.refetch()}
+              />
+            ) : records ? (
+              <RecordsView
+                key={league.code}
+                league={league}
+                d={rec.data!}
+                card={card}
+                setCard={setCard}
+              />
+            ) : view === 'all' ? (
+              <OverallView
+                league={league}
+                d={data.data as Overall}
+                date={day}
+                today={today}
+                setDate={setDate}
+                showDay={showDay}
+              />
+            ) : (
+              <DayView
+                league={league}
+                type={view}
+                d={data.data as DayBoard}
+                date={day}
+                today={today}
+                setDate={setDate}
+                headline={headline}
+                path={puzzleOn(cards.data, view, day)?.path ?? null}
+                showDay={showDay}
+              />
+            )}
+          </ScrollView>
         </View>
       </View>
     </RecordsCtx.Provider>
@@ -857,6 +870,9 @@ const styles = StyleSheet.create({
   },
   rk: { fontFamily: FONT.displayHeavy, width: 34, textAlign: 'center', fontSize: 17 },
   rkBox: { width: 34, alignItems: 'center' },
+  board: { flex: 1 },
+  // Room under the last row clear of the tab bar, as the page scroll has.
+  boardScroll: { paddingBottom: 72, flexGrow: 1 },
   who: { flex: 1, minWidth: 0 },
   nick: { fontFamily: FONT.bodySemi, fontSize: 16 },
   you: { fontFamily: FONT.bodyBold, fontSize: 11, letterSpacing: 0.7 },

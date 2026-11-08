@@ -115,6 +115,8 @@ export function LeaguesScreen({
   return (
     <Screen
       title="Leagues"
+      // On a board the board scrolls itself, under its frozen pager (Alec, 8 Nov 2026).
+      scroll={!onBoard}
       kicker={
         onBoard && league ? (
           <LeagueKicker league={league} open={menu} onPress={() => setMenu((m) => !m)} />

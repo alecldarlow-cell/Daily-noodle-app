@@ -341,3 +341,98 @@ describe('GIVEN the margins on Leagues (AF-007)', () => {
       expect(flat(r).paddingRight).toBe(ROW_INSET_RIGHT);
   });
 });
+
+/** A one-finger drag from (0, 0) to (x, y), as the responder system reports it. */
+function drag(el: { props: Record<string, (e: unknown) => unknown> }, x: number, y: number) {
+  let ts = 1;
+  const ev = (px: number, py: number) => {
+    ts += 10;
+    const touch = {
+      touchActive: true,
+      startPageX: 0,
+      startPageY: 0,
+      startTimeStamp: 1,
+      currentPageX: px,
+      currentPageY: py,
+      currentTimeStamp: ts,
+      previousPageX: 0,
+      previousPageY: 0,
+      previousTimeStamp: 1,
+    };
+    return {
+      nativeEvent: { touches: [{}], changedTouches: [{}], timestamp: ts },
+      touchHistory: {
+        numberActiveTouches: 1,
+        indexOfSingleActiveTouch: 0,
+        mostRecentTimeStamp: ts,
+        touchBank: [touch],
+      },
+    };
+  };
+  const claimed = el.props.onMoveShouldSetResponderCapture!(ev(x, y));
+  if (claimed) {
+    el.props.onResponderGrant!(ev(0, 0));
+    el.props.onResponderMove!(ev(x, y));
+    el.props.onResponderRelease!(ev(x, y));
+  }
+  return claimed;
+}
+
+// Alec, 8 Nov 2026: the swipe works on an empty board, and the pager stays put.
+describe('GIVEN a board nobody has played yet', () => {
+  it('THEN the swipe area fills the page, and a swipe moves to the next stop', async () => {
+    m.boardOverall.mockResolvedValue(overall({ day: [], week: [], not_yet: [] }));
+    await open();
+    const area = screen.getByTestId('board-swipe');
+    expect(flat(area).flex).toBe(1);
+    expect(flat(screen.getByTestId('league-board')).flex).toBe(1);
+    expect(flat(screen.getByTestId('board-scroll')).flex).toBe(1);
+    await act(async () => {
+      expect(drag(area as never, -90, 4)).toBe(true);
+    });
+    await waitFor(() => expect(board().ptype).toBe('mini'));
+  });
+
+  it('THEN a mostly-vertical drag is left to the scroll', async () => {
+    m.boardOverall.mockResolvedValue(overall({ day: [], week: [], not_yet: [] }));
+    await open();
+    expect(drag(screen.getByTestId('board-swipe') as never, 10, 80)).toBe(false);
+  });
+});
+
+describe('GIVEN a long board', () => {
+  it('THEN the masthead and the puzzle pager sit outside the board’s scroll; Share and the notes scroll', async () => {
+    m.boardOverall.mockResolvedValue(
+      overall({
+        not_yet: [{ nick: 'Piers', me: false }],
+        day: Array.from({ length: 30 }, (_, i) => ({
+          rank: i + 1,
+          nick: `P${i}`,
+          me: false,
+          points: 30 - i,
+          played: 1,
+          completed: 1,
+        })),
+      }),
+    );
+    await open();
+    const scroll = screen.getByTestId('board-scroll');
+    expect(within(scroll).queryByTestId('type-pager')).toBeNull();
+    expect(within(scroll).queryByTestId('masthead')).toBeNull();
+    expect(screen.getByTestId('type-pager')).toBeOnTheScreen();
+    expect(within(scroll).getByTestId('board-notes')).toBeOnTheScreen();
+    expect(within(scroll).getByTestId('share-board')).toBeOnTheScreen();
+    expect(within(scroll).getByText(/This week/)).toBeOnTheScreen();
+    expect(screen.queryByTestId('leagues-screen-scroll')).toBeNull();
+  });
+
+  it('THEN the settings card scrolls with the board and isn’t swiped away', async () => {
+    await open();
+    await fireEvent.press(screen.getByTestId('league-picker'));
+    const settings = await screen.findByRole('button', { name: /League settings/ });
+    await fireEvent.press(settings);
+    const scroll = screen.getByTestId('board-scroll');
+    await waitFor(() => expect(within(scroll).getByText(/Settings|settings/)).toBeOnTheScreen());
+    expect(drag(screen.getByTestId('board-swipe') as never, -90, 4)).toBe(false);
+  });
+});
