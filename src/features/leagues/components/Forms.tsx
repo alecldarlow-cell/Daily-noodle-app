@@ -1,5 +1,6 @@
 /* The intro and every form on the board page, in board.html's words ("browser" read as "app"). */
 import type { BoardLeague, BoardPending } from '@noodle/core';
+import { useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { FONT, useTokens } from '@/shared/theme';
@@ -19,7 +20,7 @@ import {
 } from '../hooks/useLeagues';
 import { claimSchema, codeSchema, nicknameSchema, startSchema } from '../schemas';
 import { object } from 'yup';
-import { Acts, Btn, Card, Field, Msg, P, PinField, TextLink } from './ui';
+import { Acts, Btn, Card, Field, Msg, P, PinField, RULES_NEEDED, RulesTick, TextLink } from './ui';
 
 export function Intro({ flow }: { flow: Flow }) {
   const t = useTokens();
@@ -49,6 +50,7 @@ export function Intro({ flow }: { flow: Flow }) {
 export function StartForm({ flow }: { flow: Flow }) {
   const create = useCreateLeague();
   const f = useForm({ name: '', nick: '' }, startSchema);
+  const [rules, setRules] = useState(false);
   return (
     <Card title="Start a league" testID="start-form">
       <Field
@@ -68,6 +70,7 @@ export function StartForm({ flow }: { flow: Flow }) {
         value={f.values.nick}
         onChangeText={f.set('nick')}
       />
+      <RulesTick value={rules} onChange={setRules} />
       <Msg text={f.msg} />
       <Acts>
         <Btn
@@ -75,11 +78,13 @@ export function StartForm({ flow }: { flow: Flow }) {
           label="Start league"
           disabled={f.busy}
           onPress={() =>
-            f.submit(async (v) => {
-              const l = await create.mutateAsync({ name: v.name, nick: v.nick });
-              flow.setNotice({ k: 'created', code: l.code });
-              flow.home();
-            })
+            !rules
+              ? f.setMsg(RULES_NEEDED)
+              : f.submit(async (v) => {
+                  const l = await create.mutateAsync({ name: v.name, nick: v.nick });
+                  flow.setNotice({ k: 'created', code: l.code });
+                  flow.home();
+                })
           }
         />
         <Btn label="Back" onPress={flow.back} />
@@ -132,6 +137,7 @@ export function InviteForm({ flow, code, typed }: { flow: Flow; code: string; ty
   const peek = usePeek(code);
   const join = useJoinLeague();
   const f = useForm({ nick: '' }, object({ nick: nicknameSchema }));
+  const [rules, setRules] = useState(false);
   if (peek.isPending)
     return (
       <ActivityIndicator
@@ -185,6 +191,7 @@ export function InviteForm({ flow, code, typed }: { flow: Flow; code: string; ty
         value={f.values.nick}
         onChangeText={f.set('nick')}
       />
+      <RulesTick value={rules} onChange={setRules} />
       <Msg text={f.msg} />
       <Acts>
         <Btn
@@ -192,19 +199,21 @@ export function InviteForm({ flow, code, typed }: { flow: Flow; code: string; ty
           label="Join league"
           disabled={f.busy}
           onPress={() =>
-            f.submit(async (v) => {
-              try {
-                await join.mutateAsync({ code, nick: v.nick });
-              } catch (e) {
-                if (e instanceof BoardError && e.code === 'nick_taken')
-                  throw new SaidError(
-                    `${e.message} If that’s you, tap “Already in ${info.name}?” below.`,
-                  );
-                throw e;
-              }
-              flow.setNotice({ k: 'joined' });
-              flow.home();
-            })
+            !rules
+              ? f.setMsg(RULES_NEEDED)
+              : f.submit(async (v) => {
+                  try {
+                    await join.mutateAsync({ code, nick: v.nick });
+                  } catch (e) {
+                    if (e instanceof BoardError && e.code === 'nick_taken')
+                      throw new SaidError(
+                        `${e.message} If that’s you, tap “Already in ${info.name}?” below.`,
+                      );
+                    throw e;
+                  }
+                  flow.setNotice({ k: 'joined' });
+                  flow.home();
+                })
           }
         />
         <Btn label={flow.inAny ? 'Not now' : 'Back'} onPress={flow.home} />
@@ -329,6 +338,7 @@ export function ClaimForm({
 export function NickForm({ flow, league }: { flow: Flow; league: BoardLeague }) {
   const setNick = useSetNick();
   const f = useForm({ nick: league.nick }, object({ nick: nicknameSchema }));
+  const [rules, setRules] = useState(false);
   return (
     <Card title="Change your nickname" testID="nick-form">
       <P>For {league.name}. Your results stay yours.</P>
@@ -339,6 +349,7 @@ export function NickForm({ flow, league }: { flow: Flow; league: BoardLeague }) 
         maxLength={16}
         autoCapitalize="words"
       />
+      <RulesTick value={rules} onChange={setRules} />
       <Msg text={f.msg} />
       <Acts>
         <Btn
@@ -346,10 +357,12 @@ export function NickForm({ flow, league }: { flow: Flow; league: BoardLeague }) 
           label="Save"
           disabled={f.busy}
           onPress={() =>
-            f.submit(async (v) => {
-              await setNick.mutateAsync({ code: league.code, nick: v.nick });
-              flow.home();
-            })
+            !rules
+              ? f.setMsg(RULES_NEEDED)
+              : f.submit(async (v) => {
+                  await setNick.mutateAsync({ code: league.code, nick: v.nick });
+                  flow.home();
+                })
           }
         />
         <Btn label="Back" onPress={flow.back} />

@@ -1084,3 +1084,12 @@ Alec ran an outside review of the app and asked for its findings to be checked a
 - `scripts/make-notices.js` writes `THIRD-PARTY-NOTICES.md` (every non-dev package in the lock with its shipped licence text, plus the fonts, SCOWL word-list notice and Natural Earth). Account › Help & privacy gains an **Open-source licences** row that opens it in the browser.
 - Tests: `scripts/tests/notices.test.ts` fails if a package in the lock is missing from the notices (rerun `node scripts/make-notices.js` after `npm ci` when dependencies change); AccountScreen tests updated for the new row. `npm run check` green (1,630 tests).
 - Site side: dailynoodle PR #111 (privacy page Credits and licences, site notices). Ships to phones with the next app update.
+
+## 8 Nov 2026 — League rules, Report and Hide (Google Play user-generated content policy; not a WP)
+
+- Alec's go-ahead after the Play policy check: nicknames and league names are seen by other players.
+- **Rules tick:** Start, Join (invite) and Change nickname carry a required "I'll keep names friendly" tick (`RulesTick` in leagues/components/ui.tsx) linking `privacy.html#league-rules`; the form says "Tick the box to agree to the league rules." until ticked.
+- **Hide / Report:** League settings › Players for members (owners keep Remove / Let back in): Hide/Show (this phone only, `noodle-board-hidden-v1`, the website's key and shape; `hooks/hidden.ts` `unhide` drops hidden players' rows from every board) and Report (email to contact@ with league and name). "Something not right? Report it to us" for everyone.
+- **Server:** wider rude-word list in `board.clean()` (site `toolchain/sql/2026-11-08-board-name-rules.sql`, applied to live `digi` 8 Nov; security advisor unchanged). Error text for `bad_nick`/`bad_name` adds "and kept friendly (see League rules)", as the site; vendor refreshed.
+- Tests: `src/features/leagues/tests/safety.test.tsx` (helpers, report email, tick required, hide/show, report); existing league tests tick the box. Site: dailynoodle PR #113 (merged first).
+- Ships with the next app update (OTA: no native change).

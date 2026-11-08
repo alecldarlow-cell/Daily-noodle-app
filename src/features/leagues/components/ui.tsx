@@ -1,6 +1,6 @@
 /* The board page's pieces (board.html .bcard, .field, .btn, .msg, .lnk) in the house tokens. */
 import type { ReactNode } from 'react';
-import { StyleSheet, Text, View, type TextInputProps } from 'react-native';
+import { Linking, Pressable, StyleSheet, Text, View, type TextInputProps } from 'react-native';
 
 import { FONT, useTokens } from '@/shared/theme';
 import { Button, TextField, type ButtonVariant } from '@/shared/ui';
@@ -121,6 +121,52 @@ export function Msg({ text, ok }: { text: string; ok?: boolean }) {
   );
 }
 
+/** The site's League rules (privacy.html#league-rules, 8 Nov 2026). */
+export const LEAGUE_RULES_URL = 'https://dailynoodle.co.uk/privacy.html#league-rules';
+export const RULES_NEEDED = 'Tick the box to agree to the league rules.';
+
+/**
+ * League rules (8 Nov 2026, Google Play's user-generated content policy): the tick every
+ * form that sets a name or joins carries, as board.html's `.rules`. The form refuses to send
+ * until it's ticked.
+ */
+export function RulesTick({ value, onChange }: { value: boolean; onChange: (v: boolean) => void }) {
+  const t = useTokens();
+  return (
+    <View style={styles.rules}>
+      <Pressable
+        accessibilityRole="checkbox"
+        accessibilityState={{ checked: value }}
+        accessibilityLabel="I’ll keep names friendly: nothing rude, hateful or about someone else."
+        testID="rules-tick"
+        hitSlop={8}
+        onPress={() => onChange(!value)}
+        style={styles.rulesRow}>
+        <View
+          style={[
+            styles.box,
+            {
+              borderColor: value ? t.accent : t.hair,
+              backgroundColor: value ? t.accent : 'transparent',
+            },
+          ]}>
+          {value ? <Text style={[styles.tick, { color: t.paper }]}>✓</Text> : null}
+        </View>
+        <Text style={[styles.rulesText, { color: t.ink }]}>
+          I’ll keep names friendly: nothing rude, hateful or about someone else.
+        </Text>
+      </Pressable>
+      <Text
+        accessibilityRole="link"
+        testID="rules-link"
+        style={[styles.rulesLink, { color: t.accent }]}
+        onPress={() => void Linking.openURL(LEAGUE_RULES_URL).catch(() => undefined)}>
+        League rules
+      </Text>
+    </View>
+  );
+}
+
 export function Sub({ children }: { children: ReactNode }) {
   const t = useTokens();
   return <Text style={[styles.sub, { color: t.faint }]}>{children}</Text>;
@@ -134,6 +180,25 @@ const styles = StyleSheet.create({
   bold: { fontFamily: FONT.bodyBold },
   acts: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 10 },
   lnkWrap: { alignSelf: 'center' },
+  rules: { marginTop: 6, gap: 4 },
+  rulesRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
+  box: {
+    width: 22,
+    height: 22,
+    borderWidth: 2,
+    borderRadius: 5,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 1,
+  },
+  tick: { fontFamily: FONT.bodyBold, fontSize: 14, lineHeight: 16 },
+  rulesText: { flex: 1, fontFamily: FONT.body, fontSize: 14, lineHeight: 20 },
+  rulesLink: {
+    marginLeft: 32,
+    fontFamily: FONT.bodyBold,
+    fontSize: 14,
+    textDecorationLine: 'underline',
+  },
   msg: { fontFamily: FONT.body, fontSize: 14, lineHeight: 20, marginTop: 6 },
   sub: {
     fontFamily: FONT.bodyBold,

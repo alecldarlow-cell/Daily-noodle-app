@@ -20,7 +20,9 @@ describe('GIVEN the league forms’ checks (the server’s limits)', () => {
     });
     it('THEN too short, too long, or odd characters get the site’s message', () => {
       for (const bad of ['A', '', 'A'.repeat(17), '-dash', 'hi!']) {
-        expect(firstError(nicknameSchema, bad)).toBe('Nicknames are 2–16 letters or numbers.');
+        expect(firstError(nicknameSchema, bad)).toBe(
+          'Nicknames are 2–16 letters or numbers, and kept friendly (see League rules).',
+        );
       }
     });
   });
@@ -29,7 +31,7 @@ describe('GIVEN the league forms’ checks (the server’s limits)', () => {
     it('THEN up to 30 characters pass and longer is refused', () => {
       expect(firstError(leagueNameSchema, 'Noodle family')).toBeNull();
       expect(firstError(leagueNameSchema, 'x'.repeat(31))).toBe(
-        'League names are 2–30 letters or numbers.',
+        'League names are 2–30 letters or numbers, and kept friendly (see League rules).',
       );
     });
   });

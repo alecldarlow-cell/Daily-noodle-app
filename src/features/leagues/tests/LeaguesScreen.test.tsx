@@ -114,6 +114,7 @@ describe('GIVEN someone in no league', () => {
       await press('Start a league');
       await type('League name', '  Noodle   family ');
       await type('Your nickname', 'Alec');
+      await fireEvent.press(screen.getByTestId('rules-tick')); // League rules (8 Nov 2026)
       await press('Start league');
       await waitFor(() => expect(screen.getByTestId('notice-created')).toBeOnTheScreen());
       const pid = board().pid!;
@@ -137,8 +138,13 @@ describe('GIVEN someone in no league', () => {
       await press('Start a league');
       await type('League name', 'Family');
       await type('Your nickname', 'A');
+      await fireEvent.press(screen.getByTestId('rules-tick')); // League rules (8 Nov 2026)
       await press('Start league');
-      expect(screen.getByText('Nicknames are 2–16 letters or numbers.')).toBeOnTheScreen();
+      expect(
+        screen.getByText(
+          'Nicknames are 2–16 letters or numbers, and kept friendly (see League rules).',
+        ),
+      ).toBeOnTheScreen();
       expect(m.boardCreate).not.toHaveBeenCalled();
     });
 
@@ -148,6 +154,7 @@ describe('GIVEN someone in no league', () => {
       await press('Start a league');
       await type('League name', 'Family');
       await type('Your nickname', 'Alec');
+      await fireEvent.press(screen.getByTestId('rules-tick')); // League rules (8 Nov 2026)
       await press('Start league');
       await waitFor(() =>
         expect(screen.getByText('You can run up to 3 leagues.')).toBeOnTheScreen(),
@@ -172,6 +179,7 @@ describe('GIVEN someone in no league', () => {
         screen.getByRole('button', { name: 'Already in Family? Pick your name' }),
       ).toBeOnTheScreen();
       await type('Your nickname', 'Alec');
+      await fireEvent.press(screen.getByTestId('rules-tick')); // League rules (8 Nov 2026)
       await press('Join league');
       await waitFor(() =>
         expect(screen.getByRole('header', { name: 'You’re in Family' })).toBeOnTheScreen(),
@@ -219,6 +227,7 @@ describe('GIVEN someone in no league', () => {
         expect(screen.getByRole('header', { name: 'Join Family' })).toBeOnTheScreen(),
       );
       await type('Your nickname', 'Alec');
+      await fireEvent.press(screen.getByTestId('rules-tick')); // League rules (8 Nov 2026)
       await press('Join league');
       await waitFor(() =>
         expect(screen.getByRole('header', { name: 'You’re in Family' })).toBeOnTheScreen(),
@@ -239,6 +248,7 @@ describe('GIVEN someone in no league', () => {
         expect(screen.getByRole('header', { name: 'Join Family' })).toBeOnTheScreen(),
       );
       await type('Your nickname', 'Alec');
+      await fireEvent.press(screen.getByTestId('rules-tick')); // League rules (8 Nov 2026)
       await press('Join league');
       await waitFor(() =>
         expect(screen.getByRole('header', { name: 'You’re in Family' })).toBeOnTheScreen(),
@@ -263,6 +273,7 @@ describe('GIVEN an invite link opened in the app (?join=)', () => {
       );
       expect(screen.getByText(/3 players so far/)).toBeOnTheScreen();
       await type('Your nickname', 'Alec');
+      await fireEvent.press(screen.getByTestId('rules-tick')); // League rules (8 Nov 2026)
       await press('Join league');
       await waitFor(() =>
         expect(
@@ -618,7 +629,11 @@ describe('GIVEN a player in a league', () => {
       await openSettings();
       await type('League name', 'x');
       await press('Save');
-      expect(screen.getByText('League names are 2–30 letters or numbers.')).toBeOnTheScreen();
+      expect(
+        screen.getByText(
+          'League names are 2–30 letters or numbers, and kept friendly (see League rules).',
+        ),
+      ).toBeOnTheScreen();
       expect(m.boardRename).not.toHaveBeenCalled();
     });
   });
