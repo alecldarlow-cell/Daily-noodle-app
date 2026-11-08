@@ -103,15 +103,18 @@ describe('GIVEN a Sweep not yet played', () => {
       await tap(START);
       await tap(2);
       await waitFor(() => expect(screen.getByTestId('finish-sheet')).toBeOnTheScreen());
-      expect(screen.getByTestId('finish-title')).toHaveTextContent(/ · Boom\.$/);
+      expect(screen.getByTestId('finish-title')).toHaveTextContent('Boom.');
       expect(await sharedLine()).toBe('💥 Sweep 18 Oct — boom');
       expect(screen.getByTestId('sweep-recap')).toBeOnTheScreen();
-      // A loss: the answer comes straight after the result (AF-015), and no jingle (AF-013).
+      // A loss: the answer comes straight after the result and Next (AF-015, design B3),
+      // labelled THE ANSWER, and no jingle (AF-013).
       expect(screen.getByTestId('finish-sheet')).toContainElement(
         screen.getByTestId('finish-recap'),
       );
+      expect(screen.getByTestId('finish-recap-label')).toHaveTextContent('THE ANSWER');
       const ids = JSON.stringify(screen.toJSON());
-      expect(ids.indexOf('"finish-recap"')).toBeLessThan(ids.indexOf('"finish-share-button"'));
+      expect(ids.indexOf('"finish-recap"')).toBeGreaterThan(ids.indexOf('"finish-next"'));
+      expect(ids.indexOf('"finish-recap"')).toBeLessThan(ids.indexOf('"finish-foot"'));
       const played = (Audio as unknown as { __played: unknown[] }).__played;
       expect(played.filter((f) => f === SOUND_FILES.jingle)).toEqual([]);
       expect(JSON.parse(appStorage.getItem(STREAK_KEY)!)).toMatchObject({ streak: 0, best: 5 });
@@ -148,8 +151,9 @@ describe('GIVEN a Sweep not yet played', () => {
       await waitFor(() => expect(screen.getByTestId('finish-sheet')).toBeOnTheScreen(), {
         timeout: 3000,
       });
-      expect(screen.getByTestId('finish-title')).toHaveTextContent(/ · Swept$/);
-      expect(screen.getByText('All seven mines found, no hints.')).toBeOnTheScreen();
+      expect(screen.getByTestId('finish-title')).toHaveTextContent('Swept');
+      // Design B3: Sweep's note only repeats the outcome, so the sheet no longer shows it.
+      expect(screen.queryByText('All seven mines found, no hints.')).toBeNull();
       expect(JSON.parse(appStorage.getItem(STREAK_KEY)!)).toMatchObject({ streak: 1 });
       expect(finishes).toHaveLength(1);
       expect(screen.queryByText('Play again (not recorded)')).toBeNull();
@@ -189,7 +193,7 @@ describe('GIVEN a Sweep already finished on this phone', () => {
     await renderWithProviders(<SweepScreen file={file94} />);
     expect(screen.getByTestId('finish-hero')).toHaveTextContent('1:27');
     expect(await sharedLine()).toBe('💣 Sweep 18 Oct — swept in 1:27 · 🔥2');
-    expect(screen.getByText('All seven mines found.')).toBeOnTheScreen();
+    expect(screen.queryByText('All seven mines found.')).toBeNull(); // design B3: no note
     expect(finishes).toEqual([]);
   });
 

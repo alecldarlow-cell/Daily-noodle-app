@@ -128,7 +128,8 @@ describe('GIVEN a Doku not yet played', () => {
       await waitFor(() => expect(screen.getByTestId('finish-sheet')).toBeOnTheScreen(), {
         timeout: 3000,
       });
-      expect(screen.getByText('All twelve tiles placed.')).toBeOnTheScreen();
+      // Design B3: Doku's note only repeats the outcome, so the sheet no longer shows it.
+      expect(screen.queryByText('All twelve tiles placed.')).toBeNull();
       expect(await sharedLine()).toMatch(/^🔢 Doku #97 — 0:0\d$/);
       expect(screen.getByText('The five given letters are shaded.')).toBeOnTheScreen();
       expect(screen.getByTestId('given-0-1')).toBeOnTheScreen();

@@ -104,7 +104,7 @@ describe('GIVEN a Borders not yet played', () => {
       await press('borders-next');
     }
     expect(screen.getByTestId('finish-sheet')).toBeOnTheScreen();
-    expect(screen.getByTestId('finish-title')).toHaveTextContent(/ · Spotted$/);
+    expect(screen.getByTestId('finish-title')).toHaveTextContent('Spotted');
     expect(screen.getByText('7 of 10')).toBeOnTheScreen();
     expect(await sharedLine()).toMatch(/^🌍 Borders #15 — 7\/10 · \d+ pts$/);
     expect(finishes).toHaveLength(1);

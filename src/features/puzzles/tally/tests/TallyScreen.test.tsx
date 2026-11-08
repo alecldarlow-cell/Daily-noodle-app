@@ -109,7 +109,7 @@ describe('GIVEN a Tally not yet played', () => {
         detail: expect.objectContaining({ type: 'logic-tally', outcome: 'solved' }),
       },
     ]);
-    expect(screen.getByTestId('finish-title')).toHaveTextContent(/ · Solved$/);
+    expect(screen.getByTestId('finish-title')).toHaveTextContent('Solved');
     expect(await sharedLine()).toMatch(/^🧮 Tally #1 — 0:0\d$/);
     expect(screen.getByTestId('tally-recap')).toBeOnTheScreen();
   });

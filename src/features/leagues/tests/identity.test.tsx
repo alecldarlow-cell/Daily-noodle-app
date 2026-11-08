@@ -83,8 +83,9 @@ describe('GIVEN a player in Family who adopts another player in the same league'
         </>,
         client,
       );
+      // Design B3: the record is the league line itself.
       await waitFor(() =>
-        expect(screen.getByTestId('board-moment')).toHaveTextContent('🏆 League record in Family!'),
+        expect(screen.getByTestId('board-line')).toHaveTextContent(/^League record in Family/),
       );
       expect(tags).toEqual(['🏆']);
       await sheet.unmount();
@@ -103,7 +104,7 @@ describe('GIVEN a player in Family who adopts another player in the same league'
       await act(async () => {
         await new Promise((r) => setTimeout(r, 20));
       });
-      expect(screen.queryByTestId('board-moment')).toBeNull();
+      expect(screen.queryByText(/League record/)).toBeNull();
       expect(tags).toEqual([]);
     });
   });

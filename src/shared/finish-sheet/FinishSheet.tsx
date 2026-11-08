@@ -3,6 +3,7 @@ import { router } from 'expo-router';
 import { useEffect, useRef, useState, type ComponentRef, type ReactNode } from 'react';
 import {
   AccessibilityInfo,
+  ActivityIndicator,
   Pressable,
   ScrollView,
   Share,
@@ -14,13 +15,25 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Entrance } from '@/shared/motion';
 import { play } from '@/shared/sound';
-import { FONT, usePuzzleTokens } from '@/shared/theme';
-import { longDate } from '@/shared/time';
-import { Button, Chevron, pressable, PuzzleTile } from '@/shared/ui';
+import { FONT, usePuzzleTokens, useTokens } from '@/shared/theme';
+import { relDay } from '@/shared/time';
+import { Chevron, pressable, PuzzleTile, ShareGlyph } from '@/shared/ui';
 
 import { tagged, useBoardSlot } from './boardSlot';
 import type { NoteParts } from './FinishParts';
-import { clockLine, playsJingle, splitHero, streakLine } from './rules';
+import {
+  announcement,
+  clockLine,
+  dayStreak,
+  NOTE_TYPES,
+  personalBest,
+  playsJingle,
+  recapLabel,
+  resultValue,
+  rewardLine,
+  splitHero,
+  type RewardKind,
+} from './rules';
 import { useFinishData } from './useFinishData';
 
 /** How long after a fresh finish the screen reader is told the result (the entrance has begun). */
@@ -32,27 +45,31 @@ export interface FinishSheetProps {
   n: number | string;
   /** The puzzle's day, YYYY-MM-DD. */
   date: string;
-  /** The outcome: "Solved". */
+  /** The outcome: "Solved" (in green under the result; coral on a lost round). */
   title: string;
   /** The result that gets shared: "1:27". */
   hero: string;
   /** Drawn in place of `hero` when the result is a picture (Link's guess squares, Tangle's score). */
   heroNode?: ReactNode;
   /**
-   * One line of comment ("No checks, no reveals."); none on a reopened puzzle. With a bold
-   * run where the site's note has <strong> (Tangle's longest word, Reckon's bullseyes).
+   * One line of comment; none on a reopened puzzle. Shown (small, under the outcome) only for
+   * the types in `NOTE_TYPES`, whose note says something nothing else shows. With a bold run
+   * where the site's note has <strong> (Tangle's longest word, Reckon's bullseyes).
    */
   note?: string | NoteParts;
   /** The share line, without the short link. It goes to the share sheet, not on screen. */
   share: string;
-  /** The type's stats: only its "day streak" is shown, as the line under the score. */
+  /** The type's stats: only its "day streak" is used, for the reward line. */
   stats: { value: string | number; label: string }[];
   /**
    * Whether the round was solved (default true). When it wasn't (Link out of mistakes,
    * Sweep's mine), the answer comes straight after the result (AF-015), and no jingle plays.
    */
   solved?: boolean;
-  /** The type's own section (the Mini's solved grid). */
+  /**
+   * The type's own section (the Mini's solved grid). Its `title` is no longer drawn: a small
+   * label stands over it (`RECAP_LABEL`, or "THE ANSWER" on a lost round); `sub` stays.
+   */
   recap?: { title: string; sub?: string; node: ReactNode };
   /** Placed at the very end (Link's "Play again (not recorded)"). */
   after?: ReactNode;
@@ -67,25 +84,60 @@ export interface FinishSheetProps {
    */
   celebrate?: boolean;
   onBack: () => void;
-  /** Open the Play more puzzle, or today's list when it names none. */
+  /** Open the Next puzzle, or today's list when it names none. */
   onNext: (item: TodayItem | null) => void;
 }
 
-/** Back down to the tabs, on the Archive (the "All 9 done today. Try the archive ›" line). */
+/** Back down to the tabs, on the Archive (the "All 9 done" / "Try the archive" button). */
 function openArchive() {
   router.dismissTo('/archive');
 }
 
+/** The held look of the Share pill and Next, as the shared Button's filled and tonal dim. */
+const HELD = { opacity: 0.75 };
+
+/** Gold, for a personal best and a streak milestone (the podium's first-place metal). */
+const GOLD = { face: '#E8B931', rim: '#B88A12', ink: '#5A4300' };
+
+/** The reward line's 30 pt round lead: ★ or 🔥 on gold, or 🔥 on a faint warm disc. */
+function RewardIcon({ kind }: { kind: RewardKind }) {
+  const gold = kind !== 'streak';
+  return (
+    <View
+      accessible={false}
+      importantForAccessibility="no-hide-descendants"
+      testID={`finish-reward-icon-${kind}`}
+      style={[
+        styles.icon,
+        gold
+          ? { backgroundColor: GOLD.face, borderColor: GOLD.rim, borderWidth: 2.5 }
+          : { backgroundColor: '#E8803122' },
+      ]}>
+      <Text
+        maxFontSizeMultiplier={1}
+        style={[
+          styles.iconText,
+          kind === 'pb' && { color: GOLD.ink, fontFamily: FONT.displayHeavy },
+        ]}>
+        {kind === 'pb' ? '★' : '🔥'}
+      </Text>
+    </View>
+  );
+}
+
 /**
- * The finish sheet every native player shows, in the website's order (engines/finish.js,
- * AF-019, Alec's design of 28 Oct 2026), one left-aligned column:
- *   1 RESULT: "Doku 107 · Solved", one big score, "🔥 5-day streak", the note;
- *   2 SHARE: one full-width filled "Share result" (the line, a newline and the short link
- *     dailynoodle.co.uk/<type> go to the phone's share sheet; the spinner shows until it opens);
- *   3 LEADERBOARD: the provided board slot's one line ("Currently 1st in Noodlers ›");
- *   4 PLAY MORE: a tonal "Play Borders 24" with "6 of 9 done today" under it;
- *   5 ANSWER: the type's recap, straight after the result when the round wasn't solved;
- * then a footer: "New Doku in 3h 38m" and the puzzle's day.
+ * The finish sheet every native player shows: Alec's design B3 (approved 8 Nov 2026,
+ * mock-ups FinishB3*.dc.html), one left-aligned column on the puzzle's paper:
+ *   top bar: "← Puzzles", and a Share pill (the line, a newline and the short link
+ *     dailynoodle.co.uk/<type> go to the phone's share sheet);
+ *   kicker "SWEEP 115" (with "· 3D AGO" when it isn't today's), the result in Archivo heavy,
+ *     the outcome word under it (green, or coral on a lost round);
+ *   the reward block on a solved round: the first of personal best, streak milestone and
+ *     streak as its main line, the league line (the board slot) as its second;
+ *     a lost round has only the quiet league line;
+ *   one Next button ("Next: Path 113" / "1 of 9 done today", or "All 9 done");
+ *   a small label and the type's recap (straight after the button on a lost round, AF-015);
+ *   footer: "New Sweep in 17h 29m" and How to play.
  */
 export function FinishSheet(props: FinishSheetProps) {
   const { type, n, date, title, hero, heroNode, note, share, stats, recap, after } = props;
@@ -95,25 +147,31 @@ export function FinishSheet(props: FinishSheetProps) {
   const [tag, setTag] = useState('');
   const shareText = tagged(share, tag);
   const pt = usePuzzleTokens();
-  const { next, secs } = useFinishData(type);
+  const t = useTokens();
+  const { next, secs, save, day } = useFinishData(type);
   const url = shortLink(type);
-  const line = clockLine(TYPE_LABEL[type], secs);
+  const name = TYPE_LABEL[type];
+  const line = clockLine(name, secs);
   const [heroVal, heroUnit] = splitHero(hero);
-  const streak = streakLine(stats, TYPE_LABEL[type]);
   const soft = pt.sheetSoft;
-  const label = `${TYPE_LABEL[type]} ${n} · ${title}`;
+  const when = date < day ? relDay(date, day) : '';
+  const kicker = `${name} ${n}${when ? ` · ${when}` : ''}`;
+  const pb = solved ? personalBest(type, resultValue(type, hero, stats), name, save) : null;
+  const main = solved ? rewardLine(pb, dayStreak(stats), name) : null;
+  const shownNote = note && NOTE_TYPES.includes(type) ? note : null;
   // A fresh finish replaces the board in the same route, so a screen reader would be left on
-  // a square that is gone: say the result, and move focus to the outcome (finish.js focuses
+  // a square that is gone: say the result, and move focus to the heading (finish.js focuses
   // .fin-title the same way). A finished puzzle reopened says nothing.
   const titleRef = useRef<ComponentRef<typeof Text>>(null);
+  const said = announcement(title, hero, main?.text ?? null);
   useEffect(() => {
     if (!celebrate) return;
-    const t = setTimeout(() => {
-      AccessibilityInfo.announceForAccessibility(`${title}. ${hero}`);
+    const h = setTimeout(() => {
+      AccessibilityInfo.announceForAccessibility(said);
       if (titleRef.current) AccessibilityInfo.sendAccessibilityEvent(titleRef.current, 'focus');
     }, ANNOUNCE_MS);
-    return () => clearTimeout(t);
-  }, [celebrate, title, hero]);
+    return () => clearTimeout(h);
+  }, [celebrate, said]);
   // The celebration jingle (AF-013): once, as the sheet rises on a fresh win of one of the five
   // grid puzzles; never on a reopened puzzle or a loss. `play` obeys the Account Sound switch.
   const jingle = playsJingle(type, celebrate, solved);
@@ -123,40 +181,134 @@ export function FinishSheet(props: FinishSheetProps) {
     sang.current = true;
     play('jingle');
   }, [jingle]);
-  const onShare = () => Share.share({ message: `${shareText}\n${url}` }).catch(() => undefined);
+  const [sharing, setSharing] = useState(false);
+  const live = useRef(true);
+  useEffect(
+    () => () => {
+      live.current = false;
+    },
+    [],
+  );
+  const onShare = () => {
+    if (sharing) return;
+    setSharing(true);
+    const done = () => {
+      if (live.current) setSharing(false);
+    };
+    Share.share({ message: `${shareText}\n${url}` }).then(done, done);
+  };
+  const slot =
+    boardSlot ??
+    (renderSlot && path
+      ? renderSlot({ path, type, date, onTag: setTag, solved, celebrate, lead: !main })
+      : null);
   const answer = recap ? (
-    <View
-      style={[styles.recap, !solved && styles.recapFirst, { borderColor: pt.rule }]}
-      testID="finish-recap">
-      <View>
-        <Text accessibilityRole="header" style={[styles.recapTitle, { color: pt.ink }]}>
-          {recap.title}
-        </Text>
-        {recap.sub ? <Text style={[styles.recapSub, { color: soft }]}>{recap.sub}</Text> : null}
-      </View>
-      {recap.node}
+    <View style={[styles.recap, !solved && styles.recapFirst]} testID="finish-recap">
+      <Text
+        accessibilityRole="header"
+        maxFontSizeMultiplier={1.4}
+        style={[styles.label, { color: t.faint }]}
+        testID="finish-recap-label">
+        {recapLabel(type, solved)}
+      </Text>
+      {recap.sub ? <Text style={[styles.recapSub, { color: soft }]}>{recap.sub}</Text> : null}
+      <View style={styles.recapNode}>{recap.node}</View>
     </View>
   ) : null;
+  const sub = next.sub.trim();
+  const nextBtn = next.all ? (
+    <Pressable
+      accessibilityRole="link"
+      accessibilityLabel={`${next.main}. ${next.sub}`}
+      onPress={openArchive}
+      style={pressable([styles.next, { backgroundColor: t.accentSoft }], HELD)}
+      testID="finish-next">
+      <View style={styles.nextText}>
+        <Text maxFontSizeMultiplier={1.4} style={[styles.nextMain, { color: t.accent }]}>
+          {next.main}
+        </Text>
+        <Text maxFontSizeMultiplier={1.4} style={[styles.nextSub, { color: t.accent }]}>
+          {next.sub}
+        </Text>
+      </View>
+      <Chevron color={t.accent} size={8} />
+    </Pressable>
+  ) : (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={next.main}
+      accessibilityHint={sub || undefined}
+      onPress={() => onNext(next.item)}
+      style={pressable([styles.next, { backgroundColor: t.accent }], HELD)}
+      testID="finish-next">
+      {next.item ? (
+        <View pointerEvents="none">
+          <PuzzleTile type={next.item.type} size={26} testID="finish-next-icon" />
+        </View>
+      ) : null}
+      <View style={styles.nextText}>
+        <Text maxFontSizeMultiplier={1.4} style={[styles.nextMain, { color: t.onAccent }]}>
+          {next.main}
+        </Text>
+        {sub ? (
+          <Text
+            maxFontSizeMultiplier={1.4}
+            style={[styles.nextSub, { color: t.onAccent }]}
+            testID="finish-next-sub">
+            {next.sub}
+          </Text>
+        ) : null}
+      </View>
+      <Chevron color={t.onAccent} size={8} />
+    </Pressable>
+  );
   return (
     <SafeAreaView style={[styles.fill, { backgroundColor: pt.paper }]} testID="finish-sheet">
       <ScrollView contentContainerStyle={styles.in}>
-        <Pressable
-          accessibilityRole="link"
-          accessibilityLabel="Back to Puzzles"
-          onPress={onBack}
-          hitSlop={8}
-          style={pressable(styles.back)}>
-          <Text style={[styles.backText, { color: soft }]}>← Puzzles</Text>
-        </Pressable>
+        <View style={styles.top}>
+          <Pressable
+            accessibilityRole="link"
+            accessibilityLabel="Back to Puzzles"
+            onPress={onBack}
+            hitSlop={8}
+            style={pressable(styles.back)}>
+            <Text style={[styles.backText, { color: soft }]}>← Puzzles</Text>
+          </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Share result"
+            accessibilityState={{ busy: sharing }}
+            onPress={onShare}
+            style={pressable(styles.shareTap, HELD)}
+            testID="finish-share-button">
+            <View style={[styles.pill, { borderColor: `${t.accent}88` }]}>
+              {sharing ? (
+                <ActivityIndicator
+                  color={t.accent}
+                  size="small"
+                  testID="finish-share-button-spinner"
+                />
+              ) : (
+                <ShareGlyph color={t.accent} />
+              )}
+              <Text
+                maxFontSizeMultiplier={1.3}
+                numberOfLines={1}
+                style={[styles.pillText, { color: t.accent }]}>
+                Share
+              </Text>
+            </View>
+          </Pressable>
+        </View>
 
         <Entrance play={celebrate} testID="finish-entrance">
           <Text
-            ref={titleRef}
-            accessibilityRole="header"
+            importantForAccessibility="no"
+            accessibilityElementsHidden
             maxFontSizeMultiplier={1.4}
-            style={[styles.label, { color: soft }]}
-            testID="finish-title">
-            {label}
+            style={[styles.kicker, { color: t.faint }]}
+            testID="finish-kicker">
+            {kicker.toUpperCase()}
           </Text>
         </Entrance>
         <Entrance play={celebrate} delay={90} from={0.9}>
@@ -178,79 +330,54 @@ export function FinishSheet(props: FinishSheetProps) {
             </Text>
           )}
         </Entrance>
-        {streak ? (
-          <Text style={[styles.streak, { color: pt.ink }]} testID="finish-streak">
-            {streak}
+        <Entrance play={celebrate} delay={180}>
+          <Text
+            ref={titleRef}
+            accessibilityRole="header"
+            accessibilityLabel={`${name} ${n} · ${title}${when ? `, ${when}` : ''}`}
+            maxFontSizeMultiplier={1.4}
+            style={[styles.outcome, { color: solved ? t.accent : pt.sheetBad }]}
+            testID="finish-title">
+            {title}
           </Text>
-        ) : null}
-        {note ? (
-          <Entrance play={celebrate} delay={180}>
+          {shownNote ? (
             <Text style={[styles.note, { color: soft }]} testID="finish-note">
-              {typeof note === 'string' ? (
-                note
+              {typeof shownNote === 'string' ? (
+                shownNote
               ) : (
                 <>
-                  {note.before}
-                  <Text style={[styles.strong, { color: pt.ink }]}>{note.bold}</Text>
-                  {note.after}
+                  {shownNote.before}
+                  <Text style={[styles.strong, { color: pt.ink }]}>{shownNote.bold}</Text>
+                  {shownNote.after}
                 </>
               )}
             </Text>
-          </Entrance>
-        ) : null}
+          ) : null}
+        </Entrance>
 
-        {solved ? null : answer}
-
-        <View style={styles.share} testID="finish-share">
-          <Button
-            variant="filled"
-            grow
-            label="Share result"
-            onPress={onShare}
-            testID="finish-share-button"
-          />
-        </View>
-
-        <View style={styles.slot} testID="finish-board-slot">
-          {boardSlot ??
-            (renderSlot && path ? renderSlot({ path, type, date, onTag: setTag }) : null)}
-        </View>
-
-        {next.all ? (
-          <Pressable
-            accessibilityRole="link"
-            accessibilityLabel={next.main}
-            onPress={openArchive}
-            style={pressable(styles.doneLine)}
-            testID="finish-next">
-            <Text style={[styles.doneText, { color: pt.ink }]}>{next.main}</Text>
-            <Chevron color={soft} size={7} />
-          </Pressable>
-        ) : (
-          <View style={styles.more}>
-            <View style={styles.row}>
-              <Button
-                variant="tonal"
-                grow
-                label={next.main}
-                onPress={() => onNext(next.item)}
-                testID="finish-next"
-              />
-              {next.item ? (
-                <View pointerEvents="none" style={styles.nextIcon}>
-                  <PuzzleTile type={next.item.type} size={32} testID="finish-next-icon" />
-                </View>
-              ) : null}
+        {solved ? (
+          <Entrance play={celebrate} delay={260}>
+            <View style={styles.reward} testID="finish-reward">
+              {main ? <RewardIcon kind={main.kind} /> : null}
+              <View style={styles.rewardText}>
+                {main ? (
+                  <Text style={[styles.rewardMain, { color: pt.ink }]} testID="finish-reward-main">
+                    {main.text}
+                  </Text>
+                ) : null}
+                <View testID="finish-board-slot">{slot}</View>
+              </View>
             </View>
-            {next.sub.trim() ? (
-              <Text style={[styles.moreSub, { color: soft }]} testID="finish-next-sub">
-                {next.sub}
-              </Text>
-            ) : null}
+          </Entrance>
+        ) : (
+          <View style={styles.lostSlot} testID="finish-board-slot">
+            {slot}
           </View>
         )}
 
-        {solved ? answer : null}
+        {nextBtn}
+
+        {answer}
         {after ? <View style={styles.after}>{after}</View> : null}
 
         <View style={[styles.foot, { borderColor: pt.hair }]} testID="finish-foot">
@@ -258,21 +385,16 @@ export function FinishSheet(props: FinishSheetProps) {
             {line.lead}
             {line.bold ? <Text style={[styles.bold, { color: pt.ink }]}>{line.bold}</Text> : null}
           </Text>
-          <Text style={[styles.day, { color: soft }]}>
-            {`${TYPE_LABEL[type]} ${n}, ${longDate(date)}`}
-          </Text>
           {/* Alec, 7 Nov 2026: a played card shows its result where How to play was, so the
               rules live here, after the game, for every type. */}
           <Pressable
             accessibilityRole="link"
-            accessibilityLabel={`How to play ${TYPE_LABEL[type]}`}
+            accessibilityLabel={`How to play ${name}`}
             hitSlop={10}
             onPress={() => router.push({ pathname: '/how-to-play', params: { type } })}
             style={pressable(styles.howTo)}
             testID="finish-howto">
-            <Text style={[styles.howToText, { color: pt.ink }]}>
-              How to play {TYPE_LABEL[type]}
-            </Text>
+            <Text style={[styles.howToText, { color: pt.ink }]}>How to play</Text>
             <Chevron color={soft} size={7} />
           </Pressable>
         </View>
@@ -281,8 +403,8 @@ export function FinishSheet(props: FinishSheetProps) {
   );
 }
 
-// finish.css (AF-019): Instrument Serif for the score and the recap heading, Archivo for
-// everything else; one accent (the app's green), buttons stacked full width.
+// Design B3: Archivo heavy for the result, Archivo for everything else; one accent (the
+// app's green), coral for a lost round, gold for a personal best or a milestone.
 const styles = StyleSheet.create({
   fill: { flex: 1 },
   in: {
@@ -292,53 +414,89 @@ const styles = StyleSheet.create({
     width: '100%',
     alignSelf: 'center',
   },
+  top: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    columnGap: 12,
+  },
   back: { minHeight: 44, justifyContent: 'center', alignSelf: 'flex-start' },
   backText: { fontSize: 15, fontFamily: FONT.sans },
-  label: { fontSize: 15, lineHeight: 20, fontFamily: FONT.sansSemi, marginTop: 8 },
+  shareTap: { minHeight: 48, justifyContent: 'center', flexShrink: 1 },
+  pill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
+    borderWidth: 1.5,
+    borderRadius: 18,
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+  },
+  pillText: { fontSize: 14, fontFamily: FONT.sansSemi, flexShrink: 1 },
+  kicker: {
+    fontSize: 13,
+    lineHeight: 18,
+    letterSpacing: 1.2,
+    fontFamily: FONT.sansSemi,
+    marginTop: 22,
+  },
   hero: {
-    fontSize: 84,
-    lineHeight: 88,
-    fontFamily: FONT.serif,
-    letterSpacing: -2.5,
-    fontVariant: ['lining-nums'],
+    fontSize: 72,
+    lineHeight: 80,
+    fontFamily: FONT.displayHeavy,
+    letterSpacing: -2,
+    fontVariant: ['lining-nums', 'tabular-nums'],
     marginTop: 4,
   },
-  heroUnit: { fontSize: 26, fontFamily: FONT.serif, letterSpacing: 0 },
+  heroUnit: { fontSize: 26, fontFamily: FONT.display, letterSpacing: 0 },
   heroNode: { marginTop: 14, marginBottom: 4 },
-  streak: { fontSize: 16, lineHeight: 22, marginTop: 8, fontFamily: FONT.sans },
-  note: { fontSize: 15, lineHeight: 22, marginTop: 6, fontFamily: FONT.sans },
+  outcome: { fontSize: 18, lineHeight: 24, fontFamily: FONT.sansSemi, marginTop: 6 },
+  note: { fontSize: 14, lineHeight: 20, marginTop: 4, fontFamily: FONT.sans },
   strong: { fontFamily: FONT.sansSemi },
-  share: { flexDirection: 'row', marginTop: 22 },
-  slot: { minHeight: 52, marginTop: 8 },
-  row: { flexDirection: 'row' },
-  more: { marginTop: 10 },
-  moreSub: { fontSize: 13, fontFamily: FONT.sans, marginTop: 6, textAlign: 'center' },
-  doneLine: {
-    marginTop: 10,
-    minHeight: 48,
+  reward: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 18 },
+  rewardText: { flex: 1, gap: 2 },
+  rewardMain: { fontSize: 16, lineHeight: 21, fontFamily: FONT.sansSemi },
+  icon: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  iconText: { fontSize: 16, lineHeight: 20 },
+  lostSlot: { marginTop: 18 },
+  next: {
+    minHeight: 58,
+    borderRadius: 29,
+    paddingHorizontal: 22,
+    paddingVertical: 8,
+    marginTop: 26,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    alignSelf: 'flex-start',
+    gap: 12,
   },
-  doneText: { fontSize: 15, fontFamily: FONT.sansSemi },
-  nextIcon: { position: 'absolute', left: 12, top: 0, bottom: 0, justifyContent: 'center' },
-  recap: { marginTop: 26, paddingTop: 18, borderTopWidth: 1, gap: 14 },
-  recapFirst: { marginTop: 18 },
-  recapTitle: { fontSize: 28, lineHeight: 32, fontFamily: FONT.serif },
-  recapSub: { fontSize: 14, fontFamily: FONT.sans, marginTop: 6 },
+  nextText: { flex: 1 },
+  nextMain: { fontSize: 16, lineHeight: 21, fontFamily: FONT.sansSemi },
+  nextSub: { fontSize: 12, lineHeight: 16, fontFamily: FONT.sansMedium, opacity: 0.8 },
+  label: { fontSize: 11, lineHeight: 15, letterSpacing: 1.2, fontFamily: FONT.sansSemi },
+  recap: { marginTop: 30, gap: 8 },
+  recapFirst: { marginTop: 26 },
+  recapSub: { fontSize: 14, lineHeight: 20, fontFamily: FONT.sans },
+  recapNode: { marginTop: 4 },
   after: { marginTop: 10 },
-  foot: { marginTop: 30, paddingTop: 14, borderTopWidth: 1, gap: 4 },
-  clock: { fontSize: 14, lineHeight: 21, fontFamily: FONT.sans },
-  day: { fontSize: 13, lineHeight: 19, fontFamily: FONT.sans },
-  bold: { fontFamily: FONT.sansSemi },
-  howTo: {
+  foot: {
+    marginTop: 24,
+    paddingTop: 12,
+    borderTopWidth: 1,
     flexDirection: 'row',
+    flexWrap: 'wrap',
     alignItems: 'center',
-    gap: 8,
-    alignSelf: 'flex-start',
-    minHeight: 44,
-    marginTop: 6,
+    justifyContent: 'space-between',
+    columnGap: 12,
   },
-  howToText: { fontSize: 15, fontFamily: FONT.sansSemi },
+  clock: { fontSize: 14, lineHeight: 21, fontFamily: FONT.sans, flexShrink: 1 },
+  bold: { fontFamily: FONT.sansSemi },
+  howTo: { flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 44 },
+  howToText: { fontSize: 14, fontFamily: FONT.sansSemi },
 });

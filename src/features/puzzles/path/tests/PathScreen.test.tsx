@@ -110,8 +110,8 @@ describe('GIVEN a Path not yet played', () => {
     await waitFor(() => expect(screen.getByTestId('finish-sheet')).toBeOnTheScreen(), {
       timeout: 3000,
     });
-    expect(screen.getByTestId('finish-title')).toHaveTextContent(/ · Path complete$/);
-    expect(screen.getByText('One to 36 without a hint.')).toBeOnTheScreen();
+    expect(screen.getByTestId('finish-title')).toHaveTextContent('Path complete');
+    expect(screen.queryByText('One to 36 without a hint.')).toBeNull(); // design B3: no note
     expect(await sharedLine()).toMatch(/^〰️ Path #92 — 0:0\d$/);
     expect(screen.getByTestId('path-recap')).toBeOnTheScreen();
     await fireEvent.press(screen.getByTestId('finish-next'));

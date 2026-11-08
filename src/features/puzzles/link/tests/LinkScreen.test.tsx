@@ -114,7 +114,7 @@ describe('GIVEN a Link not yet played', () => {
         },
       ]);
       expect(screen.getByTestId('finish-sheet')).toBeOnTheScreen();
-      expect(screen.getByTestId('finish-title')).toHaveTextContent(/ · Linked$/);
+      expect(screen.getByTestId('finish-title')).toHaveTextContent('Linked');
       expect(screen.getAllByTestId(/^guess-(g\d|x)$/)).toHaveLength(5);
       expect(screen.getByTestId('guess-x')).toBeOnTheScreen();
       expect(
@@ -160,7 +160,7 @@ describe('GIVEN a Link lost', () => {
     ])
       await guess(w, false);
     await run(3000);
-    expect(screen.getByTestId('finish-title')).toHaveTextContent(/ · So\ close\.$/);
+    expect(screen.getByTestId('finish-title')).toHaveTextContent('So close.');
     expect(
       screen.getByText('You found one group of four. Weapons caught you out.'),
     ).toBeOnTheScreen();
@@ -171,7 +171,7 @@ describe('GIVEN a Link lost', () => {
     expect(screen.getByText('medium · replay')).toBeOnTheScreen();
     for (const g of G) await guess(g);
     await run(1500);
-    expect(screen.getByTestId('finish-title')).toHaveTextContent(/ · Linked$/);
+    expect(screen.getByTestId('finish-title')).toHaveTextContent('Linked');
     expect(JSON.parse(appStorage.getItem(SAVE_KEY)!).done['DP·LINK·0078']).toEqual(lost);
     expect(finishes).toHaveLength(1);
   });
@@ -206,7 +206,7 @@ describe('GIVEN a Link already finished on this phone', () => {
     );
     await renderWithProviders(<LinkScreen file={file78} />);
     expect(screen.getByTestId('finish-sheet')).toBeOnTheScreen();
-    expect(screen.getByTestId('finish-streak')).toHaveTextContent('🔥 3-day Link streak');
+    expect(screen.getByTestId('finish-reward-main')).toHaveTextContent('3-day Link streak');
     expect(await sharedLine()).toBe('🔗 Link #78 — 🟩🟦🟨⬛ · 2:14 · 🔥3');
     expect(finishes).toEqual([]);
     await fireEvent.press(screen.getByText('← Puzzles'));

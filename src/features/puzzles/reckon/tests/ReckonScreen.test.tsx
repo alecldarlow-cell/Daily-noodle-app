@@ -80,7 +80,7 @@ describe('GIVEN a Reckon not yet played', () => {
       expect(text('reckon-qn')).toBe('1/10');
       for (let i = 0; i < 10; i++) await lockAndNext();
       expect(screen.getByTestId('finish-sheet')).toBeOnTheScreen();
-      expect(screen.getByTestId('finish-title')).toHaveTextContent(/ · Reckoned$/);
+      expect(screen.getByTestId('finish-title')).toHaveTextContent('Reckoned');
       expect(await sharedLine()).toMatch(/^🎯 Reckon #2 — /);
       expect(finishes).toHaveLength(1);
       expect(finishes[0]).toMatchObject({
@@ -99,7 +99,7 @@ describe('GIVEN a Reckon not yet played', () => {
       expect(text('reckon-qn')).toBe('4/10');
       await press('reckon-act');
       expect(screen.getByTestId('finish-sheet')).toBeOnTheScreen();
-      expect(screen.getByTestId('finish-title')).toHaveTextContent(/ · Reckoned$/);
+      expect(screen.getByTestId('finish-title')).toHaveTextContent('Reckoned');
       expect(finishes).toHaveLength(1);
     });
   });
@@ -236,7 +236,7 @@ describe('GIVEN a Reckon already finished', () => {
     await renderWithProviders(<ReckonScreen file={file2} deps={deps} />);
     expect(screen.getByTestId('finish-sheet')).toBeOnTheScreen();
     expect(screen.getByText('725 pts')).toBeOnTheScreen();
-    expect(screen.getByTestId('finish-streak')).toHaveTextContent('🔥 2-day Reckon streak');
+    expect(screen.getByTestId('finish-reward-main')).toHaveTextContent('2-day Reckon streak');
     expect(await sharedLine()).toBe('🎯 Reckon #2 — 🎯🎯🎯🎯🎯🟩🟨🟧⬜⬜ · 725 pts · 🔥2');
     expect(finishes).toHaveLength(0);
   });
