@@ -261,8 +261,8 @@ describe('GIVEN a page with pull to refresh', () => {
     });
     rc.onRefresh!();
     expect(onRefresh).toHaveBeenCalled();
-    // The page's scroll view holds the masthead: it keeps a tap for the button pressed.
-    let el = screen.getByRole('header', { name: 'Leagues' }).parent;
+    // The page's scroll view (under the frozen masthead) keeps a tap for the button pressed.
+    let el = screen.getByText('Body').parent;
     while (el && el.props.keyboardShouldPersistTaps === undefined) el = el.parent;
     expect(el?.props.keyboardShouldPersistTaps).toBe('handled');
   });

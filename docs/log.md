@@ -1011,3 +1011,12 @@ Alec ran an outside review of the app and asked for its findings to be checked a
 - Your own row, when you place, takes a faint tint of your medal's colour instead of the green.
 - The first time you see today's board for a league and puzzle (or All puzzles) on which you placed, your medal pops and a shine sweeps across it, once. New disposable key `noodle-board-medal-shine` (`{ day, keys }`); no key renamed. Reduced motion (app switch or phone) skips it.
 - Tests: medal.test.tsx (disc colours, tint, once-a-day claim, unreadable store, animation once, reduced motion) and a LeaguesScreen podium test.
+
+## 2026-11-08 — Leagues swipe on an empty board; frozen masthead and pager
+
+- From Alec's Android testing on 8 Nov.
+- **Swipe:** on a board, the swipe area (`board-swipe`) fills the space from the pager down to the tab bar (`flex: 1`), so an empty board swipes too. `claimsSwipe` is unchanged and still claims only mostly-sideways moves. The board scrolls in its own ScrollView (`board-scroll`) inside the swipe area. Swipes aren't claimed while the settings card or a player's card is open. The league menu sits outside the swipe area.
+- **Frozen masthead:** `Screen` draws the masthead outside the scrolling content on every tab, as Archive already did. Pull-to-refresh, keyboard insets and `keyboardShouldPersistTaps` stay on the page's ScrollView. The 12 pt gap under the rule moved from the masthead's margin to the content's top padding.
+- **Frozen pager:** on a Leagues board, `Screen` runs with `scroll={false}`. The puzzle pager (arrows, tile, title, day, dots) stays put, and everything below it scrolls: the settings card, notices, rows, "Not played yet", "This week" and Share.
+- **Tests:** Screen (masthead outside the scroll, refresh and keyboard props kept, scroll off). Leagues: a swipe on an empty board moves to the next stop, a vertical drag isn't claimed, the pager and masthead sit outside `board-scroll` while the notes, This week and Share are inside it, and settings isn't swiped.
+- **One test changed with the intended layout change:** Button.test's keyboard-taps check walked up from the masthead to the page ScrollView. The masthead is no longer inside it, so the check now walks up from the page content. Its assertion is unchanged.

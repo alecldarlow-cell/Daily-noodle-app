@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react-native';
+import { render, screen, within } from '@testing-library/react-native';
 import { RefreshControl, StyleSheet, Text, type RefreshControlProps } from 'react-native';
 
 import { tokensFor } from '@/shared/theme';
@@ -72,6 +72,37 @@ describe('GIVEN a Screen', () => {
       expect(rc.props.progressBackgroundColor).toBe(t.paper);
       expect(rc.props.tintColor).toBe(t.muted);
       expect(refreshColors(tokensFor('dark')).colors).toEqual([tokensFor('dark').accent]);
+    });
+  });
+});
+
+// Alec, 8 Nov 2026: the masthead is frozen on every tab, as Archive's already was.
+describe('GIVEN a page that scrolls', () => {
+  describe('WHEN its content scrolls', () => {
+    it('THEN the masthead stays put, outside the scroll, and pull-to-refresh is kept', async () => {
+      await render(
+        <Screen title="Today" testID="today" onRefresh={() => undefined}>
+          <Text>Body</Text>
+        </Screen>,
+      );
+      const scroll = screen.getByTestId('today-scroll');
+      expect(within(scroll).queryByTestId('masthead')).toBeNull();
+      expect(within(scroll).getByText('Body')).toBeOnTheScreen();
+      expect(screen.getByTestId('masthead')).toBeOnTheScreen();
+      expect(scroll.props.refreshControl).toBeTruthy();
+      expect(scroll.props.automaticallyAdjustKeyboardInsets).toBe(true);
+      expect(scroll.props.keyboardShouldPersistTaps).toBe('handled');
+    });
+  });
+  describe('WHEN the page brings its own scrolling (scroll off)', () => {
+    it('THEN the masthead is still drawn, above the content', async () => {
+      await render(
+        <Screen title="Archive" scroll={false}>
+          <Text>List</Text>
+        </Screen>,
+      );
+      expect(screen.getByTestId('masthead')).toBeOnTheScreen();
+      expect(screen.getByText('List')).toBeOnTheScreen();
     });
   });
 });
