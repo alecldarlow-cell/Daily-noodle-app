@@ -9,7 +9,7 @@ import { tokensFor } from '@/shared/theme';
 
 import { fakeClient, memoryStorage } from '../../tests/fakeClient';
 import { SWITCH_THUMB } from '../SettingsCard/SettingsCard';
-import { AccountScreen, CONTACT_EMAIL, deletionRequestUrl } from './AccountScreen';
+import { AccountScreen, CONTACT_EMAIL, NOTICES_URL, deletionRequestUrl } from './AccountScreen';
 
 jest.mock('expo-router', () => ({ router: { navigate: jest.fn() } }));
 
@@ -40,13 +40,13 @@ describe('GIVEN the Account tab in a build without sign-in', () => {
       expect(screen.getByTestId('account-build')).toHaveTextContent(buildLine());
     });
 
-    it('THEN Help & privacy is one card: How to play, Privacy, Contact us, in that order', async () => {
+    it('THEN Help & privacy is one card: How to play, Privacy, Contact us, Open-source licences, in that order', async () => {
       await render(<AccountScreen client={null} />);
       const card = screen.getByTestId('account-help-card');
       const links = within(card)
         .getAllByRole('link')
         .map((l) => l.props.accessibilityLabel);
-      expect(links).toEqual(['How to play', 'Privacy', 'Contact us']);
+      expect(links).toEqual(['How to play', 'Privacy', 'Contact us', 'Open-source licences']);
     });
   });
 
@@ -67,6 +67,16 @@ describe('GIVEN the Account tab in a build without sign-in', () => {
       await fireEvent.press(row);
       expect(router.navigate).toHaveBeenCalledWith('/privacy');
       expect(screen.queryByText(/how to stop it/)).toBeNull();
+    });
+  });
+
+  describe('WHEN the player taps Open-source licences (copyright audit, 8 Nov 2026)', () => {
+    it('THEN the app’s third-party notices open in the browser', async () => {
+      const open = jest.spyOn(Linking, 'openURL').mockResolvedValue(undefined);
+      await render(<AccountScreen client={null} />);
+      await fireEvent.press(screen.getByRole('link', { name: 'Open-source licences' }));
+      expect(open).toHaveBeenCalledWith(NOTICES_URL);
+      open.mockRestore();
     });
   });
 

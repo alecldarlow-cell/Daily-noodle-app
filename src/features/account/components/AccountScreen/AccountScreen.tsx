@@ -18,6 +18,11 @@ import { SyncCard } from '../SyncCard/SyncCard';
 /** Where the website's privacy page sends requests to delete an account (privacy.html › contact). */
 export const CONTACT_EMAIL = 'contact@dailynoodle.co.uk';
 
+/** The app's third-party notices: every open-source package, font and word list it carries
+ *  with its licence (scripts/make-notices.js; copyright audit, 8 Nov 2026). */
+export const NOTICES_URL =
+  'https://github.com/alecldarlow-cell/Daily-noodle-app/blob/main/THIRD-PARTY-NOTICES.md';
+
 /** The email that asks for the sign-in account and everything kept against it to be deleted. */
 export function deletionRequestUrl(email: string | null): string {
   const subject = 'Delete my Daily Noodle account';
@@ -103,6 +108,12 @@ export function AccountScreen({
             onPress={() => router.navigate('/privacy')}
           />
           <Row role="link" label="Contact us" testID="account-contact" onPress={contact} />
+          <Row
+            role="link"
+            label="Open-source licences"
+            testID="account-licences"
+            onPress={() => void Linking.openURL(NOTICES_URL).catch(() => undefined)}
+          />
           {syncOn ? (
             <Row
               label="Delete my data"

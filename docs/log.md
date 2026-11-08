@@ -1077,3 +1077,9 @@ Alec ran an outside review of the app and asked for its findings to be checked a
 - The streak's 🔥 now sits on an ember disc (`EMBER`, face #4A2414, rim #C2702E, 2.5 pt) with a rim like the coin's.
 - In the reward block, the league line's words are 16 pt, matching the reward line. Elsewhere they stay 14 pt.
 - **Tests:** finishSheet (ember disc size and rim), boardLink (16 pt words in the block).
+
+## 8 Nov 2026 — Copyright audit: open-source licences (not a WP)
+- Audit of both repos (project doc `claude/ip-audit-2026-11-08.md`): no copied code, art, sounds or puzzles. Alec asked for credits and licences.
+- `scripts/make-notices.js` writes `THIRD-PARTY-NOTICES.md` (every non-dev package in the lock with its shipped licence text, plus the fonts, SCOWL word-list notice and Natural Earth). Account › Help & privacy gains an **Open-source licences** row that opens it in the browser.
+- Tests: `scripts/tests/notices.test.ts` fails if a package in the lock is missing from the notices (rerun `node scripts/make-notices.js` after `npm ci` when dependencies change); AccountScreen tests updated for the new row. `npm run check` green (1,630 tests).
+- Site side: dailynoodle PR #111 (privacy page Credits and licences, site notices). Ships to phones with the next app update.
