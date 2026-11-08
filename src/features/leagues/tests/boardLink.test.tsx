@@ -1,12 +1,13 @@
 import { londonDay } from '@noodle/core';
 import { act, fireEvent, screen, waitFor } from '@testing-library/react-native';
 import { router } from 'expo-router';
+import { StyleSheet } from 'react-native';
 
 import { announceFinish } from '@/shared/results';
 import { renderWithProviders } from '@/shared/testing';
 
 import * as api from '../api/board';
-import { BoardLink } from '../components/BoardLink';
+import { BoardLink, LINK_SLOP } from '../components/BoardLink';
 import { LeagueResults } from '../components/LeagueResults';
 import { addDays, momentLine } from '../hooks/boardText';
 import { myRank, ordinal, placeLine } from '../hooks/rankText';
@@ -159,7 +160,9 @@ describe('GIVEN a finished puzzle’s sheet (design B3)', () => {
       m.boardDay.mockResolvedValue(day(1, 3));
       await slot(pathOn(today));
       const line = await screen.findByRole('link', { name: name('1st in Family today') });
-      expect(screen.queryByTestId('board-medal')).toBeNull();
+      // Alec, 8 Nov 2026: under a reward line the disc still shows, small, inside the line.
+      const disc = screen.getByTestId('board-medal', { includeHiddenElements: true });
+      expect(StyleSheet.flatten(disc.props.style).width).toBe(20);
       await fireEvent.press(line);
       expect(board().cur).toBe(FAMILY.code);
       expect(router.dismissTo).toHaveBeenCalledWith({
@@ -172,7 +175,8 @@ describe('GIVEN a finished puzzle’s sheet (design B3)', () => {
       m.boardDay.mockResolvedValue(day(2, 3));
       await slot(pathOn(today), { lead: true });
       await screen.findByRole('link', { name: name('2nd in Family today') });
-      expect(screen.getByTestId('board-medal', { includeHiddenElements: true })).toBeTruthy();
+      const disc = screen.getByTestId('board-medal', { includeHiddenElements: true });
+      expect(StyleSheet.flatten(disc.props.style).width).toBe(30);
     });
     it('THEN with no rank (failed, revealed) it says “Not placed”; with no answer, the board', async () => {
       setBoard({ pid: PID, leagues: [FAMILY] });
@@ -409,5 +413,18 @@ describe('GIVEN a finished puzzle’s sheet (design B3)', () => {
       await slot('reports/DP-SWEEP-2026-07-17.html');
       expect(screen.queryByTestId('board-slot')).toBeNull();
     });
+  });
+});
+
+describe('GIVEN the league line under the reward (Alec, 8 Nov 2026)', () => {
+  it('THEN it is only as tall as its words, with hitSlop keeping a 44 pt tap target', async () => {
+    setBoard({ pid: PID, leagues: [FAMILY] });
+    m.boardDay.mockResolvedValue(day(4, 6));
+    await slot(pathOn(today));
+    const link = await screen.findByRole('link', { name: name('4th in Family today') });
+    expect(StyleSheet.flatten(link.props.style).minHeight).toBeUndefined();
+    expect(link.props.hitSlop).toEqual(LINK_SLOP);
+    expect(LINK_SLOP.top + LINK_SLOP.bottom + 20).toBeGreaterThanOrEqual(44);
+    expect(screen.queryByTestId('board-medal', { includeHiddenElements: true })).toBeNull();
   });
 });

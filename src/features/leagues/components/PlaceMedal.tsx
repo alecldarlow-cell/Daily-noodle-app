@@ -50,8 +50,11 @@ export function PlaceMedal({
   place,
   shine,
   testID,
+  size = SIZE,
 }: {
   place: Place;
+  /** Diameter in pt: 28 on boards; smaller inline in a line of text. */
+  size?: number;
   /** Play the pop and shine once for this board and day: `{ key, day }`. */
   shine?: { key: string; day: string };
   testID?: string;
@@ -87,7 +90,8 @@ export function PlaceMedal({
       ]),
     ]).start();
   }, [key, day, reduce, pop, sweep]);
-  const x = sweep.interpolate({ inputRange: [0, 1], outputRange: [-SIZE, SIZE] });
+  const x = sweep.interpolate({ inputRange: [0, 1], outputRange: [-size, size] });
+  const k = size / SIZE;
   return (
     <Animated.View
       testID={testID}
@@ -95,10 +99,30 @@ export function PlaceMedal({
       accessibilityElementsHidden
       style={[
         styles.disc,
+        size !== SIZE && {
+          width: size,
+          height: size,
+          borderRadius: size / 2,
+          borderWidth: Math.max(1.5, 2 * k),
+        },
         { backgroundColor: m.face, borderColor: m.rim, transform: [{ scale: pop }] },
       ]}>
-      <View style={[styles.hi, { backgroundColor: m.hi }]} />
-      <Text style={[styles.n, { color: m.ink }]}>{place}</Text>
+      <View
+        style={[
+          styles.hi,
+          { backgroundColor: m.hi },
+          size !== SIZE && { top: 3 * k, left: 5 * k, width: 9 * k, height: 5 * k },
+        ]}
+      />
+      <Text
+        maxFontSizeMultiplier={1}
+        style={[
+          styles.n,
+          { color: m.ink },
+          size !== SIZE && { fontSize: 14 * k, lineHeight: 17 * k },
+        ]}>
+        {place}
+      </Text>
       <Animated.View
         pointerEvents="none"
         style={[styles.shine, { transform: [{ translateX: x }, { rotate: '20deg' }] }]}

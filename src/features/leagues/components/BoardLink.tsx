@@ -125,7 +125,9 @@ function MemberLink({
         : place !== null
           ? placeLine(place, leagueName)
           : `${leagueName} board today`;
-  const medal = lead && isToday && solved && isPlace(place) ? place : null;
+  // Alec, 8 Nov 2026: the podium disc shows whenever you place; leading the block at full
+  // size when the line stands alone, small inside the line under a reward.
+  const medal = isToday && solved && isPlace(place) ? place : null;
 
   // That league's board, on this puzzle and day (dn-board.js setCurrent, then board.html):
   // back down to the tabs (not a second copy pushed over the puzzle), on Leagues; a fresh
@@ -142,12 +144,16 @@ function MemberLink({
       accessibilityRole="link"
       accessibilityLabel={`${text}. See board`}
       onPress={open}
+      // A 44 pt target without padding the line (Alec, 8 Nov 2026: the reward line's icon sat
+      // off the text because this row was taller than the words).
+      hitSlop={LINK_SLOP}
       style={pressable(styles.link)}
       testID="board-slot">
       {medal ? (
         <PlaceMedal
           place={medal}
           shine={celebrate ? { key: `finish:${code}:${path}`, day: today } : undefined}
+          size={lead ? 30 : 20}
           testID="board-medal"
         />
       ) : null}
@@ -160,9 +166,11 @@ function MemberLink({
   );
 }
 
+/** Grows the 20 pt line to a 44 pt tap target. */
+export const LINK_SLOP = { top: 12, bottom: 12, left: 0, right: 0 } as const;
+
 const styles = StyleSheet.create({
   link: {
-    minHeight: 44,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
