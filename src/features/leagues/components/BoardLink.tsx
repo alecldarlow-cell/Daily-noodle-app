@@ -160,7 +160,9 @@ function MemberLink({
         // No podium place: a blank the disc's width, so the words line up under the reward's.
         <View style={styles.blank} testID="board-medal-blank" />
       ) : null}
-      <Text style={[styles.text, { color: pt.sheetSoft }]} testID="board-line">
+      <Text
+        style={[styles.text, lead && styles.leadText, { color: pt.sheetSoft }]}
+        testID="board-line">
         {text}
         {' · '}
         <Text style={[styles.see, { color: t.accent }]}>See board ›</Text>
@@ -184,5 +186,7 @@ const styles = StyleSheet.create({
   },
   text: { fontSize: 14, lineHeight: 20, fontFamily: FONT.sans, flexShrink: 1 },
   see: { fontFamily: FONT.sansSemi },
+  // In the reward block, the same size as the reward line above it (Alec, 8 Nov 2026).
+  leadText: { fontSize: 16, lineHeight: 21 },
   blank: { width: LEAD_ICON, height: 1 },
 });

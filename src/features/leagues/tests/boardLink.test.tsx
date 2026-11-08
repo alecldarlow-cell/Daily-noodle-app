@@ -177,6 +177,8 @@ describe('GIVEN a finished puzzle’s sheet (design B3)', () => {
       await screen.findByRole('link', { name: name('2nd in Family today') });
       const disc = screen.getByTestId('board-medal', { includeHiddenElements: true });
       expect(StyleSheet.flatten(disc.props.style).width).toBe(30);
+      // The words match the reward line's size above them.
+      expect(StyleSheet.flatten(screen.getByTestId('board-line').props.style).fontSize).toBe(16);
     });
     it('THEN with no rank (failed, revealed) it says “Not placed”; with no answer, the board', async () => {
       setBoard({ pid: PID, leagues: [FAMILY] });

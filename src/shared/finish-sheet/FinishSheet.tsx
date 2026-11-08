@@ -98,8 +98,10 @@ const HELD = { opacity: 0.75 };
 
 /** Gold, for a personal best and a streak milestone (the podium's first-place metal). */
 const GOLD = { face: '#E8B931', rim: '#B88A12', ink: '#5A4300' };
+/** The streak's disc: an ember face with a rim, so it reads at the coin's size (Alec, 8 Nov 2026). */
+export const EMBER = { face: '#4A2414', rim: '#C2702E' };
 
-/** The reward line's 30 pt round lead: ★ or 🔥 on gold, or 🔥 on a faint warm disc. */
+/** The reward line's 30 pt round lead: ★ or 🔥 on gold, or 🔥 on an ember disc; all rimmed. */
 function RewardIcon({ kind }: { kind: RewardKind }) {
   const gold = kind !== 'streak';
   return (
@@ -111,7 +113,7 @@ function RewardIcon({ kind }: { kind: RewardKind }) {
         styles.icon,
         gold
           ? { backgroundColor: GOLD.face, borderColor: GOLD.rim, borderWidth: 2.5 }
-          : { backgroundColor: '#E8803122' },
+          : { backgroundColor: EMBER.face, borderColor: EMBER.rim, borderWidth: 2.5 },
       ]}>
       <Text
         maxFontSizeMultiplier={1}
