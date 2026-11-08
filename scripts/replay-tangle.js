@@ -15,7 +15,7 @@
  * itself. Leaving is a reload (pagehide saves). The phone has no element full screen
  * (as on an iPhone, and in the app), so the count-in is 3-2-1 with no "Ready" beat.
  *
- * After every move the visible screen must match (home: number, date, head, status,
+ * After every move the visible screen must match (home: number, date, head, status, How to play's rule,
  * button, streak, best, played; board: score, words, star pill, clock and its low mark,
  * the found list, the traced word, lit tiles, the toast, the count-in, the hidden
  * board and the veil) and so must the saved digi-tangle-v1, left to the last float;
@@ -61,6 +61,8 @@ const webSnapshot = (p) =>
         date: txt('dateLine'),
         head: txt('playHead'),
         status: txt('playStatus'),
+        // How to play's first paragraph: the rule sentence (Alec, 8 Nov 2026)
+        rule: (document.querySelector('#home .how p') || {}).textContent || '',
         go: txt('playGo'),
         streak: +txt('hStreak'),
         best: +txt('hBest'),

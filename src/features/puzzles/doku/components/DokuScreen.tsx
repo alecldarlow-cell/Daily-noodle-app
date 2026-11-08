@@ -5,7 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { FinishSheet, useFreshFinish } from '@/shared/finish-sheet';
 import { WIN_BURSTS, useWinBursts } from '@/shared/motion';
-import { PuzzleBar, ruleFor, StartCard, useStartStats } from '@/shared/start-card';
+import { houseLine, PuzzleBar, ruleFor, StartCard, useStartStats } from '@/shared/start-card';
 import { FONT, usePuzzleTokens } from '@/shared/theme';
 import { BOARD_SLOT, fitBoard, pressable, useBoardFit } from '@/shared/ui';
 import { usePlayerExit } from '@/shared/shell';
@@ -53,6 +53,7 @@ export function DokuScreen({ file }: { file: PuzzleFile<DokuData> }) {
         type="doku"
         n={n}
         date={file.date}
+        line={houseLine('doku')}
         rule={ruleFor('doku', file.data)}
         stats={stats}
         onPlay={game.play}

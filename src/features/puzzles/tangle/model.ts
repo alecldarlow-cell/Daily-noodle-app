@@ -18,6 +18,7 @@
  * their saved values untouched), the tile flashes, and Yesterday's answers.
  */
 import { dayBefore, londonDay, type SaveStore } from '@noodle/core';
+import { houseLine } from '@/shared/start-card/copy';
 
 export const N = 4;
 export const MINLEN = 3;
@@ -751,7 +752,8 @@ export function homeCard(e: TangleEngine, t: string) {
     go = 'Resume';
   } else {
     head = 'Ready to play';
-    status = `90 seconds. Longer words score more; the ${num(P.star.length)}-letter word scores double.`;
+    // a fresh round opens on the house line; the rule sentence leads How to play (Alec, 8 Nov 2026)
+    status = houseLine('tangle');
     go = 'Play';
   }
   return {
@@ -759,6 +761,7 @@ export function homeCard(e: TangleEngine, t: string) {
     date: `No. ${parseInt(P.id.slice(-4), 10)}, ${longDate(P.date).replace(/ \d{4}$/, '')}`,
     head,
     status,
+    rule: `90 seconds. Longer words score more; the ${num(P.star.length)}-letter word scores double.`,
     go,
     streak: liveStreakOf(save, t),
     best: save.best || 0,

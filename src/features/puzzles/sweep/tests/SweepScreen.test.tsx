@@ -46,6 +46,16 @@ describe('GIVEN a Sweep not yet played', () => {
     it('THEN the start card says what the page says, and Play shows the locked board', async () => {
       await renderWithProviders(<SweepScreen file={file94} />);
       expect(screen.getByText('No. 94, Sunday 18 October')).toBeOnTheScreen();
+      // the open page says the house line; the rule sentence leads How to play (Alec, 8 Nov 2026)
+      expect(
+        screen.getByText('Find the mines with logic alone. Flag them, then clear the grid.'),
+      ).toBeOnTheScreen();
+      expect(
+        screen.queryByText(
+          'Clear the board without hitting one of the seven mines. Start on the highlighted square.',
+        ),
+      ).toBeNull();
+      await fireEvent.press(screen.getByText('How to play'));
       expect(
         screen.getByText(
           'Clear the board without hitting one of the seven mines. Start on the highlighted square.',

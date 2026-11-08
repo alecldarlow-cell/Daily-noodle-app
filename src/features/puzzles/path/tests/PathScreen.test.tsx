@@ -42,6 +42,14 @@ describe('GIVEN a Path not yet played', () => {
   it('THEN the start card says what the page says, and Play shows the board', async () => {
     await renderWithProviders(<PathScreen file={file92} />);
     expect(screen.getByText('No. 92, Sunday 18 October')).toBeOnTheScreen();
+    // the open page says the house line; the rule sentence leads How to play (Alec, 8 Nov 2026)
+    expect(
+      screen.getByText('One unbroken trail from 1 to 36. Tap square by square to build it.'),
+    ).toBeOnTheScreen();
+    expect(
+      screen.queryByText('Join 1 to 36 in one unbroken path, through every given number.'),
+    ).toBeNull();
+    await fireEvent.press(screen.getByText('How to play'));
     expect(
       screen.getByText('Join 1 to 36 in one unbroken path, through every given number.'),
     ).toBeOnTheScreen();

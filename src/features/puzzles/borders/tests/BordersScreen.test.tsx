@@ -68,12 +68,21 @@ describe('GIVEN a Borders not yet played', () => {
   it('THEN the start screen says what the page says', async () => {
     await renderWithProviders(<BordersScreen file={file15} deps={deps} />);
     expect(screen.getByText('No. 15, Monday, 19 October')).toBeOnTheScreen();
+    // the open page says the house line; the rule sentence leads How to play (Alec, 8 Nov 2026)
+    expect(
+      screen.getByText('Name the country from its outline. Size, sea and shape are your clues.'),
+    ).toBeOnTheScreen();
+    expect(
+      screen.queryByText(
+        'Ten country outlines, easiest first. Name them from four; 100 points each.',
+      ),
+    ).toBeNull();
+    await fireEvent.press(screen.getByText('How to play'));
     expect(
       screen.getByText(
         'Ten country outlines, easiest first. Name them from four; 100 points each.',
       ),
     ).toBeOnTheScreen();
-    await fireEvent.press(screen.getByText('How to play'));
     expect(screen.getByText(/Show on map puts the outline/)).toBeOnTheScreen();
     // The start page shows the Borders icon, not a world map.
     expect(screen.queryByTestId('drawing')).toBeNull();

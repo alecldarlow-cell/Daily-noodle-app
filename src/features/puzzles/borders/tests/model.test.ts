@@ -196,6 +196,7 @@ describe('GIVEN a round being played', () => {
     expect(homeView(s, '2026-10-19', dayBefore)).toEqual({
       stats: ['0', '0', '0'],
       status: 'Question 2 of 10, 100 points so far.',
+      rule: 'Ten country outlines, easiest first. Name them from four; 100 points each.',
       button: 'Resume',
     });
     s = apply(s, { t: 'play' }, host);

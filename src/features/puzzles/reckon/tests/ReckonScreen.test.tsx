@@ -53,12 +53,21 @@ describe('GIVEN a Reckon not yet played', () => {
     it('THEN the start screen says what the page says', async () => {
       await renderWithProviders(<ReckonScreen file={file2} deps={deps} />);
       expect(screen.getByText('No. 2, Wednesday 21 October')).toBeOnTheScreen();
+      // the open page says the house line; the rule sentence leads How to play (Alec, 8 Nov 2026)
+      expect(
+        screen.getByText('Guesstimate your way to winning. What do you reckon?'),
+      ).toBeOnTheScreen();
+      expect(
+        screen.queryByText(
+          'Ten numbers to guess, each from a different topic. The closer you get, the more you score.',
+        ),
+      ).toBeNull();
+      await fireEvent.press(screen.getByText('How to play'));
       expect(
         screen.getByText(
           'Ten numbers to guess, each from a different topic. The closer you get, the more you score.',
         ),
       ).toBeOnTheScreen();
-      await fireEvent.press(screen.getByText('How to play'));
       expect(screen.getByText(/Within 15% of the answer scores 100/)).toBeOnTheScreen();
     });
   });

@@ -44,7 +44,7 @@ export function BordersHome({ state, today, c, onPlay, onBack }: Props) {
         [h.stats[1]!, 'best score'],
         [h.stats[2]!, 'Borders played'],
       ]}
-      how={HOW}
+      how={[h.rule, ...HOW]}
       colors={{
         bg: c.bg,
         card: c.paper,

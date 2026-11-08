@@ -41,7 +41,7 @@ export function ReckonHome({ state, today, c, onPlay, onBack }: Props) {
         [h.stats[1]!, 'best score'],
         [h.stats[2]!, 'Reckons played'],
       ]}
-      how={rulesText(state.P) ? [HOW[0]!, rulesText(state.P)!, HOW[2]!] : HOW}
+      how={[h.rule, ...(rulesText(state.P) ? [HOW[0]!, rulesText(state.P)!, HOW[2]!] : HOW)]}
       colors={{
         bg: c.bg,
         card: c.paper,

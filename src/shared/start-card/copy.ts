@@ -53,6 +53,35 @@ export function ruleFor(type: GridStreakType, data: RuleData): string {
   }
 }
 
+/**
+ * The open page's line (Alec, 8 Nov 2026): the type's house line, the card description from
+ * dailynoodle tools/standfirst.js (TEXT, and link() with the day's trap count), as the site's
+ * generated `dnHouseLine` block in engines/house.js, tangle.js, borders.js and reckon.js works it
+ * out. Worked out from the puzzle, not the file's standfirst, so a page whose card line is pinned
+ * as reviewed legacy (Doku 32) opens on the house line too. The rule sentence leads How to play.
+ */
+export const HOUSE_LINE = {
+  mini: 'A crossword small enough for a coffee break. Fill every square from the clues.',
+  doku: 'A crossword with no clues. Place every letter so each line spells a word.',
+  sweep: 'Find the mines with logic alone. Flag them, then clear the grid.',
+  path: 'One unbroken trail from 1 to 36. Tap square by square to build it.',
+  tangle: 'Search for words before the clock runs out. The longer, the better.',
+  borders: 'Name the country from its outline. Size, sea and shape are your clues.',
+  reckon: 'Guesstimate your way to winning. What do you reckon?',
+  tally: 'Sudoku with a maths twist. Can you make every cage hit its number?',
+} as const;
+const LINK_LINE = 'Four hidden groups. Can you find the links?';
+const TRAP_WORD = ['no', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight'];
+
+export type HouseLineType = keyof typeof HOUSE_LINE | 'link';
+
+export function houseLine(type: HouseLineType, data?: { traps?: unknown[] | null }): string {
+  if (type !== 'link') return HOUSE_LINE[type];
+  const n = (data?.traps || []).length;
+  if (!n) return LINK_LINE;
+  return `${LINK_LINE} Today, ${n === 1 ? 'one tile is' : `${TRAP_WORD[n] ?? n} tiles are`} bluffing.`;
+}
+
 export const HOW: Record<GridStreakType, readonly string[]> = {
   mini: [
     'Tap a square and type. Tap the clue bar to switch between across and down; the arrows either side step through the clues.',

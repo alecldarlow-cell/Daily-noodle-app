@@ -10,7 +10,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { FinishSheet, useFreshFinish } from '@/shared/finish-sheet';
 import { usePlayerExit } from '@/shared/shell';
-import { PuzzleBar, ruleFor, StartCard, useStartStats } from '@/shared/start-card';
+import { houseLine, PuzzleBar, ruleFor, StartCard, useStartStats } from '@/shared/start-card';
 import { FONT, usePuzzleTokens } from '@/shared/theme';
 import { BOARD_SLOT, fitBoard, pressable, useBoardFit } from '@/shared/ui';
 
@@ -40,6 +40,7 @@ export function TallyScreen({ file }: { file: PuzzleFile<TallyData> }) {
         type="tally"
         n={n}
         date={file.date}
+        line={houseLine('tally')}
         rule={ruleFor('tally', {})}
         stats={stats}
         onPlay={game.play}

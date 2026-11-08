@@ -137,7 +137,9 @@ describe('GIVEN a Tangle not yet played', () => {
         num: 'No. 19',
         date: 'No. 19, Sunday, 25 October',
         head: 'Ready to play',
-        status: '90 seconds. Longer words score more; the eight-letter word scores double.',
+        // the open page says the house line; the rule sentence leads How to play (Alec, 8 Nov 2026)
+        status: 'Search for words before the clock runs out. The longer, the better.',
+        rule: '90 seconds. Longer words score more; the eight-letter word scores double.',
         go: 'Play',
         streak: 0,
         best: 0,

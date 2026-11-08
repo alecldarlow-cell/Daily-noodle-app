@@ -32,7 +32,7 @@ export function TangleHome({ card, onPlay, onBack }: TangleHomeProps) {
         [card.best, 'best score'],
         [card.played, 'Tangles played'],
       ]}
-      how={HOW}
+      how={[card.rule, ...HOW]}
       onBack={onBack}
     />
   );

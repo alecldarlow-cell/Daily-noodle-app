@@ -56,8 +56,12 @@ describe('GIVEN the start card with large text', () => {
     expect(screen.getByLabelText('12 Minis played')).toBeOnTheScreen();
     expect(screen.getByLabelText('4 Mini streak')).toBeOnTheScreen();
     expect(screen.getByRole('link', { name: 'Back to Puzzles' })).toBeOnTheScreen();
-    // The rule is body text: it scales freely.
-    expect(screen.getByText('Ten clues.').props.maxFontSizeMultiplier).toBeUndefined();
+    // The card's line (the house line since 8 Nov 2026) is body text: it scales freely.
+    expect(
+      screen.getByText(
+        'A crossword small enough for a coffee break. Fill every square from the clues.',
+      ).props.maxFontSizeMultiplier,
+    ).toBeUndefined();
   });
 });
 
