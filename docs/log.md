@@ -1100,3 +1100,11 @@ Alec ran an outside review of the app and asked for its findings to be checked a
 - `docs/play-listing.md` now matches Play Console: the Data safety row, the deletion links and the live short and full descriptions (the short description already said nine).
 - Site side: dailynoodle PR #112 (privacy page: who runs it, legal basis, services, rights, 30-day complaint reply).
 - Docs only; no code change.
+
+## 8 Nov 2026 — Play store listing refreshed (not a WP; [#140](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/140))
+
+- Alec asked for the Play listing to match the current app. New short and full descriptions (nine puzzles incl. Tally, leagues with podium medals, per-puzzle streaks and personal bests, archive, no adverts) in `docs/play-listing.md`.
+- `store/feature-graphic.png` rebuilt from `store/feature-graphic.html`: the noodle-n icon, "Nine new puzzles", a Tally pill.
+- `store/screenshots/play-1…5`: Alec's phone captures of 8 Nov, status bar cropped, framed on brand green with a caption. Real league and player names replaced (league "Tea Break"; Ellie, Dan, Sam, Priya, Tom, Grandad) at Alec's request.
+- Uploaded to the default store listing in Play Console by Claude through Alec's built-in browser (images fetched from this branch on GitHub), with the store icon swapped from the blue DN to the noodle-n. AI asset declaration: "Don't label" (Alec: no AI-made assets). Sent for review on 8 Nov together with an earlier, unsubmitted Data safety questionnaire change (Alec approved sending both).
+- **Left:** Play's "shop status keywords" note on the short description; if it survives review, try dropping "fresh".
