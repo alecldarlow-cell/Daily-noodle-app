@@ -127,6 +127,7 @@ describe('GIVEN a player in a league', () => {
     await fireEvent.press(screen.getByRole('button', { name: 'Change nickname' }));
     await fireEvent.changeText(screen.getByLabelText('Nickname'), 'Alec');
     m.boardMine.mockResolvedValue([{ ...FAMILY, nickname: 'Alec', pin: true }] as never);
+    await fireEvent.press(screen.getByTestId('rules-tick')); // League rules (8 Nov 2026)
     await fireEvent.press(screen.getByRole('button', { name: 'Save' }));
     await waitFor(() => expect(m.boardSetNick).toHaveBeenCalledWith('p1', 'ABCDEFGH', 'Alec'));
     await waitFor(() => expect(screen.queryByTestId('nick-form')).toBeNull());
@@ -143,6 +144,7 @@ describe('GIVEN a player in a league', () => {
     await fireEvent.press(screen.getByTestId('menu-settings'));
     await fireEvent.press(screen.getByRole('button', { name: 'Change nickname' }));
     await fireEvent.changeText(screen.getByLabelText('Nickname'), 'Mum');
+    await fireEvent.press(screen.getByTestId('rules-tick')); // League rules (8 Nov 2026)
     await fireEvent.press(screen.getByRole('button', { name: 'Save' }));
     await waitFor(() => expect(screen.getByText(/already uses that nickname/)).toBeOnTheScreen());
     expect(screen.getByTestId('nick-form')).toBeOnTheScreen();

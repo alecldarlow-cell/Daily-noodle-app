@@ -5,6 +5,7 @@ import { createContext, useContext, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Linking,
   PanResponder,
   Pressable,
   ScrollView,
@@ -45,6 +46,7 @@ import {
   usePuzzleCards,
 } from '../hooks/useLeagues';
 import { useBackfill } from '../hooks/useResults';
+import { unhide, useHidden } from '../hooks/hidden';
 import { leagueNameSchema, firstError } from '../schemas';
 import type { BoardView, DayBoard, DayRow, NotYet, Overall, OverallRow, Records } from '../types';
 import { DayLine, dayText, TypePager, viewName } from './BoardControls';
@@ -70,6 +72,9 @@ export const claimsSwipe = (dx: number, dy: number): boolean =>
 export const swipeStep = (dx: number): 1 | -1 | 0 => (dx < -50 ? 1 : dx > 50 ? -1 : 0);
 
 /** 1st, 2nd, 3rd, 4th … 11th, 12th, 13th, 21st. */
+/** The hidden list back from its memo key (one nickname per line). */
+const splitKey = (k: string) => (k ? k.split('\n') : []);
+
 export function ordinal(n: number): string {
   const ten = n % 100;
   const s = ten >= 11 && ten <= 13 ? 'th' : (['th', 'st', 'nd', 'rd'][n % 10] ?? 'th');
@@ -139,6 +144,11 @@ export function Board({
     pick('records');
   };
   const shown = records ? rec : data;
+  // Hidden players (8 Nov 2026) come off every board on this phone; the roster keeps them.
+  const hidden = useHidden(league.code);
+  const hiddenKey = hidden.list.join('\n');
+  const recData = useMemo(() => unhide(rec.data, splitKey(hiddenKey)), [rec.data, hiddenKey]);
+  const dayData = useMemo(() => unhide(data.data, splitKey(hiddenKey)), [data.data, hiddenKey]);
   // Settings' player list: the board's, or on Records every member there.
   const roster = records
     ? rec.data && { players: rec.data.players.map((p) => p.nick), members: rec.data.players.length }
@@ -181,7 +191,7 @@ export function Board({
   const headline = isType ? (puzzleOn(cards.data, view, day)?.headline ?? null) : null;
 
   return (
-    <RecordsCtx.Provider value={{ recs: rec.data, open: rec.data ? openCard : undefined }}>
+    <RecordsCtx.Provider value={{ recs: recData, open: recData ? openCard : undefined }}>
       <View testID="league-board" style={styles.board}>
         {/* The swipe area fills the space down to the tab bar, so an empty board swipes
             too (Alec, 8 Nov 2026). The pager stays put; the board scrolls under it. */}
@@ -220,6 +230,8 @@ export function Board({
                 league={league}
                 players={roster.players}
                 members={roster.members}
+                hidden={hidden.list}
+                onHide={hidden.set}
                 onClose={onSettingsClose}
               />
             ) : null}
@@ -239,14 +251,14 @@ export function Board({
               <RecordsView
                 key={league.code}
                 league={league}
-                d={rec.data!}
+                d={recData!}
                 card={card}
                 setCard={setCard}
               />
             ) : view === 'all' ? (
               <OverallView
                 league={league}
-                d={data.data as Overall}
+                d={dayData as Overall}
                 date={day}
                 today={today}
                 setDate={setDate}
@@ -256,7 +268,7 @@ export function Board({
               <DayView
                 league={league}
                 type={view}
-                d={data.data as DayBoard}
+                d={dayData as DayBoard}
                 date={day}
                 today={today}
                 setDate={setDate}
@@ -627,6 +639,15 @@ function OverallView({
 }
 
 /** Confirm with the phone's own dialog, as the site's confirm(). */
+/** Report (8 Nov 2026): an email to us with the league and the name filled in, as board.html's. */
+export function reportUrl(league: BoardLeague, nick: string): string {
+  const body =
+    `League: ${league.name} (code ${league.code})\n` +
+    (nick ? `Name I’m reporting: ${nick}\n` : 'What I’m reporting: \n') +
+    'Why: \n';
+  return `mailto:contact@dailynoodle.co.uk?subject=${encodeURIComponent(`Report a name in ${league.name}`)}&body=${encodeURIComponent(body)}`;
+}
+
 function confirm(title: string, message: string, ok: string, then: () => void) {
   Alert.alert(title, message, [
     { text: 'Cancel', style: 'cancel' },
@@ -639,12 +660,17 @@ function Settings({
   league,
   players,
   members,
+  hidden = [],
+  onHide = () => {},
   onClose,
 }: {
   flow: Flow;
   league: BoardLeague;
   players: string[];
   members: number;
+  /** Players hidden on this phone (8 Nov 2026), and the switch. */
+  hidden?: readonly string[];
+  onHide?: (nick: string, on: boolean) => void;
   onClose: () => void;
 }) {
   const t = useTokens();
@@ -708,6 +734,62 @@ function Settings({
               }
             />
           </Acts>
+          {!league.owner && players.some((p) => p !== league.nick) ? (
+            <>
+              <Sub>Players</Sub>
+              {players
+                .filter((p) => p !== league.nick)
+                .map((p) => {
+                  const off = hidden.includes(p);
+                  return (
+                    <View key={p} style={[styles.plist, { borderBottomColor: t.hair }]}>
+                      <Text style={[styles.plistName, { color: t.ink }]}>
+                        {p}
+                        {off ? ' (hidden)' : ''}
+                      </Text>
+                      <View style={styles.plistActs}>
+                        <Pressable
+                          accessibilityRole="button"
+                          accessibilityLabel={`${off ? 'Show' : 'Hide'} ${p}`}
+                          testID={`hide-${p}`}
+                          style={styles.plistHit}
+                          onPress={() => onHide(p, !off)}>
+                          <Text style={[styles.plistBtn, { color: t.faint }]}>
+                            {off ? 'Show' : 'Hide'}
+                          </Text>
+                        </Pressable>
+                        <Pressable
+                          accessibilityRole="link"
+                          accessibilityLabel={`Report ${p}`}
+                          testID={`report-${p}`}
+                          style={styles.plistHit}
+                          onPress={() =>
+                            void Linking.openURL(reportUrl(league, p)).catch(() => undefined)
+                          }>
+                          <Text style={[styles.plistBtn, { color: t.accent }]}>Report</Text>
+                        </Pressable>
+                      </View>
+                    </View>
+                  );
+                })}
+              <P fine>
+                Hide takes a player off your boards on this phone only. Report emails us; we read
+                every report.
+              </P>
+            </>
+          ) : null}
+          <Sub>Something not right?</Sub>
+          <P>
+            A rude name or league name?{' '}
+            <Text
+              accessibilityRole="link"
+              testID="report-league"
+              style={{ color: t.accent, textDecorationLine: 'underline' }}
+              onPress={() => void Linking.openURL(reportUrl(league, '')).catch(() => undefined)}>
+              Report it to us
+            </Text>
+            {league.owner ? ', or remove the player below.' : '.'}
+          </P>
           <Sub>Play somewhere else too?</Sub>
           <P>
             {syncOn()
