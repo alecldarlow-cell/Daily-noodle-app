@@ -1,4 +1,4 @@
-# Google Play listing (drafted for Alec; nothing submitted)
+# Google Play listing (what is in Play Console)
 
 Everything Play Console asks for, ready to paste. Internal testing can start before most of this is
 filled in; Play Console's dashboard lists what it still needs at each step. Check every answer
@@ -9,31 +9,35 @@ privacy page (dailynoodle.co.uk/privacy.html) and must change whenever it does.
 
 **App name** (30 max): `Daily Noodle`
 
-**Short description** (80 max, 74 used):
+**Short description** (80 max; live in Play Console, copied 8 Nov 2026):
 
-> Eight new puzzles every day. Play, share and compare results with friends.
+> Nine fresh puzzles every day. Build streaks and race friends in private leagues.
 
-**Full description** (4,000 max):
+**Full description** (4,000 max; live in Play Console, copied 8 Nov 2026):
 
-> The Daily Noodle is nine small puzzles, new every morning, from dailynoodle.co.uk.
+> The Daily Noodle is nine small puzzles, new every morning. Each one takes a few minutes, so they fit a coffee break, a commute or the wait for the kettle.
 >
-> • Mini: a little daily crossword.
-> • Doku: place the letter tiles so every row and column spells a word.
-> • Sweep: clear the grid without opening a mine. Every grid is solvable by deduction.
-> • Path: thread 1 to 36 through every square.
-> • Link: find four hidden groups of four.
-> • Tangle: find as many words as you can in ninety seconds.
-> • Borders: identify ten countries from their outlines.
-> • Reckon: estimate ten numbers, and score more the closer you get.
-> • Tally: fill a 4×4 grid so every cage makes its number.
+> TODAY'S NINE
+> • Mini – a crossword small enough for a coffee break.
+> • Doku – a crossword with no clues. Place every letter so each line spells a word.
+> • Sweep – find the mines with logic alone. Every grid can be solved without guessing.
+> • Path – one unbroken trail from 1 to 36.
+> • Link – sixteen words, four hidden groups. Watch out for the tiles that bluff.
+> • Tangle – find as many words as you can before the clock runs out.
+> • Borders – name the country from its outline.
+> • Reckon – guesstimate ten numbers. The closer you get, the more you score.
+> • Tally – sudoku with a maths twist. Make every cage hit its number.
 >
-> Your streaks and results are kept on your phone. Share your result with one tap, or start a private league so friends and family can see each
-> other's times on a daily leaderboard.
+> PLAY WITH FRIENDS
+> Start a private league for family, friends or colleagues and see everyone's results on a daily board, with gold, silver and bronze for the top three. Share your result with one tap. It's built for the group chat.
 >
-> Missed a day? Past puzzles are in the archive.
+> KEEP YOUR STREAK
+> Every puzzle keeps its own streak, and the finish page shows your personal bests and milestones. Missed a day? Past puzzles wait in the archive.
 >
-> No adverts and no account needed. You can sign in with your email (optional) to keep your
-> results the same on every phone and browser.
+> NO ADVERTS
+> No adverts and no account needed to play. Sign in with your email if you'd like your results and streaks on every phone and on dailynoodle.co.uk.
+>
+> Sound, vibration and animations can each be switched off in Account.
 
 **App category:** Games › Puzzle (or Word). **Tags:** Crossword, Word, Logic, Trivia.
 
@@ -76,13 +80,17 @@ because Supabase acts as our processor and Play doesn't count processors as shar
 | Device or other IDs                                            | Yes: a random visit code; a second random code if the player joins a league                  | Analytics; app functionality (leagues) | The visit code, yes; the league code only exists if the player joins a league |
 | App activity › Other user-generated content                    | Yes, if the player joins a league: nickname and puzzle results, shown to that league         | App functionality                      | Yes (leagues are optional)                                                    |
 | Personal info › Email address                                  | Yes, only when the player signs in to sync                                                   | Account management                     | Yes (sign-in is optional)                                                     |
-| App info and performance                                       | No                                                                                           |                                        |                                                                               |
+| App info and performance › Crash logs, Diagnostics             | Yes: the app's crash and save notes (`insights.app_errors`, since 5 Nov 2026), kept 90 days  | Analytics                              | Yes: the same "Don't record my visits" switch                                 |
 | Location, contacts, photos, files, messages, financial, health | No                                                                                           |                                        |                                                                               |
 
-**Deletion:** a signed-in player can delete their synced results in Account. For league records
-or anything else, the privacy page's contact address takes requests. Play asks for a web link where
-people can request account deletion; use https://dailynoodle.co.uk/privacy.html, which gives
-that contact.
+**Deletion:** a signed-in player can delete their synced results in Account. For league records,
+the email address or anything else, the privacy page's contact address takes requests. Play's
+"Delete account URL" and "Delete data URL" are both https://dailynoodle.co.uk/privacy.html#delete
+(set 8 Nov 2026), the page's "Delete your data" section.
+
+**Updated in Play Console on 8 Nov 2026:** App info and performance (crash logs, diagnostics) and
+the two deletion links, after the legal check (project doc `claude/legal-compliance-2026-11-08.md`).
+Change this table and the Play Console form together, and whenever privacy.html changes.
 
 Every puzzle counts the same since 25 Oct 2026 (Alec's call): the app records native puzzles
 exactly as the website's pages (page view, start, finish), with one random visitor code shared by

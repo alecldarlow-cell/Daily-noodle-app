@@ -1093,3 +1093,10 @@ Alec ran an outside review of the app and asked for its findings to be checked a
 - **Server:** wider rude-word list in `board.clean()` (site `toolchain/sql/2026-11-08-board-name-rules.sql`, applied to live `digi` 8 Nov; security advisor unchanged). Error text for `bad_nick`/`bad_name` adds "and kept friendly (see League rules)", as the site; vendor refreshed.
 - Tests: `src/features/leagues/tests/safety.test.tsx` (helpers, report email, tick required, hide/show, report); existing league tests tick the box. Site: dailynoodle PR #113 (merged first).
 - Ships with the next app update (OTA: no native change).
+
+## 8 Nov 2026 — Play Console Data safety and listing notes (not a WP)
+
+- After the legal check (project doc `claude/legal-compliance-2026-11-08.md`), Alec asked for the Play Console Data safety form to be fixed. Done in Play Console on 8 Nov: App info and performance › Crash logs and Diagnostics added (collected, not shared, kept, optional through "Don't record my visits", for Analytics), because the app has sent crash and save notes since 5 Nov. Both deletion links now go to `privacy.html#delete`. Managed publishing is off, so it went to review on its own.
+- `docs/play-listing.md` now matches Play Console: the Data safety row, the deletion links and the live short and full descriptions (the short description already said nine).
+- Site side: dailynoodle PR #112 (privacy page: who runs it, legal basis, services, rights, 30-day complaint reply).
+- Docs only; no code change.
