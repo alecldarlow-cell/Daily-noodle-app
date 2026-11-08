@@ -5,7 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { FinishSheet, useFreshFinish } from '@/shared/finish-sheet';
 import { LINK_BURSTS, useWinBursts } from '@/shared/motion';
-import { PuzzleBar, ruleFor, StartCard, useStartStats } from '@/shared/start-card';
+import { houseLine, PuzzleBar, ruleFor, StartCard, useStartStats } from '@/shared/start-card';
 import { usePuzzleTokens } from '@/shared/theme';
 import { usePlayerExit } from '@/shared/shell';
 
@@ -39,6 +39,7 @@ export function LinkScreen({ file }: { file: PuzzleFile<LinkData> }) {
         type="link"
         n={n}
         date={file.date}
+        line={houseLine('link', file.data)}
         rule={ruleFor('link', {})}
         stats={stats}
         resume={

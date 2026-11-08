@@ -21,6 +21,8 @@
  * (1–4, M, Enter), and the Sound, Reduced motion and Full screen switches (WP12).
  */
 
+import { houseLine } from '@/shared/start-card/copy';
+
 export const SAVE_KEY = 'digi-borders-v1';
 export const ATLAS_KEY = 'digi-borderline-v1';
 export const NQ = 10;
@@ -515,9 +517,11 @@ export function homeView(s: BordersState, t: string, dayBefore: (d: string) => s
       String(bestOf(s.save)),
       String(Object.keys(s.save.done || {}).length),
     ],
+    // a fresh round opens on the house line; the rule sentence leads How to play (Alec, 8 Nov 2026)
     status: c
       ? `Question ${Math.min(NQ, c.ans.length + 1)} of ${NQ}, ${c.pts} points so far.`
-      : 'Ten country outlines, easiest first. Name them from four; 100 points each.',
+      : houseLine('borders'),
+    rule: 'Ten country outlines, easiest first. Name them from four; 100 points each.',
     button: c ? 'Resume' : 'Play',
   };
 }

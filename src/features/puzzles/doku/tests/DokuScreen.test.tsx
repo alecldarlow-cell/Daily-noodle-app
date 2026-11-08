@@ -54,6 +54,16 @@ describe('GIVEN a Doku not yet played', () => {
     it('THEN the start card says what the page says, and Play shows the board and bank', async () => {
       await renderWithProviders(<DokuScreen file={file97} />);
       expect(screen.getByText('No. 97, Sunday 18 October')).toBeOnTheScreen();
+      // the open page says the house line; the rule sentence leads How to play (Alec, 8 Nov 2026)
+      expect(
+        screen.getByText(
+          'A crossword with no clues. Place every letter so each line spells a word.',
+        ),
+      ).toBeOnTheScreen();
+      expect(
+        screen.queryByText('Place the twelve letter tiles so every word across and down is real.'),
+      ).toBeNull();
+      await fireEvent.press(screen.getByText('How to play'));
       expect(
         screen.getByText('Place the twelve letter tiles so every word across and down is real.'),
       ).toBeOnTheScreen();

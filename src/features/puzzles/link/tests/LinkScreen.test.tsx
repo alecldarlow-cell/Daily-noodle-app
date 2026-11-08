@@ -60,6 +60,18 @@ describe('GIVEN a Link not yet played', () => {
   describe('WHEN it opens and Play is pressed', () => {
     it('THEN the start card says what the page says, and the board shows with its clock at zero', async () => {
       await renderWithProviders(<LinkScreen file={file78} />);
+      // the open page says the house line; the rule sentence leads How to play (Alec, 8 Nov 2026)
+      expect(
+        screen.getByText(
+          'Four hidden groups. Can you find the links? Today, three tiles are bluffing.',
+        ),
+      ).toBeOnTheScreen();
+      expect(
+        screen.queryByText(
+          'Sixteen words, four hidden groups of four. Four mistakes and it’s over.',
+        ),
+      ).toBeNull();
+      await fireEvent.press(screen.getByText('How to play'));
       expect(
         screen.getByText('Sixteen words, four hidden groups of four. Four mistakes and it’s over.'),
       ).toBeOnTheScreen();

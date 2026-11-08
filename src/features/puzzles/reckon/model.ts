@@ -20,6 +20,8 @@
  * only change those settings, which the save keeps as it found them).
  */
 
+import { houseLine } from '@/shared/start-card/copy';
+
 export const SAVE_KEY = 'digi-reckon-v1';
 export const NQ = 10;
 export const SPAN = 2;
@@ -888,9 +890,11 @@ export function homeView(s: ReckonState, t: string, dayBefore: (d: string) => st
   return {
     streak: n >= 1 ? n + '-day streak' : '',
     stats: [String(n), String(bestScore(s.save)), String(Object.keys(s.save.done || {}).length)],
+    // a fresh round opens on the house line; the rule sentence leads How to play (Alec, 8 Nov 2026)
     status: c
       ? 'Question ' + (c.i + 1) + ' of ' + NQ + ', ' + score(c) + ' points so far.'
-      : 'Ten numbers to guess, each from a different topic. The closer you get, the more you score.',
+      : houseLine('reckon'),
+    rule: 'Ten numbers to guess, each from a different topic. The closer you get, the more you score.',
     button: c ? 'Resume' : 'Play',
   };
 }

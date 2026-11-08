@@ -5,7 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { FinishSheet, useFreshFinish } from '@/shared/finish-sheet';
 import { WIN_BURSTS, useWinBursts } from '@/shared/motion';
-import { PuzzleBar, ruleFor, StartCard, useStartStats } from '@/shared/start-card';
+import { houseLine, PuzzleBar, ruleFor, StartCard, useStartStats } from '@/shared/start-card';
 import { usePuzzleTokens } from '@/shared/theme';
 import { BOARD_SLOT, fitBoard, useBoardFit } from '@/shared/ui';
 import { usePlayerExit } from '@/shared/shell';
@@ -41,6 +41,7 @@ export function MiniScreen({ file }: { file: PuzzleFile<MiniData> }) {
         type="mini"
         n={n}
         date={file.date}
+        line={houseLine('mini')}
         rule={ruleFor('mini', file.data)}
         stats={stats}
         onPlay={game.play}

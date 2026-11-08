@@ -42,6 +42,16 @@ afterEach(async () => {
 describe('GIVEN a Tally not yet played', () => {
   it('THEN the start card says what the page says, and Play shows the board', async () => {
     await renderWithProviders(<TallyScreen file={file1} />);
+    // the open page says the house line; the rule sentence leads How to play (Alec, 8 Nov 2026)
+    expect(
+      screen.getByText('Sudoku with a maths twist. Can you make every cage hit its number?'),
+    ).toBeOnTheScreen();
+    expect(
+      screen.queryByText(
+        'Fill the grid with 1 to 4, no repeats in a row or column, so every cage makes its number.',
+      ),
+    ).toBeNull();
+    await fireEvent.press(screen.getByText('How to play'));
     expect(
       screen.getByText(
         'Fill the grid with 1 to 4, no repeats in a row or column, so every cage makes its number.',
