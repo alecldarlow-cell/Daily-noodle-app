@@ -1063,3 +1063,10 @@ Alec ran an outside review of the app and asked for its findings to be checked a
 - **Alignment:** the league line under the reward was a 44 pt-tall row, so the 🔥 icon sat off the text. The row is now only as tall as its words, and `hitSlop` (12 pt above and below, `LINK_SLOP`) keeps the 44 pt tap target.
 - **Podium disc:** a place from 1st to 3rd always shows its disc on the league line. Standing alone it leads at 30 pt, as before. Under a reward line (a streak, personal best or milestone) it's a 20 pt disc inside the line. `PlaceMedal` takes a `size` prop.
 - **Tests:** boardLink (20 pt disc under a reward, 30 pt standing alone, hitSlop with no minHeight). One check changed with the intended design: "no disc under a reward line" became "a 20 pt disc".
+
+## 2026-11-08 — Finish page: the reward block as two rows
+
+- Alec chose this on 8 Nov: two rows, icons lined up in one column at the same size.
+- Row 1 is the reward (🔥 streak, ★ personal best or a gold milestone) with its 30 pt icon. Row 2 is the league line, led by the podium disc at 30 pt for 1st to 3rd, or a 30 pt blank so the words line up under row 1's. Alec considered showing only one line, by priority, and kept two rows.
+- The slot's `lead` is now true on every solved round. Lost rounds keep the plain line. Outside the finish sheet the disc stays small (20 pt).
+- **Tests:** boardLink covers the 30 pt disc in the reward block and the blank for 4th or lower. finishSheet: the slot gets `lead: true`, and the block stacks its rows. One intended-design expectation changed (`lead: false` became `true`).

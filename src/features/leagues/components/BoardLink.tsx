@@ -16,7 +16,7 @@ import { boardTypeOfPath, dateOfPath, type BoardTypeId } from '@noodle/core';
 import { useQuery } from '@tanstack/react-query';
 import { router } from 'expo-router';
 import { useEffect, useSyncExternalStore } from 'react';
-import { Pressable, StyleSheet, Text } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import type { BoardSlotProps } from '@/shared/finish-sheet';
 import { FONT, usePuzzleTokens, useTokens } from '@/shared/theme';
@@ -125,8 +125,8 @@ function MemberLink({
         : place !== null
           ? placeLine(place, leagueName)
           : `${leagueName} board today`;
-  // Alec, 8 Nov 2026: the podium disc shows whenever you place; leading the block at full
-  // size when the line stands alone, small inside the line under a reward.
+  // Alec, 8 Nov 2026: the podium disc shows whenever you place. On the finish sheet's reward
+  // block (`lead`) it sits in the icon column at the reward icon's size; elsewhere, small.
   const medal = isToday && solved && isPlace(place) ? place : null;
 
   // That league's board, on this puzzle and day (dn-board.js setCurrent, then board.html):
@@ -153,9 +153,12 @@ function MemberLink({
         <PlaceMedal
           place={medal}
           shine={celebrate ? { key: `finish:${code}:${path}`, day: today } : undefined}
-          size={lead ? 30 : 20}
+          size={lead ? LEAD_ICON : 20}
           testID="board-medal"
         />
+      ) : lead ? (
+        // No podium place: a blank the disc's width, so the words line up under the reward's.
+        <View style={styles.blank} testID="board-medal-blank" />
       ) : null}
       <Text style={[styles.text, { color: pt.sheetSoft }]} testID="board-line">
         {text}
@@ -165,6 +168,9 @@ function MemberLink({
     </Pressable>
   );
 }
+
+/** The finish sheet's reward icons are 30 pt; the disc matches them in the same column. */
+export const LEAD_ICON = 30;
 
 /** Grows the 20 pt line to a 44 pt tap target. */
 export const LINK_SLOP = { top: 12, bottom: 12, left: 0, right: 0 } as const;
@@ -178,4 +184,5 @@ const styles = StyleSheet.create({
   },
   text: { fontSize: 14, lineHeight: 20, fontFamily: FONT.sans, flexShrink: 1 },
   see: { fontFamily: FONT.sansSemi },
+  blank: { width: LEAD_ICON, height: 1 },
 });

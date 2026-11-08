@@ -7,7 +7,7 @@ import { announceFinish } from '@/shared/results';
 import { renderWithProviders } from '@/shared/testing';
 
 import * as api from '../api/board';
-import { BoardLink, LINK_SLOP } from '../components/BoardLink';
+import { BoardLink, LEAD_ICON, LINK_SLOP } from '../components/BoardLink';
 import { LeagueResults } from '../components/LeagueResults';
 import { addDays, momentLine } from '../hooks/boardText';
 import { myRank, ordinal, placeLine } from '../hooks/rankText';
@@ -160,7 +160,7 @@ describe('GIVEN a finished puzzle’s sheet (design B3)', () => {
       m.boardDay.mockResolvedValue(day(1, 3));
       await slot(pathOn(today));
       const line = await screen.findByRole('link', { name: name('1st in Family today') });
-      // Alec, 8 Nov 2026: under a reward line the disc still shows, small, inside the line.
+      // Alec, 8 Nov 2026: outside the reward block the disc shows small, inside the line.
       const disc = screen.getByTestId('board-medal', { includeHiddenElements: true });
       expect(StyleSheet.flatten(disc.props.style).width).toBe(20);
       await fireEvent.press(line);
@@ -170,7 +170,7 @@ describe('GIVEN a finished puzzle’s sheet (design B3)', () => {
         params: { p: 'mini', d: today, n: expect.any(String) },
       });
     });
-    it('THEN standing alone (no reward line above), a podium place leads with its disc', async () => {
+    it('THEN in the reward block, a podium place leads with its disc at the reward icon’s size', async () => {
       setBoard({ pid: PID, leagues: [FAMILY] });
       m.boardDay.mockResolvedValue(day(2, 3));
       await slot(pathOn(today), { lead: true });
@@ -426,5 +426,13 @@ describe('GIVEN the league line under the reward (Alec, 8 Nov 2026)', () => {
     expect(link.props.hitSlop).toEqual(LINK_SLOP);
     expect(LINK_SLOP.top + LINK_SLOP.bottom + 20).toBeGreaterThanOrEqual(44);
     expect(screen.queryByTestId('board-medal', { includeHiddenElements: true })).toBeNull();
+  });
+  it('THEN in the reward block without a podium place, a blank the disc’s width keeps the words lined up', async () => {
+    setBoard({ pid: PID, leagues: [FAMILY] });
+    m.boardDay.mockResolvedValue(day(4, 6));
+    await slot(pathOn(today), { lead: true });
+    await screen.findByRole('link', { name: name('4th in Family today') });
+    const blank = screen.getByTestId('board-medal-blank', { includeHiddenElements: true });
+    expect(StyleSheet.flatten(blank.props.style).width).toBe(LEAD_ICON);
   });
 });
