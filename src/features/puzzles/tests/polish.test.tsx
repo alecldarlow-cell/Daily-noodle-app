@@ -97,7 +97,8 @@ describe('GIVEN a Mini being played', () => {
       });
       await settle();
       expect(timing).not.toHaveBeenCalled();
-      expect(screen.getByRole('header', { name: 'Mini 105 · Solved' })).toBeOnTheScreen();
+      // Design B3: an earlier day's sheet adds when it was (", 3d ago").
+      expect(screen.getByRole('header', { name: /^Mini 105 · Solved/ })).toBeOnTheScreen();
     });
   });
 });

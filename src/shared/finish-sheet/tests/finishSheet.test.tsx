@@ -1,24 +1,34 @@
-import { londonDay, type PuzzleType, type TodayList } from '@noodle/core';
+import { dayBefore, londonDay, type PuzzleType, type TodayList } from '@noodle/core';
 import { act, fireEvent, screen, waitFor } from '@testing-library/react-native';
 import * as Audio from 'expo-audio';
 import { router } from 'expo-router';
 import type { ReactTestRendererJSON } from 'react-test-renderer';
-import { Share, Text } from 'react-native';
+import { AccessibilityInfo, Share, StyleSheet, Text } from 'react-native';
 
 import { QueryProvider } from '@/shared/query';
 import { DEFAULT_SETTINGS, saveSettings } from '@/shared/settings';
 import { resetSound, SOUND_FILES } from '@/shared/sound';
 import { appStorage } from '@/shared/storage';
+import { puzzleTokensFor, tokensFor } from '@/shared/theme';
 import { mockSite, renderWithProviders } from '@/shared/testing';
 import { TODAY_CACHE_KEY } from '@/shared/today';
 
-import { FinishSheet, type FinishSheetProps } from '../FinishSheet';
+import { BoardSlotProvider, type BoardSlotComponent, type BoardSlotProps } from '../boardSlot';
+import { ANNOUNCE_MS, FinishSheet, type FinishSheetProps } from '../FinishSheet';
 import {
+  announcement,
   clockLine,
+  clockSecs,
+  dayStreak,
   hm,
   JINGLE_TYPES,
   nextRow,
+  personalBest,
   playsJingle,
+  recapLabel,
+  resultValue,
+  rewardLine,
+  spokenHero,
   splitHero,
   streakLine,
   toMidnight,
@@ -67,15 +77,15 @@ const list = (today: string): TodayList => ({
   ],
 });
 
-describe('GIVEN the Play more row’s rules (finish.js fillNext, AF-019)', () => {
+describe('GIVEN the Next button’s rules (finish.js fillNext, design B3)', () => {
   it('THEN it names the next unplayed puzzle after this type, wrapping round', () => {
     const docs = { 'digi-mini-v1': { v: 1, done: { 'DP·MINI·0105': {} } } };
     expect(nextRow(list('2026-10-24'), 'mini', docs)).toMatchObject({
-      main: 'Play Doku 103',
+      main: 'Next: Doku 103',
       sub: '1 of 3 done today',
       all: false,
     });
-    expect(nextRow(list('2026-10-24'), 'reckon', docs).main).toBe('Play Doku 103');
+    expect(nextRow(list('2026-10-24'), 'reckon', docs).main).toBe('Next: Doku 103');
     expect(nextRow(null, 'mini', {})).toEqual({
       main: 'Today’s puzzles',
       sub: '\u00a0',
@@ -83,15 +93,15 @@ describe('GIVEN the Play more row’s rules (finish.js fillNext, AF-019)', () =>
       all: false,
     });
   });
-  it('THEN once all are done it is a line to the archive', () => {
+  it('THEN once all are done it is the archive button', () => {
     const all = {
       'digi-mini-v1': { v: 1, done: { 'DP·MINI·0105': {} } },
       'digi-doku-v1': { v: 1, done: { 'DP·LEXI·0103': {} } },
       'digi-reckon-v1': { v: 1, done: { 'DP·RECK·0005': {} } },
     };
     expect(nextRow(list('2026-10-24'), 'mini', all)).toEqual({
-      main: 'All 3 done today. Try the archive',
-      sub: '',
+      main: 'All 3 done',
+      sub: 'Try the archive',
       item: null,
       all: true,
     });
@@ -132,15 +142,108 @@ describe('GIVEN which finishes play the jingle (AF-013)', () => {
   });
 });
 
-describe('GIVEN a finish sheet', () => {
+describe('GIVEN the reward line’s rules (design B3)', () => {
+  const mini = (...secs: number[]) => ({
+    v: 1,
+    done: Object.fromEntries(secs.map((x, k) => [`DP·MINI·${k}`, { s: x, d: '2026-11-01' }])),
+  });
+  it('THEN a personal best needs this result to beat every other one, and three of them', () => {
+    // This result (90 s) is saved too; three earlier finishes, the best 102 s.
+    expect(personalBest('mini', 90, 'Mini', mini(90, 102, 130, 200))).toBe(
+      'Your fastest Mini yet, by 12s',
+    );
+    // Only two earlier finishes: not yet.
+    expect(personalBest('mini', 90, 'Mini', mini(90, 102, 130))).toBeNull();
+    // Not faster than the best (a tie is not a best).
+    expect(personalBest('mini', 102, 'Mini', mini(102, 102, 130, 200))).toBeNull();
+    expect(personalBest('mini', 90, 'Mini', mini(90, 60, 130, 200))).toBeNull();
+    expect(personalBest('mini', 30, 'Mini', mini(30, 100, 130, 200))).toBe(
+      'Your fastest Mini yet, by 1m 10s',
+    );
+    expect(personalBest('mini', 90, 'Mini', null)).toBeNull();
+  });
+  it('THEN points types count points, Sweep leaves its losses out, and Link has none', () => {
+    const tangle = { v: 1, done: { a: { s: 46 }, b: { s: 40 }, c: { s: 31 }, d: { s: 12 } } };
+    expect(personalBest('tangle', 46, 'Tangle', tangle)).toBe('Your best Tangle yet, by 6 points');
+    expect(
+      personalBest('reckon', 41, 'Reckon', {
+        done: { a: { p: 41 }, b: { p: 40 }, c: { p: 1 }, d: { p: 2 } },
+      }),
+    ).toBe('Your best Reckon yet, by 1 point');
+    const sweep = {
+      done: { a: { s: 31 }, b: { s: 5, o: 'loss' }, c: { s: 40 }, d: { s: 50 }, e: { s: 60 } },
+    };
+    expect(personalBest('sweep', 31, 'Sweep', sweep)).toBe('Your fastest Sweep yet, by 9s');
+    const path = {
+      done: { a: { t: '1:00' }, b: { t: '1:30' }, c: { t: '2:00' }, d: { t: '3:00' } },
+    };
+    expect(personalBest('path', 60, 'Path', path)).toBe('Your fastest Path yet, by 30s');
+    expect(personalBest('link', 1, 'Link', tangle)).toBeNull();
+  });
+  it('THEN the result is read off the hero, or Borders’ points off its stats', () => {
+    expect(resultValue('mini', '1:42', [])).toBe(102);
+    expect(resultValue('tangle', '46 points', [])).toBe(46);
+    expect(resultValue('reckon', '325 pts', [])).toBe(325);
+    expect(resultValue('borders', '7 of 10', [{ value: 650, label: 'points' }])).toBe(650);
+    expect(resultValue('borders', '7 of 10', [])).toBeNull();
+    expect(resultValue('link', 'Fish, Birds', [])).toBeNull();
+    expect(clockSecs('1:02:03')).toBe(3723);
+    expect(clockSecs('soon')).toBeNull();
+  });
+  it('THEN the main line is the first of best, milestone, streak; nothing under 2 days', () => {
+    expect(rewardLine('Your fastest Mini yet, by 12s', 30, 'Mini')).toEqual({
+      kind: 'pb',
+      text: 'Your fastest Mini yet, by 12s',
+    });
+    for (const n of [7, 30, 50, 100, 365])
+      expect(rewardLine(null, n, 'Tangle')).toEqual({
+        kind: 'milestone',
+        text: `${n}-day Tangle streak: a milestone`,
+      });
+    expect(rewardLine(null, 26, 'Sweep')).toEqual({ kind: 'streak', text: '26-day Sweep streak' });
+    expect(rewardLine(null, 2, 'Sweep')?.kind).toBe('streak');
+    expect(rewardLine(null, 1, 'Sweep')).toBeNull();
+    expect(dayStreak([{ value: '12', label: 'day streak' }])).toBe(12);
+    expect(dayStreak([{ value: 3, label: 'best score' }])).toBe(0);
+  });
+  it('THEN each type’s recap has its label, and a lost round’s is THE ANSWER', () => {
+    expect(recapLabel('sweep', true)).toBe('YOUR BOARD');
+    expect(recapLabel('tangle', true)).toBe('YOUR WORDS');
+    expect(recapLabel('mini', true)).toBe('YOUR GRID');
+    expect(recapLabel('link', true)).toBe('THE GROUPS');
+    expect(recapLabel('sweep', false)).toBe('THE ANSWER');
+  });
+  it('THEN a screen reader hears the outcome, the result, then the main line', () => {
+    expect(spokenHero('0:31')).toBe('31 seconds');
+    expect(spokenHero('1:01')).toBe('1 minute 1 second');
+    expect(spokenHero('2:00')).toBe('2 minutes');
+    expect(spokenHero('1:00:05')).toBe('1 hour 5 seconds');
+    expect(spokenHero('0:00')).toBe('0 seconds');
+    expect(announcement('Swept', '0:31', '26-day Sweep streak')).toBe(
+      'Swept in 31 seconds. 26-day Sweep streak.',
+    );
+    expect(announcement('Boom.', '0:48', null)).toBe('Boom in 48 seconds.');
+    expect(announcement('Time’s up', '46 points', null)).toBe('Time’s up, 46 points.');
+  });
+});
+
+describe('GIVEN a finish sheet (design B3)', () => {
   const onNext = jest.fn();
   const onBack = jest.fn();
   const today = londonDay();
+  let slotProps: BoardSlotProps[] = [];
+  /** A stand-in for leagues' line: what the sheet passes it, and one line of text. */
+  function FakeSlot(p: BoardSlotProps) {
+    slotProps.push(p);
+    return <Text testID="fake-league">1st in Noodlers today · See board ›</Text>;
+  }
+  const NoLeague = () => null;
   beforeEach(() => {
     for (const k of appStorage.keys()) appStorage.setItem(k, 'null');
     jest.clearAllMocks();
     resetSound();
     played.length = 0;
+    slotProps = [];
   });
   afterEach(async () => {
     saveSettings(DEFAULT_SETTINGS);
@@ -152,101 +255,190 @@ describe('GIVEN a finish sheet', () => {
 
   const sheet = (p: Partial<FinishSheetProps> = {}) => (
     <FinishSheet
-      type="doku"
-      n="107"
-      date="2026-10-24"
-      title="Solved"
-      hero="1:14"
-      note="No checks, no reveals."
-      share="🔤 Doku #107 — 1:14 · 🔥5"
+      type="sweep"
+      n="115"
+      date={today}
+      title="Swept"
+      hero="0:31"
+      note="All seven mines found."
+      share="💣 Sweep 115 — 0:31 · 🔥26"
+      path="reports/2026-11-08-logic-sweep-0115.html"
       stats={[
-        { value: 5, label: 'day streak' },
-        { value: 9, label: 'best streak' },
-        { value: 40, label: 'Dokus played' },
+        { value: 26, label: 'day streak' },
+        { value: 30, label: 'best streak' },
+        { value: 40, label: 'Sweeps played' },
       ]}
-      recap={{ title: 'The grid', node: <Text>grid</Text> }}
-      boardSlot={<Text>Currently 1st in Noodlers</Text>}
+      recap={{ title: 'The board', node: <Text>board</Text> }}
       onBack={onBack}
       onNext={onNext}
       {...p}
     />
   );
+  const withSlot = (el: React.ReactElement, slot: BoardSlotComponent | null = FakeSlot) => (
+    <BoardSlotProvider slot={slot}>{el}</BoardSlotProvider>
+  );
   const PARTS = [
-    'finish-title',
-    'finish-hero',
-    'finish-streak',
-    'finish-note',
-    'finish-recap',
     'finish-share-button',
+    'finish-kicker',
+    'finish-hero',
+    'finish-title',
+    'finish-note',
+    'finish-reward',
+    'finish-reward-main',
     'finish-board-slot',
     'finish-next',
+    'finish-recap',
     'finish-foot',
   ];
+  const hidden = { includeHiddenElements: true };
 
-  describe('WHEN a solved round’s sheet opens', () => {
-    it('THEN it reads result, Share result, league line, Play more, answer, footer, in that order', async () => {
+  describe('WHEN a solved round’s sheet opens, in a league, on a streak', () => {
+    it('THEN it reads Share, kicker, result, outcome, streak and league lines, Next, YOUR BOARD, footer', async () => {
       mockSite({ 'puzzles-today.json': list(today) });
-      await renderWithProviders(sheet());
-      await waitFor(() => expect(screen.getByText('Play Reckon 5')).toBeOnTheScreen());
-      expect(screen.getByRole('header', { name: 'Doku 107 · Solved' })).toBeOnTheScreen();
-      expect(screen.getByText('1:14')).toBeOnTheScreen();
-      expect(screen.getByText('🔥 5-day Doku streak')).toBeOnTheScreen();
-      expect(screen.getByTestId('finish-next-icon').type).toBe('Image');
-      expect(screen.getByText('No checks, no reveals.')).toBeOnTheScreen();
-      expect(screen.getByRole('button', { name: 'Share result' })).toBeOnTheScreen();
-      expect(screen.getByText('Currently 1st in Noodlers')).toBeOnTheScreen();
-      expect(screen.getByText('0 of 3 done today')).toBeOnTheScreen();
-      expect(screen.getByText('The grid')).toBeOnTheScreen();
-      expect(screen.getByTestId('finish-clock')).toHaveTextContent(
-        /^(New Doku in \d+h \d+m|New Doku in \d+m|Today’s puzzles are out\.)$/,
+      await renderWithProviders(withSlot(sheet()));
+      await waitFor(() => expect(screen.getByText(/^Next: /)).toBeOnTheScreen());
+      expect(screen.getByTestId('finish-kicker', hidden)).toHaveTextContent('SWEEP 115');
+      expect(screen.getByTestId('finish-hero')).toHaveTextContent('0:31');
+      expect(screen.getByTestId('finish-title')).toHaveTextContent('Swept');
+      expect(screen.getByRole('header', { name: 'Sweep 115 · Swept' })).toBeOnTheScreen();
+      expect(screen.getByTestId('finish-reward-main')).toHaveTextContent('26-day Sweep streak');
+      expect(screen.getByTestId('finish-reward-icon-streak', hidden)).toBeTruthy();
+      expect(screen.getByTestId('fake-league')).toHaveTextContent(
+        '1st in Noodlers today · See board ›',
       );
-      expect(screen.getByText('Doku 107, Saturday 24 October')).toBeOnTheScreen();
+      expect(slotProps.at(-1)).toMatchObject({
+        path: 'reports/2026-11-08-logic-sweep-0115.html',
+        type: 'sweep',
+        date: today,
+        solved: true,
+        celebrate: false,
+        lead: false,
+      });
+      expect(screen.getByText('0 of 3 done today')).toBeOnTheScreen();
+      expect(screen.getByTestId('finish-next-icon').type).toBe('Image');
+      expect(screen.getByTestId('finish-recap-label')).toHaveTextContent('YOUR BOARD');
+      expect(screen.queryByText('The board')).toBeNull();
+      expect(screen.getByTestId('finish-clock')).toHaveTextContent(
+        /^(New Sweep in \d+h \d+m|New Sweep in \d+m|Today’s puzzles are out\.)$/,
+      );
+      expect(screen.getByRole('link', { name: 'How to play Sweep' })).toHaveTextContent(
+        'How to play',
+      );
       expect(order(PARTS)).toEqual([
-        'finish-title',
-        'finish-hero',
-        'finish-streak',
-        'finish-note',
         'finish-share-button',
+        'finish-kicker',
+        'finish-hero',
+        'finish-title',
+        'finish-reward',
+        'finish-reward-main',
         'finish-board-slot',
         'finish-next',
         'finish-recap',
         'finish-foot',
       ]);
     });
-    it('THEN the dropped parts are gone: the share line, the three stats and the run sentence', async () => {
+    it('THEN the dropped parts are gone: the note, Share result button, stats and the old heading', async () => {
+      await renderWithProviders(withSlot(sheet()));
+      expect(screen.queryByText('All seven mines found.')).toBeNull();
+      expect(screen.queryByText('💣 Sweep 115 — 0:31 · 🔥26')).toBeNull();
+      expect(screen.queryByText('Share result')).toBeNull();
+      expect(screen.queryByText('best streak')).toBeNull();
+      expect(screen.queryByText(/Sweep 115, /)).toBeNull();
+    });
+  });
+
+  describe('WHEN the result beats every earlier finish kept on the phone', () => {
+    const saves = (...secs: number[]) =>
       appStorage.setItem(
         'digi-mini-v1',
-        JSON.stringify({ v: 1, done: {}, streak: { cur: 15, best: 15 } }),
+        JSON.stringify({
+          v: 1,
+          done: Object.fromEntries(
+            secs.map((x, k) => [`DP·MINI·0${k}`, { s: x, d: '2026-11-01' }]),
+          ),
+        }),
       );
-      await renderWithProviders(sheet());
-      expect(screen.queryByText('🔤 Doku #107 — 1:14 · 🔥5')).toBeNull();
-      expect(screen.queryByText('dailynoodle.co.uk/doku')).toBeNull();
-      expect(screen.queryByText('best streak')).toBeNull();
-      expect(screen.queryByText('Dokus played')).toBeNull();
-      expect(screen.queryByText(/played every day/)).toBeNull();
+    const mini = { type: 'mini' as const, n: '117', title: 'Solved', hero: '1:30' };
+    it('THEN with three earlier finishes the main line is the gold-star best, over the streak', async () => {
+      saves(90, 102, 130, 200);
+      await renderWithProviders(withSlot(sheet(mini)));
+      expect(screen.getByTestId('finish-reward-main')).toHaveTextContent(
+        'Your fastest Mini yet, by 12s',
+      );
+      expect(screen.getByTestId('finish-reward-icon-pb', hidden)).toHaveTextContent('★');
+      expect(screen.queryByText('26-day Mini streak')).toBeNull();
+      expect(screen.getByTestId('fake-league')).toBeOnTheScreen();
+    });
+    it('THEN with only two earlier finishes it is still the streak', async () => {
+      saves(90, 102, 130);
+      await renderWithProviders(withSlot(sheet(mini)));
+      expect(screen.getByTestId('finish-reward-main')).toHaveTextContent('26-day Mini streak');
     });
   });
 
-  describe('WHEN the round wasn’t solved (AF-015)', () => {
-    it('THEN the answer comes straight after the result', async () => {
-      await renderWithProviders(
-        sheet({ type: 'link', title: 'Out of mistakes', solved: false, note: undefined }),
+  describe('WHEN the day streak reaches a milestone', () => {
+    it('THEN the main line says so, with 🔥 on gold', async () => {
+      await renderWithProviders(withSlot(sheet({ stats: [{ value: 30, label: 'day streak' }] })));
+      expect(screen.getByTestId('finish-reward-main')).toHaveTextContent(
+        '30-day Sweep streak: a milestone',
       );
-      expect(screen.getByRole('header', { name: 'Link 107 · Out of mistakes' })).toBeOnTheScreen();
+      expect(screen.getByTestId('finish-reward-icon-milestone', hidden)).toHaveTextContent('🔥');
+    });
+  });
+
+  describe('WHEN there is no streak to speak of', () => {
+    it('THEN only the league line shows, and it may lead with its own disc', async () => {
+      await renderWithProviders(withSlot(sheet({ stats: [{ value: 1, label: 'day streak' }] })));
+      expect(screen.queryByTestId('finish-reward-main')).toBeNull();
+      expect(screen.getByTestId('fake-league')).toBeOnTheScreen();
+      expect(slotProps.at(-1)?.lead).toBe(true);
+    });
+  });
+
+  describe('WHEN the round was lost (AF-015)', () => {
+    it('THEN the outcome is coral, there is no reward, the board link is quiet, and THE ANSWER follows Next', async () => {
+      await renderWithProviders(withSlot(sheet({ title: 'Boom.', solved: false, hero: '0:48' })));
+      const word = screen.getByTestId('finish-title');
+      expect(word).toHaveTextContent('Boom.');
+      expect(StyleSheet.flatten(word.props.style).color).toBe(puzzleTokensFor('light').sheetBad);
+      expect(screen.queryByTestId('finish-reward')).toBeNull();
+      expect(screen.queryByTestId('finish-reward-main')).toBeNull();
+      expect(slotProps.at(-1)).toMatchObject({ solved: false });
+      expect(screen.getByTestId('finish-recap-label')).toHaveTextContent('THE ANSWER');
       expect(order(PARTS)).toEqual([
-        'finish-title',
-        'finish-hero',
-        'finish-streak',
-        'finish-recap',
         'finish-share-button',
+        'finish-kicker',
+        'finish-hero',
+        'finish-title',
         'finish-board-slot',
         'finish-next',
+        'finish-recap',
         'finish-foot',
       ]);
     });
   });
 
-  describe('WHEN Share result is tapped', () => {
+  describe('WHEN the player is in no league', () => {
+    it('THEN there is no second line: just the streak', async () => {
+      await renderWithProviders(withSlot(sheet(), NoLeague));
+      expect(screen.getByTestId('finish-reward-main')).toHaveTextContent('26-day Sweep streak');
+      expect(screen.queryByText(/See board/)).toBeNull();
+    });
+  });
+
+  describe('WHEN the puzzle is an earlier day’s, from the archive', () => {
+    it('THEN the kicker says when, and the league line is given that day', async () => {
+      const day = dayBefore(dayBefore(dayBefore(today)));
+      await renderWithProviders(
+        withSlot(sheet({ type: 'mini', n: '117', title: 'Solved', date: day })),
+      );
+      expect(screen.getByTestId('finish-kicker', hidden)).toHaveTextContent('MINI 117 · 3D AGO');
+      expect(screen.getByRole('header', { name: 'Mini 117 · Solved, 3d ago' })).toBeOnTheScreen();
+      expect(slotProps.at(-1)).toMatchObject({ date: day });
+    });
+  });
+
+  describe('WHEN Share is tapped', () => {
     it('THEN the share sheet gets the line and the short link, with a spinner until it opens', async () => {
       let open!: () => void;
       const spy = jest.spyOn(Share, 'share').mockReturnValue(
@@ -254,18 +446,112 @@ describe('GIVEN a finish sheet', () => {
           open = () => r({ action: 'sharedAction', activityType: undefined });
         }),
       );
-      await renderWithProviders(sheet());
-      await fireEvent.press(screen.getByRole('button', { name: 'Share result' }));
+      await renderWithProviders(withSlot(sheet()));
+      const pill = screen.getByRole('button', { name: 'Share result' });
+      expect(pill).toHaveTextContent('Share');
+      expect(StyleSheet.flatten(pill.props.style).minHeight).toBeGreaterThanOrEqual(44);
+      await fireEvent.press(pill);
       expect(spy).toHaveBeenCalledWith({
-        message: '🔤 Doku #107 — 1:14 · 🔥5\ndailynoodle.co.uk/doku',
+        message: '💣 Sweep 115 — 0:31 · 🔥26\ndailynoodle.co.uk/sweep',
       });
       expect(screen.getByTestId('finish-share-button-spinner')).toBeOnTheScreen();
+      await fireEvent.press(pill);
+      expect(spy).toHaveBeenCalledTimes(1);
       await act(async () => open());
       expect(screen.queryByTestId('finish-share-button-spinner')).toBeNull();
     });
   });
 
-  describe('WHEN today’s list is kept and Play more is tapped', () => {
+  describe('WHEN it rises on a fresh finish', () => {
+    it('THEN a screen reader hears “Swept in 31 seconds. 26-day Sweep streak.” and lands on the outcome', async () => {
+      jest.useFakeTimers();
+      const say = jest.spyOn(AccessibilityInfo, 'announceForAccessibility').mockImplementation();
+      const focus = jest.spyOn(AccessibilityInfo, 'sendAccessibilityEvent').mockImplementation();
+      await renderWithProviders(withSlot(sheet({ celebrate: true })));
+      await act(async () => {
+        jest.advanceTimersByTime(ANNOUNCE_MS);
+      });
+      expect(say).toHaveBeenCalledWith('Swept in 31 seconds. 26-day Sweep streak.');
+      expect(focus).toHaveBeenCalledWith(expect.anything(), 'focus');
+      expect(slotProps.at(-1)?.celebrate).toBe(true);
+      jest.useRealTimers();
+    });
+  });
+
+  describe('WHEN it is a points puzzle (Tangle) with its best score', () => {
+    it('THEN the unit is small after the points, the best is in points, and the longest word stays', async () => {
+      appStorage.setItem(
+        'digi-tangle-v1',
+        JSON.stringify({ v: 1, done: { a: { s: 46 }, b: { s: 40 }, c: { s: 31 }, d: { s: 12 } } }),
+      );
+      await renderWithProviders(
+        withSlot(
+          sheet({
+            type: 'tangle',
+            n: '33',
+            title: 'Time’s up',
+            hero: '46 points',
+            note: {
+              before: '8 words, including the longest, ',
+              bold: 'PLANTER',
+              after: ', for 10 points.',
+            },
+            stats: [{ value: 4, label: 'day streak' }],
+            recap: { title: 'Today’s words', node: <Text>words</Text> },
+          }),
+        ),
+      );
+      expect(screen.getByTestId('finish-hero')).toHaveTextContent('46 points');
+      expect(screen.getByText(' points')).toBeOnTheScreen();
+      expect(screen.getByTestId('finish-reward-main')).toHaveTextContent(
+        'Your best Tangle yet, by 6 points',
+      );
+      expect(screen.getByTestId('finish-note')).toHaveTextContent(
+        '8 words, including the longest, PLANTER, for 10 points.',
+      );
+      expect(screen.getByTestId('finish-recap-label')).toHaveTextContent('YOUR WORDS');
+    });
+  });
+
+  describe('WHEN it is a Link', () => {
+    it('THEN its picture stays, its note stays, there is no personal best, and Play again is last', async () => {
+      await renderWithProviders(
+        withSlot(
+          sheet({
+            type: 'link',
+            n: '92',
+            title: 'Linked',
+            hero: 'Fish, Birds',
+            heroNode: <Text testID="squares">squares</Text>,
+            note: 'All four groups with one mistake. Birds caught you out.',
+            stats: [{ value: 3, label: 'day streak' }],
+            recap: { title: 'The groups', node: <Text>groups</Text> },
+            after: <Text testID="again">Play again (not recorded)</Text>,
+          }),
+        ),
+      );
+      expect(screen.getByTestId('squares')).toBeOnTheScreen();
+      expect(screen.getByTestId('finish-note')).toHaveTextContent(/Birds caught you out\.$/);
+      expect(screen.getByTestId('finish-reward-main')).toHaveTextContent('3-day Link streak');
+      expect(screen.getByTestId('finish-recap-label')).toHaveTextContent('THE GROUPS');
+      expect(order([...PARTS, 'again'])).toEqual([
+        'finish-share-button',
+        'finish-kicker',
+        'finish-hero',
+        'finish-title',
+        'finish-note',
+        'finish-reward',
+        'finish-reward-main',
+        'finish-board-slot',
+        'finish-next',
+        'finish-recap',
+        'again',
+        'finish-foot',
+      ]);
+    });
+  });
+
+  describe('WHEN today’s list is kept and Next is tapped', () => {
     it('THEN it opens the next puzzle, even before the site answers', async () => {
       appStorage.setItem(TODAY_CACHE_KEY, JSON.stringify(list(today)));
       appStorage.setItem(
@@ -274,7 +560,9 @@ describe('GIVEN a finish sheet', () => {
       );
       mockSite({});
       await renderWithProviders(sheet({ type: 'mini', n: '105' }));
-      await fireEvent.press(screen.getByRole('button', { name: 'Play Doku 103' }));
+      const next = screen.getByRole('button', { name: 'Next: Doku 103' });
+      expect(StyleSheet.flatten(next.props.style).minHeight).toBe(58);
+      await fireEvent.press(next);
       expect(onNext).toHaveBeenCalledWith(expect.objectContaining({ id: 'DP·LEXI·0103' }));
       expect(screen.getByText('1 of 3 done today')).toBeOnTheScreen();
       await fireEvent.press(screen.getByText('← Puzzles'));
@@ -283,16 +571,20 @@ describe('GIVEN a finish sheet', () => {
   });
 
   describe('WHEN every puzzle today is done', () => {
-    it('THEN a quiet line “All 3 done today. Try the archive ›” opens the Archive', async () => {
+    it('THEN a quieter tonal “All 3 done / Try the archive” opens the Archive', async () => {
       appStorage.setItem(TODAY_CACHE_KEY, JSON.stringify(list(today)));
       appStorage.setItem('digi-mini-v1', JSON.stringify({ v: 1, done: { 'DP·MINI·0105': {} } }));
       appStorage.setItem('digi-doku-v1', JSON.stringify({ v: 1, done: { 'DP·LEXI·0103': {} } }));
       appStorage.setItem('digi-reckon-v1', JSON.stringify({ v: 1, done: { 'DP·RECK·0005': {} } }));
       mockSite({});
       await renderWithProviders(sheet());
-      const line = screen.getByRole('link', { name: 'All 3 done today. Try the archive' });
-      expect(screen.queryByRole('button', { name: /^Play / })).toBeNull();
-      await fireEvent.press(line);
+      const btn = screen.getByRole('link', { name: 'All 3 done. Try the archive' });
+      expect(btn).toHaveTextContent('All 3 doneTry the archive');
+      expect(StyleSheet.flatten(btn.props.style).backgroundColor).toBe(
+        tokensFor('light').accentSoft,
+      );
+      expect(screen.queryByTestId('finish-next-icon')).toBeNull();
+      await fireEvent.press(btn);
       expect(router.dismissTo).toHaveBeenCalledWith('/archive');
       expect(onNext).not.toHaveBeenCalled();
     });
@@ -304,6 +596,7 @@ describe('GIVEN a finish sheet', () => {
       await renderWithProviders(sheet());
       await fireEvent.press(screen.getByRole('button', { name: 'Today’s puzzles' }));
       expect(onNext).toHaveBeenCalledWith(null);
+      expect(screen.queryByTestId('finish-next-sub')).toBeNull();
     });
   });
 
@@ -372,7 +665,7 @@ describe('GIVEN any finished puzzle', () => {
         />,
       );
       const link = screen.getByRole('link', { name: 'How to play Mini' });
-      expect(link).toHaveTextContent('How to play Mini');
+      expect(link).toHaveTextContent('How to play');
       await fireEvent.press(link);
       expect(router.push).toHaveBeenCalledWith({
         pathname: '/how-to-play',

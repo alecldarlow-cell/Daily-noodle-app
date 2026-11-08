@@ -114,7 +114,7 @@ describe('GIVEN a Tangle not yet played', () => {
       },
     ]);
     expect(screen.getByTestId('finish-sheet')).toBeOnTheScreen();
-    expect(screen.getByTestId('finish-title')).toHaveTextContent(/ · Time’s\ up$/);
+    expect(screen.getByTestId('finish-title')).toHaveTextContent('Time’s up');
     expect(await sharedLine()).toBe('🧶 Tangle #19 — 13 points, 2 words ★');
     expect(
       screen.getByText('2 words, including the longest, ORIGINAL, for 12 points.'),
@@ -164,7 +164,7 @@ describe('GIVEN a Tangle already played today', () => {
       }),
     );
     await renderWithProviders(<TangleScreen file={file19} />);
-    expect(screen.getByTestId('finish-title')).toHaveTextContent(/ · Your\ score$/);
+    expect(screen.getByTestId('finish-title')).toHaveTextContent('Your score');
     expect(await sharedLine()).toBe('🧶 Tangle #19 — 2 points, 2 words');
     expect(finishes).toEqual([]);
     await fireEvent.press(screen.getByText('← Puzzles'));

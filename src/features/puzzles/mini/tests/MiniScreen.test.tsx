@@ -126,7 +126,8 @@ describe('GIVEN a Mini not yet played', () => {
       await waitFor(() => expect(screen.getByTestId('finish-sheet')).toBeOnTheScreen(), {
         timeout: 3000,
       });
-      expect(screen.getByText('No checks, no reveals.')).toBeOnTheScreen();
+      // Design B3: the Mini's note goes from the sheet (the model still writes it).
+      expect(screen.queryByText('No checks, no reveals.')).toBeNull();
       expect(await sharedLine()).toMatch(/^✏️ Mini #105 — 0:0\d$/);
       expect(screen.getByTestId('solved-grid')).toBeOnTheScreen();
       expect(jingles()).toBe(1);
@@ -193,7 +194,7 @@ describe('GIVEN the board in play', () => {
     await waitFor(() => expect(screen.getByTestId('finish-sheet')).toBeOnTheScreen(), {
       timeout: 3000,
     });
-    expect(screen.getByText('Two checks, one word revealed.')).toBeOnTheScreen();
+    expect(screen.queryByText('Two checks, one word revealed.')).toBeNull(); // design B3: no note
     expect(finishes[0]!.detail).toMatchObject({ checks: 2, reveals: 1 });
     await fireEvent.press(screen.getByTestId('finish-next'));
     expect(mockRouter.back).toHaveBeenCalled();

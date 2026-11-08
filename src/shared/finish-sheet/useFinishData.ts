@@ -11,11 +11,17 @@ import { nextRow, toMidnight, type NextRow } from './rules';
 const KEYS = [...new Set(PUZZLE_TYPES.map(saveKey))];
 
 /**
- * The Play more row and countdown: today's list (the kept copy straight away, then the
+ * The Next button and countdown, the type's save (for the personal best): today's list (the kept copy straight away, then the
  * site's file, as finish.js does with dn-today-cache), the saves, and a clock that
  * repaints every 30 seconds.
  */
-export function useFinishData(type: PuzzleType): { next: NextRow; secs: number } {
+export function useFinishData(type: PuzzleType): {
+  next: NextRow;
+  secs: number;
+  /** The type's own save (`digi-<type>-v1`), for the personal best. */
+  save: unknown;
+  day: string;
+} {
   const day = useLondonDay();
   const docs = useStoredDocs(KEYS);
   const q = useQuery({
@@ -37,5 +43,5 @@ export function useFinishData(type: PuzzleType): { next: NextRow; secs: number }
   }, []);
   const list = q.data ?? cachedToday(day) ?? null;
   const next = useMemo(() => nextRow(list, type, docs), [list, type, docs]);
-  return { next, secs: toMidnight(now) };
+  return { next, secs: toMidnight(now), save: docs[saveKey(type)] ?? null, day };
 }

@@ -56,26 +56,27 @@ describe('GIVEN the finish sheet', () => {
     });
   });
 
-  describe('WHEN the streak is a long number at large text (AF-019)', () => {
-    it('THEN it is one line under the score, not a big stat', async () => {
+  describe('WHEN the streak is a long number at large text (AF-019, design B3)', () => {
+    it('THEN it is the reward line under the outcome, not a big stat', async () => {
       mockWindow.fontScale = 2;
       await renderWithProviders(sheet(false));
-      expect(screen.getByTestId('finish-streak')).toHaveTextContent('🔥 1150-day Mini streak');
+      expect(screen.getByTestId('finish-reward-main')).toHaveTextContent('1150-day Mini streak');
       expect(screen.queryByText('1150')).toBeNull();
       expect(screen.queryByText('best streak')).toBeNull();
     });
   });
 
   describe('WHEN the text is large or the phone narrow', () => {
-    it('THEN Share result stays one full-width button (the line goes in the share sheet)', async () => {
+    it('THEN the Share pill keeps a full tap target and may shrink (the line goes in the share sheet)', async () => {
       Object.assign(mockWindow, { width: 320, fontScale: 2 });
       await renderWithProviders(sheet(false));
       expect(
         StyleSheet.flatten(screen.getByTestId('finish-share-button').props.style),
       ).toMatchObject({
-        flexGrow: 1,
+        flexShrink: 1,
         minHeight: 48,
       });
+      expect(screen.getByTestId('finish-hero').props.adjustsFontSizeToFit).toBe(true);
       expect(screen.queryByText('✏️ Mini #105 — 1:27 · 🔥5')).toBeNull();
     });
   });
@@ -101,7 +102,7 @@ describe('GIVEN the finish sheet', () => {
       await act(async () => {
         jest.advanceTimersByTime(ANNOUNCE_MS);
       });
-      expect(say).toHaveBeenCalledWith('Solved. 1:27');
+      expect(say).toHaveBeenCalledWith('Solved in 1 minute 27 seconds. 1150-day Mini streak.');
       expect(focus).toHaveBeenCalledWith(expect.anything(), 'focus');
     });
   });

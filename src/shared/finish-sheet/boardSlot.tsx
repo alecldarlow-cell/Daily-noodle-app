@@ -1,6 +1,7 @@
 /**
  * The finish sheet's board slot, filled from outside shared: the root provides a
- * component (leagues' "See today's board"), and every native finish sheet draws it with
+ * component (leagues' "1st in Noodlers today · See board ›", the reward block's second
+ * line in design B3), and every native finish sheet draws it with
  * the puzzle's path, type and day. Shared never imports a feature; the feature comes in
  * through this context. The component can tag the share line (a league record adds 🏆),
  * as dn-board.js does through engines/finish.js `dnFinish.tag`.
@@ -23,6 +24,15 @@ export interface BoardSlotProps {
   date: string;
   /** Add a tag to the end of the share line's first line (finish.js `tag`). */
   onTag: (tag: string) => void;
+  /** Whether the round was solved: a lost one isn't placed. Default true. */
+  solved?: boolean;
+  /** A fresh finish: a podium disc may pop and shine; never on a reopened puzzle. */
+  celebrate?: boolean;
+  /**
+   * The line stands alone in the reward block (no personal best, milestone or streak above
+   * it), so it may lead with its own icon (the podium disc for 1st to 3rd).
+   */
+  lead?: boolean;
 }
 
 export type BoardSlotComponent = ComponentType<BoardSlotProps>;
