@@ -6,9 +6,10 @@ import { appStorage } from '@/shared/storage';
 import { mockSite, renderWithProviders } from '@/shared/testing';
 
 import { cancel, hold } from '../../link/tests/press';
-import { PIP_SLOP, verdictLine } from '../components/ReckonPlay';
+import { PIP_SLOP, qnWords, verdictLine } from '../components/ReckonPlay';
 import { ReckonScreen } from '../components/ReckonScreen';
-import { file2 } from './fixtures';
+import { serial } from '../model';
+import { file2, reckon2 } from './fixtures';
 import { PRESSED } from '@/shared/ui';
 
 jest.mock('expo-router', () => ({
@@ -46,30 +47,24 @@ afterEach(async () => {
   jest.restoreAllMocks();
 });
 
-describe('GIVEN Reckon’s top row', () => {
-  describe('WHEN the phone is narrow (320 pt)', () => {
-    it('THEN the pack chip keeps its colour and gives its name only to screen readers', async () => {
+describe('GIVEN Reckon’s bar and question card', () => {
+  describe('WHEN a question shows', () => {
+    it('THEN the bar is the puzzles’ own (back, name, score) and the pack chip names the pack and the question in the card', async () => {
       width(320);
       await renderWithProviders(<ReckonScreen file={file2} deps={deps} />);
       await press('reckon-play-button');
+      expect(
+        screen.getByRole('header', { name: `Reckon ${serial(reckon2.id)}` }),
+      ).toBeOnTheScreen();
+      expect(screen.getByRole('button', { name: 'Back to Puzzles' })).toBeOnTheScreen();
       const chip = screen.getByTestId('reckon-chip');
       expect(chip).toHaveProp('accessible', true);
-      expect(chip.props.accessibilityLabel).toBeTruthy();
-      expect(screen.queryByText(chip.props.accessibilityLabel as string)).toBeNull();
-      expect(screen.getByTestId('reckon-score')).toHaveStyle({ fontSize: 28 });
-    });
-  });
-
-  describe('WHEN the phone is 375 pt wide', () => {
-    it('THEN the chip shows its name, and the row’s text is capped at 1.2× the text size', async () => {
-      width(375);
-      await renderWithProviders(<ReckonScreen file={file2} deps={deps} />);
-      await press('reckon-play-button');
-      const name = screen.getByTestId('reckon-chip-name');
-      expect(name).toHaveProp('maxFontSizeMultiplier', 1.2);
-      expect(screen.getByTestId('reckon-score')).toHaveProp('maxFontSizeMultiplier', 1.2);
-      expect(screen.getByTestId('reckon-qn')).toHaveProp('maxFontSizeMultiplier', 1.2);
-      expect(flat('reckon-prev')).toMatchObject({ marginHorizontal: -6 });
+      expect(chip.props.accessibilityLabel).toMatch(/^.+, question 1 of 10$/);
+      expect(screen.getByTestId('reckon-chip-name')).toHaveTextContent(/^.+ · 1 of 10$/);
+      expect(screen.getByTestId('reckon-chip-name')).toHaveProp('maxFontSizeMultiplier', 1.2);
+      expect(screen.queryByTestId('reckon-prev')).toBeNull();
+      expect(screen.queryByTestId('reckon-fwd')).toBeNull();
+      expect(qnWords('3/10')).toBe('3 of 10');
     });
   });
 
@@ -78,20 +73,16 @@ describe('GIVEN Reckon’s top row', () => {
     await press('reckon-play-button');
     expect(screen.getByLabelText('0 points so far')).toBeOnTheScreen();
     await press('reckon-act');
-    const score = String(screen.getByTestId('reckon-score').props.children);
-    expect(screen.getByTestId('reckon-score')).toHaveProp(
-      'accessibilityLabel',
-      `${score} points so far`,
-    );
+    const label = String(screen.getByTestId('puzzle-score').props.accessibilityLabel);
+    expect(label).toMatch(/^\d+ points so far$/);
+    expect(screen.getByTestId('puzzle-score')).toHaveTextContent(`${parseInt(label, 10)} pts`);
   });
 
-  it('THEN the question pips reach a 44 pt touch, and a hidden pause is hidden from screen readers', async () => {
+  it('THEN the question pips reach a 44 pt touch', async () => {
     await renderWithProviders(<ReckonScreen file={file2} deps={deps} />);
     await press('reckon-play-button');
     expect(PIP_SLOP.top + PIP_SLOP.bottom + 10).toBeGreaterThanOrEqual(44);
     expect(screen.getByTestId('reckon-pip-0')).toHaveProp('hitSlop', PIP_SLOP);
-    const pause = screen.getByTestId('reckon-pause');
-    expect(pause).toHaveProp('accessibilityElementsHidden', false);
   });
 });
 
@@ -114,7 +105,7 @@ describe('GIVEN Reckon’s buttons', () => {
   it('THEN each dims while pressed', async () => {
     await renderWithProviders(<ReckonScreen file={file2} deps={deps} />);
     await press('reckon-play-button');
-    for (const id of ['reckon-act', 'reckon-pause', 'reckon-pip-0']) {
+    for (const id of ['reckon-act', 'reckon-pip-0']) {
       await hold(screen.getByTestId(id));
       expect(flat(id)).toMatchObject(PRESSED);
       await cancel(screen.getByTestId(id));

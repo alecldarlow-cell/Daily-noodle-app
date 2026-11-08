@@ -6,7 +6,7 @@ import { appStorage } from '@/shared/storage';
 import { mockSite, renderWithProviders, sharedLine } from '@/shared/testing';
 
 import { BordersScreen } from '../components/BordersScreen';
-import { ATLAS_KEY, SAVE_KEY } from '../model';
+import { ATLAS_KEY, SAVE_KEY, serial } from '../model';
 import { borders15, file15 } from './fixtures';
 
 jest.mock('expo-router', () => ({
@@ -116,15 +116,16 @@ describe('GIVEN a Borders not yet played', () => {
     );
   });
 
-  it('THEN Pause, Back to start and Resume keep the round', async () => {
+  it('THEN back keeps the round (no pause button now), and Resume returns to it', async () => {
     await renderWithProviders(<BordersScreen file={file15} deps={deps} />);
     await press('borders-play-button');
     await press(`borders-opt-${pick(0, true)}`);
-    await press('borders-pause');
-    expect(screen.getByTestId('borders-paused')).toBeOnTheScreen();
-    await press('borders-resume');
-    await press('borders-pause');
-    await press('borders-quit');
+    expect(screen.queryByTestId('borders-pause')).toBeNull();
+    expect(
+      screen.getByRole('header', { name: `Borders ${serial(borders15.id)}` }),
+    ).toBeOnTheScreen();
+    expect(screen.getByLabelText('100 points so far')).toBeOnTheScreen();
+    await fireEvent.press(screen.getByRole('button', { name: 'Back to Puzzles' }));
     expect(screen.getByText('Question 2 of 10, 100 points so far.')).toBeOnTheScreen();
     await press('borders-play-button');
     expect(screen.getByTestId('borders-quiz')).toBeOnTheScreen();

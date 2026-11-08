@@ -76,6 +76,8 @@ export type Move =
   | { t: 'bar' }
   /** ‹ / › (Shift-Tab / Tab): previous or next clue. */
   | { t: 'step'; delta: 1 | -1 }
+  /** Help › Check square: the square under the cursor only. */
+  | { t: 'checkCell' }
   | { t: 'checkWord' }
   | { t: 'checkAll' }
   | { t: 'revealWord' };
@@ -431,6 +433,11 @@ export function apply(prev: MiniState, move: Move): MiniState {
       }
       break;
     }
+    case 'checkCell':
+      s.track.checks++;
+      s.used.checks++;
+      checkCells([[s.sel.r, s.sel.c]]);
+      break;
     case 'checkAll':
       s.track.checks++;
       s.used.checks++;

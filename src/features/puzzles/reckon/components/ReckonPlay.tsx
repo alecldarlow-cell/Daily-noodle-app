@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import {
@@ -12,15 +12,14 @@ import {
   type ReckonState,
 } from '../model';
 import { FONT } from '@/shared/theme';
-import { Chevron, pressable } from '@/shared/ui';
+import { PuzzleBar } from '@/shared/start-card';
+import { pressable } from '@/shared/ui';
 
 import { useAnnounce } from '../../link/hooks/announce';
 import type { ReckonColors } from './colors';
 import { ReckonSlider } from './ReckonSlider';
 
-/** Under this width the pack chip keeps only its colour; its name stays for screen readers. */
-export const NARROW = 360;
-/** The top row's text grows with the phone's text size no further than this. */
+/** The chip's text grows with the phone's text size no further than this. */
 const TOP_CAP = 1.2;
 /** The pips are 10 pt bars: their touch reaches 17 pt above and below (44 pt in all). */
 export const PIP_SLOP = { top: 17, bottom: 17, left: 3, right: 3 };
@@ -63,14 +62,27 @@ function useHold(d: -1 | 1, dispatch: (m: Move) => void) {
   };
 }
 
+/** "3/10" → "3 of 10", as the question card's chip says it. */
+export function qnWords(qn: string): string {
+  return qn.replace('/', ' of ');
+}
+
 interface Props {
   state: ReckonState;
   c: ReckonColors;
   dispatch: (m: Move) => void;
+  /** "Reckon 23", for the bar. */
+  name: string;
+  streak: number;
+  /** Back: keeps the round where it is (the pause sheet's Back to start) and leaves. */
+  onBack: () => void;
 }
 
-/** A question: its pack, the scale, the reading, Lock in / Next, and the pause sheet. */
-export function ReckonPlay({ state, c, dispatch }: Props) {
+/**
+ * A question: the bar (back, name, streak, score), the pips, its card with the pack chip,
+ * the scale, the reading, Lock in / Next. The pips move between questions already played.
+ */
+export function ReckonPlay({ state, c, dispatch, name, streak, onBack }: Props) {
   const v = playView(state);
   const [drag, setDrag] = useState<number | null>(null);
   const minus = useHold(-1, dispatch);
@@ -84,78 +96,19 @@ export function ReckonPlay({ state, c, dispatch }: Props) {
     } else setDrag(fr);
   };
   const fb = v.feedback;
-  const narrow = useWindowDimensions().width < NARROW;
   const said = fb ? verdictLine(fb) : '';
   useAnnounce(said, `${v.qn}|${said}`);
   return (
     <SafeAreaView style={[styles.fill, { backgroundColor: c.bg }]} testID="reckon-play">
       <View style={styles.pw}>
-        <View style={styles.top}>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Pause"
-            testID="reckon-pause"
-            disabled={v.pauseHidden}
-            accessibilityElementsHidden={v.pauseHidden}
-            importantForAccessibility={v.pauseHidden ? 'no-hide-descendants' : 'auto'}
-            onPress={() => dispatch({ t: 'pause' })}
-            style={pressable([styles.ib, { borderColor: c.ink, opacity: v.pauseHidden ? 0 : 1 }])}>
-            <View style={styles.bars}>
-              <View style={[styles.bar, { backgroundColor: c.ink }]} />
-              <View style={[styles.bar, { backgroundColor: c.ink }]} />
-            </View>
-          </Pressable>
-          {narrow ? (
-            <View
-              style={[styles.chipDot, { backgroundColor: v.chip.colour }]}
-              accessible
-              accessibilityLabel={v.chip.name}
-              testID="reckon-chip"
-            />
-          ) : (
-            <View style={[styles.chip, { backgroundColor: v.chip.colour }]} testID="reckon-chip">
-              <Text
-                style={styles.chipText}
-                numberOfLines={1}
-                maxFontSizeMultiplier={TOP_CAP}
-                testID="reckon-chip-name">
-                {v.chip.name}
-              </Text>
-            </View>
-          )}
-          <View style={styles.qnav}>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Previous question"
-              testID="reckon-prev"
-              disabled={v.prevDisabled}
-              onPress={() => dispatch({ t: 'nav', d: -1 })}
-              style={pressable([styles.navb, v.prevDisabled && styles.off])}>
-              <Chevron color={c.ink} dir="left" />
-            </Pressable>
-            <Text
-              style={[styles.qn, { color: c.ink }]}
-              maxFontSizeMultiplier={TOP_CAP}
-              testID="reckon-qn">
-              {v.qn}
-            </Text>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Next question"
-              testID="reckon-fwd"
-              disabled={v.fwdDisabled}
-              onPress={() => dispatch({ t: 'nav', d: 1 })}
-              style={pressable([styles.navb, v.fwdDisabled && styles.off])}>
-              <Chevron color={c.ink} />
-            </Pressable>
-          </View>
-          <Text
-            style={[styles.sc, narrow && styles.scNarrow, { color: c.ink }]}
-            maxFontSizeMultiplier={TOP_CAP}
-            accessibilityLabel={`${v.score} points so far`}
-            testID="reckon-score">
-            {v.score}
-          </Text>
+        <View style={styles.head}>
+          <PuzzleBar
+            name={name}
+            streak={streak}
+            score={v.score}
+            colors={{ ink: c.ink, inkSoft: c.ink2, card: c.paper, line: c.line }}
+            onBack={onBack}
+          />
         </View>
         <View style={styles.pips}>
           {v.pips.map((p) => (
@@ -187,6 +140,21 @@ export function ReckonPlay({ state, c, dispatch }: Props) {
                 {v.reviewing}
               </Text>
             ) : null}
+            <View
+              style={[styles.chip, { backgroundColor: v.chip.colour }]}
+              accessible
+              accessibilityLabel={`${v.chip.name}, question ${qnWords(v.qn)}`}
+              testID="reckon-chip">
+              <Text
+                style={styles.chipText}
+                numberOfLines={1}
+                maxFontSizeMultiplier={TOP_CAP}
+                testID="reckon-chip-name">
+                {v.chip.name}
+                {' · '}
+                <Text testID="reckon-qn">{qnWords(v.qn)}</Text>
+              </Text>
+            </View>
             <Text style={[styles.q, { color: c.ink }]} testID="reckon-question">
               {v.question}
             </Text>
@@ -327,41 +295,9 @@ export function ReckonPlay({ state, c, dispatch }: Props) {
 const styles = StyleSheet.create({
   fill: { flex: 1 },
   pw: { flex: 1, maxWidth: 560, width: '100%', alignSelf: 'center', paddingBottom: 12 },
-  top: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    paddingHorizontal: 16,
-    minHeight: 56,
-  },
-  ib: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    borderWidth: 1.5,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  bars: { flexDirection: 'row', gap: 4 },
-  bar: { width: 4, height: 14, borderRadius: 1 },
-  chip: { borderRadius: 999, paddingHorizontal: 12, paddingVertical: 5, flexShrink: 1 },
-  chipDot: { width: 22, height: 22, borderRadius: 11, flexShrink: 0 },
-  chipText: { color: '#FFFFFF', fontFamily: FONT.sansSemi, fontSize: 14 },
-  qnav: { flexDirection: 'row', alignItems: 'center', marginLeft: 'auto' },
-  // reckon.css .navb: 44 pt to touch, overlapping the number by 6 pt a side to save room.
-  navb: {
-    width: 44,
-    height: 44,
-    marginHorizontal: -6,
-    zIndex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  navt: { fontFamily: FONT.sans, fontSize: 26 },
-  off: { opacity: 0.25 },
-  qn: { minWidth: 38, textAlign: 'center', fontVariant: ['tabular-nums'] },
-  sc: { minWidth: 56, textAlign: 'right', fontFamily: FONT.serif, fontSize: 32 },
-  scNarrow: { minWidth: 44, fontSize: 28 },
+  head: { paddingHorizontal: 16 },
+  chip: { alignSelf: 'flex-start', borderRadius: 999, paddingHorizontal: 11, paddingVertical: 4 },
+  chipText: { color: '#FFFFFF', fontFamily: FONT.sansSemi, fontSize: 13 },
   pips: { flexDirection: 'row', gap: 6, paddingHorizontal: 16, marginTop: 4 },
   pip: { flex: 1, height: 10, borderRadius: 5 },
   mid: { padding: 16, gap: 14, flexGrow: 1 },

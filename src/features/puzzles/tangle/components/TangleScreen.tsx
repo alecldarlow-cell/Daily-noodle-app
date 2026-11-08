@@ -38,7 +38,19 @@ export function TangleScreen({ file }: { file: PuzzleFile<TangleData> }) {
   const view = engine.s.view;
 
   if (view === 'play')
-    return <TangleBoard engine={engine} setRects={setRects} onHome={() => engine.home()} />;
+    return (
+      <TangleBoard
+        engine={engine}
+        setRects={setRects}
+        onHome={() => {
+          // The page's pause-and-home, then out to Puzzles like every other puzzle's back;
+          // the round waits on its home card's Resume.
+          engine.home();
+          back();
+        }}
+        streak={homeCard(engine, day).streak}
+      />
+    );
 
   if (view === 'winModal') {
     const f = sheetInfo(engine, londonDay());

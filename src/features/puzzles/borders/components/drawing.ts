@@ -16,10 +16,12 @@ svg{display:block}
 .grat line{stroke:${c.grat};stroke-width:1}
 .gl{fill:${c.ink2};font:12px -apple-system,Roboto,sans-serif;opacity:.8}
 .land{stroke:${c.ink};stroke-linejoin:round}
-#scale{position:absolute;left:12px;bottom:10px;font:12px -apple-system,Roboto,sans-serif;color:${c.ink}}
+#scale{position:absolute;left:16px;bottom:10px;font:12px -apple-system,Roboto,sans-serif;color:${c.ink}}
 .segs{display:flex}.segs i{display:block;height:5px;border:1.25px solid ${c.ink};margin-left:-1.25px}
 .segs i:nth-child(odd){background:${c.ink}}
-.lab{display:flex;justify-content:space-between;margin-top:2px}
+.lab{position:relative;height:15px;margin-top:2px}
+.lab span{position:absolute;top:0;transform:translateX(-50%);white-space:nowrap}
+.lab span b{position:absolute;left:100%;padding-left:3px;font-weight:normal}
 #inset{position:absolute;right:10px;top:10px;width:46%;border:1.5px solid ${c.edge};border-radius:3px;background:${c.globe}}
 #inset svg{width:100%;height:auto}
 .ring{fill:none;stroke:${c.pin};stroke-width:2}
@@ -56,7 +58,7 @@ function scaleBar(c){
  var px=nice/kmPerPx;var segs=document.createElement('div');segs.className='segs';
  for(var i=0;i<4;i++){var s=document.createElement('i');s.style.width=(px/4+1.25)+'px';segs.appendChild(s);}
  var lab=document.createElement('div');lab.className='lab';lab.style.width=px+'px';
- lab.innerHTML='<span>0</span><span>'+(nice>=1000?nice.toLocaleString('en-GB'):nice)+' km</span>';
+ lab.innerHTML='<span style="left:0">0</span><span style="left:'+px+'px">'+(nice>=1000?nice.toLocaleString('en-GB'):nice)+'<b>km</b></span>';
  host.appendChild(segs);host.appendChild(lab);
 }
 function drawLand(svg,c){

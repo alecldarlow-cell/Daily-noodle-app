@@ -1,3 +1,4 @@
+import { dayBefore } from '@noodle/core';
 import { Linking, StyleSheet, View } from 'react-native';
 
 import { FinishLink, FinishSheet, useFreshFinish } from '@/shared/finish-sheet';
@@ -9,7 +10,7 @@ import { usePlayerExit } from '@/shared/shell';
 import type { PuzzleFile } from '../../types';
 import type { FinishInfo } from '../finishing';
 import { useBordersGame } from '../hooks/useBordersGame';
-import { serial, type BordersData } from '../model';
+import { homeView, serial, type BordersData } from '../model';
 import { useBordersColors, type BordersColors } from './colors';
 import { BordersHome } from './BordersHome';
 import { BordersQuiz } from './BordersQuiz';
@@ -80,7 +81,23 @@ export function BordersScreen({
         onNext={openNext}
       />
     );
-  if (state.view === 'quiz') return <BordersQuiz state={state} c={c} dispatch={dispatch} />;
+  if (state.view === 'quiz')
+    return (
+      <BordersQuiz
+        state={state}
+        c={c}
+        dispatch={dispatch}
+        name={`Borders ${serial(file.data.id)}`}
+        streak={Number(homeView(state, today, dayBefore).stats[0]) || 0}
+        onBack={() => {
+          // The pause sheet's Back to start, then out: the round is kept and its start
+          // screen offers Resume (Alec, 8 Nov 2026: back replaces the pause button).
+          dispatch({ t: 'pause' });
+          dispatch({ t: 'quit' });
+          back();
+        }}
+      />
+    );
   return (
     <BordersHome
       state={state}

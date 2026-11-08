@@ -59,7 +59,7 @@ describe('GIVEN a Borders question at a large text size', () => {
     expect(scroll.props.contentContainerStyle).toMatchObject({ flexGrow: 1 });
     expect(screen.getByText(borders15.qs[0]!.o[0]!)).toHaveProp('maxFontSizeMultiplier', 1.3);
     expect(screen.getByText('Show on map (half points)')).toHaveProp('maxFontSizeMultiplier', 1.3);
-    expect(screen.getByTestId('borders-points')).toHaveProp('maxFontSizeMultiplier', 1.15);
+    expect(screen.getByTestId('puzzle-score')).toHaveProp('maxFontSizeMultiplier', 1.3);
     await press(`borders-opt-${pick(0, true)}`);
     expect(screen.getByText('Next')).toHaveProp('maxFontSizeMultiplier', 1.3);
     expect(screen.getByTestId('borders-plate')).toBeOnTheScreen();
@@ -98,9 +98,6 @@ describe('GIVEN the quiz’s buttons', () => {
     expect(flat('borders-opt-0')).toMatchObject(PRESSED);
     await cancel(opt);
     expect(flat('borders-opt-0').opacity).toBeUndefined();
-    await hold(screen.getByTestId('borders-pause'));
-    expect(flat('borders-pause')).toMatchObject(PRESSED);
-    await cancel(screen.getByTestId('borders-pause'));
     await press(`borders-opt-${pick(0, true)}`);
     await hold(screen.getByTestId(`borders-opt-${pick(0, true)}`));
     expect(flat(`borders-opt-${pick(0, true)}`).opacity).toBeUndefined();

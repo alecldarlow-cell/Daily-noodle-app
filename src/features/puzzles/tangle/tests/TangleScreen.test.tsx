@@ -6,7 +6,7 @@ import { onFinish, type PuzzleFinish } from '@/shared/results';
 import { appStorage } from '@/shared/storage';
 import { mockSite, renderWithProviders, sharedLine } from '@/shared/testing';
 
-import { LIST_H, tileRects, TOAST_H, WORD_H } from '../components/TangleBoard';
+import { CUR_H, LIST_H, tileRects } from '../components/TangleBoard';
 import { dayCard, TangleScreen } from '../components/TangleScreen';
 import { KEY } from '../model';
 import { findPath } from '../oracle';
@@ -124,13 +124,15 @@ describe('GIVEN a Tangle not yet played', () => {
     await fireEvent.press(screen.getByText(/^Rarer words: /));
   });
 
-  it('THEN going back mid-round pauses it, and the app leaving pauses it behind Resume', async () => {
+  it('THEN going back mid-round pauses it and leaves for Puzzles, and the app leaving pauses it behind Resume', async () => {
     await renderWithProviders(<TangleScreen file={file19} />);
     await fireEvent.press(screen.getByTestId('play-card'));
     await layOut();
     await run(3100);
     await trace('air');
-    await fireEvent.press(screen.getByRole('button', { name: 'Pause and go back' }));
+    expect(screen.getByRole('header', { name: 'Tangle 19' })).toBeOnTheScreen();
+    await fireEvent.press(screen.getByRole('button', { name: 'Back to Puzzles' }));
+    expect(mockRouter.back).toHaveBeenCalled();
     expect(screen.getByText('Round paused')).toBeOnTheScreen();
     expect(screen.getByText(/^1:[23]\d left, 1 point so far\.$/)).toBeOnTheScreen();
     await fireEvent.press(screen.getByTestId('play-card'));
@@ -185,19 +187,19 @@ describe('GIVEN a Tangle round in play', () => {
       });
       const before = heights();
       expect(before.list).toHaveStyle({ height: LIST_H });
-      expect(before.cur).toHaveStyle({ height: WORD_H + TOAST_H });
+      expect(before.cur).toHaveStyle({ height: CUR_H });
       expect(screen.queryByTestId('tangle-toast')).toBeNull();
       // mid-trace: the word in progress shows
       const p = findPath(tangle19, 'original')!;
       const grid = screen.getByTestId('tangle-grid');
       await fireEvent(grid, 'responderGrant', at(p[0]!));
       await fireEvent(grid, 'responderMove', at(p[1]!));
-      expect(screen.getByTestId('tangle-cur')).toHaveStyle({ height: WORD_H + TOAST_H });
+      expect(screen.getByTestId('tangle-cur')).toHaveStyle({ height: CUR_H });
       await fireEvent(grid, 'responderRelease', at(p[1]!));
       // found: a toast and a word in the list
       await trace('ago');
       expect(screen.getByTestId('tangle-toast')).toBeOnTheScreen();
-      expect(screen.getByTestId('tangle-cur')).toHaveStyle({ height: WORD_H + TOAST_H });
+      expect(screen.getByTestId('tangle-cur')).toHaveStyle({ height: CUR_H });
       expect(screen.getByTestId('tangle-list')).toHaveStyle({ height: LIST_H });
       expect(screen.getByTestId('tangle-current')).toHaveProp('numberOfLines', 1);
     });

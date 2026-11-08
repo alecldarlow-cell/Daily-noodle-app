@@ -4,7 +4,7 @@ import { AppState, StyleSheet, type AppStateStatus } from 'react-native';
 
 import { appStorage } from '@/shared/storage';
 import { heldStyle, mockSite, renderWithProviders } from '@/shared/testing';
-import { puzzleTokensFor } from '@/shared/theme';
+import { FONT, puzzleTokensFor } from '@/shared/theme';
 import { PRESSED } from '@/shared/ui';
 
 import { DokuScreen } from '../components/DokuScreen';
@@ -42,7 +42,7 @@ afterEach(async () => {
 
 describe('GIVEN a Doku on the board', () => {
   describe('WHEN the cursor lands on a given square', () => {
-    it('THEN the square keeps its shade and soft ink, ringed in marigold, so letter and cursor both show', async () => {
+    it('THEN the square keeps its shade and its clue’s full, heaviest ink, ringed in marigold, so letter and cursor both show', async () => {
       await renderWithProviders(<DokuScreen file={file97} />);
       await play();
       await fireEvent.press(screen.getByTestId('cell-0-1'));
@@ -51,7 +51,9 @@ describe('GIVEN a Doku on the board', () => {
       const style = StyleSheet.flatten(cell.props.style);
       expect(style).toMatchObject({ borderWidth: 3, borderColor: pt.active });
       expect(style.backgroundColor).not.toBe(pt.active);
-      expect(StyleSheet.flatten(within(cell).getByText('S').props.style).color).toBe(pt.inkSoft);
+      const ltr = StyleSheet.flatten(within(cell).getByText('S').props.style);
+      expect(ltr.color).toBe(pt.ink);
+      expect(ltr.fontFamily).toBe(FONT.displayHeavy);
     });
   });
 

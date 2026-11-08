@@ -70,8 +70,8 @@ interface PathBoardProps {
 }
 
 /**
- * The 6×6 board as the page paints it: the numbers placed, the givens shaded, the
- * active end marigold and the other end ringed, the thread from 1 in cobalt and the
+ * The 6×6 board: the numbers placed (a step softer), the givens shaded and boldest, the
+ * active end marigold and the other end ringed in blue, the thread from 1 in cobalt and the
  * thread from 36 in deep blue, one green thread once it is complete.
  */
 export function PathBoard({ state, side, onCell, celebrating = false }: PathBoardProps) {
@@ -117,7 +117,9 @@ export function PathBoard({ state, side, onCell, celebrating = false }: PathBoar
                           backgroundColor:
                             m === 'active' ? pt.active : given ? pt.lineSoft : pt.card,
                         },
-                        m === 'endsel' ? { borderWidth: 2, borderColor: pt.active } : null,
+                        // The far end: ringed in the brand blue, so it never reads as the
+                        // marigold active end (Alec, 8 Nov 2026).
+                        m === 'endsel' ? { borderWidth: 2.5, borderColor: pt.brand } : null,
                       ]}>
                       <WaveFlash wave={w} at={0} active={pt.active} word={pt.activeWord} />
                     </Pressable>
@@ -154,9 +156,12 @@ export function PathBoard({ state, side, onCell, celebrating = false }: PathBoar
                   maxFontSizeMultiplier={1.2}
                   style={[
                     styles.num,
+                    // The checkpoints are the clues: the boldest, full ink. The numbers the
+                    // player lays are a step softer (Alec, 8 Nov 2026).
+                    given ? styles.givenNum : null,
                     {
                       fontSize: cs * 0.36,
-                      color: m === 'active' ? '#141726' : given ? pt.inkSoft : pt.ink,
+                      color: m === 'active' ? '#141726' : given ? pt.ink : pt.inkSoft,
                       backgroundColor: m === 'active' ? pt.active : given ? pt.lineSoft : pt.card,
                     },
                   ]}>
@@ -229,6 +234,7 @@ const styles = StyleSheet.create({
   cell: { borderWidth: StyleSheet.hairlineWidth },
   numBox: { position: 'absolute', alignItems: 'center', justifyContent: 'center' },
   num: { fontFamily: FONT.display, borderRadius: 4, paddingHorizontal: 3, overflow: 'hidden' },
+  givenNum: { fontFamily: FONT.displayHeavy },
   recap: { alignSelf: 'flex-start', borderWidth: 2, borderRadius: 6, overflow: 'hidden' },
   threadLayer: { flex: 1, opacity: 0.5 },
   recapCell: { borderWidth: 0.5, alignItems: 'center', justifyContent: 'center' },

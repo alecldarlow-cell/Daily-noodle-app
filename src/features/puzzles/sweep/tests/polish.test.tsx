@@ -41,8 +41,8 @@ describe('GIVEN a Sweep on the board', () => {
     it('THEN each shows the pressed look', async () => {
       await renderWithProviders(<SweepScreen file={file94} />);
       await play();
-      for (const name of ['⛏ Dig', '⚑ Flag', 'Hint'])
-        expect(await heldStyle(screen.getByRole('button', { name }))).toMatchObject(PRESSED);
+      for (const id of ['sweep-mode-dig', 'sweep-mode-flag', 'sweep-hint'])
+        expect(await heldStyle(screen.getByTestId(id))).toMatchObject(PRESSED);
     });
   });
 

@@ -187,7 +187,7 @@ describe('GIVEN a Borders round part-way', () => {
       expect(screen.getByTestId('borders-play-button')).toHaveTextContent('Resume');
       await press('borders-play-button');
       expect(screen.getByTestId('borders-quiz')).toBeOnTheScreen();
-      expect(screen.getByTestId('borders-points')).toHaveTextContent('100 pts');
+      expect(screen.getByTestId('puzzle-score')).toHaveTextContent('100 pts');
       const back = JSON.parse(b.getItem(BORDERS_KEY)!).cur;
       expect(back).toMatchObject({ id: borders15.id, ans: kept.ans, pts: 100, i: 2 });
       expect(back.secs).toBe(kept.secs);
@@ -226,8 +226,11 @@ describe('GIVEN a Reckon round part-way', () => {
       await press('reckon-act');
       t += 1000;
       await press('reckon-act');
-      expect(text('reckon-qn')).toBe('2/10');
-      const score = text('reckon-score');
+      expect(text('reckon-qn')).toBe('2 of 10');
+      const score = parseInt(
+        String(screen.getByTestId('puzzle-score').props.accessibilityLabel),
+        10,
+      );
       await press('reckon-plus');
       await play(2000);
       await act(async () => setAppState('background'));
@@ -241,8 +244,11 @@ describe('GIVEN a Reckon round part-way', () => {
       expect(screen.getByText(`Question 2 of 10, ${score} points so far.`)).toBeOnTheScreen();
       expect(screen.getByTestId('reckon-play-button')).toHaveTextContent('Resume');
       await press('reckon-play-button');
-      expect(text('reckon-qn')).toBe('2/10');
-      expect(text('reckon-score')).toBe(score);
+      expect(text('reckon-qn')).toBe('2 of 10');
+      expect(screen.getByTestId('puzzle-score')).toHaveProp(
+        'accessibilityLabel',
+        `${score} points so far`,
+      );
       const back = JSON.parse(b.getItem(RECKON_KEY)!).cur;
       expect(back).toMatchObject({ id: reckon2.id, i: 1, g: kept.g, z: kept.z, cur: kept.cur });
       expect(back.secs).toBe(kept.secs);

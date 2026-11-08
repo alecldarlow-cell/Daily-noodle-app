@@ -82,7 +82,7 @@ describe('GIVEN a Mini not yet played', () => {
   });
 
   describe('WHEN the board is laid out', () => {
-    it('THEN it reads top to bottom as the page does: grid, clue bar, the checks, keyboard', async () => {
+    it('THEN it reads top to bottom: grid, clue bar, keyboard (the checks live in Help)', async () => {
       await renderWithProviders(<MiniScreen file={file105} />);
       await fireEvent.press(screen.getByRole('button', { name: 'Play' }));
       const order: string[] = [];
@@ -96,7 +96,7 @@ describe('GIVEN a Mini not yet played', () => {
         walk(node.children);
       };
       walk(screen.toJSON());
-      expect(order).toEqual(['mini-board', 'clue-bar', 'mini-controls', 'mini-keyboard']);
+      expect(order).toEqual(['mini-board', 'clue-bar', 'mini-keyboard']);
     });
   });
 
@@ -175,7 +175,7 @@ describe('GIVEN the board in play', () => {
     expect(screen.getByText('0:03')).toBeOnTheScreen();
   });
 
-  it('THEN the clue bar, arrows, delete and the help buttons work as on the page', async () => {
+  it('THEN the clue bar, arrows, delete and every Help option work, Help closing after each', async () => {
     await renderWithProviders(<MiniScreen file={file105} />);
     await fireEvent.press(screen.getByRole('button', { name: 'Play' }));
     await fireEvent.press(screen.getByTestId('clue-bar'));
@@ -186,16 +186,23 @@ describe('GIVEN the board in play', () => {
     await press('key-X');
     await press('key-del');
     await press('key-del');
-    await fireEvent.press(screen.getByRole('button', { name: 'Check word' }));
-    await fireEvent.press(screen.getByRole('button', { name: 'Check all' }));
-    await fireEvent.press(screen.getByRole('button', { name: 'Reveal word' }));
+    const help = async (name: string) => {
+      await press('key-help');
+      expect(screen.getByTestId('mini-help')).toBeOnTheScreen();
+      await fireEvent.press(screen.getByRole('button', { name }));
+      expect(screen.queryByTestId('mini-help')).toBeNull();
+    };
+    await help('Check square');
+    await help('Check word');
+    await help('Check all');
+    await help('Reveal word');
     expect(screen.getByTestId('cell-3-0')).toHaveAccessibleName(/S$/);
     await solveOnScreen();
     await waitFor(() => expect(screen.getByTestId('finish-sheet')).toBeOnTheScreen(), {
       timeout: 3000,
     });
     expect(screen.queryByText('Two checks, one word revealed.')).toBeNull(); // design B3: no note
-    expect(finishes[0]!.detail).toMatchObject({ checks: 2, reveals: 1 });
+    expect(finishes[0]!.detail).toMatchObject({ checks: 3, reveals: 1 });
     await fireEvent.press(screen.getByTestId('finish-next'));
     expect(mockRouter.back).toHaveBeenCalled();
   });

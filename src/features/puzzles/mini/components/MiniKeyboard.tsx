@@ -10,26 +10,39 @@ import {
 
 import { FONT, usePuzzleTokens } from '@/shared/theme';
 
-/** The page's on-screen keyboard (#kb): three rows, ⌫ at the end of the last. */
+/**
+ * The on-screen keyboard: the phone's own staggered QWERTY, run edge to edge. The
+ * bottom row is Help · Z–M · ⌫, Help sitting where Shift would (Alec, 8 Nov 2026).
+ */
 export const KB_ROWS = ['QWERTYUIOP', 'ASDFGHJKL', 'ZXCVBNM'] as const;
 
-/** Space between keys, and the largest a letter key or ⌫ grows to. */
-export const KEY_GAP = 4;
-export const KEY_MAX = 40;
-export const DEL_MAX = 64;
+/** Space between keys, and the largest a letter key or a side key (Help, ⌫) grows to. */
+export const KEY_GAP = 5;
+export const KEY_MAX = 48;
+export const DEL_MAX = 72;
 
-/** The Mini screen's side padding and widest content, for the first frame's estimate. */
+/** Key height: tall on most phones; the old height on short screens so the board keeps its room. */
+export const KEY_TALL = 56;
+export const KEY_SHORT = 46;
+export const TALL_FROM = 700;
+export function keyHeight(windowHeight: number): number {
+  return windowHeight >= TALL_FROM ? KEY_TALL : KEY_SHORT;
+}
+
+/** The Mini screen's side padding, how far the keyboard reaches into it, and its widest content. */
 const SCREEN_PAD = 12;
+export const KB_BLEED = 8;
 const SCREEN_MAX = 560;
 
-/** The keyboard's width before it has been measured: the window less the screen's padding. */
+/** The keyboard's width before it has been measured: the window less the screen's padding, plus the bleed. */
 export function estimateWidth(windowWidth: number): number {
-  return Math.min(SCREEN_MAX, windowWidth) - 2 * SCREEN_PAD;
+  return Math.min(SCREEN_MAX, windowWidth) - 2 * SCREEN_PAD + 2 * KB_BLEED;
 }
 
 /**
  * Key widths for a keyboard `width` points wide: every letter key the same width, the
- * widest that lets the top row (ten keys) fit, up to KEY_MAX; ⌫ one and a half keys.
+ * widest that lets the top row (ten keys) fit, up to KEY_MAX; Help and ⌫ share what is
+ * left of the bottom row, between one key and DEL_MAX.
  *
  * Widths are set explicitly rather than left to flex: grow-to-a-maximum keys collapsed
  * the bottom row to bare borders when the slot was 367–372 pt (phones about 393 pt wide,
@@ -40,17 +53,19 @@ export function keyWidths(width: number): { key: number; del: number } {
   const top = KB_ROWS[0].length;
   const fit = Math.floor((width - KEY_GAP * (top - 1)) / top);
   const key = Math.max(1, Math.min(KEY_MAX, fit));
-  const room = width - KB_ROWS[2].length * (key + KEY_GAP);
-  const del = Math.max(key, Math.min(DEL_MAX, Math.round(key * 1.5), Math.floor(room)));
+  const n = KB_ROWS[2].length;
+  const side = Math.floor((width - n * key - (n + 1) * KEY_GAP) / 2);
+  const del = Math.max(key, Math.min(DEL_MAX, side));
   return { key, del };
 }
 
 interface MiniKeyboardProps {
   onKey: (ch: string) => void;
   onDelete: () => void;
+  onHelp: () => void;
 }
 
-export function MiniKeyboard({ onKey, onDelete }: MiniKeyboardProps) {
+export function MiniKeyboard({ onKey, onDelete, onHelp }: MiniKeyboardProps) {
   const pt = usePuzzleTokens();
   const win = useWindowDimensions();
   const [measured, setMeasured] = useState<number | null>(null);
@@ -60,11 +75,31 @@ export function MiniKeyboard({ onKey, onDelete }: MiniKeyboardProps) {
     if (w > 0 && (measured === null || Math.abs(w - measured) >= 0.5)) setMeasured(w);
   };
   const size = keyWidths(width);
-  const key = { backgroundColor: pt.card, borderColor: pt.lineSoft };
+  const height = keyHeight(win.height);
+  const key = { backgroundColor: pt.card, borderColor: pt.lineSoft, height };
+  const pressedKey = { backgroundColor: pt.activeWord };
   return (
     <View style={styles.kb} testID="mini-keyboard" onLayout={onLayout}>
       {KB_ROWS.map((row, i) => (
         <View key={row} style={styles.row}>
+          {i === 2 ? (
+            <Pressable
+              testID="key-help"
+              accessibilityRole="button"
+              accessibilityLabel="Help"
+              accessibilityHint="Check or reveal letters"
+              onPress={onHelp}
+              style={({ pressed }) => [
+                styles.key,
+                styles.help,
+                { width: size.del, height, borderColor: pt.inkSoft },
+                pressed && pressedKey,
+              ]}>
+              <Text maxFontSizeMultiplier={1.2} style={[styles.helpText, { color: pt.ink }]}>
+                Help
+              </Text>
+            </Pressable>
+          ) : null}
           {[...row].map((ch) => (
             <Pressable
               key={ch}
@@ -76,7 +111,7 @@ export function MiniKeyboard({ onKey, onDelete }: MiniKeyboardProps) {
                 styles.key,
                 { width: size.key },
                 key,
-                pressed && { backgroundColor: pt.activeWord },
+                pressed && pressedKey,
               ]}>
               <Text maxFontSizeMultiplier={1.3} style={[styles.text, { color: pt.ink }]}>
                 {ch}
@@ -93,7 +128,7 @@ export function MiniKeyboard({ onKey, onDelete }: MiniKeyboardProps) {
                 styles.key,
                 { width: size.del },
                 key,
-                pressed && { backgroundColor: pt.activeWord },
+                pressed && pressedKey,
               ]}>
               <Text maxFontSizeMultiplier={1.3} style={[styles.text, { color: pt.ink }]}>
                 ⌫
@@ -107,16 +142,18 @@ export function MiniKeyboard({ onKey, onDelete }: MiniKeyboardProps) {
 }
 
 const styles = StyleSheet.create({
-  kb: { gap: 6 },
+  kb: { gap: 10, marginHorizontal: -KB_BLEED },
   row: { flexDirection: 'row', gap: KEY_GAP, justifyContent: 'center' },
   key: {
     flexGrow: 0,
     flexShrink: 0,
-    height: 46,
     borderRadius: 8,
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  text: { fontSize: 16, fontFamily: FONT.sansSemi },
+  // A quiet outlined key: it shouldn't pull the eye while typing.
+  help: { borderWidth: 1.5, backgroundColor: 'transparent' },
+  text: { fontSize: 20, fontFamily: FONT.sansSemi },
+  helpText: { fontSize: 14, fontFamily: FONT.sansSemi },
 });

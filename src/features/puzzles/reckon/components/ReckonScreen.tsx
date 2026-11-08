@@ -1,3 +1,5 @@
+import { dayBefore } from '@noodle/core';
+
 import { boldLead, FinishSheet, useFreshFinish } from '@/shared/finish-sheet';
 import { dayHead } from '@/shared/time';
 import { usePuzzleVisit } from '@/shared/results';
@@ -5,7 +7,7 @@ import { usePlayerExit } from '@/shared/shell';
 
 import type { PuzzleFile } from '../../types';
 import { useReckonGame } from '../hooks/useReckonGame';
-import { serial, type ReckonData } from '../model';
+import { homeView, serial, type ReckonData } from '../model';
 import { useReckonColors } from './colors';
 import { ReckonHome } from './ReckonHome';
 import { ReckonPlay } from './ReckonPlay';
@@ -52,7 +54,23 @@ export function ReckonScreen({
         onNext={openNext}
       />
     );
-  if (state.view === 'play') return <ReckonPlay state={state} c={c} dispatch={dispatch} />;
+  if (state.view === 'play')
+    return (
+      <ReckonPlay
+        state={state}
+        c={c}
+        dispatch={dispatch}
+        name={`Reckon ${serial(file.data.id)}`}
+        streak={Number(homeView(state, today, dayBefore).stats[0]) || 0}
+        onBack={() => {
+          // The pause sheet's Back to start, then out: the round is kept and its start
+          // screen offers Resume (Alec, 8 Nov 2026: back replaces the pause button).
+          dispatch({ t: 'pause' });
+          dispatch({ t: 'quit' });
+          back();
+        }}
+      />
+    );
   return (
     <ReckonHome
       state={state}

@@ -16,8 +16,9 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { PuzzleBar } from '@/shared/start-card';
 import { FONT, usePuzzleTokens } from '@/shared/theme';
-import { Chevron, pressable } from '@/shared/ui';
+import { pressable } from '@/shared/ui';
 
 import { useAnnounce } from '../../link/hooks/announce';
 import { boardTop, current, foundList, N, type Rect, type TangleEngine } from '../model';
@@ -34,6 +35,8 @@ const MAX_SIDE = 420;
 export const LIST_H = 150;
 export const WORD_H = 32;
 export const TOAST_H = 20;
+/** The traced word's outlined slot: the word, its toast, the dashed edge's 1.5 pt a side and a breath. */
+export const CUR_H = WORD_H + TOAST_H + 4;
 
 /** The tiles' rectangles for a square board `side` wide, in the board's own coordinates. */
 export function tileRects(side: number): Rect[] {
@@ -47,6 +50,8 @@ export function tileRects(side: number): Rect[] {
 }
 
 interface TangleBoardProps {
+  /** Tangle's streak, for the bar. */
+  streak: number;
   engine: TangleEngine;
   setRects: (r: Rect[]) => void;
   onHome: () => void;
@@ -91,13 +96,13 @@ function Thread({ path, rects, color }: { path: number[]; rects: Rect[]; color: 
 }
 
 /**
- * The round on screen (the page's #play): back (pause), score and words, the clock and
- * its bar, the star pill, the words found, the traced word with its toast, and the
+ * The round on screen (the page's #play): the puzzles' bar (back pauses, name, streak, the
+ * clock), the time bar with the score and words, the star pill, the words found, the traced word with its toast, and the
  * board. Tracing uses the touch responder on the board, handing the engine the same
  * press, moves and release the page's pointer events give it; the engine hit-tests
  * them against the tiles' rectangles exactly as the page does.
  */
-export function TangleBoard({ engine, setRects, onHome }: TangleBoardProps) {
+export function TangleBoard({ engine, setRects, onHome, streak }: TangleBoardProps) {
   const pt = usePuzzleTokens();
   const tc = useTangleColors();
   const s = engine.s;
@@ -143,38 +148,32 @@ export function TangleBoard({ engine, setRects, onHome }: TangleBoardProps) {
   return (
     <SafeAreaView style={[styles.fill, { backgroundColor: pt.paper }]} testID="tangle-board">
       <View style={styles.in}>
+        <PuzzleBar
+          name={`Tangle ${engine.P.n}`}
+          sub={engine.P.band}
+          streak={streak}
+          clock={top.clock}
+          urgent={top.low}
+          onBack={onHome}
+        />
         <View style={styles.ptop}>
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Pause and go back"
-            onPress={onHome}
-            testID="tangle-back"
-            style={pressable([
-              styles.iconBtn,
-              { borderColor: pt.lineSoft, backgroundColor: pt.card },
-            ])}>
-            <Chevron color={pt.ink} dir="left" size={10} />
-          </Pressable>
-          <View style={styles.scorebox}>
+          <View style={[styles.timebar, { backgroundColor: pt.lineSoft }]}>
+            <View
+              style={[
+                styles.timefill,
+                { backgroundColor: top.low ? pt.bad : pt.brand, width: `${top.fill * 100}%` },
+              ]}
+            />
+          </View>
+          <Text
+            style={[styles.small, { color: pt.inkSoft }]}
+            maxFontSizeMultiplier={1.3}
+            accessibilityLabel={`${top.score} points, ${top.words}`}>
             <Text style={[styles.score, { color: pt.ink }]} testID="tangle-score">
               {top.score}
             </Text>
-            <Text style={[styles.small, { color: pt.inkSoft }]}>{`pts · ${top.words}`}</Text>
-          </View>
-          <Text
-            style={[styles.clock, { color: top.low ? pt.bad : pt.ink }]}
-            accessibilityRole="timer"
-            testID="tangle-clock">
-            {top.clock}
+            {` pts · ${top.words}`}
           </Text>
-        </View>
-        <View style={[styles.timebar, { backgroundColor: pt.lineSoft }]}>
-          <View
-            style={[
-              styles.timefill,
-              { backgroundColor: top.low ? pt.bad : pt.brand, width: `${top.fill * 100}%` },
-            ]}
-          />
         </View>
         <View
           testID="tangle-pill"
@@ -216,7 +215,7 @@ export function TangleBoard({ engine, setRects, onHome }: TangleBoardProps) {
             </View>
           ))}
         </ScrollView>
-        <View style={styles.cur} testID="tangle-cur">
+        <View style={[styles.cur, { borderColor: pt.lineSoft }]} testID="tangle-cur">
           <Text
             numberOfLines={1}
             adjustsFontSizeToFit
@@ -351,28 +350,12 @@ const styles = StyleSheet.create({
     width: '100%',
     alignSelf: 'center',
   },
-  ptop: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 48 },
-  iconBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  ptop: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 28 },
   chev: { fontSize: 26, lineHeight: 28, fontFamily: FONT.sansSemi },
-  scorebox: { flex: 1, flexDirection: 'row', alignItems: 'baseline', gap: 6 },
-  score: { fontSize: 28, fontFamily: FONT.display, fontVariant: ['tabular-nums'] },
+  score: { fontSize: 20, fontFamily: FONT.display, fontVariant: ['tabular-nums'] },
   small: { fontFamily: FONT.sans, fontSize: 13 },
-  clock: {
-    fontSize: 22,
-    fontFamily: FONT.display,
-    fontVariant: ['tabular-nums'],
-    minWidth: 60,
-    textAlign: 'right',
-  },
-  timebar: { height: 4, borderRadius: 2, overflow: 'hidden' },
-  timefill: { height: 4 },
+  timebar: { flex: 1, height: 6, borderRadius: 3, overflow: 'hidden' },
+  timefill: { height: 6 },
   pill: {
     alignSelf: 'flex-start',
     borderRadius: 999,
@@ -396,8 +379,12 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   bon: { fontStyle: 'italic' },
+  // A fixed, outlined slot: the traced word always has its place, so nothing jumps.
   cur: {
-    height: WORD_H + TOAST_H,
+    height: CUR_H,
+    borderWidth: 1.5,
+    borderStyle: 'dashed',
+    borderRadius: 12,
     flexShrink: 0,
     alignItems: 'center',
     justifyContent: 'flex-start',

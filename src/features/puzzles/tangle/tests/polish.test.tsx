@@ -152,7 +152,7 @@ describe('GIVEN a screen reader', () => {
 describe('GIVEN the back button', () => {
   it('THEN it dims while pressed', async () => {
     await open(400, 400);
-    const b = screen.getByTestId('tangle-back');
+    const b = screen.getByRole('button', { name: 'Back to Puzzles' });
     await hold(b);
     expect(b).toHaveStyle(PRESSED);
     await release(b);

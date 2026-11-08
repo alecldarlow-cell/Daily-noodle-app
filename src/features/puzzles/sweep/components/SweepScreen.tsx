@@ -115,13 +115,28 @@ export function SweepScreen({ file }: { file: PuzzleFile<SweepData> }) {
     return (
       <Pressable
         accessibilityRole="button"
+        accessibilityLabel={flag ? `Flag, ${left} mines left` : 'Dig'}
         accessibilityState={{ selected: on }}
         onPress={() => dispatch({ t: 'mode', flag })}
+        testID={flag ? 'sweep-mode-flag' : 'sweep-mode-dig'}
         style={pressable([
           styles.mode,
           { backgroundColor: bg, borderColor: on && !flag ? pt.brand : pt.ink },
         ])}>
         <Text style={[styles.modeText, { color: ink }]}>{flag ? '⚑ Flag' : '⛏ Dig'}</Text>
+        {flag ? (
+          // The mines-left count rides in the Flag button: a counter with a button's
+          // outline invited a pointless tap (Alec, 8 Nov 2026).
+          <Text
+            style={[
+              styles.modeText,
+              styles.count,
+              left < 0 ? [styles.neg, { backgroundColor: pt.bad }] : { color: ink },
+            ]}
+            testID="sweep-left">
+            {left}
+          </Text>
+        ) : null}
       </Pressable>
     );
   };
@@ -153,29 +168,15 @@ export function SweepScreen({ file }: { file: PuzzleFile<SweepData> }) {
         <View style={styles.modes}>
           {modeBtn(false)}
           {modeBtn(true)}
-          <View
-            style={[styles.counter, { borderColor: pt.ink, backgroundColor: pt.card }]}
-            accessibilityLabel={`Mines left ${left}`}>
-            <Text style={[styles.modeText, { color: pt.ink }]}>⚑ </Text>
-            <Text
-              style={[
-                styles.modeText,
-                left < 0 ? [styles.neg, { backgroundColor: pt.bad }] : { color: pt.ink },
-              ]}
-              testID="sweep-left">
-              {left}
-            </Text>
-          </View>
-        </View>
-        <Message msg={copy.msg} color={pt.inkSoft} />
-        <View style={styles.controls}>
           <Pressable
             accessibilityRole="button"
             onPress={() => dispatch({ t: 'hint' })}
-            style={pressable([styles.btn, { borderColor: pt.ink, backgroundColor: pt.card }])}>
+            testID="sweep-hint"
+            style={pressable([styles.hint, { borderColor: pt.ink, backgroundColor: pt.card }])}>
             <Text style={[styles.btnText, { color: pt.ink }]}>Hint</Text>
           </Pressable>
         </View>
+        <Message msg={copy.msg} color={pt.inkSoft} />
       </View>
     </SafeAreaView>
   );
@@ -196,6 +197,8 @@ const styles = StyleSheet.create({
   modes: { flexDirection: 'row', gap: 8 },
   mode: {
     flex: 1,
+    flexDirection: 'row',
+    gap: 6,
     minHeight: 48,
     borderWidth: 1.5,
     borderRadius: 10,
@@ -203,26 +206,18 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   modeText: { fontSize: 15, fontFamily: FONT.display },
-  counter: {
-    minWidth: 74,
-    borderWidth: 1.5,
-    borderRadius: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  count: { fontVariant: ['tabular-nums'] },
   neg: { color: '#fff', borderRadius: 4, paddingHorizontal: 5, overflow: 'hidden' },
   msg: { fontFamily: FONT.sans, fontSize: 13, lineHeight: 18, textAlign: 'center', minHeight: 18 },
   bold: { fontFamily: FONT.display },
-  controls: { flexDirection: 'row', justifyContent: 'center', gap: 6 },
-  btn: {
-    minHeight: 44,
-    minWidth: 88,
+  hint: {
+    minHeight: 48,
+    minWidth: 76,
     borderWidth: 1.5,
-    borderRadius: 9,
+    borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 14,
+    paddingHorizontal: 12,
   },
   btnText: { fontSize: 14, fontFamily: FONT.sansMedium },
 });

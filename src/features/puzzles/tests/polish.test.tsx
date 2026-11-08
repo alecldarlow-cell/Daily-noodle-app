@@ -73,6 +73,7 @@ describe('GIVEN a Mini being played', () => {
       await press('cell-0-0');
       await press('key-X');
       expect(H.impactAsync).toHaveBeenCalledWith(Haptics.ImpactFeedbackStyle.Light);
+      await press('key-help');
       await fireEvent.press(screen.getByRole('button', { name: 'Check all' }));
       expect(H.notificationAsync).toHaveBeenLastCalledWith(Wrong);
       await solveMini();
@@ -163,7 +164,7 @@ describe('GIVEN a screen reader or large text on the boards', () => {
     expect(within(screen.getByTestId('key-M')).getByText('M').props.maxFontSizeMultiplier).toBe(
       1.3,
     );
-    expect(screen.getByRole('button', { name: 'Check all' })).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'Help' })).toBeOnTheScreen();
   });
 
   it('THEN a found Link group reads as its name and members', async () => {

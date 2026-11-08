@@ -32,6 +32,7 @@ const MOVES: MoveSpec = {
   del: {},
   bar: {},
   step: { delta: 'number' },
+  checkCell: {},
   checkWord: {},
   checkAll: {},
   revealWord: {},

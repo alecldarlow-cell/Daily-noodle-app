@@ -85,7 +85,7 @@ export function houseLine(type: HouseLineType, data?: { traps?: unknown[] | null
 export const HOW: Record<GridStreakType, readonly string[]> = {
   mini: [
     'Tap a square and type. Tap the clue bar to switch between across and down; the arrows either side step through the clues.',
-    'Check word and Check all mark wrong letters; Reveal word fills one in. The clock stops when the grid is right.',
+    'Help, the bottom-left key, checks a square, a word or the whole grid for wrong letters, or reveals a word. The clock stops when the grid is right.',
   ],
   doku: [
     'Tap a tile in the bank, then tap a square to place it; or tap a square and type. Every run of letters, across and down, must make a real word.',
