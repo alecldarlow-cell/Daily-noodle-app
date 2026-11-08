@@ -200,7 +200,7 @@ export function FinishSheet(props: FinishSheetProps) {
   const slot =
     boardSlot ??
     (renderSlot && path
-      ? renderSlot({ path, type, date, onTag: setTag, solved, celebrate, lead: !main })
+      ? renderSlot({ path, type, date, onTag: setTag, solved, celebrate, lead: solved })
       : null);
   const answer = recap ? (
     <View style={[styles.recap, !solved && styles.recapFirst]} testID="finish-recap">
@@ -357,16 +357,18 @@ export function FinishSheet(props: FinishSheetProps) {
 
         {solved ? (
           <Entrance play={celebrate} delay={260}>
+            {/* Two rows, icons in one column at one size (Alec, 8 Nov 2026): the reward, then
+                the league with its podium disc (or a blank of the same width). */}
             <View style={styles.reward} testID="finish-reward">
-              {main ? <RewardIcon kind={main.kind} /> : null}
-              <View style={styles.rewardText}>
-                {main ? (
+              {main ? (
+                <View style={styles.rewardRow}>
+                  <RewardIcon kind={main.kind} />
                   <Text style={[styles.rewardMain, { color: pt.ink }]} testID="finish-reward-main">
                     {main.text}
                   </Text>
-                ) : null}
-                <View testID="finish-board-slot">{slot}</View>
-              </View>
+                </View>
+              ) : null}
+              <View testID="finish-board-slot">{slot}</View>
             </View>
           </Entrance>
         ) : (
@@ -454,9 +456,9 @@ const styles = StyleSheet.create({
   outcome: { fontSize: 18, lineHeight: 24, fontFamily: FONT.sansSemi, marginTop: 6 },
   note: { fontSize: 14, lineHeight: 20, marginTop: 4, fontFamily: FONT.sans },
   strong: { fontFamily: FONT.sansSemi },
-  reward: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 18 },
-  rewardText: { flex: 1, gap: 2 },
-  rewardMain: { fontSize: 16, lineHeight: 21, fontFamily: FONT.sansSemi },
+  reward: { gap: 12, marginTop: 18 },
+  rewardRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  rewardMain: { flex: 1, fontSize: 16, lineHeight: 21, fontFamily: FONT.sansSemi },
   icon: {
     width: 30,
     height: 30,

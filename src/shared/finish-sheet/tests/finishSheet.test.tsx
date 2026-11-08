@@ -312,8 +312,12 @@ describe('GIVEN a finish sheet (design B3)', () => {
         date: today,
         solved: true,
         celebrate: false,
-        lead: false,
+        // Alec, 8 Nov 2026: the league line is its own row, under the reward, icons lined up.
+        lead: true,
       });
+      expect(
+        StyleSheet.flatten(screen.getByTestId('finish-reward').props.style).flexDirection,
+      ).toBe(undefined);
       expect(screen.getByText('0 of 3 done today')).toBeOnTheScreen();
       expect(screen.getByTestId('finish-next-icon').type).toBe('Image');
       expect(screen.getByTestId('finish-recap-label')).toHaveTextContent('YOUR BOARD');

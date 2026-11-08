@@ -29,8 +29,8 @@ export interface BoardSlotProps {
   /** A fresh finish: a podium disc may pop and shine; never on a reopened puzzle. */
   celebrate?: boolean;
   /**
-   * The line stands alone in the reward block (no personal best, milestone or streak above
-   * it), so it may lead with its own icon (the podium disc for 1st to 3rd).
+   * The line is a row of the finish sheet's reward block (a solved round): it leads with a
+   * 30 pt icon column, the podium disc for 1st to 3rd or a blank, under the reward's icon.
    */
   lead?: boolean;
 }
