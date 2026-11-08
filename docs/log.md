@@ -1070,3 +1070,10 @@ Alec ran an outside review of the app and asked for its findings to be checked a
 - Row 1 is the reward (🔥 streak, ★ personal best or a gold milestone) with its 30 pt icon. Row 2 is the league line, led by the podium disc at 30 pt for 1st to 3rd, or a 30 pt blank so the words line up under row 1's. Alec considered showing only one line, by priority, and kept two rows.
 - The slot's `lead` is now true on every solved round. Lost rounds keep the plain line. Outside the finish sheet the disc stays small (20 pt).
 - **Tests:** boardLink covers the 30 pt disc in the reward block and the blank for 4th or lower. finishSheet: the slot gets `lead: true`, and the block stacks its rows. One intended-design expectation changed (`lead: false` became `true`).
+
+## 2026-11-08 — Finish page: the reward block's two rows match
+
+- Alec, 8 Nov: the flame and coin looked like different sizes. Both were 30 pt, but the flame's faint disc blended into the background.
+- The streak's 🔥 now sits on an ember disc (`EMBER`, face #4A2414, rim #C2702E, 2.5 pt) with a rim like the coin's.
+- In the reward block, the league line's words are 16 pt, matching the reward line. Elsewhere they stay 14 pt.
+- **Tests:** finishSheet (ember disc size and rim), boardLink (16 pt words in the block).

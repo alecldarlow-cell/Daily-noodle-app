@@ -14,7 +14,7 @@ import { mockSite, renderWithProviders } from '@/shared/testing';
 import { TODAY_CACHE_KEY } from '@/shared/today';
 
 import { BoardSlotProvider, type BoardSlotComponent, type BoardSlotProps } from '../boardSlot';
-import { ANNOUNCE_MS, FinishSheet, type FinishSheetProps } from '../FinishSheet';
+import { ANNOUNCE_MS, EMBER, FinishSheet, type FinishSheetProps } from '../FinishSheet';
 import {
   announcement,
   clockLine,
@@ -302,7 +302,17 @@ describe('GIVEN a finish sheet (design B3)', () => {
       expect(screen.getByTestId('finish-title')).toHaveTextContent('Swept');
       expect(screen.getByRole('header', { name: 'Sweep 115 · Swept' })).toBeOnTheScreen();
       expect(screen.getByTestId('finish-reward-main')).toHaveTextContent('26-day Sweep streak');
-      expect(screen.getByTestId('finish-reward-icon-streak', hidden)).toBeTruthy();
+      // An ember disc with a rim, so it reads at the podium coin's size (Alec, 8 Nov 2026).
+      const ember = StyleSheet.flatten(
+        screen.getByTestId('finish-reward-icon-streak', hidden).props.style,
+      );
+      expect(ember).toMatchObject({
+        width: 30,
+        height: 30,
+        backgroundColor: EMBER.face,
+        borderColor: EMBER.rim,
+        borderWidth: 2.5,
+      });
       expect(screen.getByTestId('fake-league')).toHaveTextContent(
         '1st in Noodlers today · See board ›',
       );
