@@ -142,9 +142,9 @@ describe('GIVEN another Doku’s round is kept in the Doku slot', () => {
       const { result } = await renderHook(() => usePlayerExit());
       await act(() => result.current.next(dokuItem));
       expect(alert).toHaveBeenCalledTimes(1);
-      expect(alert.mock.calls[0]![0]).toBe('Replace your Doku in progress?');
+      expect(alert.mock.calls[0]![0]).toMatch(/ isn’t finished$/);
       expect(mockRouter.replace).not.toHaveBeenCalled();
-      const start = buttons().find((b) => b.text === 'Start Doku 108')!;
+      const start = buttons().find((b) => b.text === 'Start Doku 108 instead')!;
       await act(() => start.onPress!());
       expect(mockRouter.replace).toHaveBeenCalledTimes(1);
       expect(mockRouter.replace).toHaveBeenCalledWith(route);
