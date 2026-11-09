@@ -53,7 +53,7 @@ describe('GIVEN Today opened from a shared Mini link', () => {
       mockSite({ 'puzzles-today.json': todayList() });
       await renderWithProviders(<TodayScreen open="mini" />);
       await waitFor(() => expect(alert).toHaveBeenCalledTimes(1));
-      expect(alert.mock.calls[0]![0]).toBe('Replace your Mini in progress?');
+      expect(alert.mock.calls[0]![0]).toBe('Another Mini isn’t finished');
       expect(router.push).not.toHaveBeenCalled();
       alert.mockRestore();
     });

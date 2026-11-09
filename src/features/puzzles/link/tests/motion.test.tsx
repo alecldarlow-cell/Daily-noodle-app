@@ -85,6 +85,36 @@ describe('GIVEN a Link in play with motion allowed', () => {
     });
   });
 
+  describe('WHEN a right four follows a wrong one (Alec, 9 Nov 2026)', () => {
+    it('THEN the wrong four’s tiles stay still and plain as the rows close up', async () => {
+      motion(false);
+      await open();
+      const wrong = [G[1]![0]!, G[1]![1]!, G[1]![2]!, G[2]![0]!];
+      await pick(wrong);
+      await run(MISS_MS + 100);
+      await pick(G[0]!);
+      for (const ms of [100, SETTLE_MS, 300]) {
+        await run(ms);
+        expect(screen.queryAllByTestId('link-wobble')).toHaveLength(0);
+        for (const w of wrong)
+          expect(within(screen.getByTestId(`tile-${w}`)).getByText(w)).not.toHaveStyle({
+            color: '#E4483B',
+          });
+      }
+      expect(screen.getByTestId('band-1')).toBeOnTheScreen();
+    });
+
+    it('THEN a Shuffle after a wrong four doesn’t wobble it again', async () => {
+      motion(false);
+      await open();
+      await pick([G[1]![0]!, G[1]![1]!, G[1]![2]!, G[2]![0]!]);
+      await run(MISS_MS + 100);
+      await press('Shuffle');
+      await run(100);
+      expect(screen.queryAllByTestId('link-wobble')).toHaveLength(0);
+    });
+  });
+
   describe('WHEN a right four is submitted', () => {
     it('THEN its tiles settle one by one and fly, and the band lands with a swell', async () => {
       motion(false);

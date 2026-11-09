@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   PixelRatio,
   Pressable,
@@ -17,7 +17,7 @@ import { disabled, MAX_MISTAKES, shownMsg, type LinkState } from '../model';
 import { useAnnounce } from '../hooks/announce';
 import type { ScreenMove } from '../hooks/useLinkGame';
 import { useBoardColors } from './LinkParts';
-import { Landing, LostPip, SettleTile, Wobble } from './LinkMotion';
+import { Landing, LostPip, MISS_MS, SettleTile, Wobble } from './LinkMotion';
 
 interface LinkBoardProps {
   state: LinkState;
@@ -87,9 +87,19 @@ export function LinkBoard({ state, dispatch, past = false }: LinkBoardProps) {
       const again = state.msg.text === 'Already tried that one' && last.msg.text !== state.msg.text;
       if (lost || again)
         setMiss({ n: (miss?.n ?? 0) + 1, tiles: state.sel, pip: lost ? state.mistakes - 1 : -1 });
+      // Tiles that move (a right four settling, the rows closing up, Shuffle) are drawn
+      // afresh, and a wobble still marked would play again on them (Alec, 9 Nov 2026).
+      else if (miss && (state.live !== last.live || state.settling !== last.settling))
+        setMiss(null);
       if (state.solved.length === last.solved.length + 1) setLanded(state.solved.at(-1)!);
     }
   }
+  // The wobble plays once: after it the four are forgotten, so nothing redrawn replays it.
+  useEffect(() => {
+    if (!miss) return;
+    const h = setTimeout(() => setMiss(null), MISS_MS);
+    return () => clearTimeout(h);
+  }, [miss]);
   // The board's geometry, for the right four's flight to the band's row.
   const [geo, setGeo] = useState({ h: 0, w: 0 });
   const measure = (e: LayoutChangeEvent) => {

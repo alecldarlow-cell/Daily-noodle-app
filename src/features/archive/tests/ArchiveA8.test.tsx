@@ -119,7 +119,11 @@ describe('GIVEN a Mini left part-way', () => {
       await fireEvent.press(screen.getByTestId('archive-DP·MINI·0010'));
       expect(router.push).not.toHaveBeenCalled();
       const buttons = alert.mock.calls[0]![2] as AlertButton[];
-      expect(buttons.map((b) => b.text)).toEqual(['Cancel', 'Go to Mini 100', 'Start Mini 10']);
+      expect(buttons.map((b) => b.text)).toEqual([
+        'Cancel',
+        'Carry on with Mini 100',
+        'Start Mini 10 instead',
+      ]);
       buttons[2]!.onPress!();
       expect(router.push).toHaveBeenCalledWith({
         pathname: '/play/[type]/[file]',

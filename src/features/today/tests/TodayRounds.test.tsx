@@ -116,9 +116,13 @@ describe('GIVEN yesterday’s Mini is kept part-way', () => {
       await waitFor(() => expect(screen.queryByText('Yesterday.')).toBeNull());
       await fireEvent.press(screen.getByTestId('today-mini'));
       expect(router.push).not.toHaveBeenCalled();
-      expect(alert.mock.calls[0]![0]).toBe('Replace your Mini in progress?');
+      expect(alert.mock.calls[0]![0]).toBe('Mini 104 isn’t finished');
       const buttons = alert.mock.calls[0]![2] as AlertButton[];
-      expect(buttons.map((b) => b.text)).toEqual(['Cancel', 'Go to Mini 104', 'Start Mini 105']);
+      expect(buttons.map((b) => b.text)).toEqual([
+        'Cancel',
+        'Carry on with Mini 104',
+        'Start Mini 105 instead',
+      ]);
       buttons[1]!.onPress!();
       expect(router.push).toHaveBeenCalledWith({
         pathname: '/play/[type]/[file]',
