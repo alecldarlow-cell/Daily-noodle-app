@@ -1136,4 +1136,11 @@ Alec ran an outside review of the app and asked for its findings to be checked a
 - Alec's go-ahead, 10 Nov (distribution plan, batch 3): `/tally`, `/tally/` and `/tally/index.html` join the short-link App Links in `app.json`, as the other eight types. `systemPath` already sent `/tally` to `/?open=tally`; only Android's filter was missing, so a shared Tally result opened the browser.
 - **Tests:** appLinks.test.ts now expects nine types (an intended change to the expected list).
 - **Needs a native build** (app.json changes the runtime fingerprint): it reaches phones with the next Play build, not by OTA. No site change: assetlinks.json is per domain.
-- **Left:** in-app review prompt, awaiting Alec's decision.
+- **Left:** nothing; the rating prompt below rides on the same branch.
+
+## 10 Nov 2026 — The store's rating sheet, asked once (not a WP; ADR-010)
+
+- Alec's go-ahead, 10 Nov (distribution plan, batch 3): `expo-store-review` 58.0.2 and `src/shared/review`. The finish sheet asks the store for its rating sheet at most once per app version, 2.5 s after a fresh win of today's puzzle that puts the type's day streak at five or more. Never after a loss, an archive puzzle or a reopened puzzle. The version that asked is kept under the new disposable key `noodle-app-review`.
+- **Tests:** review.test.ts (asks once, again on a new version; the four not-that-moment cases; store unavailable or erroring). Jest stand-in `test/mocks/expo-store-review.js`. `THIRD-PARTY-NOTICES.md` regenerated.
+- **Needs a native build**, with the Tally App Link on the same branch (draft PR #146): `scripts/tests/runtime.test.ts` is red by design until that build ships and `store/runtime.json` records it. **Do not merge before then.**
+- **Needs Alec:** include this branch in the next Play build. The sheet can only be seen on a Play install.
