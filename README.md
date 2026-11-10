@@ -1,7 +1,11 @@
 # Daily Noodle — the puzzle app
 
-The Daily Noodle's eight daily puzzles as an iPhone and Android app: Today, Archive,
-streaks, leagues and optional sign-in. Built with Expo (React Native, TypeScript).
+**Nine free daily puzzles in British English, new every morning**, as an Android app (in Google
+Play testing; iPhone later): Mini (a small crossword), Doku (letter logic), Sweep (minesweeper you
+can always solve without guessing), Path (a number trail), Link (four hidden word groups), Tangle
+(a 90-second word grid), Borders (name the country from its outline), Reckon (estimate ten
+numbers) and Tally (a small calcudoku). Today, Archive, streaks, private leagues for friends and
+family, and optional sign-in. No adverts. Built with Expo (React Native, TypeScript).
 The website, [dailynoodle.co.uk](https://dailynoodle.co.uk), stays as it is; this app
 reads what its build publishes and talks to the same Supabase backend.
 
