@@ -1144,3 +1144,9 @@ Alec ran an outside review of the app and asked for its findings to be checked a
 - **Tests:** review.test.ts (asks once, again on a new version; the four not-that-moment cases; store unavailable or erroring). Jest stand-in `test/mocks/expo-store-review.js`. `THIRD-PARTY-NOTICES.md` regenerated.
 - **Needs a native build**, with the Tally App Link on the same branch (draft PR #146): `scripts/tests/runtime.test.ts` is red by design until that build ships and `store/runtime.json` records it. **Do not merge before then.**
 - **Needs Alec:** include this branch in the next Play build. The sheet can only be seen on a Play install.
+
+## 10 Nov 2026 — 0.5.0 for the next store build (not a WP)
+
+- Alec, 10 Nov: build the Tally App Link and the rating sheet for Google Play. Version 0.5.0 in `app.json`, `package.json` and the lock file; `scripts/tests/version.test.ts` expects it.
+- The production Android build is started from this branch (`tally-app-link`) with the Release workflow. After Alec uploads the `.aab` to Play: put that build's runtime version in `store/runtime.json`, then merge PR #146.
+
