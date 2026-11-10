@@ -58,7 +58,10 @@
             { "scheme": "https", "host": "dailynoodle.co.uk", "path": "/borders/index.html" },
             { "scheme": "https", "host": "dailynoodle.co.uk", "path": "/reckon" },
             { "scheme": "https", "host": "dailynoodle.co.uk", "path": "/reckon/" },
-            { "scheme": "https", "host": "dailynoodle.co.uk", "path": "/reckon/index.html" }
+            { "scheme": "https", "host": "dailynoodle.co.uk", "path": "/reckon/index.html" },
+            { "scheme": "https", "host": "dailynoodle.co.uk", "path": "/tally" },
+            { "scheme": "https", "host": "dailynoodle.co.uk", "path": "/tally/" },
+            { "scheme": "https", "host": "dailynoodle.co.uk", "path": "/tally/index.html" }
           ],
           "category": ["BROWSABLE", "DEFAULT"]
         }

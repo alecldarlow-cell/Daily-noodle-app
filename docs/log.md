@@ -1130,3 +1130,10 @@ Alec ran an outside review of the app and asked for its findings to be checked a
 - Distribution review, 10 Nov (project doc `claude/distribution-plan-2026-11-10.md`): the public README still said "eight daily puzzles" and "iPhone and Android". It now leads with the nine puzzles by name and the true store status (Android testing, iPhone later), since a public README is read by search and AI tools. Site side: dailynoodle PR #119 (structured data, AI sources in admin).
 - Found, not changed (needs a native build): `/tally` is missing from the App Links intent filter in `app.json`, so `dailynoodle.co.uk/tally` share links open the browser; no in-app review prompt yet. Both are batch 3 of the plan.
 - Docs only; no code change.
+
+## 10 Nov 2026 — Tally share links open the app (not a WP)
+
+- Alec's go-ahead, 10 Nov (distribution plan, batch 3): `/tally`, `/tally/` and `/tally/index.html` join the short-link App Links in `app.json`, as the other eight types. `systemPath` already sent `/tally` to `/?open=tally`; only Android's filter was missing, so a shared Tally result opened the browser.
+- **Tests:** appLinks.test.ts now expects nine types (an intended change to the expected list).
+- **Needs a native build** (app.json changes the runtime fingerprint): it reaches phones with the next Play build, not by OTA. No site change: assetlinks.json is per domain.
+- **Left:** in-app review prompt, awaiting Alec's decision.

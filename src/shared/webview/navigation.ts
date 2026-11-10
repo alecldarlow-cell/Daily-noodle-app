@@ -104,7 +104,7 @@ export function shareBoard(u: URL): { p?: string; d?: string } {
  * opens these site links in the app (app.json intentFilters, verified by the site's
  * assetlinks.json):
  * - an invite, https://dailynoodle.co.uk/join.html?c=CODE → that league's invite on Leagues;
- * - a shared result's short link, /mini … /reckon (also /mini/ and /mini/index.html, as the
+ * - a shared result's short link, /mini … /tally (also /mini/ and /mini/index.html, as the
  *   site serves it) → today's puzzle of that type, on Today (`/?open=mini`; AF-010);
  * - a board link with a code, board.html?join=CODE → the same invite as join.html. A board
  *   link carrying the website's sign-in (its email links land on board.html) is left alone.
