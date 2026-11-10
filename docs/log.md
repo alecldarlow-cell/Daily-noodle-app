@@ -1124,3 +1124,9 @@ Alec ran an outside review of the app and asked for its findings to be checked a
 - Fix: the latch counts Android's Back only while its player is focused (`useIsFocused`); a second tap on the same card within 800 ms (`DOUBLE_TAP_MS`) is dropped (`openPuzzle`'s push, and `pushPuzzle` for the league board).
 - **Tests:** playerBack.test.tsx (How to play then Back, twice; two stacked copies, own Back and Android's): the four new tests fail on the old code and pass now. openPuzzle.test.ts (double tap, after the guard, two different puzzles, league board). The player tests' expo-router mocks gain `useIsFocused: () => true` (the new hook; no assertion changed). `npm run check` green (1,648 tests).
 - **Release:** [#143](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/143); Update production run [42782944481](https://github.com/alecldarlow-cell/Daily-noodle-app/actions/runs/42782944481) published `8c6f6a4` at Alec's request (10 Nov, 08:30 London). JS only. Not checked on a phone yet: Alec to confirm once the app has picked it up.
+
+## 10 Nov 2026 — README says what the app is (not a WP)
+
+- Distribution review, 10 Nov (project doc `claude/distribution-plan-2026-11-10.md`): the public README still said "eight daily puzzles" and "iPhone and Android". It now leads with the nine puzzles by name and the true store status (Android testing, iPhone later), since a public README is read by search and AI tools. Site side: dailynoodle PR #119 (structured data, AI sources in admin).
+- Found, not changed (needs a native build): `/tally` is missing from the App Links intent filter in `app.json`, so `dailynoodle.co.uk/tally` share links open the browser; no in-app review prompt yet. Both are batch 3 of the plan.
+- Docs only; no code change.
