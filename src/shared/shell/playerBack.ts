@@ -1,5 +1,5 @@
 import { londonDay, saveKey, type PuzzleType, type TodayItem } from '@noodle/core';
-import { router } from 'expo-router';
+import { router, useIsFocused } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { BackHandler } from 'react-native';
 
@@ -65,14 +65,23 @@ function heldBy(item: TodayItem): { name?: string; path?: string } | null {
  * Android's Back is swallowed until the screen has gone. Once it has, Back is the tabs' own
  * again (Archive, Leagues and Account go to Today first, then leave the app).
  *
- * Nothing above a player is ever pushed, so a hardware Back while it is mounted is always
- * this screen leaving (an open Modal takes Back itself and never reaches here).
+ * Android's Back counts only while this player is the screen on show. A screen can sit above
+ * a player (the finish page's How to play), or a second player can (a card tapped twice),
+ * and their Back used to trip this one's latch too: once back on it, its Back and Android's
+ * did nothing (Alec, 10 Nov 2026). Under another screen, Back is that screen's, untouched.
+ * An open Modal takes Back itself and never reaches here.
  */
 export function usePlayerExit(): PlayerExit {
   const leaving = useRef(false);
+  const focused = useIsFocused();
+  const onShow = useRef(focused);
+  useEffect(() => {
+    onShow.current = focused;
+  }, [focused]);
 
   useEffect(() => {
     const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      if (!onShow.current) return false;
       if (leaving.current) return true;
       leaving.current = true;
       return false;

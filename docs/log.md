@@ -1116,3 +1116,11 @@ Alec ran an outside review of the app and asked for its findings to be checked a
 - Not changed: an earlier day's finish shows "Noodlers board for Tue 3 Nov" without a place, as designed (Alec: leave the board as it is). Nothing was lost: the result was saved, and See board opened 3 Nov's board.
 - **Tests:** motion.test.tsx (a right four after a wrong one, and Shuffle after one: no wobble, no red); openPuzzle.test.ts (the new question, `dayWord`: today, yesterday, a date, none). Intended-design changes to the question's expected words in openPuzzle, TodayOpen, TodayRounds, ArchiveA8 and playerBack tests. `npm run check` green (1,640 tests, 98.8% lines).
 - Ships with the next app update (OTA: no native change).
+
+## 10 Nov 2026 — Android Back stuck on a puzzle (not a WP)
+
+- Alec, 10 Nov: on Sweep 117's start page neither Android's Back (button or swipe) nor "← Puzzles" did anything.
+- Cause: `usePlayerExit`'s latch (first Back wins, later ones swallowed) listened to Android's Back even when its player was not the screen on show. When a screen sat above a player, that screen's Back tripped the player's latch, and once back on the player every Back was ignored. Two ways in: a Today/Archive card (or a league board's "Play …") tapped twice, which stacked two copies; and the finish page's How to play (7 Nov), which opens over the player.
+- Fix: the latch counts Android's Back only while its player is focused (`useIsFocused`); a second tap on the same card within 800 ms (`DOUBLE_TAP_MS`) is dropped (`openPuzzle`'s push, and `pushPuzzle` for the league board).
+- **Tests:** playerBack.test.tsx (How to play then Back, twice; two stacked copies, own Back and Android's): the four new tests fail on the old code and pass now. openPuzzle.test.ts (double tap, after the guard, two different puzzles, league board). The player tests' expo-router mocks gain `useIsFocused: () => true` (the new hook; no assertion changed). `npm run check` green (1,648 tests).
+- Ships with the next app update (OTA: no native change). Not checked on a phone yet: Alec to confirm on the next update.

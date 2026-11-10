@@ -26,6 +26,8 @@ import { clone as cloneTangle, file19 } from '../tangle/tests/fixtures';
 jest.mock('react-native-webview', () => ({ WebView: () => null }));
 jest.mock('expo-router', () => ({
   router: { back: jest.fn(), replace: jest.fn(), canGoBack: jest.fn(() => true) },
+  // players count Android's Back only while on show (usePlayerExit)
+  useIsFocused: () => true,
   Stack: { Screen: () => null },
 }));
 

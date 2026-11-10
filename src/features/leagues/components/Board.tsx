@@ -16,6 +16,7 @@ import {
 } from 'react-native';
 
 import { BUILD_ENV } from '@/shared/env';
+import { pushPuzzle } from '@/shared/played';
 import { appStorage, useStoredRaw } from '@/shared/storage';
 import { FONT, useTokens } from '@/shared/theme';
 import { useLondonDay } from '@/shared/time';
@@ -554,7 +555,7 @@ function DayView({
       {!played && headline && file ? (
         <Pressable
           accessibilityRole="button"
-          onPress={() => router.push({ pathname: '/play/[type]/[file]', params: { type, file } })}
+          onPress={() => pushPuzzle({ pathname: '/play/[type]/[file]', params: { type, file } })}
           style={[styles.play, { backgroundColor: t.accentSoft }]}>
           <Text style={[styles.playText, { color: t.ink }]}>You haven’t played this one yet.</Text>
           <Text style={[styles.playLink, { color: t.accent }]}>Play {headline} →</Text>

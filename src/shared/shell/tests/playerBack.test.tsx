@@ -7,12 +7,20 @@ import { appStorage } from '@/shared/storage';
 
 import { fileOf, usePlayerExit } from '../playerBack';
 
+let mockFocused = true;
 jest.mock('expo-router', () => ({
   router: { back: jest.fn(), replace: jest.fn(), canGoBack: jest.fn(() => true) },
+  useIsFocused: () => mockFocused,
 }));
 const mockRouter = (
   jest.requireMock('expo-router') as { router: Record<'back' | 'replace' | 'canGoBack', jest.Mock> }
 ).router;
+
+/** Android's Back as React Native runs it: the newest listener first, until one takes it. */
+const pressBack = () => {
+  for (const h of [...handlers].reverse()) if (h()) return true;
+  return false;
+};
 
 type Handler = () => boolean | null | undefined;
 let handlers: Handler[] = [];
@@ -20,6 +28,7 @@ const removed = jest.fn();
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockFocused = true;
   mockRouter.canGoBack.mockReturnValue(true);
   handlers = [];
   jest.spyOn(BackHandler, 'addEventListener').mockImplementation((_e, fn) => {
@@ -110,6 +119,68 @@ describe('GIVEN a player on screen', () => {
         result.current.next(item);
       });
       expect(mockRouter.replace).not.toHaveBeenCalled();
+    });
+  });
+});
+
+describe('GIVEN a screen above the player (the finish page’s How to play)', () => {
+  describe('WHEN Android’s Back closes that screen, then the player’s own Back is tapped', () => {
+    it('THEN the first Back is left to the navigator and the player still leaves', async () => {
+      const { result, rerender } = await renderHook(() => usePlayerExit());
+      mockFocused = false;
+      await rerender({});
+      expect(pressBack()).toBe(false);
+      mockFocused = true;
+      await rerender({});
+      await act(() => result.current.back());
+      expect(mockRouter.back).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('WHEN Android’s Back closes that screen, then Android’s Back is pressed again', () => {
+    it('THEN the second is left to the navigator too, so the player leaves', async () => {
+      const { rerender } = await renderHook(() => usePlayerExit());
+      mockFocused = false;
+      await rerender({});
+      expect(pressBack()).toBe(false);
+      mockFocused = true;
+      await rerender({});
+      expect(pressBack()).toBe(false);
+      expect(pressBack()).toBe(true);
+    });
+  });
+});
+
+describe('GIVEN two copies of a puzzle stacked (its card tapped twice)', () => {
+  describe('WHEN Android’s Back closes the top copy', () => {
+    it('THEN the copy under it still leaves on its own Back and on Android’s', async () => {
+      const under = await renderHook(() => usePlayerExit());
+      mockFocused = false;
+      await under.rerender({});
+      mockFocused = true;
+      const top = await renderHook(() => usePlayerExit());
+      expect(pressBack()).toBe(false);
+      await top.unmount();
+      handlers.pop();
+      mockFocused = true;
+      await under.rerender({});
+      await act(() => under.result.current.back());
+      expect(mockRouter.back).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('WHEN Android’s Back closes the top copy, then Android’s Back is pressed again', () => {
+    it('THEN the copy under it is left to the navigator, so it leaves too', async () => {
+      const under = await renderHook(() => usePlayerExit());
+      mockFocused = false;
+      await under.rerender({});
+      mockFocused = true;
+      const top = await renderHook(() => usePlayerExit());
+      expect(pressBack()).toBe(false);
+      await top.unmount();
+      handlers.pop();
+      await under.rerender({});
+      expect(pressBack()).toBe(false);
     });
   });
 });

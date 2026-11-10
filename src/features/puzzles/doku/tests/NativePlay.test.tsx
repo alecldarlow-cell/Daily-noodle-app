@@ -13,6 +13,8 @@ import { dayHead } from '@/shared/time';
 // an act() open that swallows the next render (seen 25 Oct 2026).
 jest.mock('expo-router', () => ({
   router: { back: jest.fn(), replace: jest.fn(), canGoBack: jest.fn(() => true) },
+  // players count Android's Back only while on show (usePlayerExit)
+  useIsFocused: () => true,
   Stack: { Screen: () => null },
 }));
 

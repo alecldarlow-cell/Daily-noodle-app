@@ -13,6 +13,8 @@ import { file97 } from './fixtures';
 
 jest.mock('expo-router', () => ({
   router: { back: jest.fn(), replace: jest.fn(), canGoBack: jest.fn(() => true) },
+  // players count Android's Back only while on show (usePlayerExit)
+  useIsFocused: () => true,
 }));
 jest.setTimeout(30_000);
 

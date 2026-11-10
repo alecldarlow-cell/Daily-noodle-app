@@ -24,6 +24,8 @@ import { file94 } from '../sweep/tests/fixtures';
 
 jest.mock('expo-router', () => ({
   router: { back: jest.fn(), replace: jest.fn(), canGoBack: jest.fn(() => true) },
+  // players count Android's Back only while on show (usePlayerExit)
+  useIsFocused: () => true,
 }));
 jest.mock('expo-haptics', () => ({
   ...jest.requireActual('expo-haptics'),

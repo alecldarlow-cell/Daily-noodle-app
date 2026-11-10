@@ -21,6 +21,8 @@ import { file2 } from '../reckon/tests/fixtures';
 
 jest.mock('expo-router', () => ({
   router: { back: jest.fn(), replace: jest.fn(), canGoBack: jest.fn(() => true) },
+  // players count Android's Back only while on show (usePlayerExit)
+  useIsFocused: () => true,
 }));
 jest.mock('react-native-webview', () => {
   const { createElement } = jest.requireActual<typeof import('react')>('react');
