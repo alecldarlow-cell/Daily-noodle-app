@@ -52,6 +52,9 @@ export function decide(url: string, current: string): NavDecision {
   }
   if (p === '/' || p === '/index.html' || p === '/puzzles.html') return { kind: 'back' };
   if (p === '/how-to-play.html' || p === '/privacy.html') return { kind: 'allow' };
+  // Each type's own guide page (site: tools/guide-pages.js, 10 Nov 2026), so the guide can link to
+  // them and stay in the app. Lower-case letters only: nothing else under /how-to-play/ is ours.
+  if (/^\/how-to-play\/[a-z]+\.html$/.test(p)) return { kind: 'allow' };
   if (p === '/board.html') {
     // A personal link (#dnmove=) is for a browser to import; it stays in the browser.
     if (/dnmove=/.test(u.hash)) return { kind: 'external' };

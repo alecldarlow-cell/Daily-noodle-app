@@ -1130,3 +1130,9 @@ Alec ran an outside review of the app and asked for its findings to be checked a
 - Distribution review, 10 Nov (project doc `claude/distribution-plan-2026-11-10.md`): the public README still said "eight daily puzzles" and "iPhone and Android". It now leads with the nine puzzles by name and the true store status (Android testing, iPhone later), since a public README is read by search and AI tools. Site side: dailynoodle PR #119 (structured data, AI sources in admin).
 - Found, not changed (needs a native build): `/tally` is missing from the App Links intent filter in `app.json`, so `dailynoodle.co.uk/tally` share links open the browser; no in-app review prompt yet. Both are batch 3 of the plan.
 - Docs only; no code change.
+
+## 10 Nov 2026 — The guide's per-type pages open inside the app (not a WP)
+
+- Alec's go-ahead, 10 Nov (distribution plan: split the guide). The site now has a guide page per puzzle type (`how-to-play/<type>.html`, dailynoodle PR #120). The app's web view allowed only `how-to-play.html`, so the site hides its links to those pages inside the app. `decide()` now allows `/how-to-play/<lower-case>.html` as well; other site pages still open in the browser.
+- **Tests:** navigation.test.ts (two type pages allowed; a path that climbs out, a capitalised name and about.html are not).
+- JS only: goes out with the next production update. **Then, site side:** stop hiding the "More about <Type>" links in the app, and point the website's own "How to play" links at the type pages.
