@@ -1149,4 +1149,3 @@ Alec ran an outside review of the app and asked for its findings to be checked a
 
 - Alec, 10 Nov: build the Tally App Link and the rating sheet for Google Play. Version 0.5.0 in `app.json`, `package.json` and the lock file; `scripts/tests/version.test.ts` expects it.
 - The production Android build is started from this branch (`tally-app-link`) with the Release workflow. After Alec uploads the `.aab` to Play: put that build's runtime version in `store/runtime.json`, then merge PR #146.
-
