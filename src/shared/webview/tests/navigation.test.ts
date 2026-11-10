@@ -12,6 +12,13 @@ describe('GIVEN the page wants to navigate', () => {
   });
   it('THEN the guide and privacy page open in place', () => {
     expect(decide(`${S}/how-to-play.html#mini`, CUR)).toEqual({ kind: 'allow' });
+    // each type's own guide page stays in the app too (site: how-to-play/<type>.html, 10 Nov 2026)
+    expect(decide(`${S}/how-to-play/tally.html`, CUR)).toEqual({ kind: 'allow' });
+    expect(decide(`${S}/how-to-play/mini.html?via=finish`, CUR)).toEqual({ kind: 'allow' });
+    // but nothing else under that folder, and other site pages still leave for the browser
+    expect(decide(`${S}/how-to-play/../admin.html`, CUR)).toEqual({ kind: 'external' });
+    expect(decide(`${S}/how-to-play/Tally.html`, CUR)).toEqual({ kind: 'external' });
+    expect(decide(`${S}/about.html`, CUR)).toEqual({ kind: 'external' });
     expect(decide(`${S}/privacy.html`, CUR)).toEqual({ kind: 'allow' });
   });
   it('THEN "← Puzzles" and the home page go back to the app', () => {
