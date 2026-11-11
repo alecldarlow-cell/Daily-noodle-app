@@ -122,6 +122,20 @@ describe('GIVEN the app already holds saves', () => {
       });
       expect(Object.keys(seedFrom(store)).sort()).toEqual(['digi-doku-streak', 'digi-mini-v1']);
     });
+    it('THEN the Lab’s saves and answers go in too (11 Nov 2026), but no other app key', () => {
+      const { store } = memoryStore({
+        'digi-redact-v1': { v: 1 },
+        'digi-tilt-streak': {},
+        'noodle-lab-votes-v1': { redact: { v: 'yes', at: 1 } },
+        'noodle-lab-voter': 'x',
+        'digi-nope-v1': {},
+      });
+      expect(Object.keys(seedFrom(store)).sort()).toEqual([
+        'digi-redact-v1',
+        'digi-tilt-streak',
+        'noodle-lab-votes-v1',
+      ]);
+    });
   });
 });
 

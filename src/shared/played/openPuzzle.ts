@@ -1,4 +1,4 @@
-import { dateOfPath, londonDay, TYPE_LABEL, type PuzzleType } from '@noodle/core';
+import { dateOfPath, labelOf, londonDay, type AnyType } from '@noodle/core';
 import { router } from 'expo-router';
 import { Alert, type AlertButton } from 'react-native';
 
@@ -7,7 +7,8 @@ import { shortDate } from '@/shared/time';
 import { fileOf } from './rounds';
 
 export interface PuzzleRef {
-  type: PuzzleType;
+  /** A daily type, or a Lab trial's (11 Nov 2026). */
+  type: AnyType;
   /** The card's name ("Mini 105"). */
   name: string;
   path: string;
@@ -16,7 +17,7 @@ export interface PuzzleRef {
 /** How a puzzle's route is opened: pushed above the list (cards), or swapped in (a player). */
 export type Opener = (href: {
   pathname: '/play/[type]/[file]';
-  params: { type: PuzzleType; file: string };
+  params: { type: AnyType; file: string };
 }) => void;
 
 /** When the last card push went out, and where to: a double tap must not open two copies. */
@@ -64,13 +65,13 @@ export function openPuzzle(
   open: Opener = push,
   today: string = londonDay(Date.now()),
 ) {
-  const go = (type: PuzzleType, path: string) =>
+  const go = (type: AnyType, path: string) =>
     open({ pathname: '/play/[type]/[file]', params: { type, file: fileOf(path) } });
   if (!held) {
     go(target.type, target.path);
     return;
   }
-  const label = TYPE_LABEL[target.type];
+  const label = labelOf(target.type);
   const when = (path: string | undefined) => {
     const w = dayWord(path, today);
     return w ? ` (${w})` : '';

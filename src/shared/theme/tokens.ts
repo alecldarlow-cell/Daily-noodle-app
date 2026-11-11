@@ -36,6 +36,10 @@ export interface Tokens {
    * paper in both schemes, under a white thumb.
    */
   switchOff: string;
+  /** The Lab's panel and badges (11 Nov 2026): a pale marigold, its ink and its rules. */
+  labSoft: string;
+  labInk: string;
+  labLine: string;
 }
 
 const light: Tokens = {
@@ -59,6 +63,9 @@ const light: Tokens = {
   tileCell: '#FFFFFF',
   tileLock: '#ECF0FC',
   switchOff: '#80858F',
+  labSoft: '#FCEFC7',
+  labInk: '#6A4E00',
+  labLine: '#EBD9A3',
 };
 
 const dark: Tokens = {
@@ -82,6 +89,9 @@ const dark: Tokens = {
   tileCell: '#2E3344',
   tileLock: '#3A4466',
   switchOff: '#6B7186',
+  labSoft: '#2A2410',
+  labInk: '#FFD54A',
+  labLine: '#4A3F1C',
 };
 
 /** Tokens for a colour scheme; anything other than 'dark' gets the light set, as the site does. */
