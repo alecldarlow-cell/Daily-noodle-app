@@ -1,4 +1,11 @@
-import { isPuzzleType, typeOfId, type PuzzleType } from '@noodle/core';
+import {
+  isLabType,
+  isPuzzleType,
+  labTypeOfId,
+  typeOfId,
+  type LabType,
+  type PuzzleType,
+} from '@noodle/core';
 import { useQuery } from '@tanstack/react-query';
 
 import { getJson } from '@/shared/net';
@@ -19,11 +26,16 @@ export interface FeedItem {
   json: string | null;
 }
 
+/** A Lab trial's card (Tilt, Redact, Tumbler): the same fields, kept apart from the dailies. */
+export type LabFeedItem = Omit<FeedItem, 'type'> & { type: LabType };
+
 export interface FeedLite {
   built: string;
   today: string;
   count: number;
   items: FeedItem[];
+  /** The Lab's cards, never mixed into `items` (Today, the Archive's types, stats). */
+  lab: LabFeedItem[];
 }
 
 /** App-only key: the last copy of the list, so the Archive and Today's cards open offline. */
@@ -46,15 +58,17 @@ const DATE = /^\d{4}-\d{2}-\d{2}$/;
  * whose id agrees with it (DP·MINI·… is a mini), a date and a headline. Text the card can do
  * without is filled in empty.
  */
-function parseItem(x: unknown): FeedItem | null {
+function parseItem(x: unknown): FeedItem | LabFeedItem | null {
   if (!x || typeof x !== 'object') return null;
   const o = x as Record<string, unknown>;
-  if (!str(o.path) || !PATH.test(o.path)) return null;
-  if (!isPuzzleType(o.type) || !str(o.id) || typeOfId(o.id) !== o.type) return null;
+  if (!str(o.path) || !PATH.test(o.path) || !str(o.id)) return null;
+  const daily = isPuzzleType(o.type) && typeOfId(o.id) === o.type;
+  const lab = isLabType(o.type) && labTypeOfId(o.id) === o.type;
+  if (!daily && !lab) return null;
   if (!str(o.date) || !DATE.test(o.date) || !str(o.headline)) return null;
   return {
     path: o.path,
-    type: o.type,
+    type: o.type as PuzzleType | LabType,
     id: o.id,
     date: o.date,
     headline: o.headline,
@@ -62,7 +76,7 @@ function parseItem(x: unknown): FeedItem | null {
     read: str(o.read) ? o.read : '',
     mask: str(o.mask) ? o.mask : '',
     json: str(o.json) ? o.json : null,
-  };
+  } as FeedItem | LabFeedItem;
 }
 
 /**
@@ -76,17 +90,22 @@ export function parseFeedLite(x: unknown): FeedLite {
   const o = x as Record<string, unknown> & { items: unknown[] };
   const seen = new Set<string>();
   const items: FeedItem[] = [];
-  for (const raw of o.items) {
+  const lab: LabFeedItem[] = [];
+  // The site lists the Lab's cards among the rest; a kept copy has them apart, under `lab`.
+  const raws = [...o.items, ...(Array.isArray(o.lab) ? (o.lab as unknown[]) : [])];
+  for (const raw of raws) {
     const it = parseItem(raw);
     if (!it || seen.has(it.path)) continue;
     seen.add(it.path);
-    items.push(it);
+    if (isLabType(it.type)) lab.push(it as LabFeedItem);
+    else items.push(it as FeedItem);
   }
   return {
     built: str(o.built) ? o.built : '',
     today: str(o.today) ? o.today : '',
     count: items.length,
     items,
+    lab,
   };
 }
 
