@@ -34,6 +34,9 @@ import { validate as validateTally, type TallyData } from '../tally/model';
 import { enabled as tangleEnabled } from '../tangle';
 import { TangleScreen } from '../tangle/components/TangleScreen';
 import { validate as validateTangle, type TangleData } from '../tangle/model';
+import { enabled as tumblerEnabled } from '../tumbler';
+import { TumblerScreen } from '../tumbler/components/TumblerScreen';
+import { validate as validateTumbler, type TumblerData } from '../tumbler/model';
 import type { PuzzleFile } from '../types';
 
 /** Which types have a native player switched on: each once its replay passed on every puzzle. */
@@ -47,6 +50,8 @@ export const NATIVE: Record<string, boolean> = {
   reckon: reckonEnabled,
   borders: bordersEnabled,
   tally: tallyEnabled,
+  // The Lab's (11 Nov 2026): played natively once its replay passes, never a daily.
+  tumbler: tumblerEnabled,
 };
 
 /**
@@ -63,6 +68,7 @@ const VALIDATE: Record<string, (f: PuzzleFile) => boolean> = {
   reckon: (f) => validateReckon(f.data, f.date).ok,
   borders: (f) => validateBorders(f.data, f.date).ok,
   tally: (f) => validateTally(f.data).ok,
+  tumbler: (f) => validateTumbler(f.data).ok,
 };
 
 /** Puzzle types with a native player, each on once its replay has passed on every puzzle. */
@@ -131,6 +137,8 @@ export function NativePlay({ type, file, fallback }: NativePlayProps) {
       <ReckonScreen key={file} file={data as PuzzleFile<ReckonData>} />
     ) : type === 'tally' ? (
       <TallyScreen key={file} file={data as PuzzleFile<TallyData>} />
+    ) : type === 'tumbler' ? (
+      <TumblerScreen key={file} file={data as PuzzleFile<TumblerData>} />
     ) : (
       <BordersScreen key={file} file={data as PuzzleFile<BordersData>} />
     );

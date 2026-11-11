@@ -22,6 +22,7 @@ import { enabled as reckonEnabled } from '../reckon';
 import { file2 } from '../reckon/tests/fixtures';
 import { enabled as tangleEnabled } from '../tangle';
 import { clone as cloneTangle, file19 } from '../tangle/tests/fixtures';
+import { enabled as tumblerEnabled } from '../tumbler';
 
 jest.mock('react-native-webview', () => ({ WebView: () => null }));
 jest.mock('expo-router', () => ({
@@ -63,6 +64,7 @@ describe('GIVEN the play route asks which types play natively', () => {
       reckon: reckonEnabled,
       borders: bordersEnabled,
       tally: tallyEnabled,
+      tumbler: tumblerEnabled,
     });
     expect(hasNativePlayer('toString')).toBe(false);
     expect(hasNativePlayer(undefined)).toBe(false);

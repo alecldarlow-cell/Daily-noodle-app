@@ -33,7 +33,7 @@ export function createRecorder(tracker: Tracker, uuid: () => string) {
     const v = visit(e.path);
     if (v.started) return;
     v.started = true;
-    tracker.track('puzzle_start', { type: slug(e.type), tv: 3 }, e.path, v.pv);
+    tracker.track('puzzle_start', { type: e.slug ?? slug(e.type), tv: 3 }, e.path, v.pv);
   }
 
   function heardFinish(f: PuzzleFinish): void {

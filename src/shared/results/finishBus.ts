@@ -48,6 +48,11 @@ export interface PuzzleVisit {
   ev: 'open' | 'start';
   path: string;
   type: PuzzleType | null;
+  /**
+   * The site's slug for the start event when `type` is null: a Lab trial's ("word-tumbler"),
+   * which has no league type, so its plays are recorded but never sent to a board.
+   */
+  slug?: string;
 }
 
 type VisitListener = (v: PuzzleVisit) => void;
