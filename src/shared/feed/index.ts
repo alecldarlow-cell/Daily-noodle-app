@@ -6,4 +6,5 @@ export {
   useFeedLite,
   type FeedItem,
   type FeedLite,
+  type LabFeedItem,
 } from './feedLite';

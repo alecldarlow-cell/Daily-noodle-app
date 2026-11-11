@@ -26,14 +26,23 @@ import { enabled as sweepEnabled } from '../sweep';
 import { SweepScreen } from '../sweep/components/SweepScreen';
 import { validate as validateSweep, type SweepData } from '../sweep/model';
 import { enabled as reckonEnabled } from '../reckon';
+import { enabled as redactEnabled } from '../redact';
+import { RedactScreen } from '../redact/components/RedactScreen';
+import { validate as validateRedact, type RedactData } from '../redact/model';
 import { ReckonScreen } from '../reckon/components/ReckonScreen';
 import { validate as validateReckon, type ReckonData } from '../reckon/model';
 import { enabled as tallyEnabled } from '../tally';
 import { TallyScreen } from '../tally/components/TallyScreen';
 import { validate as validateTally, type TallyData } from '../tally/model';
 import { enabled as tangleEnabled } from '../tangle';
+import { enabled as tiltEnabled } from '../tilt';
+import { TiltScreen } from '../tilt/components/TiltScreen';
+import { validate as validateTilt, type TiltData } from '../tilt/model';
 import { TangleScreen } from '../tangle/components/TangleScreen';
 import { validate as validateTangle, type TangleData } from '../tangle/model';
+import { enabled as tumblerEnabled } from '../tumbler';
+import { TumblerScreen } from '../tumbler/components/TumblerScreen';
+import { validate as validateTumbler, type TumblerData } from '../tumbler/model';
 import type { PuzzleFile } from '../types';
 
 /** Which types have a native player switched on: each once its replay passed on every puzzle. */
@@ -47,6 +56,10 @@ export const NATIVE: Record<string, boolean> = {
   reckon: reckonEnabled,
   borders: bordersEnabled,
   tally: tallyEnabled,
+  // A Lab trial (11 Nov 2026): its own screen, start card and finish (src/shared/lab).
+  redact: redactEnabled,
+  tumbler: tumblerEnabled,
+  tilt: tiltEnabled,
 };
 
 /**
@@ -63,6 +76,9 @@ const VALIDATE: Record<string, (f: PuzzleFile) => boolean> = {
   reckon: (f) => validateReckon(f.data, f.date).ok,
   borders: (f) => validateBorders(f.data, f.date).ok,
   tally: (f) => validateTally(f.data).ok,
+  redact: (f) => validateRedact(f.data).ok,
+  tumbler: (f) => validateTumbler(f.data).ok,
+  tilt: (f) => validateTilt(f.data).ok,
 };
 
 /** Puzzle types with a native player, each on once its replay has passed on every puzzle. */
@@ -131,6 +147,12 @@ export function NativePlay({ type, file, fallback }: NativePlayProps) {
       <ReckonScreen key={file} file={data as PuzzleFile<ReckonData>} />
     ) : type === 'tally' ? (
       <TallyScreen key={file} file={data as PuzzleFile<TallyData>} />
+    ) : type === 'redact' ? (
+      <RedactScreen key={file} file={data as PuzzleFile<RedactData>} />
+    ) : type === 'tumbler' ? (
+      <TumblerScreen key={file} file={data as PuzzleFile<TumblerData>} />
+    ) : type === 'tilt' ? (
+      <TiltScreen key={file} file={data as PuzzleFile<TiltData>} />
     ) : (
       <BordersScreen key={file} file={data as PuzzleFile<BordersData>} />
     );

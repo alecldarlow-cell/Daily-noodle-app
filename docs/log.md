@@ -1131,6 +1131,26 @@ Alec ran an outside review of the app and asked for its findings to be checked a
 - Found, not changed (needs a native build): `/tally` is missing from the App Links intent filter in `app.json`, so `dailynoodle.co.uk/tally` share links open the browser; no in-app review prompt yet. Both are batch 3 of the plan.
 - Docs only; no code change.
 
+## 10 Nov 2026 — The guide's per-type pages open inside the app (not a WP)
+
+- Alec's go-ahead, 10 Nov (distribution plan: split the guide). The site now has a guide page per puzzle type (`how-to-play/<type>.html`, dailynoodle PR #120). The app's web view allowed only `how-to-play.html`, so the site hides its links to those pages inside the app. `decide()` now allows `/how-to-play/<lower-case>.html` as well; other site pages still open in the browser.
+- **Tests:** navigation.test.ts (two type pages allowed; a path that climbs out, a capitalised name and about.html are not).
+- JS only: goes out with the next production update. **Then, site side:** stop hiding the "More about <Type>" links in the app, and point the website's own "How to play" links at the type pages.
+
+## 11 Nov 2026 — The Lab in the app: panel, one-tap vote, native Tilt, Redact and Tumbler (not a WP; [#148](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/148))
+
+- Alec's go-ahead (project doc `claude/lab-in-app-brief.md`; mock https://claude.ai/artifact/8D4omvW21JB9zX19QJ3XjD, Option 3 and the one-tap finish). Trials restart from the day this ships; the site added Lab pages through 19 Dec.
+- **Core:** `LAB_TYPES` (tilt, redact, tumbler) apart from `PUZZLE_TYPES`, so a trial never reaches Today's count, streak run, stats or leagues; `AnyType`, `labelOf`, `labPlayed`, `labRunning`, the votes document (`noodle-lab-votes-v1`, the website's shape). Ids and keys are the ones a daily would keep (`digi-<type>-v1`), so graduating renames nothing.
+- **Feed:** feed-lite's Lab cards parsed into `lab`, never `items`.
+- **Today:** "From the Lab" panel under the dailies (pale marigold `labSoft`/`labInk`/`labLine` tokens, contrast-tested): running trials (newest today or yesterday) as compact rows, "Try it ›" / "Continue" / "Rate it" / "✓ Rated", "N OF 3 RATED". No panel when none is running.
+- **shared/lab:** `LabStartCard`, `LabFinishSheet` (Lab badge, time, the one question "Should <Name> go daily?" Yes/No with no submit, next trial, recap, "A Lab trial: it isn’t in your streaks or leagues."), vote sender to the site's `lab_vote` with this phone's own `noodle-lab-voter` code (not the tracker's), the account's token when signed in.
+- **Archive:** a Lab choice in the picker; trials ended show "· Retired"; list only.
+- **Web view:** the bridge carries the Lab types' saves and `noodle-lab-votes-v1`; the site tags votes from the app as source app.
+- **Native players** (built in parallel lanes, merged): Redact, Tumbler, Tilt ported line by line from engines/\*.js, same keys and record shapes; plays tracked with their slugs (`word-redact`, `word-tumbler`, `logic-tilt`) with `type: null`, so the leagues never see them. Differential replay identical on every page: redact 252/252 runs (63 pages), tumbler 252/252 (63), tilt 159/159 (53); after the merge, a 5-page sample of each identical again.
+- **Tests:** core lab.test (16), feedLite (Lab cards), TodayLab, ArchiveLab, shared/lab (vote sender, castVote, trials, finish, start), tokens (Lab contrast), webview messages (Lab keys), each player's model/finishing/oracle/screen tests, tracker (Lab slug). `npm run check` green: 1,778 tests, 98.71% lines.
+- **Site side:** dailynoodle PR [#123](https://github.com/alecldarlow-cell/dailynoodle/pull/123), merged first (Lab votes on the web finish, admin Lab card, privacy line, SITE.md › Lab trial votes, Lab pages to 19 Dec). Database applied live 11 Nov with Alec's go-ahead: migrations `lab_votes` and `lab_votes_admin_not_anon`.
+- **For Alec:** confirm the graduation bar (suggested ~20 votes and 70% Yes, read with abandons). Wording: the Lab start card says "Tilts played" where the web says "mazes played". Ships in the next Play build (native code is JS only, but new tile images are bundled assets).
+
 ## 10 Nov 2026 — Tally share links open the app (not a WP)
 
 - Alec's go-ahead, 10 Nov (distribution plan, batch 3): `/tally`, `/tally/` and `/tally/index.html` join the short-link App Links in `app.json`, as the other eight types. `systemPath` already sent `/tally` to `/?open=tally`; only Android's filter was missing, so a shared Tally result opened the browser.
