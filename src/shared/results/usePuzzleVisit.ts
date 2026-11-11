@@ -6,7 +6,8 @@ import { announceVisit } from './finishBus';
 /**
  * For a native puzzle screen: announces the open once, and returns `start`, which
  * announces the start once (call it where the page's tracker would count a start:
- * Play on the start card). A finished puzzle reopened is never a new start.
+ * Play on the start card). A finished puzzle reopened is never a new start. A Lab trial
+ * has no daily type: it passes null and its tracker slug ("logic-tilt").
  */
 export function usePuzzleVisit(
   path: string,

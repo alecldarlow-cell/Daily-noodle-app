@@ -29,6 +29,7 @@ const SLUG = {
   'quiz-reckon': 'reckon',
   'logic-tally': 'tally',
   'word-tumbler': 'tumbler',
+  'logic-tilt': 'tilt',
   'geo-borders': 'borders',
 };
 /** Shards for a full run, so each job stays well inside GitHub's 6-hour limit. */
@@ -43,6 +44,7 @@ const SHARDS = {
   borders: 6,
   tally: 2,
   tumbler: 1,
+  tilt: 1,
 };
 /** Site code every native player was ported from, besides its own engine. */
 const SHARED = ['engines/finish.js', 'engines/house.js', 'dn-core.js'];

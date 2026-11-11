@@ -35,6 +35,9 @@ import { enabled as tallyEnabled } from '../tally';
 import { TallyScreen } from '../tally/components/TallyScreen';
 import { validate as validateTally, type TallyData } from '../tally/model';
 import { enabled as tangleEnabled } from '../tangle';
+import { enabled as tiltEnabled } from '../tilt';
+import { TiltScreen } from '../tilt/components/TiltScreen';
+import { validate as validateTilt, type TiltData } from '../tilt/model';
 import { TangleScreen } from '../tangle/components/TangleScreen';
 import { validate as validateTangle, type TangleData } from '../tangle/model';
 import { enabled as tumblerEnabled } from '../tumbler';
@@ -56,6 +59,7 @@ export const NATIVE: Record<string, boolean> = {
   // A Lab trial (11 Nov 2026): its own screen, start card and finish (src/shared/lab).
   redact: redactEnabled,
   tumbler: tumblerEnabled,
+  tilt: tiltEnabled,
 };
 
 /**
@@ -74,6 +78,7 @@ const VALIDATE: Record<string, (f: PuzzleFile) => boolean> = {
   tally: (f) => validateTally(f.data).ok,
   redact: (f) => validateRedact(f.data).ok,
   tumbler: (f) => validateTumbler(f.data).ok,
+  tilt: (f) => validateTilt(f.data).ok,
 };
 
 /** Puzzle types with a native player, each on once its replay has passed on every puzzle. */
@@ -146,6 +151,8 @@ export function NativePlay({ type, file, fallback }: NativePlayProps) {
       <RedactScreen key={file} file={data as PuzzleFile<RedactData>} />
     ) : type === 'tumbler' ? (
       <TumblerScreen key={file} file={data as PuzzleFile<TumblerData>} />
+    ) : type === 'tilt' ? (
+      <TiltScreen key={file} file={data as PuzzleFile<TiltData>} />
     ) : (
       <BordersScreen key={file} file={data as PuzzleFile<BordersData>} />
     );
