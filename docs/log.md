@@ -1150,3 +1150,22 @@ Alec ran an outside review of the app and asked for its findings to be checked a
 - **Tests:** core lab.test (16), feedLite (Lab cards), TodayLab, ArchiveLab, shared/lab (vote sender, castVote, trials, finish, start), tokens (Lab contrast), webview messages (Lab keys), each player's model/finishing/oracle/screen tests, tracker (Lab slug). `npm run check` green: 1,778 tests, 98.71% lines.
 - **Site side:** dailynoodle PR [#123](https://github.com/alecldarlow-cell/dailynoodle/pull/123), merged first (Lab votes on the web finish, admin Lab card, privacy line, SITE.md › Lab trial votes, Lab pages to 19 Dec). Database applied live 11 Nov with Alec's go-ahead: migrations `lab_votes` and `lab_votes_admin_not_anon`.
 - **For Alec:** confirm the graduation bar (suggested ~20 votes and 70% Yes, read with abandons). Wording: the Lab start card says "Tilts played" where the web says "mazes played". Ships in the next Play build (native code is JS only, but new tile images are bundled assets).
+
+## 10 Nov 2026 — Tally share links open the app (not a WP)
+
+- Alec's go-ahead, 10 Nov (distribution plan, batch 3): `/tally`, `/tally/` and `/tally/index.html` join the short-link App Links in `app.json`, as the other eight types. `systemPath` already sent `/tally` to `/?open=tally`; only Android's filter was missing, so a shared Tally result opened the browser.
+- **Tests:** appLinks.test.ts now expects nine types (an intended change to the expected list).
+- **Needs a native build** (app.json changes the runtime fingerprint): it reaches phones with the next Play build, not by OTA. No site change: assetlinks.json is per domain.
+- **Left:** nothing; the rating prompt below rides on the same branch.
+
+## 10 Nov 2026 — The store's rating sheet, asked once (not a WP; ADR-010)
+
+- Alec's go-ahead, 10 Nov (distribution plan, batch 3): `expo-store-review` 58.0.2 and `src/shared/review`. The finish sheet asks the store for its rating sheet at most once per app version, 2.5 s after a fresh win of today's puzzle that puts the type's day streak at five or more. Never after a loss, an archive puzzle or a reopened puzzle. The version that asked is kept under the new disposable key `noodle-app-review`.
+- **Tests:** review.test.ts (asks once, again on a new version; the four not-that-moment cases; store unavailable or erroring). Jest stand-in `test/mocks/expo-store-review.js`. `THIRD-PARTY-NOTICES.md` regenerated.
+- **Needs a native build**, with the Tally App Link on the same branch (draft PR #146): `scripts/tests/runtime.test.ts` is red by design until that build ships and `store/runtime.json` records it. **Do not merge before then.**
+- **Needs Alec:** include this branch in the next Play build. The sheet can only be seen on a Play install.
+
+## 10 Nov 2026 — 0.5.0 for the next store build (not a WP)
+
+- Alec, 10 Nov: build the Tally App Link and the rating sheet for Google Play. Version 0.5.0 in `app.json`, `package.json` and the lock file; `scripts/tests/version.test.ts` expects it.
+- The production Android build is started from this branch (`tally-app-link`) with the Release workflow. After Alec uploads the `.aab` to Play: put that build's runtime version in `store/runtime.json`, then merge PR #146.

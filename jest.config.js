@@ -24,6 +24,8 @@ module.exports = {
       '<rootDir>/node_modules/@react-native-community/netinfo/jest/netinfo-mock.js',
     // expo-audio ships no Jest mock and can't load without its native side (ADR-009).
     '^expo-audio$': '<rootDir>/test/mocks/expo-audio.js',
+    // expo-store-review needs its native side too (ADR-010).
+    '^expo-store-review$': '<rootDir>/test/mocks/expo-store-review.js',
   },
   collectCoverageFrom: [
     'src/**/*.{ts,tsx}',
