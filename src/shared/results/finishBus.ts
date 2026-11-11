@@ -48,7 +48,10 @@ export interface PuzzleVisit {
   ev: 'open' | 'start';
   path: string;
   type: PuzzleType | null;
-  /** The site's tracker slug, for a puzzle with no daily type (a Lab trial: "word-redact"). */
+  /**
+   * The site's slug for the start event when `type` is null: a Lab trial's ("word-redact"),
+   * which has no league type, so its plays are recorded but never sent to a board.
+   */
   slug?: string;
 }
 
