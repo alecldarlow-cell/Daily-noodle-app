@@ -49,6 +49,7 @@ const TYPES = {
   reckon: () => require('./replay/reckon'),
   borders: () => require('./replay/borders'),
   tally: () => require('./replay/tally'),
+  redact: () => require('./replay/redact'),
 };
 
 const args = process.argv.slice(2);
