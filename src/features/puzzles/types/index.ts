@@ -1,9 +1,10 @@
-import type { PuzzleType } from '@noodle/core';
+import type { AnyType } from '@noodle/core';
 
 /** reports/<page>.json, published by the site since WP2 (tools/puzzle-json.js). */
 export interface PuzzleFile<D = unknown> {
   id: string;
-  type: PuzzleType;
+  /** A daily type, or a Lab trial's (11 Nov 2026). */
+  type: AnyType;
   date: string;
   band: string;
   n: number | null;

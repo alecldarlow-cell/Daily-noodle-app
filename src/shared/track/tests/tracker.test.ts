@@ -76,6 +76,27 @@ describe('GIVEN a native puzzle played in the app', () => {
     });
   });
 
+  describe('WHEN it is a Lab trial, with no daily type (11 Nov 2026)', () => {
+    it('THEN its start and finish carry its tracker slug', () => {
+      const h = setup();
+      const LAB = 'reports/2026-11-11-logic-tilt-0015.html';
+      announceVisit({ ev: 'open', path: LAB, type: null, slug: 'logic-tilt' });
+      announceVisit({ ev: 'start', path: LAB, type: null, slug: 'logic-tilt' });
+      announceFinish({
+        path: LAB,
+        type: null,
+        detail: { type: 'logic-tilt', tv: 3, outcome: 'solved', secs: 40 },
+      });
+      h.off();
+      const ev = h.all();
+      expect(ev.map((e) => [e.ev, e.x.type])).toEqual([
+        ['page_view', undefined],
+        ['puzzle_start', 'logic-tilt'],
+        ['puzzle_end', 'logic-tilt'],
+      ]);
+    });
+  });
+
   describe('WHEN it finishes with no start recorded, or the site’s own page reported the finish', () => {
     it('THEN a flagged late start goes first, as dn-track.js does; a page’s finish is not sent twice', () => {
       const h = setup();

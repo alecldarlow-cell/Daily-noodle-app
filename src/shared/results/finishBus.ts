@@ -48,6 +48,8 @@ export interface PuzzleVisit {
   ev: 'open' | 'start';
   path: string;
   type: PuzzleType | null;
+  /** The site's tracker slug, for a puzzle with no daily type (a Lab trial: "logic-tilt"). */
+  slug?: string;
 }
 
 type VisitListener = (v: PuzzleVisit) => void;
