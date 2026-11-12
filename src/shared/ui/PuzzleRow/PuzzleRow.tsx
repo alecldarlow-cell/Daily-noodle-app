@@ -1,4 +1,4 @@
-import type { AnyType, PlayedState } from '@noodle/core';
+import type { PlayedState, PuzzleType } from '@noodle/core';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
 
@@ -8,7 +8,7 @@ import { PuzzleTile } from '../PuzzleTile/PuzzleTile';
 import { Standfirst } from './Standfirst';
 
 interface PuzzleRowProps {
-  type: AnyType;
+  type: PuzzleType;
   title: string;
   /** The card's standfirst, up to three lines. */
   detail?: string;

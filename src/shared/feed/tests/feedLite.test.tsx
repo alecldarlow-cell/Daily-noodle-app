@@ -67,37 +67,7 @@ describe('GIVEN the site’s card list', () => {
         { ...sweep, standfirst: '', read: '', mask: '', json: null },
       ]);
       expect(lite).toMatchObject({ built: 'b', today: '2026-10-24', count: 2 });
-      expect(parseFeedLite({ items: [] })).toEqual({
-        built: '',
-        today: '',
-        count: 0,
-        items: [],
-        lab: [],
-      });
-    });
-  });
-
-  describe('WHEN the list holds Lab cards (11 Nov 2026)', () => {
-    const redact = {
-      path: 'reports/2026-11-11-word-redact-0025.html',
-      type: 'redact',
-      id: 'DP·REDA·0025',
-      date: '2026-11-11',
-      headline: 'Redact 0025',
-      standfirst: 'A crossword hiding in here.',
-      json: 'reports/2026-11-11-word-redact-0025.json',
-    };
-    it('THEN they are kept apart from the dailies, and a mismatched one dropped', () => {
-      const lite = parseFeedLite({
-        items: [good, redact, { ...redact, path: 'reports/x.html', id: 'DP·TILT·0001' }],
-      });
-      expect(lite.items).toEqual([good]);
-      expect(lite.count).toBe(1);
-      expect(lite.lab).toEqual([{ ...redact, read: '', mask: '' }]);
-    });
-    it('THEN a kept copy (Lab under `lab`) reads back the same', () => {
-      const lite = parseFeedLite({ items: [good, redact] });
-      expect(parseFeedLite(JSON.parse(JSON.stringify(lite)))).toEqual(lite);
+      expect(parseFeedLite({ items: [] })).toEqual({ built: '', today: '', count: 0, items: [] });
     });
   });
 
