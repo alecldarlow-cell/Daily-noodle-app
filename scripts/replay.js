@@ -7,7 +7,7 @@
  *   node scripts/replay.js --type path --all --shard 2/4 ...   (the second quarter of the runs)
  *   node scripts/replay.js --type link|tangle|doku … [--shard 1/2] [--variants a,b]
  *
- *   node scripts/replay.js --type reckon|borders|tally|redact|tumbler|tilt … [--shard 1/2] [--only 0105]
+ *   node scripts/replay.js --type reckon|borders|tally … [--shard 1/2] [--only 0105]
  *
  * For every page of the type in the site clone's reports/ that carries
  * window.DN_PUZZLE (read with the site's tools/puzzle-json.js), and every oracle
@@ -49,9 +49,6 @@ const TYPES = {
   reckon: () => require('./replay/reckon'),
   borders: () => require('./replay/borders'),
   tally: () => require('./replay/tally'),
-  redact: () => require('./replay/redact'),
-  tumbler: () => require('./replay/tumbler'),
-  tilt: () => require('./replay/tilt'),
 };
 
 const args = process.argv.slice(2);

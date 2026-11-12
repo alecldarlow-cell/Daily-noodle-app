@@ -38,24 +38,3 @@ describe('GIVEN the players’ palette', () => {
     );
   });
 });
-
-describe('GIVEN the Lab’s colours (11 Nov 2026)', () => {
-  /** WCAG contrast of two #RRGGBB colours. */
-  const lum = (hex: string) => {
-    const [r, g, b] = [1, 3, 5].map((i) => {
-      const c = parseInt(hex.slice(i, i + 2), 16) / 255;
-      return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
-    });
-    return 0.2126 * r! + 0.7152 * g! + 0.0722 * b!;
-  };
-  const ratio = (a: string, b: string) => {
-    const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p);
-    return (x! + 0.05) / (y! + 0.05);
-  };
-  it.each(['light', 'dark'] as const)('THEN in %s the panel’s small text reads at 4.5:1', (s) => {
-    const t = tokensFor(s);
-    expect(ratio(t.labInk, t.labSoft)).toBeGreaterThanOrEqual(4.5);
-    expect(ratio(t.ink, t.labSoft)).toBeGreaterThanOrEqual(4.5);
-    expect(ratio(t.accent, t.labSoft)).toBeGreaterThanOrEqual(4.5);
-  });
-});

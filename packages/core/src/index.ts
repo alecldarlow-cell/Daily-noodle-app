@@ -64,25 +64,6 @@ export {
   type PuzzleType,
   type GridStreakType,
 } from './ids';
-export {
-  LAB_TYPES,
-  LAB_LABEL,
-  LAB_OF_ID,
-  LAB_VOTES_KEY,
-  LAB_VOTER_KEY,
-  isLabType,
-  labelOf,
-  labTypeOfId,
-  labRunning,
-  readLabVotes,
-  labPlayed,
-  labSaveKey,
-  withLabVote,
-  type LabType,
-  type AnyType,
-  type LabVote,
-  type LabVotes,
-} from './lab';
 export type * from './types';
 export {
   createSaveStore,

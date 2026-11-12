@@ -1,4 +1,4 @@
-import type { AnyType } from '@noodle/core';
+import type { PuzzleType } from '@noodle/core';
 import { Image, StyleSheet, Text, useColorScheme, View } from 'react-native';
 
 import { FONT, useTokens, type Tokens } from '@/shared/theme';
@@ -24,7 +24,7 @@ export function tileCells(mask: string | undefined): { size: number; cells: Tile
 }
 
 /** Each type's icon: the site's assets/<type>-thumb.svg, drawn to PNG in light and dark. */
-const PICTURES: Partial<Record<AnyType, { light: number; dark: number }>> = {
+const PICTURES: Partial<Record<PuzzleType, { light: number; dark: number }>> = {
   mini: {
     light: require('../../../../assets/images/tiles/mini-light.png') as number,
     dark: require('../../../../assets/images/tiles/mini-dark.png') as number,
@@ -61,19 +61,6 @@ const PICTURES: Partial<Record<AnyType, { light: number; dark: number }>> = {
     light: require('../../../../assets/images/tiles/tangle-light.png') as number,
     dark: require('../../../../assets/images/tiles/tangle-dark.png') as number,
   },
-  // The Lab's trials (11 Nov 2026), from the site's assets/<type>-thumb.svg.
-  tilt: {
-    light: require('../../../../assets/images/tiles/tilt-light.png') as number,
-    dark: require('../../../../assets/images/tiles/tilt-dark.png') as number,
-  },
-  redact: {
-    light: require('../../../../assets/images/tiles/redact-light.png') as number,
-    dark: require('../../../../assets/images/tiles/redact-dark.png') as number,
-  },
-  tumbler: {
-    light: require('../../../../assets/images/tiles/tumbler-light.png') as number,
-    dark: require('../../../../assets/images/tiles/tumbler-dark.png') as number,
-  },
 };
 
 const SIZE = 96;
@@ -83,7 +70,7 @@ function cellColour(t: Tokens, c: TileCell): string {
 }
 
 interface PuzzleTileProps {
-  type: AnyType;
+  type: PuzzleType;
   mask?: string;
   /** The picture's size: 96 on a card, larger on a start page, small on Play next. */
   size?: number;

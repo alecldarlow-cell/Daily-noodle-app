@@ -1,4 +1,4 @@
-import { isLabType, isPuzzleType, labelOf } from '@noodle/core';
+import { isPuzzleType, TYPE_LABEL } from '@noodle/core';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 
@@ -13,7 +13,7 @@ import { PuzzleWebView } from '@/shared/webview';
 export function PlayScreen() {
   const t = useTokens();
   const { type, file } = useLocalSearchParams<{ type: string; file: string }>();
-  const label = isPuzzleType(type) || isLabType(type) ? labelOf(type) : 'Puzzle';
+  const label = isPuzzleType(type) ? TYPE_LABEL[type] : 'Puzzle';
   return (
     <View style={[styles.fill, { backgroundColor: t.canvas }]} testID="play-screen">
       <Stack.Screen options={{ title: label }} />

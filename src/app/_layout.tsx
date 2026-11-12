@@ -6,10 +6,9 @@ import { useEffect } from 'react';
 import { useColorScheme } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
-import { accessToken, SyncRunner } from '@/features/account';
+import { SyncRunner } from '@/features/account';
 import { BoardLink, LeagueResults } from '@/features/leagues';
 import { BoardSlotProvider } from '@/shared/finish-sheet';
-import { voteSender } from '@/shared/lab';
 import { ConfettiHost } from '@/shared/motion';
 import { QueryProvider } from '@/shared/query';
 import { reporter, watchGlobalErrors } from '@/shared/report';
@@ -20,9 +19,6 @@ import { optedOut, VisitRecorder } from '@/shared/track';
 import { UpdateRunner } from '@/shared/updates';
 
 void SplashScreen.preventAutoHideAsync();
-
-// A signed-in player's Lab votes go on their account, so two phones count once.
-voteSender.setToken(accessToken);
 
 /**
  * The tabs sit under every other screen, even one opened cold from a link

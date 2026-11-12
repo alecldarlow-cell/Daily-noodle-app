@@ -12,13 +12,9 @@
  * It must stay plain ES5 and end with `true;` (react-native-webview's rule).
  */
 
-/**
- * Puzzle save keys the bridge carries, both ways. Game and board keys are left alone. The Lab's
- * trials and their answers too (11 Nov 2026), so a Lab puzzle played on its page shows as played,
- * and rated, on the app's Lab panel.
- */
+/** Puzzle save keys the bridge carries, both ways. Game and board keys are left alone. */
 export const BRIDGED_KEY =
-  /^(digi-(mini|doku|sweep|path|link|tangle|borders|reckon|tally|tilt|redact|tumbler)-(v1|streak)|noodle-lab-votes-v1)$/;
+  /^digi-(mini|doku|sweep|path|link|tangle|borders|reckon|tally)-(v1|streak)$/;
 
 /** The site tracker's own keys (dn-track.js), shared both ways. '' in the app means absent. */
 export const ID_KEY = /^digi\.(aid|sid|last|optout)$/;
