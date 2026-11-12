@@ -208,7 +208,7 @@ describe('GIVEN a Lab puzzle not yet played', () => {
     expect(screen.getByText('Tumbler')).toBeOnTheScreen();
     expect(screen.getByText('Spin the wheels.')).toBeOnTheScreen();
     expect(screen.getByText(/Lab trial No\. 35/)).toBeOnTheScreen();
-    expect(screen.getByText('Tumblers played')).toBeOnTheScreen();
+    expect(screen.getByText('words found')).toBeOnTheScreen(); // the website's wording (house.js)
     await fireEvent.press(screen.getByRole('button', { name: 'Play' }));
     expect(onPlay).toHaveBeenCalled();
   });
