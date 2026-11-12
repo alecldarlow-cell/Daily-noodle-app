@@ -4,6 +4,13 @@ import { StartLayout } from '@/shared/start-card';
 import { longDate, startHead, useLondonDay } from '@/shared/time';
 import { PuzzleTile } from '@/shared/ui';
 
+/** What each trial counts on its start card, as the website's (engines/house.js). */
+export const PLAYED_LABEL: Record<LabType, string> = {
+  tilt: 'mazes played',
+  redact: 'boards played',
+  tumbler: 'words found',
+};
+
 interface LabStartCardProps {
   type: LabType;
   n: number | string;
@@ -38,7 +45,7 @@ export function LabStartCard(props: LabStartCardProps) {
       head={resume?.head ?? startHead(name, date, today)}
       status={resume?.status ?? line}
       button={{ label: resume ? 'Resume' : 'Play', onPress: onPlay }}
-      stats={[[played, `${name}s played`]]}
+      stats={[[played, PLAYED_LABEL[type]]]}
       how={[...how, 'This is a Lab trial: tell us at the end whether it should go daily.']}
       onBack={onBack}
     />
