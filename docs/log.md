@@ -1136,3 +1136,8 @@ Alec ran an outside review of the app and asked for its findings to be checked a
 - Alec's go-ahead, 10 Nov (distribution plan: split the guide). The site now has a guide page per puzzle type (`how-to-play/<type>.html`, dailynoodle PR #120). The app's web view allowed only `how-to-play.html`, so the site hides its links to those pages inside the app. `decide()` now allows `/how-to-play/<lower-case>.html` as well; other site pages still open in the browser.
 - **Tests:** navigation.test.ts (two type pages allowed; a path that climbs out, a capitalised name and about.html are not).
 - JS only: goes out with the next production update. **Then, site side:** stop hiding the "More about <Type>" links in the app, and point the website's own "How to play" links at the type pages.
+
+## 12 Nov 2026 — The Lab held back from main (not a WP)
+
+- Alec, 11 Nov 22:22: the release approved for Google Play must stay as it is, so the Lab in the app ([#148](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/148), log [#149](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/149)) is reverted on main and kept, unchanged and tested, on the branch `lab-held` (plus one commit: the Lab start cards count "mazes played", "boards played", "words found", as the website does). Nothing had reached phones: no build or update was made from main in between.
+- To ship it later: merge `lab-held` back through a pull request once Alec says so; its 11 Nov entry above (in that branch) has what tests proved. The site half (dailynoodle #123: the web vote, the live `lab_votes` database, Lab pages to 19 Dec) stays live; app plays of Lab puzzles in the meantime open through the web view only if a Lab page is reached, as before.
