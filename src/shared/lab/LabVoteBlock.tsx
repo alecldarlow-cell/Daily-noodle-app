@@ -1,10 +1,13 @@
 import { LAB_LABEL, type LabType, type LabVote } from '@noodle/core';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { FONT, usePuzzleTokens, useTokens } from '@/shared/theme';
 import { pressable } from '@/shared/ui';
 
 /** What the line under the buttons says before and after an answer. */
+/** Thumbs up; turned over for No (Alec, 12 Nov 2026). One black PNG, tinted to the button's colour. */
+const THUMB = require('../../../assets/images/icons/thumb.png') as number;
+
 export const VOTE_ASK = 'YOUR VOTE HELPS DECIDE IF IT STAYS';
 export const VOTE_THANKS = 'THANKS: YOU CAN CHANGE IT ANY TIME';
 
@@ -35,12 +38,18 @@ export function LabVoteBlock({ type, vote, onVote }: Props) {
           styles.btn,
           {
             borderColor: on ? t.accent : pt.inkSoft,
-            borderWidth: on ? 2 : 1.5,
-            backgroundColor: on ? t.accentSoft : pt.paper,
+            borderWidth: 1.5,
+            backgroundColor: on ? t.accent : pt.paper,
           },
         ])}
         testID={`lab-vote-${v}`}>
-        <Text style={[styles.btnText, { color: on ? t.accent : pt.ink }]}>{label}</Text>
+        <Image
+          source={THUMB}
+          accessibilityIgnoresInvertColors
+          style={[styles.thumb, { tintColor: on ? t.onAccent : pt.ink }, v === 'no' && styles.down]}
+          testID={`lab-thumb-${v}`}
+        />
+        <Text style={[styles.btnText, { color: on ? t.onAccent : pt.ink }]}>{label}</Text>
       </Pressable>
     );
   };
@@ -69,11 +78,15 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', gap: 12 },
   btn: {
     flex: 1,
-    minHeight: 58,
+    minHeight: 64,
     borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 4,
+    paddingVertical: 10,
   },
+  thumb: { width: 26, height: 26 },
+  down: { transform: [{ rotate: '180deg' }] },
   btnText: { fontSize: 16, fontFamily: FONT.sansSemi },
   note: {
     marginTop: 10,
