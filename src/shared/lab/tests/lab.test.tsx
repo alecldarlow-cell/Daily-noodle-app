@@ -169,6 +169,9 @@ describe('GIVEN a Lab puzzle finished', () => {
     expect(screen.getByTestId('lab-kicker')).toHaveTextContent(/·/); // an earlier day says when
     await fireEvent.press(screen.getByTestId('lab-vote-yes'));
     expect(screen.getByTestId('lab-vote-yes').props.accessibilityState.selected).toBe(true);
+    // thumbs up on Yes, turned over on No (12 Nov 2026)
+    expect(screen.getByTestId('lab-thumb-yes')).toBeOnTheScreen();
+    expect(screen.getByTestId('lab-thumb-no')).toHaveStyle({ transform: [{ rotate: '180deg' }] });
     expect(screen.getByTestId('lab-vote-note')).toHaveTextContent(VOTE_THANKS);
     await fireEvent.press(screen.getByTestId('lab-vote-no'));
     expect(screen.getByTestId('lab-vote-no').props.accessibilityState.selected).toBe(true);
