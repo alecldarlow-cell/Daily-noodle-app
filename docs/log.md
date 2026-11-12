@@ -1137,7 +1137,7 @@ Alec ran an outside review of the app and asked for its findings to be checked a
 - **Tests:** navigation.test.ts (two type pages allowed; a path that climbs out, a capitalised name and about.html are not).
 - JS only: goes out with the next production update. **Then, site side:** stop hiding the "More about <Type>" links in the app, and point the website's own "How to play" links at the type pages.
 
-## 11 Nov 2026 — The Lab in the app: panel, one-tap vote, native Tilt, Redact and Tumbler (not a WP; [#148](https://github.com/alecldarlow-cell/Daily-noodle-app/pull/148))
+## 11 Nov 2026 — The Lab in the app: panel, one-tap vote, native Tilt, Redact and Tumbler (not a WP)
 
 - Alec's go-ahead (project doc `claude/lab-in-app-brief.md`; mock https://claude.ai/artifact/8D4omvW21JB9zX19QJ3XjD, Option 3 and the one-tap finish). Trials restart from the day this ships; the site added Lab pages through 19 Dec.
 - **Core:** `LAB_TYPES` (tilt, redact, tumbler) apart from `PUZZLE_TYPES`, so a trial never reaches Today's count, streak run, stats or leagues; `AnyType`, `labelOf`, `labPlayed`, `labRunning`, the votes document (`noodle-lab-votes-v1`, the website's shape). Ids and keys are the ones a daily would keep (`digi-<type>-v1`), so graduating renames nothing.
@@ -1148,5 +1148,5 @@ Alec ran an outside review of the app and asked for its findings to be checked a
 - **Web view:** the bridge carries the Lab types' saves and `noodle-lab-votes-v1`; the site tags votes from the app as source app.
 - **Native players** (built in parallel lanes, merged): Redact, Tumbler, Tilt ported line by line from engines/\*.js, same keys and record shapes; plays tracked with their slugs (`word-redact`, `word-tumbler`, `logic-tilt`) with `type: null`, so the leagues never see them. Differential replay identical on every page: redact 252/252 runs (63 pages), tumbler 252/252 (63), tilt 159/159 (53); after the merge, a 5-page sample of each identical again.
 - **Tests:** core lab.test (16), feedLite (Lab cards), TodayLab, ArchiveLab, shared/lab (vote sender, castVote, trials, finish, start), tokens (Lab contrast), webview messages (Lab keys), each player's model/finishing/oracle/screen tests, tracker (Lab slug). `npm run check` green: 1,778 tests, 98.71% lines.
-- **Site side:** dailynoodle PR [#123](https://github.com/alecldarlow-cell/dailynoodle/pull/123), merged first (Lab votes on the web finish, admin Lab card, privacy line, SITE.md › Lab trial votes, Lab pages to 19 Dec). Database applied live 11 Nov with Alec's go-ahead: migrations `lab_votes` and `lab_votes_admin_not_anon`.
+- **Site side:** dailynoodle PR (Lab votes on the web finish, admin Lab card, privacy line, SITE.md › Lab trial votes, Lab pages to 19 Dec). Database applied live 11 Nov with Alec's go-ahead: migrations `lab_votes` and `lab_votes_admin_not_anon`.
 - **For Alec:** confirm the graduation bar (suggested ~20 votes and 70% Yes, read with abandons). Wording: the Lab start card says "Tilts played" where the web says "mazes played". Ships in the next Play build (native code is JS only, but new tile images are bundled assets).
