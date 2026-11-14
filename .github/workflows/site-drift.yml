@@ -8,6 +8,10 @@ on:
     - cron: '23 4 * * *'
   workflow_dispatch:
 
+# Read-only token: nothing here writes to the repo (security hardening, 14 Nov 2026).
+permissions:
+  contents: read
+
 jobs:
   drift:
     name: drift
