@@ -1210,3 +1210,7 @@ Alec ran an outside review of the app and asked for its findings to be checked a
 - **Alec, 15 Nov:** merge now. 0.5.0 (version code 8) was already published to production at 12:07 (Play submission 9, full rollout), carrying 10 Nov code: no Lab, no pink, no Link no-replay until this update.
 - **What:** `store/runtime.json` now records 0.5.0's runtime `5008b778` (recomputed from the build's commit `96f02e7`, identical to the branch). PR #146 merged; Update production then publishes to 0.5.0 phones.
 - **0.4.0 phones** keep the update they have (the Lab, the pink, Link's no-replay) and get no new ones; Play moves them to 0.5.0.
+
+## 15 Nov 2026 — Delete branches workflow
+
+- **Alec, 15 Nov:** clear old branches without deleting them by hand. `.github/workflows/delete-branches.yml` (Run workflow, dry run by default) deletes branches whose PR merged with no later commits, plus any named in "also"; never main or a branch with an open PR. Merged PRs already auto-delete their branch (repo setting).
