@@ -169,10 +169,10 @@ describe('GIVEN the native half of the replay', () => {
     expect(sim.snaps).toHaveLength(sc.steps.length);
     expect(sim.snaps.at(-1)).toMatchObject({ sheet: true, share: true, tiles: '' });
     expect(sim.final.ends).toHaveLength(1);
-    expect(sim.final.sheets.length).toBe(v === 'loss' ? 2 : 1);
+    expect(sim.final.sheets.length).toBe(1); // a loss ends on its sheet: no Play again (15 Nov 2026)
     expect(sim.final.sheets[0]!.kick).toBe('Link 78');
     if (v === 'loss') {
-      expect(sim.final.sheets[0]!.again).toBe(true);
+      expect(sim.final.sheets[0]!.again).toBe(false);
       expect(sim.final.save).toMatchObject({ done: { 'DP·LINK·0078': { o: 'loss', m: 4 } } });
       expect(sim.final.streak).toMatchObject({ streak: 0 });
     }

@@ -1,6 +1,6 @@
 import { StyleSheet, Text, useColorScheme, View } from 'react-native';
 
-import { FinishLink, Mark } from '@/shared/finish-sheet';
+import { Mark } from '@/shared/finish-sheet';
 
 import { FONT, usePuzzleTokens } from '@/shared/theme';
 
@@ -80,11 +80,6 @@ export function GroupBands({ groups }: { groups: LinkGroup[] }) {
       ))}
     </View>
   );
-}
-
-/** "Play again (not recorded)" under a lost result. */
-export function PlayAgain({ onPress }: { onPress: () => void }) {
-  return <FinishLink label="Play again (not recorded)" onPress={onPress} />;
 }
 
 const styles = StyleSheet.create({

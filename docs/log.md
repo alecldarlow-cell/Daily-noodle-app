@@ -1190,3 +1190,12 @@ Alec ran an outside review of the app and asked for its findings to be checked a
 
 - **Alec, 15 Nov (from his phone):** the panel sat tight under the last daily. Now 24 px above it (was 8), and the last daily drops its hairline when the panel follows (`PuzzleRow` `rule`, default on; on everywhere else, and on Today when no trial runs).
 - **Tests proved:** TodayLab: with a trial running the last daily (Reckon) has no rule and the one above keeps it; with every trial retired the last daily keeps its rule. JS only, ships by Update production.
+
+## 15 Nov 2026 — Link: no Play again after a loss
+
+- **Alec, 15 Nov (from a player taking a second go at the day's Link):** remove Link's replay. The finish sheet already shows all four groups, so a second go only re-enters them.
+- **What:** the sheet after a loss no longer offers "Play again (not recorded)" (`PlayAgain` removed from `LinkParts`). The model keeps its `again` move, unused. The oracle's `loss` variant ends at the loss; `simulate` reports `again: false`, and `replay-link.js` still reads the page's button, so the replay proves it's gone on both sides. Saves, streaks and the same-day "· replay" label are unchanged. Sweep keeps its Play again.
+- **Site side:** dailynoodle PR [#131](https://github.com/alecldarlow-cell/dailynoodle/pull/131), merged first.
+- **Tests proved:** LinkScreen (a lost Link offers no Play again, its save and streak as before), sheetParts, play (the loss variant ends on one sheet). `npm run check` green: 209 suites, 1,779 tests. Differential replay against the site branch: 72/72 runs identical (12 Links, 2,268 moves).
+- **Native:** none. JS only, ships by Update production to 0.4.0.
+- **Left:** bring this into the 0.5.0 branch (`tally-app-link`) with the Lab.

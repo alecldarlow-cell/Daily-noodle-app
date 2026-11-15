@@ -11,7 +11,7 @@
  * - wrong: tools/tests/play.js link({wrong: 1}); crosses London midnight on a live streak.
  * - misc: "Four at a time", Not a group, the same four again ("Already tried"), one
  *   away, then the solve; a streak saved before 18 Oct 2026 (one day's grace).
- * - loss: play.js link({wrong: 4}) on a lapsed streak, then Play again (not recorded)
+ * - loss: play.js link({wrong: 4}) on a lapsed streak (no Play again from 15 Nov 2026)
  *   and a win that records nothing.
  * - replayday: another Link already played today, so this one is a replay from the
  *   start (the label, the note, no streak), solved with two mistakes.
@@ -144,13 +144,7 @@ function misc(pl: Player, d: LinkData) {
 }
 
 function loss(pl: Player, d: LinkData) {
-  wrong(pl, d, 4);
-  pl.do({ t: 'again' }, 900);
-  const g = G(d);
-  pl.pick(g[1]!);
-  pl.pick(g[0]!);
-  pl.pick(g[3]!);
-  pl.pick(g[2]!, true);
+  wrong(pl, d, 4); // the end: no Play again from 15 Nov 2026
 }
 
 function replayday(pl: Player, d: LinkData) {
