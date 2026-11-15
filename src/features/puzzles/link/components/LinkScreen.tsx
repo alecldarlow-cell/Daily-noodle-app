@@ -13,7 +13,7 @@ import type { PuzzleFile } from '../../types';
 import { useLinkGame } from '../hooks/useLinkGame';
 import { groupsByRank, shownLabel, timerText, type LinkData } from '../model';
 import { LinkBoard } from './LinkBoard';
-import { GroupBands, GuessSquares, PlayAgain } from './LinkParts';
+import { GroupBands, GuessSquares } from './LinkParts';
 
 /** engines/link.js resumeCard: how many groups a kept round had found. */
 const FOUND = ['No groups', 'One group', 'Two groups', 'Three groups'];
@@ -83,7 +83,7 @@ export function LinkScreen({ file }: { file: PuzzleFile<LinkData> }) {
           sub: 'Easiest to hardest',
           node: <GroupBands groups={groupsByRank(state.p)} />,
         }}
-        after={f.won ? undefined : <PlayAgain onPress={() => dispatch({ t: 'again' })} />}
+        // No Play again after a loss (Alec, 15 Nov 2026, as the site): the sheet shows every group.
         onBack={back}
         onNext={openNext}
       />

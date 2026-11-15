@@ -1,7 +1,7 @@
 import { render, screen, within } from '@testing-library/react-native';
 import * as RN from 'react-native';
 
-import { GroupBands, GuessSquares, PlayAgain } from '../components/LinkParts';
+import { GroupBands, GuessSquares } from '../components/LinkParts';
 
 afterEach(() => jest.restoreAllMocks());
 
@@ -17,7 +17,6 @@ describe('GIVEN Link’s finish sheet parts', () => {
               { rank: 4, name: '___ball', members: ['FOOT', 'BASE', 'NET', 'HAND'] },
             ]}
           />
-          <PlayAgain onPress={() => undefined} />
         </RN.View>,
       );
       expect(screen.getByTestId('guess-g1')).toHaveStyle({
@@ -36,7 +35,6 @@ describe('GIVEN Link’s finish sheet parts', () => {
       expect(screen.getByText('COD, EEL, RAY, GAR')).toHaveStyle({ fontSize: 15 });
       expect(screen.getByText('Fish')).toHaveStyle({ fontSize: 13 });
       expect(screen.getByTestId('band-recap-4')).toHaveStyle({ backgroundColor: '#141726' });
-      expect(screen.getByText('Play again (not recorded)')).toHaveStyle({ color: '#1B3B9E' });
     });
   });
 

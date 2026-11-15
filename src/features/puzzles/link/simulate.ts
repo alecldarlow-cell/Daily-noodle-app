@@ -80,7 +80,7 @@ export interface Sheet {
   stats: string[];
   /** "🔥 5-day streak", the sheet's line under the score. */
   streakLine: string;
-  /** "Play again (not recorded)" under a lost result. */
+  /** "Play again (not recorded)" under a lost result: never, from 15 Nov 2026 (kept so the replay checks it's gone). */
   again: boolean;
 }
 
@@ -122,7 +122,7 @@ const sheetOf = (f: FinishInfo, kick: string): Sheet => ({
   hero: heroCode(f.squares),
   stats: statsOf(f),
   streakLine: line(f.streak),
-  again: !f.won,
+  again: false,
 });
 
 /**
