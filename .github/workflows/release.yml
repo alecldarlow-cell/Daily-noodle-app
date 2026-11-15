@@ -46,7 +46,10 @@ permissions:
   actions: read
 
 env:
-  EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+  # Only whether the secret exists, not the token itself: the token is given to the eas
+  # steps alone, so no dependency install script or other step can read it (security
+  # hardening, 14 Nov 2026).
+  HAS_EXPO_TOKEN: ${{ secrets.EXPO_TOKEN != '' }}
   EAS: npx --yes eas-cli@25.3.0
 
 jobs:
@@ -61,34 +64,35 @@ jobs:
     timeout-minutes: 20
     steps:
       - name: Skip until EXPO_TOKEN is set
-        if: env.EXPO_TOKEN == ''
+        if: env.HAS_EXPO_TOKEN != 'true'
         run: echo "::notice::No EXPO_TOKEN secret yet; nothing published (docs/install.md)."
       - uses: actions/checkout@v4
-        if: env.EXPO_TOKEN != ''
+        if: env.HAS_EXPO_TOKEN == 'true'
         with:
           ref: ${{ github.event.workflow_run.head_sha }}
       - name: Only a green commit that is still main's tip publishes
         id: gate
-        if: env.EXPO_TOKEN != ''
+        if: env.HAS_EXPO_TOKEN == 'true'
         env:
           GITHUB_TOKEN: ${{ github.token }}
           SHA: ${{ github.event.workflow_run.head_sha }}
         run: node scripts/ci-gate.js "$SHA" --tip main
       - uses: actions/setup-node@v4
-        if: env.EXPO_TOKEN != '' && steps.gate.outputs.publish == 'true'
+        if: env.HAS_EXPO_TOKEN == 'true' && steps.gate.outputs.publish == 'true'
         with:
           node-version: 22
           cache: npm
-      - if: env.EXPO_TOKEN != '' && steps.gate.outputs.publish == 'true'
+      - if: env.HAS_EXPO_TOKEN == 'true' && steps.gate.outputs.publish == 'true'
         run: npm ci
       - name: Publish an update to preview builds
-        if: env.EXPO_TOKEN != '' && steps.gate.outputs.publish == 'true'
+        if: env.HAS_EXPO_TOKEN == 'true' && steps.gate.outputs.publish == 'true'
         # eas-cli 25 refuses --non-interactive without --environment. The commit's first line
         # goes through an env var so quotes in a message can't break the command.
         # `eas update` doesn't read eas.json's build env (it reads EAS's server-side variables,
         # and preview has none), so export the preview profile's env here, or the update ships
         # without EXPO_PUBLIC_SUPABASE_* and leagues stop working (25 Oct 2026).
         env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
           MESSAGE: ${{ github.event.workflow_run.head_commit.message }}
         run: |
           eval "$(node scripts/eas-profile-env.js preview)"
@@ -101,7 +105,7 @@ jobs:
     timeout-minutes: 30
     steps:
       - name: Stop without EXPO_TOKEN
-        if: env.EXPO_TOKEN == ''
+        if: env.HAS_EXPO_TOKEN != 'true'
         run: |
           echo "::error::Add the EXPO_TOKEN repository secret first (docs/install.md)."
           exit 1
@@ -112,6 +116,8 @@ jobs:
           cache: npm
       - run: npm ci
       - name: Build on EAS
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
         run: >
           $EAS build --profile ${{ inputs.profile }} --platform ${{ inputs.platform }}
           --non-interactive --no-wait

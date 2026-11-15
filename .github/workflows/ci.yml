@@ -6,6 +6,10 @@ on:
     branches: [main]
   workflow_dispatch:
 
+# Read-only token: nothing here writes to the repo (security hardening, 14 Nov 2026).
+permissions:
+  contents: read
+
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true

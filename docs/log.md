@@ -1169,3 +1169,12 @@ Alec ran an outside review of the app and asked for its findings to be checked a
 
 - Alec, 10 Nov: build the Tally App Link and the rating sheet for Google Play. Version 0.5.0 in `app.json`, `package.json` and the lock file; `scripts/tests/version.test.ts` expects it.
 - The production Android build is started from this branch (`tally-app-link`) with the Release workflow. After Alec uploads the `.aab` to Play: put that build's runtime version in `store/runtime.json`, then merge PR #146.
+
+## 15 Nov 2026 — The Lab ships (from `lab-held`)
+
+- **Alec, 15 Nov:** ship the Lab now, over the air to the production build (0.4.0).
+- **What:** reverts #150 (the hold-back), then the two `lab-held` commits from 12 Nov: thumbs on the vote's Yes/No with the chosen answer filled, and the start cards counting as the website does. Same code as `lab-held`, plus main's workflow hardening (`ad03664`).
+- **Native:** none. `runtime.test` green: the Android fingerprint is still `e442790c…`, matching `store/runtime.json`, so an Update production run reaches 0.4.0 phones with no store build. (The 11 Nov note "ships in the next Play build" was overcautious: the tile images are bundled assets, which updates carry.)
+- **Tests proved:** `npm run check` green, 209 suites, 1,778 tests.
+- **Trial:** day 1 is the day the production update goes out; review the admin Lab card at day 14.
+- **Left:** bring this into the 0.5.0 branch (`tally-app-link`) so 0.5.0 keeps the Lab and the 12 Nov tweaks.
