@@ -57,5 +57,6 @@ describe('GIVEN the Lab’s colours (11 Nov 2026)', () => {
     expect(ratio(t.labInk, t.labSoft)).toBeGreaterThanOrEqual(4.5);
     expect(ratio(t.ink, t.labSoft)).toBeGreaterThanOrEqual(4.5);
     expect(ratio(t.accent, t.labSoft)).toBeGreaterThanOrEqual(4.5);
+    expect(ratio(t.muted, t.labSoft)).toBeGreaterThanOrEqual(4.5);
   });
 });

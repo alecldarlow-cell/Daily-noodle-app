@@ -5,9 +5,11 @@ import { Share, Text } from 'react-native';
 
 import type { LabFeedItem } from '@/shared/feed';
 import { appStorage } from '@/shared/storage';
+import { tokensFor } from '@/shared/theme';
 import { renderWithProviders } from '@/shared/testing';
 
 import { LAB_FOOT, LabFinishSheet } from '../LabFinishSheet';
+import { LabMark } from '../LabFlask';
 import { LabStartCard } from '../LabStartCard';
 import { VOTE_ASK, VOTE_THANKS } from '../LabVoteBlock';
 import { labTrials, nextTrial } from '../trials';
@@ -152,6 +154,8 @@ describe('GIVEN a Lab puzzle finished', () => {
     expect(screen.getByTestId('lab-vote-note')).toHaveTextContent(VOTE_ASK);
     expect(screen.getByTestId('lab-hero')).toHaveTextContent('2:48');
     expect(screen.getByTestId('lab-kicker')).toHaveTextContent('REDACT 35');
+    expect(screen.getByText('FROM THE LAB')).toBeOnTheScreen();
+    expect(screen.getByTestId('lab-flask')).toBeOnTheScreen(); // the badge's flask (15 Nov)
     expect(screen.getByTestId('lab-foot')).toHaveTextContent(LAB_FOOT);
     expect(screen.getByText('THE CROSSWORD')).toBeOnTheScreen();
     await fireEvent.press(screen.getByTestId('lab-next'));
@@ -214,5 +218,14 @@ describe('GIVEN a Lab puzzle not yet played', () => {
     expect(screen.getByText('words found')).toBeOnTheScreen(); // the website's wording (house.js)
     await fireEvent.press(screen.getByRole('button', { name: 'Play' }));
     expect(onPlay).toHaveBeenCalled();
+  });
+});
+
+describe('GIVEN the Lab mark (15 Nov 2026: the flask, in the website Lab pink)', () => {
+  it('WHEN it renders THEN the flask is tinted the panel colour on a Lab-ink tile', async () => {
+    const t = tokensFor('light');
+    await renderWithProviders(<LabMark />);
+    expect(screen.getByTestId('lab-mark')).toHaveStyle({ backgroundColor: t.labInk });
+    expect(screen.getByTestId('lab-flask')).toHaveStyle({ tintColor: t.labSoft });
   });
 });
