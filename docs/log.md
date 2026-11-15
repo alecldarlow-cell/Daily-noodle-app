@@ -1199,3 +1199,8 @@ Alec ran an outside review of the app and asked for its findings to be checked a
 - **Tests proved:** LinkScreen (a lost Link offers no Play again, its save and streak as before), sheetParts, play (the loss variant ends on one sheet). `npm run check` green: 209 suites, 1,779 tests. Differential replay against the site branch: 72/72 runs identical (12 Links, 2,268 moves).
 - **Native:** none. JS only, ships by Update production to 0.4.0.
 - **Left:** bring this into the 0.5.0 branch (`tally-app-link`) with the Lab.
+
+## 15 Nov 2026 — 0.5.0 branch takes Link's no-replay
+
+- **Alec, 15 Nov:** update 0.5.0. Merged main (`5af8945`, #155: Link, no Play again after a loss) into `tally-app-link`; the Lab and its 15 Nov tweaks were already in. Clean merge.
+- **Tests proved:** `npm run check` on the branch: 1,788 of 1,789 pass; the one red is `runtime.test`, red by design until the 0.5.0 store build ships (see the 10 Nov entry). PR #146 still not to be merged before then.
