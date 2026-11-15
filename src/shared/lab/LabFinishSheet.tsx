@@ -17,6 +17,7 @@ import { FONT, usePuzzleTokens, useTokens } from '@/shared/theme';
 import { relDay, useLondonDay } from '@/shared/time';
 import { Chevron, pressable, PuzzleTile, ShareGlyph } from '@/shared/ui';
 
+import { LabFlask } from './LabFlask';
 import { LabVoteBlock } from './LabVoteBlock';
 import { useLabVotes } from './vote';
 
@@ -103,6 +104,7 @@ export function LabFinishSheet(props: LabFinishSheetProps) {
         <Entrance play={celebrate}>
           <View style={styles.kickRow}>
             <View style={[styles.badge, { backgroundColor: t.labSoft }]}>
+              <LabFlask color={t.labInk} />
               <Text style={[styles.badgeText, { color: t.labInk }]}>FROM THE LAB</Text>
             </View>
             <Text style={[styles.kicker, { color: t.faint }]} testID="lab-kicker">
@@ -203,7 +205,14 @@ const styles = StyleSheet.create({
   },
   pillText: { fontSize: 14, fontFamily: FONT.sansSemi },
   kickRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 10, marginTop: 22 },
-  badge: { borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3 },
+  badge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
   badgeText: { fontSize: 11, letterSpacing: 1, fontFamily: FONT.sansSemi },
   kicker: { fontSize: 13, letterSpacing: 1.2, fontFamily: FONT.sansSemi },
   hero: {

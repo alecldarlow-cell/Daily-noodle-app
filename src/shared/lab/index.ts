@@ -1,4 +1,5 @@
 export { LabFinishSheet, LAB_FOOT, type LabFinishSheetProps } from './LabFinishSheet';
+export { LabFlask, LabMark } from './LabFlask';
 export { LabStartCard } from './LabStartCard';
 export { LabVoteBlock, VOTE_ASK, VOTE_THANKS } from './LabVoteBlock';
 export { labTrials, nextTrial, useLabTrials, type LabTrials } from './trials';

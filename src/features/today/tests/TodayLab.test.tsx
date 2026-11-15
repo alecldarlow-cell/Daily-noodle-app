@@ -72,6 +72,7 @@ describe('GIVEN three trials running and one retired', () => {
       await renderWithProviders(<TodayScreen />);
       const panel = await screen.findByTestId('lab-panel');
       expect(within(panel).getByText('From the Lab')).toBeOnTheScreen();
+      expect(within(panel).getByTestId('lab-mark')).toBeOnTheScreen(); // the flask (15 Nov)
       expect(within(panel).getByText(LAB_LINE)).toBeOnTheScreen();
       expect(screen.getByTestId('lab-rated')).toHaveTextContent('1 OF 3 RATED');
       expect(within(screen.getByTestId('lab-row-tilt')).getByText('✓ Rated')).toBeOnTheScreen();
