@@ -1204,3 +1204,9 @@ Alec ran an outside review of the app and asked for its findings to be checked a
 
 - **Alec, 15 Nov:** update 0.5.0. Merged main (`5af8945`, #155: Link, no Play again after a loss) into `tally-app-link`; the Lab and its 15 Nov tweaks were already in. Clean merge.
 - **Tests proved:** `npm run check` on the branch: 1,788 of 1,789 pass; the one red is `runtime.test`, red by design until the 0.5.0 store build ships (see the 10 Nov entry). PR #146 still not to be merged before then.
+
+## 15 Nov 2026 — main moves to 0.5.0 (PR #146 merged)
+
+- **Alec, 15 Nov:** merge now rather than wait for Google's review of 0.5.0, so phones get the Lab and Link's no-replay from the moment they move to 0.5.0.
+- **What:** `store/runtime.json` now records 0.5.0's runtime `5008b778` (recomputed from the build's commit `96f02e7`, identical to the branch). PR #146 merged; Update production then publishes to 0.5.0 phones.
+- **Trade-off, accepted:** 0.4.0 phones (all of production until the review clears) keep the update they have (the Lab, the pink, Link's no-replay) but get no new ones.
