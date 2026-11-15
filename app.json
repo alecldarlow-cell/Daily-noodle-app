@@ -2,7 +2,7 @@
   "expo": {
     "name": "Daily Noodle",
     "slug": "daily-noodle",
-    "version": "0.4.0",
+    "version": "0.5.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "dailynoodle",
@@ -58,7 +58,10 @@
             { "scheme": "https", "host": "dailynoodle.co.uk", "path": "/borders/index.html" },
             { "scheme": "https", "host": "dailynoodle.co.uk", "path": "/reckon" },
             { "scheme": "https", "host": "dailynoodle.co.uk", "path": "/reckon/" },
-            { "scheme": "https", "host": "dailynoodle.co.uk", "path": "/reckon/index.html" }
+            { "scheme": "https", "host": "dailynoodle.co.uk", "path": "/reckon/index.html" },
+            { "scheme": "https", "host": "dailynoodle.co.uk", "path": "/tally" },
+            { "scheme": "https", "host": "dailynoodle.co.uk", "path": "/tally/" },
+            { "scheme": "https", "host": "dailynoodle.co.uk", "path": "/tally/index.html" }
           ],
           "category": ["BROWSABLE", "DEFAULT"]
         }

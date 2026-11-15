@@ -7,7 +7,7 @@ import { createCachedStorage } from './cachedStorage';
 
 /**
  * Keys that only cache what the site can send again (a puzzle's data, Today's list, the
- * feed, when sync last ran, a dismissed prompt, the visit clock). A failed write to one of
+ * feed, when sync last ran, a dismissed prompt, which version asked for a rating, the visit clock). A failed write to one of
  * these is dropped rather than retried and never raises the "Couldn't save" notice. Every
  * other key (results, streaks, rounds in progress, the league identity) is critical.
  */
@@ -21,6 +21,7 @@ export function isDisposableKey(key: string): boolean {
     key === 'noodle-app-sync' ||
     key === 'noodle-board-pinlater' ||
     key === 'noodle-board-medal-shine' ||
+    key === 'noodle-app-review' ||
     key === 'digi.sid' ||
     key === 'digi.last'
   );

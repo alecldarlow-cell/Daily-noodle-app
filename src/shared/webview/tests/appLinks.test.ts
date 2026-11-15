@@ -1,6 +1,6 @@
 import app from '../../../../app.json';
 
-const TYPES = ['mini', 'doku', 'sweep', 'path', 'link', 'tangle', 'borders', 'reckon'];
+const TYPES = ['mini', 'doku', 'sweep', 'path', 'link', 'tangle', 'borders', 'reckon', 'tally'];
 const HOST = { scheme: 'https', host: 'dailynoodle.co.uk' };
 
 // The Android App Links the site's .well-known/assetlinks.json verifies (SITE.md › App links;

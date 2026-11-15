@@ -1,5 +1,5 @@
 {
   "note": "The native fingerprint (EAS runtime version) of the build testers have from Google Play. EAS Updates reach a phone only when they match it. Change this only after shipping a new store build, to that build's runtime version.",
-  "android": "e442790c15876e84624e6aac990cd33687cfd668",
-  "build": "0.4.0 (version code 7, the noodle-n icon): uploaded to the Play Alpha track and sent for review on 7 Nov 2026. Runtime e442790c confirmed on the EAS build page."
+  "android": "5008b7786d70d7bdd5f89580008460f7994da5a5",
+  "build": "0.5.0 (version code 8, EAS build de101180, built 10 Nov 2026 from tally-app-link 96f02e7): full production rollout on Google Play, published 15 Nov 2026 at 12:07 (submission 9). Runtime 5008b778 recomputed from 96f02e7 on 15 Nov. Replaces 0.4.0 (version code 7, runtime e442790c), which gets no new updates from here."
 }

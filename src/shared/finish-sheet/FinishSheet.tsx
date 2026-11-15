@@ -14,6 +14,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Entrance } from '@/shared/motion';
+import { askForReview, REVIEW_DELAY_MS } from '@/shared/review';
 import { play } from '@/shared/sound';
 import { FONT, usePuzzleTokens, useTokens } from '@/shared/theme';
 import { relDay } from '@/shared/time';
@@ -183,6 +184,17 @@ export function FinishSheet(props: FinishSheetProps) {
     sang.current = true;
     play('jingle');
   }, [jingle]);
+  // The store's rating sheet (ADR-010): at most once per app version, a moment after a fresh
+  // win of today's puzzle on a five-day streak. `askForReview` checks all of that itself.
+  const streak = dayStreak(stats);
+  const isToday = date === day;
+  useEffect(() => {
+    if (!celebrate || !solved) return;
+    const h = setTimeout(() => {
+      void askForReview({ celebrate, solved, today: isToday, streak });
+    }, REVIEW_DELAY_MS);
+    return () => clearTimeout(h);
+  }, [celebrate, solved, isToday, streak]);
   const [sharing, setSharing] = useState(false);
   const live = useRef(true);
   useEffect(
