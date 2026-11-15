@@ -92,7 +92,7 @@ function open(it: LabFeedItem) {
 
 const styles = StyleSheet.create({
   panel: {
-    marginTop: 8,
+    marginTop: 24,
     borderRadius: 18,
     paddingHorizontal: 16,
     paddingTop: 16,

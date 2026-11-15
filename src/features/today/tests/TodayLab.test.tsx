@@ -73,6 +73,9 @@ describe('GIVEN three trials running and one retired', () => {
       const panel = await screen.findByTestId('lab-panel');
       expect(within(panel).getByText('From the Lab')).toBeOnTheScreen();
       expect(within(panel).getByTestId('lab-mark')).toBeOnTheScreen(); // the flask (15 Nov)
+      // 15 Nov: the panel, not a rule, ends the dailies; the rows above keep theirs
+      expect(screen.getByTestId('today-reckon-card')).toHaveStyle({ borderBottomWidth: 0 });
+      expect(screen.getByTestId('today-borders-card')).not.toHaveStyle({ borderBottomWidth: 0 });
       expect(within(panel).getByText(LAB_LINE)).toBeOnTheScreen();
       expect(screen.getByTestId('lab-rated')).toHaveTextContent('1 OF 3 RATED');
       expect(within(screen.getByTestId('lab-row-tilt')).getByText('✓ Rated')).toBeOnTheScreen();
@@ -107,5 +110,7 @@ describe('GIVEN no trial running (all retired)', () => {
       await new Promise((r) => setTimeout(r, 100));
     });
     expect(screen.queryByTestId('lab-panel')).toBeNull();
+    // with no panel, the last daily keeps its rule
+    expect(screen.getByTestId('today-reckon-card')).not.toHaveStyle({ borderBottomWidth: 0 });
   });
 });
