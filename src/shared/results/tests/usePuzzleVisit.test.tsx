@@ -30,6 +30,19 @@ describe('GIVEN a native puzzle screen', () => {
     expect(heard.map((v) => v.ev)).toEqual(['open']);
   });
 
+  it('THEN a Lab trial (no daily type) announces its tracker slug', async () => {
+    const heard: PuzzleVisit[] = [];
+    const off = onVisit((v) => heard.push(v));
+    const LAB = 'reports/2026-11-11-logic-tilt-0015.html';
+    const { result } = await renderHook(() => usePuzzleVisit(LAB, null, false, 'logic-tilt'));
+    await act(() => result.current());
+    off();
+    expect(heard).toEqual([
+      { ev: 'open', path: LAB, type: null, slug: 'logic-tilt' },
+      { ev: 'start', path: LAB, type: null, slug: 'logic-tilt' },
+    ]);
+  });
+
   it('THEN a failing listener doesn’t stop the others', async () => {
     const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
     const heard: string[] = [];

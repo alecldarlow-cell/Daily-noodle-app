@@ -24,4 +24,5 @@ export const FEED_LITE: FeedLite = {
   today: '2026-10-24',
   count: ITEMS.length,
   items: ITEMS,
+  lab: [],
 };

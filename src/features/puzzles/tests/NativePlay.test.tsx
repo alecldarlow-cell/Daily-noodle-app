@@ -7,6 +7,8 @@ import { mockSite, renderWithProviders } from '@/shared/testing';
 import { PUZZLE_CACHE_PREFIX } from '../api/usePuzzleData';
 import { hasNativePlayer, NATIVE, NativePlay } from '../components/NativePlay';
 import { enabled as tallyEnabled } from '../tally';
+import { enabled as redactEnabled } from '../redact';
+import { enabled as tiltEnabled } from '../tilt';
 import { enabled as bordersEnabled } from '../borders';
 import { file15 } from '../borders/tests/fixtures';
 import { enabled as dokuEnabled } from '../doku';
@@ -22,6 +24,7 @@ import { enabled as reckonEnabled } from '../reckon';
 import { file2 } from '../reckon/tests/fixtures';
 import { enabled as tangleEnabled } from '../tangle';
 import { clone as cloneTangle, file19 } from '../tangle/tests/fixtures';
+import { enabled as tumblerEnabled } from '../tumbler';
 
 jest.mock('react-native-webview', () => ({ WebView: () => null }));
 jest.mock('expo-router', () => ({
@@ -53,6 +56,7 @@ describe('GIVEN the play route asks which types play natively', () => {
     expect(hasNativePlayer('path')).toBe(pathOn);
     expect(hasNativePlayer('reckon')).toBe(reckonEnabled);
     expect(hasNativePlayer('borders')).toBe(bordersEnabled);
+    expect(hasNativePlayer('redact')).toBe(redactEnabled);
     expect(NATIVE).toEqual({
       mini: enabled,
       link: linkEnabled,
@@ -63,6 +67,9 @@ describe('GIVEN the play route asks which types play natively', () => {
       reckon: reckonEnabled,
       borders: bordersEnabled,
       tally: tallyEnabled,
+      redact: redactEnabled,
+      tumbler: tumblerEnabled,
+      tilt: tiltEnabled,
     });
     expect(hasNativePlayer('toString')).toBe(false);
     expect(hasNativePlayer(undefined)).toBe(false);

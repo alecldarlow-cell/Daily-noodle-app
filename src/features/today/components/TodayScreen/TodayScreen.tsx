@@ -11,6 +11,7 @@ import { shortDate, useLondonDay } from '@/shared/time';
 import { Note, PuzzleRow, PuzzleRowSkeleton, Screen } from '@/shared/ui';
 
 import { useToday } from '../../hooks/useToday';
+import { LabPanel } from '../LabPanel/LabPanel';
 
 const NO_ITEMS: never[] = [];
 
@@ -176,6 +177,9 @@ export function TodayScreen({ open, onOpened }: { open?: PuzzleType; onOpened?: 
           />
         );
       })}
+
+      {/* The Lab's trials, under the dailies (Alec, 11 Nov 2026). */}
+      {status.kind === 'ready' ? <LabPanel /> : null}
     </Screen>
   );
 }
