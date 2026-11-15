@@ -1159,3 +1159,10 @@ Alec ran an outside review of the app and asked for its findings to be checked a
 - **Tests proved:** `npm run check` green, 209 suites, 1,778 tests.
 - **Trial:** day 1 is the day the production update goes out; review the admin Lab card at day 14.
 - **Left:** bring this into the 0.5.0 branch (`tally-app-link`) so 0.5.0 keeps the Lab and the 12 Nov tweaks.
+
+## 15 Nov 2026 — The Lab in the website's pink, with a flask
+
+- **Alec, 15 Nov (after seeing the panel on his phone in dark mode):** the all-marigold text was loud, and marigold already means "in progress" in the app. Chose the website's Lab pink and a flask mark from mocks in both modes.
+- **What:** `labSoft`/`labInk`/`labLine` become pink (light `#FBEAF1`/`#C2185B`/`#F2CFDD`; dark `#2A1621`/`#F48FB8`/`#45283A`). The panel's line and one-line descriptions use `muted`, like the dailies; Lab pink stays on the counter, "Try it" and its chevron. A flask (`assets/images/icons/flask.png`, white 96 px, tinted like the thumb) on a Lab-pink tile before "From the Lab" (`LabMark`) and in the finish sheet's FROM THE LAB badge (`LabFlask`).
+- **Native:** none; assets travel with updates. JS only, ships by Update production to 0.4.0.
+- **Tests proved:** tokens contrast now also checks `muted` on the panel (every pair ≥ 4.5:1 in both schemes; lowest is the green "✓ Rated" on light pink, 4.65); TodayLab shows the mark; the finish badge shows the flask; LabMark's tile and tint. `npm run check` green.

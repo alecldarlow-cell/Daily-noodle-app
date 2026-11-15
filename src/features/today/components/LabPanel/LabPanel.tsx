@@ -2,7 +2,7 @@ import { LAB_LABEL, labPlayed, labSaveKey, LAB_TYPES } from '@noodle/core';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import type { LabFeedItem } from '@/shared/feed';
-import { useLabTrials, useLabVotes } from '@/shared/lab';
+import { LabMark, useLabTrials, useLabVotes } from '@/shared/lab';
 import { openPuzzle } from '@/shared/played';
 import { useStoredDocs } from '@/shared/storage';
 import { FONT, useTokens } from '@/shared/theme';
@@ -15,7 +15,8 @@ export const LAB_LINE =
   'New puzzles on trial, here for a few weeks. Vote after you play: your votes help decide which become permanent dailies.';
 
 /**
- * "From the Lab", under Today's dailies (Alec, 11 Nov 2026; mock Option 3): the running
+ * "From the Lab", under Today's dailies (Alec, 11 Nov 2026; mock Option 3; the website's Lab pink
+ * and the dailies' text colours, 15 Nov 2026): the running
  * trials as compact rows in a pale marigold panel, each saying "Try it" or "✓ Rated", and how
  * many of them you've rated. Always the same shape; no panel when no trial is running.
  */
@@ -32,14 +33,17 @@ export function LabPanel() {
       accessibilityRole="summary"
       testID="lab-panel">
       <View style={styles.head}>
-        <Text accessibilityRole="header" style={[styles.title, { color: t.ink }]}>
-          From the Lab
-        </Text>
+        <View style={styles.titleRow}>
+          <LabMark />
+          <Text accessibilityRole="header" style={[styles.title, { color: t.ink }]}>
+            From the Lab
+          </Text>
+        </View>
         <Text style={[styles.count, { color: t.labInk }]} testID="lab-rated">
           {`${rated} OF ${current.length} RATED`}
         </Text>
       </View>
-      <Text style={[styles.line, { color: t.labInk }]}>{LAB_LINE}</Text>
+      <Text style={[styles.line, { color: t.muted }]}>{LAB_LINE}</Text>
       {current.map((it, i) => {
         const played = labPlayed(it.id, docs[labSaveKey(it.type)] as never);
         const name = LAB_LABEL[it.type];
@@ -68,7 +72,7 @@ export function LabPanel() {
             <View style={styles.body}>
               <Text style={[styles.name, { color: t.ink }]}>{name}</Text>
               {it.standfirst ? (
-                <Text numberOfLines={1} style={[styles.desc, { color: t.labInk }]}>
+                <Text numberOfLines={1} style={[styles.desc, { color: t.muted }]}>
                   {it.standfirst}
                 </Text>
               ) : null}
@@ -94,7 +98,8 @@ const styles = StyleSheet.create({
     paddingTop: 16,
     paddingBottom: 6,
   },
-  head: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', gap: 8 },
+  head: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
+  titleRow: { flexDirection: 'row', alignItems: 'center', gap: 7 },
   title: { fontSize: 16, fontFamily: FONT.display },
   count: { fontSize: 11, letterSpacing: 0.8, fontFamily: FONT.bodySemi },
   line: { fontSize: 12.5, lineHeight: 17, fontFamily: FONT.body, marginTop: 2, marginBottom: 6 },
