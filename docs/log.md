@@ -1150,3 +1150,12 @@ Alec ran an outside review of the app and asked for its findings to be checked a
 - **Tests:** core lab.test (16), feedLite (Lab cards), TodayLab, ArchiveLab, shared/lab (vote sender, castVote, trials, finish, start), tokens (Lab contrast), webview messages (Lab keys), each player's model/finishing/oracle/screen tests, tracker (Lab slug). `npm run check` green: 1,778 tests, 98.71% lines.
 - **Site side:** dailynoodle PR [#123](https://github.com/alecldarlow-cell/dailynoodle/pull/123), merged first (Lab votes on the web finish, admin Lab card, privacy line, SITE.md › Lab trial votes, Lab pages to 19 Dec). Database applied live 11 Nov with Alec's go-ahead: migrations `lab_votes` and `lab_votes_admin_not_anon`.
 - **For Alec:** confirm the graduation bar (suggested ~20 votes and 70% Yes, read with abandons). Wording: the Lab start card says "Tilts played" where the web says "mazes played". Ships in the next Play build (native code is JS only, but new tile images are bundled assets).
+
+## 15 Nov 2026 — The Lab ships (from `lab-held`)
+
+- **Alec, 15 Nov:** ship the Lab now, over the air to the production build (0.4.0).
+- **What:** reverts #150 (the hold-back), then the two `lab-held` commits from 12 Nov: thumbs on the vote's Yes/No with the chosen answer filled, and the start cards counting as the website does. Same code as `lab-held`, plus main's workflow hardening (`ad03664`).
+- **Native:** none. `runtime.test` green: the Android fingerprint is still `e442790c…`, matching `store/runtime.json`, so an Update production run reaches 0.4.0 phones with no store build. (The 11 Nov note "ships in the next Play build" was overcautious: the tile images are bundled assets, which updates carry.)
+- **Tests proved:** `npm run check` green, 209 suites, 1,778 tests.
+- **Trial:** day 1 is the day the production update goes out; review the admin Lab card at day 14.
+- **Left:** bring this into the 0.5.0 branch (`tally-app-link`) so 0.5.0 keeps the Lab and the 12 Nov tweaks.
