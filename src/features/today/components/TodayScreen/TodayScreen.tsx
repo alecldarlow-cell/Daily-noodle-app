@@ -5,6 +5,7 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { useFeedLite, type FeedItem } from '@/shared/feed';
 import { fileOf, keepToday, openPuzzle, useKept, usePlayed } from '@/shared/played';
+import { useLabTrials } from '@/shared/lab';
 import { appStorage } from '@/shared/storage';
 import { FONT, useTokens } from '@/shared/theme';
 import { shortDate, useLondonDay } from '@/shared/time';
@@ -43,6 +44,9 @@ export function TodayScreen({ open, onOpened }: { open?: PuzzleType; onOpened?: 
   const status = useToday();
   const feed = useFeedLite();
   const items = status.kind === 'ready' ? status.list.items : NO_ITEMS;
+  // The Lab panel shows only while a trial runs; then it, not a rule, ends the dailies.
+  const trials = useLabTrials();
+  const labShown = status.kind === 'ready' && trials.current.length > 0;
   const { byId, run, rounds, held } = usePlayed(items, day);
   const refresh = status.refresh;
   const cards = useMemo(() => {
@@ -157,7 +161,7 @@ export function TodayScreen({ open, onOpened }: { open?: PuzzleType; onOpened?: 
         </View>
       ) : null}
 
-      {items.map((it) => {
+      {items.map((it, i) => {
         const card = cards[it.id];
         const title = card?.headline ?? it.name;
         return (
@@ -174,6 +178,7 @@ export function TodayScreen({ open, onOpened }: { open?: PuzzleType; onOpened?: 
             kept={kept.has(it.path)}
             onHowTo={() => openHowTo(it.type)}
             onPress={() => play(it, title)}
+            rule={!(labShown && i === items.length - 1)}
           />
         );
       })}

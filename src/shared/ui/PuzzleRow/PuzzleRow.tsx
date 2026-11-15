@@ -24,6 +24,8 @@ interface PuzzleRowProps {
   onPress: () => void;
   /** "How to play", a sibling of the card so it never opens the puzzle. */
   onHowTo?: () => void;
+  /** The hairline under the card; off for the last daily when the Lab panel follows (15 Nov 2026). */
+  rule?: boolean;
   testID?: string;
 }
 
@@ -69,6 +71,7 @@ export function PuzzleRow({
   kept,
   onPress,
   onHowTo,
+  rule = true,
   testID,
 }: PuzzleRowProps) {
   const t = useTokens();
@@ -96,7 +99,9 @@ export function PuzzleRow({
       : t.faint;
 
   return (
-    <View style={[styles.card, { borderBottomColor: t.hair }]}>
+    <View
+      style={[styles.card, rule ? { borderBottomColor: t.hair } : styles.noRule]}
+      testID={testID ? `${testID}-card` : undefined}>
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={label}
@@ -183,6 +188,7 @@ export function PuzzleRow({
 
 const styles = StyleSheet.create({
   card: { borderBottomWidth: StyleSheet.hairlineWidth, position: 'relative' },
+  noRule: { borderBottomWidth: 0 },
   // 20 pt above and below every card, so the tiles (and the text beside them) stream evenly.
   press: { flexDirection: 'row', alignItems: 'flex-start', gap: 14, paddingVertical: CARD_PAD },
   mark: {

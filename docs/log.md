@@ -1185,3 +1185,8 @@ Alec ran an outside review of the app and asked for its findings to be checked a
 - **What:** `labSoft`/`labInk`/`labLine` become pink (light `#FBEAF1`/`#C2185B`/`#F2CFDD`; dark `#2A1621`/`#F48FB8`/`#45283A`). The panel's line and one-line descriptions use `muted`, like the dailies; Lab pink stays on the counter, "Try it" and its chevron. A flask (`assets/images/icons/flask.png`, white 96 px, tinted like the thumb) on a Lab-pink tile before "From the Lab" (`LabMark`) and in the finish sheet's FROM THE LAB badge (`LabFlask`).
 - **Native:** none; assets travel with updates. JS only, ships by Update production to 0.4.0.
 - **Tests proved:** tokens contrast now also checks `muted` on the panel (every pair ≥ 4.5:1 in both schemes; lowest is the green "✓ Rated" on light pink, 4.65); TodayLab shows the mark; the finish badge shows the flask; LabMark's tile and tint. `npm run check` green.
+
+## 15 Nov 2026 — More room above the Lab panel
+
+- **Alec, 15 Nov (from his phone):** the panel sat tight under the last daily. Now 24 px above it (was 8), and the last daily drops its hairline when the panel follows (`PuzzleRow` `rule`, default on; on everywhere else, and on Today when no trial runs).
+- **Tests proved:** TodayLab: with a trial running the last daily (Reckon) has no rule and the one above keeps it; with every trial retired the last daily keeps its rule. JS only, ships by Update production.
