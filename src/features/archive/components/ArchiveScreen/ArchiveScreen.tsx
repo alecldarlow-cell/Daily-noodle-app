@@ -1,4 +1,12 @@
-import { PUZZLE_TYPES, TYPE_LABEL, type PuzzleType } from '@noodle/core';
+import {
+  LAB_LABEL,
+  LAB_TYPES,
+  labPlayed,
+  labSaveKey,
+  PUZZLE_TYPES,
+  TYPE_LABEL,
+  type PuzzleType,
+} from '@noodle/core';
 import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
 import {
@@ -13,10 +21,13 @@ import {
   View,
 } from 'react-native';
 
+import type { LabFeedItem } from '@/shared/feed';
 import { useFeatures } from '@/shared/features';
+import { useLabTrials } from '@/shared/lab';
 import { isConnectionError } from '@/shared/net';
 import { openPuzzle, useKept, usePlayed } from '@/shared/played';
 import { useManualRefresh } from '@/shared/query';
+import { useStoredDocs } from '@/shared/storage';
 import { FONT, useTokens } from '@/shared/theme';
 import { relDay, useLondonDay } from '@/shared/time';
 import { appRecorder } from '@/shared/track';
@@ -37,6 +48,13 @@ import { useArchive } from '../../hooks/useArchive';
 import type { ArchiveItem } from '../../types';
 
 const NO_ITEMS: ArchiveItem[] = [];
+const LAB_KEYS = LAB_TYPES.map(labSaveKey);
+
+/** The picker's choice: a daily type, the Lab's trials (11 Nov 2026), or All (null). */
+type Pick_ = PuzzleType | 'lab' | null;
+const pickLabel = (p: Pick_) => (p === 'lab' ? 'Lab' : p ? TYPE_LABEL[p] : 'All');
+/** What a Lab card's left side says: when, and "Retired" once its trial has ended. */
+export const labWhen = (when: string, retired: boolean) => (retired ? `${when} · Retired` : when);
 
 type View_ = 'list' | 'calendar';
 
@@ -52,7 +70,9 @@ export function ArchiveScreen() {
   const t = useTokens();
   const day = useLondonDay();
   const q = useArchive();
-  const [type, setType] = useState<PuzzleType | null>(null);
+  const [pick, setType] = useState<Pick_>(null);
+  const lab = pick === 'lab';
+  const type: PuzzleType | null = lab ? null : pick;
   const [hideDone, setHideDone] = useState(false);
   const [picking, setPicking] = useState(false);
   const status: DoneFilter = hideDone ? 'todo' : 'all';
@@ -60,7 +80,8 @@ export function ArchiveScreen() {
   const [chosen, setView] = useState<View_>('list');
   // features.json's archive switch (Alec, 6 Nov 2026): off hides the calendar, with no app update.
   const calendarOn = useFeatures().archive;
-  const view: View_ = calendarOn ? chosen : 'list';
+  // The Lab is a short list: always as a list.
+  const view: View_ = calendarOn && !lab ? chosen : 'list';
   const items = q.data?.items ?? NO_ITEMS;
   const { byId, rounds, held } = usePlayed(items, day);
   // Finished, won or lost, counts as done; started but unfinished does not (as the cards' ✓).
@@ -68,6 +89,22 @@ export function ArchiveScreen() {
   const sections = useMemo(
     () => groupArchive(items, type, status, finished, day),
     [items, type, status, finished, day],
+  );
+  // The Lab's trials: every Lab puzzle before today, with its own saves (11 Nov 2026).
+  const trials = useLabTrials();
+  const labDocs = useStoredDocs(LAB_KEYS);
+  const labDone = useMemo(
+    () =>
+      new Set(
+        trials.all
+          .filter((it) => labPlayed(it.id, labDocs[labSaveKey(it.type)] as never)?.done)
+          .map((it) => it.id),
+      ),
+    [trials.all, labDocs],
+  );
+  const labSections = useMemo(
+    () => groupArchive(trials.all, null, status, labDone, day),
+    [trials.all, status, labDone, day],
   );
   const { refresh, refreshing } = useManualRefresh(q, () => q.refetch());
   const offline = isConnectionError(q.error);
@@ -103,12 +140,30 @@ export function ArchiveScreen() {
     />
   );
 
+  const renderLab = (item: LabFeedItem) => (
+    <PuzzleRow
+      testID={`archive-${item.id}`}
+      type={item.type}
+      title={`${LAB_LABEL[item.type]} ${Number(item.id.split('·').pop())}`}
+      detail={item.standfirst}
+      when={labWhen(relDay(item.date, day), trials.retired.has(item.type))}
+      played={labPlayed(item.id, labDocs[labSaveKey(item.type)] as never)}
+      onPress={() => {
+        appRecorder.event('archive_play', { type: item.type, id: item.id }, 'archive.html');
+        openPuzzle({ type: item.type, name: LAB_LABEL[item.type], path: item.path }, null);
+      }}
+    />
+  );
+  const shown: { title: string; data: (ArchiveItem | LabFeedItem)[] }[] = lab
+    ? labSections
+    : sections;
+
   return (
     <Screen title="Archive" testID="archive-screen" scroll={false}>
       <View style={styles.bar} testID="archive-switches">
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={`Puzzles: ${type ? TYPE_LABEL[type] : 'All'}`}
+          accessibilityLabel={`Puzzles: ${pickLabel(pick)}`}
           accessibilityHint="Choose which puzzle to show"
           accessibilityState={{ expanded: picking }}
           testID="archive-type"
@@ -117,9 +172,9 @@ export function ArchiveScreen() {
             styles.pill,
             { borderColor: t.hair, backgroundColor: pressed ? t.accentSoft : t.paper },
           ]}>
-          <TypeIcon type={type} size={26} />
+          <TypeIcon type={pick} size={26} />
           <Text style={[styles.pillText, { color: t.ink }]} numberOfLines={1}>
-            {type ? TYPE_LABEL[type] : 'All'}
+            {pickLabel(pick)}
           </Text>
           <Chevron color={t.ink} dir="down" size={7} />
         </Pressable>
@@ -165,7 +220,7 @@ export function ArchiveScreen() {
       </View>
       <TypeSheet
         open={picking}
-        type={type}
+        type={pick}
         onClose={() => setPicking(false)}
         onPick={(ty) => {
           setType(ty);
@@ -193,7 +248,7 @@ export function ArchiveScreen() {
           action={{ label: 'Try again', onPress: refresh }}
         />
       ) : null}
-      {q.data && view === 'list' && sections.length === 0 ? (
+      {q.data && view === 'list' && shown.length === 0 ? (
         <Note testID="archive-empty" title={hideDone ? 'All done here' : 'No puzzles match'} />
       ) : null}
       {view === 'calendar' ? (
@@ -215,7 +270,7 @@ export function ArchiveScreen() {
         </ScrollView>
       ) : (
         <SectionList
-          sections={sections}
+          sections={shown}
           keyExtractor={(it) => it.path}
           stickySectionHeadersEnabled={false}
           refreshControl={
@@ -232,7 +287,9 @@ export function ArchiveScreen() {
               {section.title}
             </Text>
           )}
-          renderItem={({ item }) => renderRow(item)}
+          renderItem={({ item }) =>
+            lab ? renderLab(item as LabFeedItem) : renderRow(item as ArchiveItem)
+          }
           ListFooterComponent={<View style={styles.footer} />}
         />
       )}
@@ -240,11 +297,13 @@ export function ArchiveScreen() {
   );
 }
 
-/** A type's tile, or the noodle mark for All. */
-function TypeIcon({ type, size }: { type: PuzzleType | null; size: number }) {
+/** A type's tile, the Lab's (Redact's, as the Lab's face), or the noodle mark for All. */
+function TypeIcon({ type, size }: { type: Pick_; size: number }) {
   return (
     <View style={{ width: size, height: size, borderRadius: size / 6, overflow: 'hidden' }}>
-      {type ? (
+      {type === 'lab' ? (
+        <PuzzleTile type="redact" size={size} />
+      ) : type ? (
         <PuzzleTile type={type} size={size} />
       ) : (
         <Image source={MARK} style={{ width: size, height: size }} accessible={false} />
@@ -274,9 +333,9 @@ function TypeSheet({
   onPick,
 }: {
   open: boolean;
-  type: PuzzleType | null;
+  type: Pick_;
   onClose: () => void;
-  onPick: (t: PuzzleType | null) => void;
+  onPick: (t: Pick_) => void;
 }) {
   const t = useTokens();
   return (
@@ -294,9 +353,9 @@ function TypeSheet({
           Choose a puzzle
         </Text>
         <View style={styles.grid}>
-          {[null, ...PUZZLE_TYPES].map((ty) => {
+          {[null, ...PUZZLE_TYPES, 'lab' as const].map((ty) => {
             const on = ty === type;
-            const label = ty ? TYPE_LABEL[ty] : 'All';
+            const label = pickLabel(ty);
             return (
               <Pressable
                 key={label}

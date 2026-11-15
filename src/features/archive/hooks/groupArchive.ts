@@ -2,7 +2,7 @@ import type { PuzzleType } from '@noodle/core';
 
 import { monthLabel } from '@/shared/time';
 
-import type { ArchiveItem, ArchiveSection } from '../types';
+import type { ArchiveItem } from '../types';
 
 /**
  * The archive as month sections, newest first: only `type` when given, and only the
@@ -12,20 +12,22 @@ import type { ArchiveItem, ArchiveSection } from '../types';
  */
 export type DoneFilter = 'all' | 'todo' | 'done';
 
-export function groupArchive(
-  items: readonly ArchiveItem[],
+export function groupArchive<
+  T extends Pick<ArchiveItem, 'date' | 'path' | 'id'> & { type: string },
+>(
+  items: readonly T[],
   type: PuzzleType | null,
   status: DoneFilter = 'all',
   finished: ReadonlySet<string> = new Set(),
   before?: string,
-): ArchiveSection[] {
+): { title: string; data: T[] }[] {
   const kept = items
     .filter((it) => !before || it.date < before)
     .filter((it) => !type || it.type === type)
     .filter((it) => status === 'all' || (status === 'done') === finished.has(it.id))
     .slice()
     .sort((a, b) => (a.date === b.date ? a.path.localeCompare(b.path) : a.date < b.date ? 1 : -1));
-  const sections: ArchiveSection[] = [];
+  const sections: { title: string; data: T[] }[] = [];
   for (const it of kept) {
     const title = monthLabel(it.date);
     const last = sections.at(-1);
