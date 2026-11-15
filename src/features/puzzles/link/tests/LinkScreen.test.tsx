@@ -150,7 +150,7 @@ describe('GIVEN a Link not yet played', () => {
 });
 
 describe('GIVEN a Link lost', () => {
-  it('THEN its sheet offers Play again, and the replay records nothing new', async () => {
+  it('THEN its sheet ends there: no Play again (Alec, 15 Nov 2026)', async () => {
     await renderWithProviders(<LinkScreen file={file78} />);
     await press('Play');
     await guess(G[0]!);
@@ -169,12 +169,7 @@ describe('GIVEN a Link lost', () => {
     const lost = JSON.parse(appStorage.getItem(SAVE_KEY)!).done['DP·LINK·0078'];
     expect(lost).toMatchObject({ o: 'loss', m: 4 });
     expect(JSON.parse(appStorage.getItem(STREAK_KEY)!)).toMatchObject({ streak: 0 });
-    await press('Play again (not recorded)');
-    expect(screen.getByText('medium · replay')).toBeOnTheScreen();
-    for (const g of G) await guess(g);
-    await run(1500);
-    expect(screen.getByTestId('finish-title')).toHaveTextContent('Linked');
-    expect(JSON.parse(appStorage.getItem(SAVE_KEY)!).done['DP·LINK·0078']).toEqual(lost);
+    expect(screen.queryByText('Play again (not recorded)')).toBeNull();
     expect(finishes).toHaveLength(1);
   });
 });
