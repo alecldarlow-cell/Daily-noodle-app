@@ -1214,3 +1214,10 @@ Alec ran an outside review of the app and asked for its findings to be checked a
 ## 15 Nov 2026 — Delete branches workflow
 
 - **Alec, 15 Nov:** clear old branches without deleting them by hand. `.github/workflows/delete-branches.yml` (Run workflow, dry run by default) deletes branches whose PR merged with no later commits, plus any named in "also"; never main or a branch with an open PR. Merged PRs already auto-delete their branch (repo setting).
+
+## 16 Nov 2026 — Lab rows follow today's puzzle
+
+- **Alec, 16 Nov (from his phone):** "the new day's Lab puzzles haven't appeared". They had: the rows open today's puzzle, but "✓ Rated" follows the vote, which is one per type for the whole trial, so a rated type looked finished every day after.
+- **What:** each Lab row now says where you are with today's puzzle: "Try it", "Continue", "Rate it" (finished, type not yet rated) or "✓ Done" (finished and rated; green, no chevron). The header's "N OF 3 RATED" still counts votes. No storage, vote or database change.
+- **Tests proved:** TodayLab: a type rated on an earlier puzzle says "Try it" on a new one; finished + rated says "✓ Done"; part-played says "Continue". `npm run check` green.
+- **Native:** none. JS only, ships by Update production.

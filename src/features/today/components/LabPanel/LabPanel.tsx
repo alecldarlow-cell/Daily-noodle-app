@@ -17,8 +17,9 @@ export const LAB_LINE =
 /**
  * "From the Lab", under Today's dailies (Alec, 11 Nov 2026; mock Option 3; the website's Lab pink
  * and the dailies' text colours, 15 Nov 2026): the running
- * trials as compact rows in a pale marigold panel, each saying "Try it" or "✓ Rated", and how
- * many of them you've rated. Always the same shape; no panel when no trial is running.
+ * trials as compact rows in a pale marigold panel, each saying where you are with today's
+ * puzzle ("Try it", "Continue", "Rate it" or "✓ Done", 16 Nov 2026), and how many types you've
+ * rated. Always the same shape; no panel when no trial is running.
  */
 export function LabPanel() {
   const t = useTokens();
@@ -47,14 +48,17 @@ export function LabPanel() {
       {current.map((it, i) => {
         const played = labPlayed(it.id, docs[labSaveKey(it.type)] as never);
         const name = LAB_LABEL[it.type];
+        // The row follows today's puzzle, not the vote (Alec, 16 Nov 2026): a vote is one per
+        // type for the whole trial, so a rated type still says "Try it" when a new puzzle is up.
         const isRated = !!votes[it.type];
-        const call = isRated
-          ? '✓ Rated'
-          : played?.done
-            ? 'Rate it'
-            : played
-              ? 'Continue'
-              : 'Try it';
+        const finished = !!played?.done && isRated;
+        const call = played?.done
+          ? isRated
+            ? '✓ Done'
+            : 'Rate it'
+          : played
+            ? 'Continue'
+            : 'Try it';
         return (
           <Pressable
             key={it.path}
@@ -77,8 +81,8 @@ export function LabPanel() {
                 </Text>
               ) : null}
             </View>
-            <Text style={[styles.call, { color: isRated ? t.accent : t.labInk }]}>{call}</Text>
-            {isRated ? null : <Chevron color={t.labInk} size={7} />}
+            <Text style={[styles.call, { color: finished ? t.accent : t.labInk }]}>{call}</Text>
+            {finished ? null : <Chevron color={t.labInk} size={7} />}
           </Pressable>
         );
       })}
