@@ -1,6 +1,6 @@
 /**
  * Tumbler's rules, ported line by line from dailynoodle engines/tumbler.js (Lab, 6 Nov 2026):
- * a hidden word in four wheels of letters. Wheels turn down only and wrap round; the yellow
+ * a hidden word in four wheels of letters. Wheels turn down only and wrap round; the outlined
  * line (row 1) is read and submitted. A real word gets Wordle-style clues; the hidden word
  * solves it. Pure TypeScript with no React or storage; the screen and the differential
  * replay (scripts/replay.js) both play it.
@@ -8,9 +8,9 @@
 export const SAVE_KEY = 'digi-tumbler-v1';
 export const STREAK_KEY = 'digi-tumbler-streak';
 /** The page's message before anything is played (its markup). */
-export const START_MSG = 'Make a word on the yellow line and submit it for clues.';
+export const START_MSG = 'Make a word on the outlined line and submit it for clues.';
 export const RESUME_MSG = 'Carrying on where you left off.';
-/** The row of each wheel that is read: the yellow line. */
+/** The row of each wheel that is read: the outlined line. */
 export const READ = 1;
 
 export interface TumblerData {
@@ -87,7 +87,7 @@ export function letter(s: TumblerState, k: number, i: number): string {
   return s.p.wheels[k]![(((i + s.off[k]!) % P) + P) % P]!;
 }
 
-/** The word on the yellow line, lower case. */
+/** The word on the outlined line, lower case. */
 export function lineWord(s: TumblerState): string {
   let w = '';
   for (let k = 0; k < s.p.n; k++) w += letter(s, k, READ);
@@ -108,6 +108,50 @@ export function clue(g: string, secret: string): Clue[] {
       left[g[i]!]!--;
     }
   return res;
+}
+
+/**
+ * A tile's clue mark from the submits (engines/tumbler.js wheelMarks; Alec, 16 Nov 2026): only
+ * what the submits showed, nothing deduced. g: green on its wheel. x: ruled out (a grey letter
+ * on every wheel, or a letter tried on this wheel and not green there). n: in the word, tried on
+ * this wheel and not here. a: in the word, not yet found, not ruled out here. '' unmarked.
+ */
+export type Mark = 'g' | 'x' | 'n' | 'a' | '';
+
+export function wheelMarks(s: TumblerState): (k: number, L: string) => Mark {
+  const n = s.p.n;
+  const green: (string | null)[] = new Array<string | null>(n).fill(null);
+  const notAt = Array.from({ length: n }, () => new Set<string>());
+  const out = new Set<string>();
+  const amber = new Set<string>();
+  const found = new Set<string>();
+  for (const w of s.tries) {
+    const W = w.toUpperCase();
+    const c = clue(w, s.p.secret);
+    const hit = new Set<string>();
+    for (let i = 0; i < n; i++) {
+      const L = W[i]!;
+      if (c[i] === 'g') {
+        green[i] = L;
+        found.add(L);
+        hit.add(L);
+      } else {
+        notAt[i]!.add(L);
+        if (c[i] === 'a') {
+          amber.add(L);
+          hit.add(L);
+        }
+      }
+    }
+    for (let i = 0; i < n; i++) if (!hit.has(W[i]!)) out.add(W[i]!);
+  }
+  return (k, L) => {
+    const live = amber.has(L) && !found.has(L);
+    if (green[k] === L) return 'g';
+    if (out.has(L)) return 'x';
+    if (notAt[k]!.has(L)) return live ? 'n' : 'x';
+    return live ? 'a' : '';
+  };
 }
 
 /** One move. A solved board takes none, as every control's guard in the engine. */
@@ -155,7 +199,7 @@ export function timerText(secs: number): string {
 /** "1 submit", "3 submits". */
 export const submitsText = (n: number) => `${n} submit${n === 1 ? '' : 's'}`;
 
-/** What a screen reader says for the yellow line's letter on wheel k. */
+/** What a screen reader says for the outlined line's letter on wheel k. */
 export function lineLabel(s: TumblerState, k: number): string {
   return `Line letter ${k + 1}: ${lineWord(s)[k]!.toUpperCase()}`;
 }

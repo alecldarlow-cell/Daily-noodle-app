@@ -4,11 +4,38 @@ import { PanResponder, Pressable, StyleSheet, Text, useColorScheme, View } from 
 import { FONT, usePuzzleTokens } from '@/shared/theme';
 import { Chevron, pressable } from '@/shared/ui';
 
-import { clue, letter, lineLabel, READ, type Clue, type TumblerState } from '../model';
+import {
+  clue,
+  letter,
+  lineLabel,
+  READ,
+  wheelMarks,
+  type Clue,
+  type Mark,
+  type TumblerState,
+} from '../model';
 import { tumblerColors } from './colors';
 
-/** The tile's size for a board `width` wide (tumbler.css .board --t), at most 64. */
-export const tileFor = (width: number) => Math.max(30, Math.min(64, Math.floor((width - 60) / 4)));
+/**
+ * What sits under and around the seven tiles when the screen is `height` tall: the tile gaps,
+ * the down arrows, Submit, the message and the latest submit (Alec, 16 Nov 2026: a tester's
+ * submits sat below the screen, so they stay in view).
+ */
+export const BOARD_CHROME = 6 * 5 + 7 + 44 + 8 + 12 + 50 + 12 + 20 + 12 + 34 + 12;
+
+/**
+ * The tile's size for a board `width` wide (tumbler.css .board --t), at most 64; given the
+ * `height` the screen body has, small enough that Submit and the latest submit fit under it.
+ */
+export const tileFor = (width: number, height?: number) =>
+  Math.max(
+    30,
+    Math.min(
+      64,
+      Math.floor((width - 60) / 4),
+      height ? Math.floor((height - BOARD_CHROME) / 7) : 64,
+    ),
+  );
 
 /**
  * A drag down `dy` from where the last step was taken (`from`): whether it is far enough for
@@ -21,23 +48,105 @@ export function dragStep(dy: number, from: number, t: number): { turn: boolean; 
 interface BoardProps {
   state: TumblerState;
   width: number;
+  /** The height the screen body has, so the latest submit stays in view. */
+  height?: number;
   /** The line's letters turn green (the win beat, or a reopened board). */
   won?: boolean;
   onTurn: (k: number) => void;
 }
 
-/** One wheel: its tiles, the yellow line, a drag down turning it a step a tile. */
+/**
+ * How a tile looks: the line outlined in ink (so green, amber and grey only ever mean clues), and
+ * the submits' marks (model.ts wheelMarks; engines/tumbler.css k-g, k-x, k-n, k-a).
+ */
+export function tileLook(
+  mark: Mark,
+  read: boolean,
+  won: boolean,
+  c: { card: string; ink: string; lineSoft: string; good: string; amber: string; miss: string },
+) {
+  if (read && won)
+    return {
+      bg: c.good,
+      border: c.good,
+      width: 2.5,
+      dashed: false,
+      opacity: 1,
+      fg: '#FFFFFF',
+      dot: false,
+    };
+  const edge = read ? c.ink : c.lineSoft;
+  const width = read ? 2.5 : 1.5;
+  switch (mark) {
+    case 'g':
+      return {
+        bg: c.good,
+        border: read ? c.ink : c.good,
+        width,
+        dashed: false,
+        opacity: 1,
+        fg: '#FFFFFF',
+        dot: false,
+      };
+    case 'x':
+      return read
+        ? { bg: c.miss, border: c.ink, width, dashed: false, opacity: 1, fg: c.ink, dot: false }
+        : {
+            bg: 'transparent',
+            border: edge,
+            width,
+            dashed: true,
+            opacity: 0.28,
+            fg: c.ink,
+            dot: false,
+          };
+    case 'n':
+      return read
+        ? {
+            bg: c.amber,
+            border: c.ink,
+            width,
+            dashed: false,
+            opacity: 1,
+            fg: '#141726',
+            dot: false,
+          }
+        : {
+            bg: 'transparent',
+            border: edge,
+            width,
+            dashed: true,
+            opacity: 0.28,
+            fg: c.ink,
+            dot: true,
+          };
+    default:
+      return {
+        bg: c.card,
+        border: edge,
+        width,
+        dashed: false,
+        opacity: read ? 1 : 0.55,
+        fg: c.ink,
+        dot: mark === 'a',
+      };
+  }
+}
+
+/** One wheel: its tiles, the outlined line, a drag down turning it a step a tile. */
 function Wheel({
   state,
   k,
   t,
   won,
+  marks,
   onTurn,
 }: {
   state: TumblerState;
   k: number;
   t: number;
   won: boolean;
+  marks: (k: number, L: string) => Mark;
   onTurn: (k: number) => void;
 }) {
   const pt = usePuzzleTokens();
@@ -65,6 +174,9 @@ function Wheel({
       testID={`tumbler-wheel-${k}`}>
       {Array.from({ length: state.size }, (_, i) => {
         const read = i === READ;
+        const L = letter(state, k, i);
+        const mark = marks(k, L);
+        const look = tileLook(mark, read, won, { ...pt, ...tc });
         return (
           <View
             key={i}
@@ -75,18 +187,31 @@ function Wheel({
               {
                 width: t * 1.25,
                 height: t,
-                backgroundColor: read ? (won ? tc.good : pt.activeWord) : pt.card,
-                borderColor: read ? (won ? tc.good : pt.active) : pt.lineSoft,
-                opacity: read ? 1 : 0.55,
+                backgroundColor: look.bg,
+                borderColor: look.border,
+                borderWidth: look.width,
+                borderStyle: look.dashed ? 'dashed' : 'solid',
+                opacity: look.opacity,
               },
-            ]}>
-            <Text
-              style={[
-                styles.tileText,
-                { fontSize: t * 0.48, color: read && won ? '#FFFFFF' : pt.ink },
-              ]}>
-              {letter(state, k, i)}
-            </Text>
+            ]}
+            testID={`tumbler-tile-${k}-${i}`}>
+            <Text style={[styles.tileText, { fontSize: t * 0.48, color: look.fg }]}>{L}</Text>
+            {look.dot ? (
+              <View
+                style={[
+                  styles.dot,
+                  {
+                    top: t * 0.1,
+                    right: t * 0.12,
+                    width: t * 0.16,
+                    height: t * 0.16,
+                    borderRadius: t * 0.08,
+                    backgroundColor: tc.amber,
+                  },
+                ]}
+                testID={`tumbler-dot-${k}-${i}`}
+              />
+            ) : null}
           </View>
         );
       })}
@@ -95,15 +220,16 @@ function Wheel({
 }
 
 /** The four wheels and, under each, its down arrow (the page's #down1…#down4). */
-export function TumblerBoard({ state, width, won = false, onTurn }: BoardProps) {
+export function TumblerBoard({ state, width, height, won = false, onTurn }: BoardProps) {
   const pt = usePuzzleTokens();
-  const t = tileFor(width);
+  const t = tileFor(width, height);
+  const marks = useMemo(() => wheelMarks(state), [state]);
   const ks = Array.from({ length: state.p.n }, (_, k) => k);
   return (
     <View style={styles.board} testID="tumbler-board">
       <View style={styles.row}>
         {ks.map((k) => (
-          <Wheel key={k} state={state} k={k} t={t} won={won} onTurn={onTurn} />
+          <Wheel key={k} state={state} k={k} t={t} won={won} marks={marks} onTurn={onTurn} />
         ))}
       </View>
       <View style={styles.row}>
@@ -177,6 +303,7 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', gap: 10, justifyContent: 'center' },
   wheel: { alignItems: 'center' },
   tile: { borderRadius: 10, borderWidth: 1.5, alignItems: 'center', justifyContent: 'center' },
+  dot: { position: 'absolute' },
   tileText: { fontFamily: FONT.sansSemi },
   down: {
     minHeight: 44,

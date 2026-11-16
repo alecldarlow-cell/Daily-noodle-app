@@ -1221,3 +1221,10 @@ Alec ran an outside review of the app and asked for its findings to be checked a
 - **What:** each Lab row now says where you are with today's puzzle: "Try it", "Continue", "Rate it" (finished, type not yet rated) or "✓ Done" (finished and rated; green, no chevron). The header's "N OF 3 RATED" still counts votes. No storage, vote or database change.
 - **Tests proved:** TodayLab: a type rated on an earlier puzzle says "Try it" on a new one; finished + rated says "✓ Done"; part-played says "Continue". `npm run check` green.
 - **Native:** none. JS only, ships by Update production.
+
+## 16 Nov 2026: Tumbler clues on the wheels (Alec, after Helen's play)
+
+- **Feedback:** a tester couldn't see her submits (they sat below the screen) and expected the line itself to change colour, so she took ages. Alec chose (16 Nov): the line as a neutral outline, the clues marked on the wheels strictly from what the submits showed (nothing deduced), and the board sized to the screen.
+- **What:** `model.ts wheelMarks` (g green on its wheel; x grey everywhere, or tried here and not green; n in the word, tried here; a in the word, not found, dot where not ruled out), drawn by `TumblerBoard tileLook`; the line is an ink outline (was marigold); `tileFor(width, height)` shrinks the tiles until Submit and the latest submit fit in the measured body (`BOARD_CHROME`). Copy says "outlined line" (START_MSG and How to play, matching the site's engines/house.js and engines/tumbler.js, site PR first).
+- **Tests proved:** model tests for the marks (line reads like the submit row, grey everywhere, amber dot, nothing deduced, a repeated letter, a found amber losing its dots); tileFor fits a 600-high body. `npm run check` green.
+- **Native:** none. JS only, ships by Update production after the site PR merges (the replay compares the start message).

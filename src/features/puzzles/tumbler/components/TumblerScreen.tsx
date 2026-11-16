@@ -1,6 +1,6 @@
 import { LAB_LABEL } from '@noodle/core';
 import { router } from 'expo-router';
-import { useCallback, useRef } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -24,9 +24,9 @@ export const HOUSE_LINE =
   "Today's word is hidden in four wheels of letters. Give them a spin and close in on it.";
 /** How to play: the rule sentence, then the guide's paragraphs (engines/house.js). */
 export const HOW = [
-  'A four-letter word is hidden in the wheels. Make words on the yellow line and submit them for clues until you find it.',
-  'Each wheel holds one letter of the hidden word and six others. Tap a wheel’s arrow, or drag it down, to turn it; wheels only turn down and wrap round. Only the yellow line counts.',
-  'Make any real word on the yellow line and Submit it. Green: right letter on the right wheel. Amber: the letter is in the word but belongs to another wheel. Grey: not in the word. Your submits stay listed below. Submit the hidden word to solve it; the clock is the score.',
+  'A four-letter word is hidden in the wheels. Make words on the outlined line and submit them for clues until you find it.',
+  'Each wheel holds one letter of the hidden word and six others. Tap a wheel’s arrow, or drag it down, to turn it; wheels only turn down and wrap round. Only the outlined line counts.',
+  'Make any real word on the outlined line and Submit it. Green: right letter on the right wheel. Amber: the letter is in the word but belongs to another wheel. Grey: not in the word. The clues stay marked on the wheels and your submits are listed below. Submit the hidden word to solve it; the clock is the score.',
 ];
 
 const LAB_KEYS = ['digi-tilt-v1', 'digi-redact-v1', 'digi-tumbler-v1'];
@@ -45,6 +45,8 @@ export function TumblerScreen({ file }: { file: PuzzleFile<TumblerData> }) {
   const { state, dispatch } = game;
   const leaving = useRef(false);
   const onTurn = useCallback((k: number) => dispatch({ t: 'turn', k }), [dispatch]);
+  /** The body's height, measured, so the tiles shrink until the latest submit is in view. */
+  const [bodyH, setBodyH] = useState<number | undefined>(undefined);
 
   const isDone = (it: LabFeedItem) => {
     const d = docs[`digi-${it.type}-v1`] as { done?: Record<string, unknown> } | null;
@@ -109,8 +111,16 @@ export function TumblerScreen({ file }: { file: PuzzleFile<TumblerData> }) {
     <SafeAreaView style={[styles.fill, { backgroundColor: pt.paper }]} testID="tumbler-screen">
       <View style={styles.in}>
         <PuzzleBar name={`Tumbler ${n}`} sub="Lab" streak={0} clock={game.clock} onBack={back} />
-        <ScrollView contentContainerStyle={styles.body}>
-          <TumblerBoard state={state} width={width} won={state.solved} onTurn={onTurn} />
+        <ScrollView
+          contentContainerStyle={styles.body}
+          onLayout={(e) => setBodyH(Math.round(e.nativeEvent.layout.height))}>
+          <TumblerBoard
+            state={state}
+            width={width}
+            height={bodyH}
+            won={state.solved}
+            onTurn={onTurn}
+          />
           <Pressable
             accessibilityRole="button"
             disabled={state.solved}
