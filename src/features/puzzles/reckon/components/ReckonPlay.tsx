@@ -1,16 +1,17 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import {
-  fmt,
   fromFraction,
   ladderOf,
   playView,
   posOf,
+  readoutParts,
   type Move,
   type ReckonState,
 } from '../model';
+import type { Parts } from '../units';
 import { FONT } from '@/shared/theme';
 import { PuzzleBar } from '@/shared/start-card';
 import { pressable } from '@/shared/ui';
@@ -62,6 +63,28 @@ function useHold(d: -1 | 1, dispatch: (m: Move) => void) {
   };
 }
 
+/** A reading's parts: big numbers with their units small after each ("5 ft 6 in"). */
+function reading(parts: Parts, unitStyle: object) {
+  return parts.map(([n, u], i) => (
+    <Text key={i}>
+      {i ? ' ' : ''}
+      {n}
+      <Text style={unitStyle}>{u ? ` ${u}` : ''}</Text>
+    </Text>
+  ));
+}
+
+/** The units switch's tip shows until the next move, or four seconds at most. */
+function useUnitTip(tip: string | null) {
+  const [gone, setGone] = useState<string | null>(null);
+  useEffect(() => {
+    if (!tip) return;
+    const t = setTimeout(() => setGone(tip), 4000);
+    return () => clearTimeout(t);
+  }, [tip]);
+  return tip && gone !== tip ? tip : null;
+}
+
 /** "3/10" → "3 of 10", as the question card's chip says it. */
 export function qnWords(qn: string): string {
   return qn.replace('/', ' of ');
@@ -96,6 +119,7 @@ export function ReckonPlay({ state, c, dispatch, name, streak, onBack }: Props) 
     } else setDrag(fr);
   };
   const fb = v.feedback;
+  const unitTip = useUnitTip(v.unitTip);
   const said = fb ? verdictLine(fb) : '';
   useAnnounce(said, `${v.qn}|${said}`);
   return (
@@ -190,8 +214,10 @@ export function ReckonPlay({ state, c, dispatch, name, streak, onBack }: Props) 
                 maxFontSizeMultiplier={1.2}
                 style={[styles.rv, fb && styles.rvTwo, { color: fb ? c.tomInk : c.ink }]}
                 testID="reckon-guess">
-                {preview != null ? fmt(preview) : v.guess}
-                <Text style={[styles.ru, { color: c.ink2 }]}>{v.unit ? ` ${v.unit}` : ''}</Text>
+                {reading(preview != null ? readoutParts(state, preview) : v.guessParts, [
+                  styles.ru,
+                  { color: c.ink2 },
+                ])}
               </Text>
             </View>
             {fb ? (
@@ -211,12 +237,49 @@ export function ReckonPlay({ state, c, dispatch, name, streak, onBack }: Props) 
                   maxFontSizeMultiplier={1.2}
                   style={[styles.rv, styles.rvTwo, { color: c.ink }]}
                   testID="reckon-answer">
-                  {fb.answer}
-                  <Text style={[styles.ru, { color: c.ink2 }]}>{fb.unit ? ` ${fb.unit}` : ''}</Text>
+                  {reading(fb.answerParts, [styles.ru, { color: c.ink2 }])}
                 </Text>
               </View>
             ) : null}
           </View>
+          {v.units ? (
+            <View
+              style={[styles.usw, { backgroundColor: c.paper, borderColor: c.rule }]}
+              accessibilityLabel="Units"
+              testID="reckon-units">
+              {(
+                [
+                  [false, v.units.metric],
+                  [true, v.units.imperial],
+                ] as const
+              ).map(([imp, label]) => {
+                const on = imp === v.units!.on;
+                return (
+                  <Pressable
+                    key={label}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: on }}
+                    testID={imp ? 'reckon-units-imperial' : 'reckon-units-metric'}
+                    onPress={() => dispatch({ t: 'units', imp })}
+                    style={pressable([styles.uswb, on && { backgroundColor: c.ink }])}>
+                    <Text
+                      maxFontSizeMultiplier={1.3}
+                      style={[styles.uswt, { color: on ? c.paper : c.ink2 }, on && styles.uswOn]}>
+                      {label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          ) : null}
+          {v.units && unitTip ? (
+            <Text
+              accessibilityLiveRegion="polite"
+              style={[styles.utip, { backgroundColor: c.tipBg, color: c.tipInk }]}
+              testID="reckon-unit-tip">
+              {unitTip}
+            </Text>
+          ) : null}
         </ScrollView>
         {!v.tipHidden ? (
           <Text
@@ -358,6 +421,35 @@ const styles = StyleSheet.create({
   },
   rvTwo: { fontSize: 44, lineHeight: 50, letterSpacing: -0.5 },
   ru: { fontFamily: FONT.sansSemi, fontSize: 20, letterSpacing: 0 },
+  // reckon.css .usw: km | miles under the reading (16 Nov 2026)
+  usw: {
+    alignSelf: 'center',
+    flexDirection: 'row',
+    padding: 2,
+    borderRadius: 999,
+    borderWidth: 1.5,
+  },
+  uswb: {
+    minWidth: 58,
+    minHeight: 44,
+    paddingHorizontal: 14,
+    borderRadius: 999,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  uswt: { fontSize: 17, fontFamily: FONT.sansSemi },
+  uswOn: { fontFamily: FONT.display },
+  utip: {
+    alignSelf: 'center',
+    maxWidth: 300,
+    borderRadius: 12,
+    overflow: 'hidden',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    fontFamily: FONT.sansSemi,
+    fontSize: 14,
+    textAlign: 'center',
+  },
   tip: { marginHorizontal: 16, borderRadius: 12, padding: 12, fontFamily: FONT.sans, fontSize: 15 },
   // 8 pt more between the scale's label strip and − / Lock in / + (7 Nov 2026): with the
   // band in ReckonSlider, 44 pt of inert space separates the track band from the buttons.

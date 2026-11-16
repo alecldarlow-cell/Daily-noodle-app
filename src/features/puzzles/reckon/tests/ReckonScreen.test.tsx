@@ -243,3 +243,33 @@ describe('GIVEN a Reckon already finished', () => {
     expect(finishes).toHaveLength(0);
   });
 });
+
+describe('GIVEN a metres question (16 Nov 2026: the units switch)', () => {
+  describe('WHEN the player taps feet', () => {
+    it('THEN the question and reading are in feet, a tip says so once, and the choice is saved for lengths', async () => {
+      await renderWithProviders(<ReckonScreen file={file2} deps={deps} />);
+      await press('reckon-play-button');
+      expect(screen.queryByTestId('reckon-units')).toBeNull(); // light speed in km/s keeps its unit
+      await lockAndNext();
+      expect(screen.getByTestId('reckon-question')).toHaveTextContent(/in metres\?$/);
+      expect(screen.getByTestId('reckon-units-metric').props.accessibilityState).toEqual({
+        selected: true,
+      });
+      await press('reckon-units-imperial');
+      expect(screen.getByTestId('reckon-question')).toHaveTextContent(
+        'How deep is Veryovkina, the deepest known cave, in feet?',
+      );
+      expect(screen.getByTestId('reckon-guess')).toHaveTextContent(/ ft$/);
+      expect(screen.getByTestId('reckon-unit-tip')).toHaveTextContent(
+        'Lengths stay in feet and inches until you switch back.',
+      );
+      expect(screen.getByTestId('reckon-units-imperial').props.accessibilityState).toEqual({
+        selected: true,
+      });
+      expect(saved().un).toEqual({ len: 'i' });
+      await press('reckon-units-metric');
+      expect(screen.getByTestId('reckon-guess')).toHaveTextContent(/ m$/);
+      expect(saved().un).toEqual({});
+    });
+  });
+});

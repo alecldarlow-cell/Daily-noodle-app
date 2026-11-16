@@ -22,6 +22,8 @@
 
 import { houseLine } from '@/shared/start-card/copy';
 
+import * as units from './units';
+
 export const SAVE_KEY = 'digi-reckon-v1';
 export const NQ = 10;
 export const SPAN = 2;
@@ -333,6 +335,8 @@ export interface ReckonState {
   ending: boolean;
   /** A finished round waiting for `finishing.commitFinish` (set by nextQ on the tenth). */
   finishing: boolean;
+  /** The units switch's one-off tip, set by the move that first switches a kind (cleared by the next move). */
+  unitTip?: string | null;
 }
 
 /** What the page asks of the browser. */
@@ -369,7 +373,7 @@ function copy(s: ReckonState): ReckonState {
   const aliased = !!s.R && s.R === s.save.cur;
   const R: Round | null = s.R ? (aliased ? save.cur : JSON.parse(JSON.stringify(s.R))) : null;
   const VR = s.VR && s.VR !== 'R' ? JSON.parse(JSON.stringify(s.VR)) : s.VR;
-  return { ...s, save, R, VR };
+  return { ...s, save, R, VR, unitTip: null };
 }
 
 /** A page opened: home, or the finish sheet for a round already finished. */
@@ -401,9 +405,26 @@ export function init(P: ReckonData, stored: unknown, now: number): ReckonState {
 
 /* ---------- the ladder on screen ---------- */
 
+/* the units switch (16 Nov 2026): the question on screen's imperial view, if the player chose it for its
+   kind (save.un, e.g. {dist:'i'}). Guesses are kept and scored in the fact's own unit: shown = metric × f. */
+export function unitsOf(s: ReckonState) {
+  const q = s.P.qs[s.Q]!;
+  const sp = units.spec(q);
+  const un = s.save.un as Record<string, string> | undefined;
+  const on = !!(sp && un && typeof un === 'object' && un[sp.k] === 'i');
+  return { sp, on, f: on ? sp!.f : 1, dlo: on ? q.lo + L10(sp!.f) : q.lo };
+}
+/** How a metric value of the question on screen reads, as [number, unit] parts. */
+export function readoutParts(s: ReckonState, shown: number, answer = false): units.Parts {
+  const u = unitsOf(s);
+  const q = s.P.qs[s.Q]!;
+  if (u.on) return units.parts(shown, u.sp!.du);
+  return [[answer ? fmtA(shown) : fmt(shown), q.u]];
+}
 export function ladderOf(s: ReckonState): number[] {
   const q = s.P.qs[s.Q]!;
-  return ladder(q.lo, !!q.i);
+  const u = unitsOf(s);
+  return u.on ? units.rungs(q.lo, u.sp!, ladder) : ladder(q.lo, !!q.i);
 }
 const logs = (lad: number[]) => lad.map(L10);
 function nearestIn(LOGS: number[], lv: number): number {
@@ -427,19 +448,20 @@ export function posOf(lo: number, v: number): number {
 /** The index a touch at fraction `fr` (0–1) of the track picks (fromX). */
 export function fromFraction(s: ReckonState, fr: number): number {
   const f = Math.max(0, Math.min(1, fr));
-  return nearest(s, s.P.qs[s.Q]!.lo + f * SPAN);
+  return nearest(s, unitsOf(s).dlo + f * SPAN);
 }
 /** The fraction of the track a ladder index sits at (where a replay aims a drag). */
 export function fractionOf(s: ReckonState, i: number): number {
   const lad = ladderOf(s);
-  return (L10(lad[Math.max(0, Math.min(lad.length - 1, i))]!) - s.P.qs[s.Q]!.lo) / SPAN;
+  return (L10(lad[Math.max(0, Math.min(lad.length - 1, i))]!) - unitsOf(s).dlo) / SPAN;
 }
 
 function setIdx(s: ReckonState, i: number) {
   const LAD = ladderOf(s);
   i = Math.max(0, Math.min(LAD.length - 1, i));
   s.CI = i;
-  if (live(s) && s.R!.ph === 'g') s.R!.cur = LAD[i]!; // only the live guess is ever changed
+  // only the live guess is ever changed; kept in the fact's own unit
+  if (live(s) && s.R!.ph === 'g') s.R!.cur = LAD[i]! / unitsOf(s).f;
 }
 
 /* ---------- the engine's functions ---------- */
@@ -452,19 +474,24 @@ function persist(s: ReckonState, host: Host, progress = true) {
 }
 
 function renderQ(s: ReckonState) {
-  const q = s.P.qs[s.Q]!;
   const guessing = live(s) && s.R!.ph === 'g';
-  const LAD = ladder(q.lo, !!q.i);
+  const u = unitsOf(s);
+  const LAD = ladderOf(s);
   const LOGS = logs(LAD);
   if (guessing) {
     const R = s.R!;
-    let CI = R.cur == null ? nearestIn(LOGS, q.lo + SPAN / 2) : Math.max(0, LAD.indexOf(R.cur));
-    if (CI < 0) CI = nearestIn(LOGS, q.lo + SPAN / 2);
+    let CI =
+      R.cur == null
+        ? nearestIn(LOGS, u.dlo + SPAN / 2)
+        : u.on
+          ? nearestIn(LOGS, L10(R.cur * u.f))
+          : Math.max(0, LAD.indexOf(R.cur));
+    if (CI < 0) CI = nearestIn(LOGS, u.dlo + SPAN / 2);
     s.CI = CI;
     setIdx(s, CI);
   } else {
     const g = vr(s)!.g[s.Q]!;
-    s.CI = LAD.indexOf(g) >= 0 ? LAD.indexOf(g) : nearestIn(LOGS, L10(g));
+    s.CI = !u.on && LAD.indexOf(g) >= 0 ? LAD.indexOf(g) : nearestIn(LOGS, L10(g * u.f));
     setIdx(s, s.CI);
   }
   s.tipHidden = !!s.save.tip || s.Q > 0 || !guessing;
@@ -506,7 +533,7 @@ function lockIn(s: ReckonState, host: Host) {
   s.lockedAt = host.now();
   const R = s.R!;
   const q = s.P.qs[s.Q]!;
-  const g = ladder(q.lo, !!q.i)[s.CI]!;
+  const g = ladderOf(s)[s.CI]! / unitsOf(s).f;
   const z = zone(g, q.a);
   R.g[R.i] = g;
   R.z[R.i] = z;
@@ -589,6 +616,24 @@ function closePause(s: ReckonState, host: Host) {
   s.last = host.now();
 }
 
+/** The units switch: one remembered setting per kind; the guess stays where it is (the engine's setUnits). */
+function setUnits(s: ReckonState, host: Host, imp: boolean) {
+  const u = unitsOf(s);
+  if (!u.sp || s.paused || imp === u.on) return;
+  const un: Record<string, string> =
+    s.save.un && typeof s.save.un === 'object' ? { ...(s.save.un as Record<string, string>) } : {};
+  if (imp) un[u.sp.k] = 'i';
+  else delete un[u.sp.k];
+  s.save.un = un;
+  const told = s.save.unT && (s.save.unT as Record<string, number>)[u.sp.k];
+  if (imp && !told) {
+    s.save.unT = { ...((s.save.unT as Record<string, number>) || {}), [u.sp.k]: 1 };
+    s.unitTip = u.sp.tip;
+  }
+  persist(s, host, false);
+  renderQ(s);
+}
+
 /* ---------- moves ---------- */
 
 export type Move =
@@ -614,6 +659,8 @@ export type Move =
   | { t: 'quit' }
   /** A row of the finish sheet's recap: review that question. */
   | { t: 'recap'; k: number }
+  /** The units switch under the reading: imperial (true) or the fact's own metric unit. */
+  | { t: 'units'; imp: boolean }
   /** The page closed and opened again (the save is all that's left). */
   | { t: 'reload' };
 
@@ -690,6 +737,9 @@ export function apply(prev: ReckonState, move: Move, host: Host): ReckonState {
     case 'recap':
       if (s.view === 'winModal') reviewEnd(s, move.k);
       break;
+    case 'units':
+      if (playing && s.VR) setUnits(s, host, move.imp);
+      break;
   }
   return s;
 }
@@ -756,13 +806,18 @@ export function noteFor(P: ReckonData, rec: ReckonRecord): string {
 }
 
 /** The finish sheet's "Today's ten": one row per question. */
-export function recapRows(P: ReckonData, rec: ReckonRecord) {
+export function recapRows(P: ReckonData, rec: ReckonRecord, un?: unknown) {
+  const pick = un && typeof un === 'object' ? (un as Record<string, string>) : {};
   return P.qs.map((q, k) => {
     const z = rec.z[k]!;
     const g = rec.g[k]!;
+    const sp = units.spec(q);
+    const on = !!(sp && pick[sp.k] === 'i');
+    const show = (v: number, ans: boolean) =>
+      on ? units.text(v * sp!.f, sp!.du) : withU(ans ? fmtA(v) : fmt(v), q.u);
     return {
       q: q.q,
-      line: 'You ' + withU(fmt(g), q.u) + ' · answer ' + withU(fmtA(q.a), q.u),
+      line: 'You ' + show(g, false) + ' · answer ' + show(q.a, true),
       pts: PTS[z]!,
       z,
     };
@@ -778,6 +833,8 @@ export interface Feedback {
   line: string;
   answer: string;
   unit: string;
+  /** The answer as parts, as guessParts. */
+  answerParts: units.Parts;
   note: string;
   /** The note is hidden when it only restates the number. */
   noteHidden: boolean;
@@ -811,15 +868,25 @@ export interface PlayView {
   answerAt: number | null;
   bands: { l: number; w: number; zone: number }[];
   thumbAt: number;
+  /** The reading as parts ([number, unit], …): feet and inches are two. */
+  guessParts: units.Parts;
+  /** The units switch, or null when the question keeps its unit. */
+  units: { metric: string; imperial: string; on: boolean } | null;
+  /** The one-off tip after the first switch of a kind. */
+  unitTip: string | null;
 }
 
 export function playView(s: ReckonState): PlayView {
   const q = s.P.qs[s.Q]!;
   const V = vr(s)!;
-  const LAD = ladder(q.lo, !!q.i);
+  const u = unitsOf(s);
+  const LAD = ladderOf(s);
   const guessing = live(s) && s.R!.ph === 'g';
   const maxQ = endRev(s) ? NQ - 1 : s.R!.i;
   const v = LAD[s.CI]!;
+  const gp = readoutParts(s, v);
+  const ap = u.on ? readoutParts(s, q.a * u.f) : readoutParts(s, q.a, true);
+  const one = (p: units.Parts) => p.length === 1;
   let feedback: Feedback | null = null;
   let action = 'Lock in';
   if (!guessing) {
@@ -830,9 +897,10 @@ export function playView(s: ReckonState): PlayView {
       pts: '+' + PTS[z],
       zone: z,
       line: offText(g, q.a),
-      answer: fmtA(q.a),
-      unit: q.u,
-      note: q.n,
+      answer: one(ap) ? ap[0]![0] : units.text(q.a * u.f, u.sp!.du),
+      unit: one(ap) ? ap[0]![1] : '',
+      answerParts: ap,
+      note: u.on ? u.sp!.n : q.n,
       noteHidden: !q.n || /^(About |Around |Up to about )?[\d.,]+( [^ .]+)?\.$/.test(q.n),
     };
     if (endRev(s)) action = 'Back to results';
@@ -842,8 +910,8 @@ export function playView(s: ReckonState): PlayView {
   const bands: PlayView['bands'] = [];
   if (feedback)
     for (let k = BAND.length - 1; k >= 0; k--) {
-      const l = Math.max(0, posOf(q.lo, q.a / BAND[k]!));
-      const r = Math.min(100, posOf(q.lo, q.a * BAND[k]!));
+      const l = Math.max(0, posOf(u.dlo, (q.a * u.f) / BAND[k]!));
+      const r = Math.min(100, posOf(u.dlo, q.a * u.f * BAND[k]!));
       bands.push({ l, w: r - l, zone: k });
     }
   const pk = PACKS[q.k] || { n: 'Quiz', c: '#57534E' };
@@ -851,10 +919,10 @@ export function playView(s: ReckonState): PlayView {
     qn: s.Q + 1 + '/' + NQ,
     score: score(V),
     chip: { name: pk.n, colour: pk.c },
-    question: q.q,
-    unit: q.u,
-    guess: fmt(v),
-    guessText: withU(fmt(v), q.u),
+    question: u.on ? u.sp!.q : q.q,
+    unit: one(gp) ? gp[0]![1] : '',
+    guess: one(gp) ? gp[0]![0] : units.text(v, u.sp!.du),
+    guessText: u.on ? units.text(v, u.sp!.du) : withU(fmt(v), q.u),
     index: s.CI,
     ladderSize: LAD.length,
     prevDisabled: s.Q <= 0,
@@ -876,10 +944,13 @@ export function playView(s: ReckonState): PlayView {
         disabled: !(k <= maxQ),
       };
     }),
-    lo: q.lo,
-    answerAt: feedback ? posOf(q.lo, q.a) : null,
+    lo: u.dlo,
+    answerAt: feedback ? posOf(u.dlo, q.a * u.f) : null,
     bands,
-    thumbAt: posOf(q.lo, v),
+    thumbAt: posOf(u.dlo, v),
+    guessParts: gp,
+    units: u.sp ? { metric: u.sp.mu, imperial: u.sp.iu, on: u.on } : null,
+    unitTip: s.unitTip || null,
   };
 }
 
