@@ -64,7 +64,7 @@ class Player {
     this.state = apply(this.state, move);
     this.steps.push({ move, ms });
   }
-  /** Turn every wheel until `word` is on the yellow line. */
+  /** Turn every wheel until `word` is on the outlined line. */
   make(word: string) {
     const { p } = this.state;
     for (let k = 0; k < p.n; k++)

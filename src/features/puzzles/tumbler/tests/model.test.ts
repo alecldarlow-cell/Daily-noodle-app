@@ -11,6 +11,7 @@ import {
   timerText,
   tumblerNumber,
   validate,
+  wheelMarks,
   type TumblerState,
 } from '../model';
 import { tumbler25 } from './fixtures';
@@ -44,7 +45,7 @@ describe('GIVEN a Tumbler board', () => {
   });
 
   describe('WHEN it opens', () => {
-    it('THEN the yellow line reads the second row and the page’s message shows', () => {
+    it('THEN the outlined line reads the second row and the page’s message shows', () => {
       const s = init(tumbler25);
       expect(lineWord(s)).toBe('teds');
       expect(s.msg).toBe(START_MSG);
@@ -103,5 +104,38 @@ describe('GIVEN a Tumbler board', () => {
     expect(timerText(-3)).toBe('0:00');
     expect(submitsText(1)).toBe('1 submit');
     expect(submitsText(3)).toBe('3 submits');
+  });
+
+  describe('WHEN a wrong word is submitted (clues on the wheels, Alec, 16 Nov 2026)', () => {
+    const sub = (x: TumblerState, w: string) => apply(turnTo(x, w), { t: 'submit' });
+    const s = sub(init(tumbler25), 'toes'); // against LETS: amber, grey, amber, green
+    const m = wheelMarks(s);
+    it('THEN the line shows the submit row: amber, grey, amber, green', () => {
+      expect(s.tries).toEqual(['toes']);
+      expect([0, 1, 2, 3].map((k) => m(k, letter(s, k, 1)))).toEqual(['n', 'x', 'n', 'g']);
+    });
+    it('THEN a grey letter fades on every wheel and an amber one is dotted where it could go', () => {
+      expect(m(2, 'O')).toBe('x');
+      expect(m(2, 'T')).toBe('a');
+      expect(m(1, 'E')).toBe('a');
+    });
+    it('THEN nothing is deduced: a found letter elsewhere and a solved wheel’s others stay plain', () => {
+      const n = wheelMarks(sub(init(tumbler25), 'lens'));
+      expect(n(2, 'E')).toBe('');
+      expect(n(1, 'B')).toBe('');
+      expect(n(0, 'R')).toBe('');
+    });
+    it('THEN a repeated letter greyed in one place is still in the word', () => {
+      const n = wheelMarks(sub(init(tumbler25), 'leek'));
+      expect(n(2, 'E')).toBe('x');
+      expect(n(0, 'E')).toBe('');
+      expect(n(0, 'L')).toBe('g');
+    });
+    it('THEN an amber letter found later loses its dots', () => {
+      const t = wheelMarks(sub(s, 'lets'));
+      expect(t(2, 'T')).toBe('g');
+      expect(t(0, 'T')).toBe('x');
+      expect(t(1, 'E')).toBe('g');
+    });
   });
 });

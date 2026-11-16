@@ -7,7 +7,7 @@ import { appStorage } from '@/shared/storage';
 import { mockSite, renderWithProviders } from '@/shared/testing';
 
 import { HOUSE_LINE, TumblerScreen } from '../components/TumblerScreen';
-import { dragStep, tileFor } from '../components/TumblerBoard';
+import { BOARD_CHROME, dragStep, tileFor } from '../components/TumblerBoard';
 import { beatMs } from '../hooks/useTumblerGame';
 import { letter, SAVE_KEY, type TumblerState } from '../model';
 import { file25 } from './fixtures';
@@ -190,5 +190,16 @@ describe('GIVEN the board’s sizes', () => {
     expect(tileFor(100)).toBe(30);
     const s = { p: { wheels: ['AB'] }, off: [0], size: 2 } as unknown as TumblerState;
     expect(letter(s, 0, 1)).toBe('B');
+  });
+});
+
+describe('GIVEN a short phone (Alec, 16 Nov 2026: a tester’s submits sat below the screen)', () => {
+  it('THEN the tiles shrink so Submit and the latest submit fit under the wheels', () => {
+    expect(tileFor(366)).toBe(64);
+    const body = 600;
+    const t = tileFor(366, body);
+    expect(t).toBeLessThan(64);
+    expect(7 * t + BOARD_CHROME).toBeLessThanOrEqual(body);
+    expect(tileFor(366, 300)).toBe(30);
   });
 });
