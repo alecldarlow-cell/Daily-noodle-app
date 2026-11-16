@@ -67,7 +67,7 @@ export function sheetInfo(s: ReckonState, rec: ReckonRecord, t: string): FinishI
     share: shareReckon(s.P.id, rec.z, rec.p, n),
     streak: n,
     best: bestScore(s.save),
-    rows: recapRows(s.P, rec),
+    rows: recapRows(s.P, rec, s.save.un),
     rec,
   };
 }
