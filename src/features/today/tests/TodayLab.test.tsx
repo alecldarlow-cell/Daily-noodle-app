@@ -77,7 +77,9 @@ describe('GIVEN three trials running and one retired', () => {
       expect(screen.getByTestId('today-reckon-card')).toHaveStyle({ borderBottomWidth: 0 });
       expect(screen.getByTestId('today-borders-card')).not.toHaveStyle({ borderBottomWidth: 0 });
       expect(within(panel).getByText(LAB_LINE)).toBeOnTheScreen();
-      expect(screen.getByTestId('lab-rated')).toHaveTextContent('1 OF 3 RATED');
+      // 17 Nov: no "N OF 3 RATED" count; the rows say where you are
+      expect(screen.queryByTestId('lab-rated')).toBeNull();
+      expect(within(panel).queryByText(/RATED/)).toBeNull();
       // 16 Nov: Tilt was rated on an earlier puzzle, but today's is new, so it's still "Try it"
       expect(within(screen.getByTestId('lab-row-tilt')).getByText('Try it')).toBeOnTheScreen();
       expect(within(screen.getByTestId('lab-row-redact')).getByText('Rate it')).toBeOnTheScreen();
@@ -100,7 +102,6 @@ describe('GIVEN three trials running and one retired', () => {
       mockSite({ 'puzzles-today.json': todayList(), 'feed-lite.json': feed(lab) });
       await renderWithProviders(<TodayScreen />);
       await screen.findByTestId('lab-panel');
-      expect(screen.getByTestId('lab-rated')).toHaveTextContent('2 OF 3 RATED');
       expect(within(screen.getByTestId('lab-row-tilt')).getByText('✓ Done')).toBeOnTheScreen();
       expect(within(screen.getByTestId('lab-row-tumbler')).getByText('Continue')).toBeOnTheScreen();
       expect(within(screen.getByTestId('lab-row-redact')).getByText('Try it')).toBeOnTheScreen();
