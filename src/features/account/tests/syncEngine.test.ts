@@ -381,3 +381,48 @@ describe('GIVEN rounds left part-way on two devices (code review, 30 Oct 2026)',
     });
   });
 });
+
+describe('GIVEN Lab saves and votes on this phone and on the account (17 Nov 2026)', () => {
+  describe('WHEN the phone syncs', () => {
+    it('THEN the Lab saves merge both ways and each type keeps its latest vote', async () => {
+      const store = memoryStorage({
+        'digi-tilt-v1': { done: { T: { s: 42, d: '2026-11-17' } } },
+        'noodle-lab-votes-v1': { tilt: { v: 'no', at: 1000 }, tumbler: { v: 'yes', at: 3000 } },
+        'noodle-lab-voter': { never: 'synced' },
+      });
+      const { client, remote } = fakeClient({
+        email: 'a@b.c',
+        remote: {
+          'digi-redact-v1': { done: { R: { s: 70, d: '2026-11-17' } } },
+          'digi-redact-streak': { streak: 2, best: 2, last: '2026-11-17' },
+          'noodle-lab-votes-v1': {
+            tilt: { v: 'yes', at: 2000 },
+            redact: { v: 'no', at: 500 },
+            tumbler: { v: 'no', at: 100 },
+            junk: { v: 'maybe', at: 9999 },
+          },
+        },
+      });
+      await runSync(store, syncApi(client));
+      const votes = {
+        tilt: { v: 'yes', at: 2000 },
+        tumbler: { v: 'yes', at: 3000 },
+        redact: { v: 'no', at: 500 },
+      };
+      expect(read(store, 'noodle-lab-votes-v1')).toEqual(votes);
+      expect(Object.keys(read(store, 'digi-redact-v1').done)).toEqual(['R']);
+      expect(read(store, 'digi-redact-streak')).toMatchObject({ streak: 2 });
+      expect(remote['digi-tilt-v1']).toEqual({ done: { T: { s: 42, d: '2026-11-17' } } });
+      expect(remote['noodle-lab-votes-v1']).toMatchObject(votes);
+      expect(remote['noodle-lab-voter']).toBeUndefined();
+    });
+  });
+  describe('WHEN the account has no votes document', () => {
+    it("THEN this phone's votes go up unchanged", async () => {
+      const store = memoryStorage({ 'noodle-lab-votes-v1': { tilt: { v: 'yes', at: 5 } } });
+      const { client, remote } = fakeClient({ email: 'a@b.c' });
+      await runSync(store, syncApi(client));
+      expect(remote['noodle-lab-votes-v1']).toEqual({ tilt: { v: 'yes', at: 5 } });
+    });
+  });
+});

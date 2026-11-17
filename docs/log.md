@@ -1243,3 +1243,11 @@ Alec ran an outside review of the app and asked for its findings to be checked a
 - **What:** `LabPanel` no longer shows the count; rows unchanged. No storage, vote or database change.
 - **Tests proved:** TodayLab: no `lab-rated` and no "RATED" text in the panel; row callouts as before. `npm run check` green (1,806 tests).
 - **Native:** none. JS only, ships by Update production.
+
+## 17 Nov 2026 — Lab saves and votes in sign-in sync
+
+- **Alec, 17 Nov:** a signed-in player's Lab status should match on the website and the app ("Do it").
+- **What:** `syncEngine.ts` `SYNC_KEY` adds tilt, redact and tumbler saves and streaks; `noodle-lab-votes-v1` syncs too, merged per type by latest `at` (`newerVotes`) before the import. The voter code (`noodle-lab-voter`) never syncs.
+- **Site and database:** migration `lab_sync` applied first (a key the database refuses fails the whole push); site PR dailynoodle#139 (dn-sync.js the same, and the Puzzles front page now syncs on open).
+- **Tests proved:** syncEngine: Lab saves merge both ways, each type keeps its latest vote, junk entries ignored, the voter code stays on the phone; `npm run check` green (1,808 tests).
+- **Native:** none. JS only, ships by Update production.
