@@ -1,10 +1,21 @@
-import { BOARD_KEY, finished, importMove, keptPids, type KV, type MovePayload } from '@noodle/core';
+import {
+  BOARD_KEY,
+  finished,
+  importMove,
+  keptPids,
+  LAB_VOTES_KEY,
+  type KV,
+  type MovePayload,
+} from '@noodle/core';
 
 import { missingFunction, type RevDoc, type SyncApi } from '../api/syncApi';
 
-/** What sync carries: the eight daily types' saves and streaks, and the league identity. */
+/**
+ * What sync carries: the dailies' and the Lab trials' saves and streaks (the Lab's from 17 Nov
+ * 2026, Alec, as the website's dn-sync.js), the league identity and the Lab votes document.
+ */
 export const SYNC_KEY =
-  /^digi-(mini|doku|sweep|path|link|tangle|borders|reckon|tally)-(v1|streak)$/;
+  /^digi-(mini|doku|sweep|path|link|tangle|borders|reckon|tally|tilt|redact|tumbler)-(v1|streak)$/;
 /** App-only: when this phone last synced, for the Account screen. */
 export const LAST_SYNC_KEY = 'noodle-app-sync';
 /** Pull, merge and push again at most this many times when another device wrote in between. */
@@ -16,7 +27,7 @@ const isObj = (v: unknown): v is Doc => !!v && typeof v === 'object' && !Array.i
 function local(kv: KV & { keys(): string[] }): Record<string, Doc> {
   const out: Record<string, Doc> = {};
   for (const k of kv.keys()) {
-    if (!SYNC_KEY.test(k) && k !== BOARD_KEY) continue;
+    if (!SYNC_KEY.test(k) && k !== BOARD_KEY && k !== LAB_VOTES_KEY) continue;
     try {
       const v: unknown = JSON.parse(kv.getItem(k) ?? 'null');
       if (isObj(v)) out[k] = v;
@@ -45,11 +56,34 @@ export const same = (a: unknown, b: unknown) =>
  * chosen between its own league player and the account's, or chose to keep its own
  * (remembered, plan R4), the account keeps the player it had.
  */
+const stamp = (x: unknown) =>
+  typeof x === 'number' ? x : typeof x === 'string' ? Date.parse(x) || 0 : 0;
+
+/**
+ * Lab votes: per type, the latest answer wins ({type: {v: 'yes'|'no', at}}), whichever device
+ * gave it (as dn-sync.js). Only the answer shown: the counted vote is the server's.
+ */
+export function newerVotes(here: unknown, there: unknown): Doc {
+  const out: Doc = isObj(here) ? { ...here } : {};
+  if (isObj(there))
+    for (const [t, b] of Object.entries(there)) {
+      if (!isObj(b) || (b.v !== 'yes' && b.v !== 'no')) continue;
+      const mine = out[t];
+      if (!isObj(mine) || stamp(b.at) > stamp(mine.at)) out[t] = b;
+    }
+  return out;
+}
+
 function mergeIn(
   kv: KV & { keys(): string[] },
   remote: Record<string, Doc>,
   now: () => number,
 ): Record<string, Doc> {
+  if (isObj(remote[LAB_VOTES_KEY])) {
+    const here = local(kv)[LAB_VOTES_KEY];
+    const merged = newerVotes(here, remote[LAB_VOTES_KEY]);
+    if (!same(merged, here)) kv.setItem(LAB_VOTES_KEY, JSON.stringify(merged));
+  }
   const d: Record<string, string> = {};
   for (const [k, v] of Object.entries(remote))
     if (SYNC_KEY.test(k) && isObj(v)) d[k] = JSON.stringify(v);
