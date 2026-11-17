@@ -18,8 +18,9 @@ export const LAB_LINE =
  * "From the Lab", under Today's dailies (Alec, 11 Nov 2026; mock Option 3; the website's Lab pink
  * and the dailies' text colours, 15 Nov 2026): the running
  * trials as compact rows in a pale marigold panel, each saying where you are with today's
- * puzzle ("Try it", "Continue", "Rate it" or "✓ Done", 16 Nov 2026), and how many types you've
- * rated. Always the same shape; no panel when no trial is running.
+ * puzzle ("Try it", "Continue", "Rate it" or "✓ Done", 16 Nov 2026). No "N OF 3 RATED" count
+ * (Alec, 17 Nov 2026): it counted trial-long votes while the rows follow today's puzzle, so it
+ * read as wrong. Always the same shape; no panel when no trial is running.
  */
 export function LabPanel() {
   const t = useTokens();
@@ -27,7 +28,6 @@ export function LabPanel() {
   const { votes } = useLabVotes();
   const docs = useStoredDocs(KEYS);
   if (!current.length) return null;
-  const rated = current.filter((it) => votes[it.type]).length;
   return (
     <View
       style={[styles.panel, { backgroundColor: t.labSoft }]}
@@ -40,9 +40,6 @@ export function LabPanel() {
             From the Lab
           </Text>
         </View>
-        <Text style={[styles.count, { color: t.labInk }]} testID="lab-rated">
-          {`${rated} OF ${current.length} RATED`}
-        </Text>
       </View>
       <Text style={[styles.line, { color: t.muted }]}>{LAB_LINE}</Text>
       {current.map((it, i) => {
@@ -105,7 +102,6 @@ const styles = StyleSheet.create({
   head: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: 7 },
   title: { fontSize: 16, fontFamily: FONT.display },
-  count: { fontSize: 11, letterSpacing: 0.8, fontFamily: FONT.bodySemi },
   line: { fontSize: 12.5, lineHeight: 17, fontFamily: FONT.body, marginTop: 2, marginBottom: 6 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10, minHeight: 44 },
   body: { flex: 1, minWidth: 0 },

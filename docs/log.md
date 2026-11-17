@@ -1236,3 +1236,10 @@ Alec ran an outside review of the app and asked for its findings to be checked a
 - **Tests proved:** `units.test.ts`: all 549 facts with a metric unit convert exactly as the site does (spec, question, note, rungs hashed, answer wording), from `tests/units-fixture.json`, written by `node scripts/reckon-units-fixture.js ../dailynoodle`; every imperial rung scores as its metric value; the switch keeps the guess, saves per kind, shows the tip once, does nothing when paused or on a unitless question; a bullseye in feet scores as in metres. ReckonScreen: tap feet, question and reading in feet, tip, saved, back to metres. `npm run check` green (1,806 tests).
 - **Left:** if the site's units block changes, rerun the fixture script (the nightly drift check doesn't cover it yet).
 - **Native:** none. JS only, ships by Update production.
+
+## 17 Nov 2026 — Lab panel: no "N OF 3 RATED" count
+
+- **Alec, 17 Nov (from his phone):** the header said "2 OF 3 RATED" while all three rows said "Try it". The count was right (votes are one per type for the whole trial) but the rows follow today's puzzle, so it read as wrong. He chose to drop the count (or make it per day); dropped, as a vote is never per day.
+- **What:** `LabPanel` no longer shows the count; rows unchanged. No storage, vote or database change.
+- **Tests proved:** TodayLab: no `lab-rated` and no "RATED" text in the panel; row callouts as before. `npm run check` green (1,806 tests).
+- **Native:** none. JS only, ships by Update production.
