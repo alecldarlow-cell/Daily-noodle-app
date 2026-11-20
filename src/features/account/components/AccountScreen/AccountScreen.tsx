@@ -1,11 +1,12 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Linking, StyleSheet, Text, View } from 'react-native';
+import { Linking, Platform, StyleSheet, Text, View } from 'react-native';
 
 import { buildLine } from '@/shared/build';
 import { appStorage, type CachedStorage } from '@/shared/storage';
 import { FONT, useTokens } from '@/shared/theme';
+import { appRecorder } from '@/shared/track';
 import { Button, Screen } from '@/shared/ui';
 
 import { authClient } from '../../api/authClient';
@@ -22,6 +23,26 @@ export const CONTACT_EMAIL = 'contact@dailynoodle.co.uk';
  *  with its licence (scripts/make-notices.js; copyright audit, 8 Nov 2026). */
 export const NOTICES_URL =
   'https://github.com/alecldarlow-cell/Daily-noodle-app/blob/main/THIRD-PARTY-NOTICES.md';
+
+/** The app's Google Play listing: the Play Store app first, the web page if that won't open. */
+export const PLAY_APP_URL = 'market://details?id=uk.co.dailynoodle.app';
+export const PLAY_WEB_URL = 'https://play.google.com/store/apps/details?id=uk.co.dailynoodle.app';
+
+/**
+ * Rate Daily Noodle (Alec, 20 Nov 2026: no ratings yet, and Google rations the in-app sheet):
+ * opens the store listing, recorded as an anonymous `review_link`. There's no App Store
+ * listing yet, so iPhones don't show the row.
+ */
+export function openRating(record = appRecorder.event): void {
+  try {
+    record('review_link', { from: 'account' }, 'review');
+  } catch {
+    // Recording must never stop the link.
+  }
+  Linking.openURL(PLAY_APP_URL)
+    .catch(() => Linking.openURL(PLAY_WEB_URL))
+    .catch(() => undefined);
+}
 
 /** The email that asks for the sign-in account and everything kept against it to be deleted. */
 export function deletionRequestUrl(email: string | null): string {
@@ -107,6 +128,15 @@ export function AccountScreen({
             testID="account-privacy"
             onPress={() => router.navigate('/privacy')}
           />
+          {Platform.OS !== 'ios' ? (
+            <Row
+              role="link"
+              label="Rate Daily Noodle"
+              sub="Tell other players what you think on Google Play"
+              testID="account-rate"
+              onPress={() => openRating()}
+            />
+          ) : null}
           <Row role="link" label="Contact us" testID="account-contact" onPress={contact} />
           <Row
             role="link"
