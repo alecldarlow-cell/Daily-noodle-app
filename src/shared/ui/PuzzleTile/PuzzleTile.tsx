@@ -74,6 +74,10 @@ const PICTURES: Partial<Record<AnyType, { light: number; dark: number }>> = {
     light: require('../../../../assets/images/tiles/tumbler-light.png') as number,
     dark: require('../../../../assets/images/tiles/tumbler-dark.png') as number,
   },
+  cryptic: {
+    light: require('../../../../assets/images/tiles/cryptic-light.png') as number,
+    dark: require('../../../../assets/images/tiles/cryptic-dark.png') as number,
+  },
 };
 
 const SIZE = 96;

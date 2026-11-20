@@ -18,7 +18,7 @@
  * and rated, on the app's Lab panel.
  */
 export const BRIDGED_KEY =
-  /^(digi-(mini|doku|sweep|path|link|tangle|borders|reckon|tally|tilt|redact|tumbler)-(v1|streak)|noodle-lab-votes-v1)$/;
+  /^(digi-(mini|doku|sweep|path|link|tangle|borders|reckon|tally|tilt|redact|tumbler|cryptic)-(v1|streak)|noodle-lab-votes-v1)$/;
 
 /** The site tracker's own keys (dn-track.js), shared both ways. '' in the app means absent. */
 export const ID_KEY = /^digi\.(aid|sid|last|optout)$/;

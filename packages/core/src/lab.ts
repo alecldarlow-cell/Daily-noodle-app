@@ -9,7 +9,7 @@ import { TYPE_LABEL, type PuzzleType } from './ids';
 import { clock, type PlayedState } from './played';
 import type { SaveDoc } from './types';
 
-export const LAB_TYPES = ['tilt', 'redact', 'tumbler'] as const;
+export const LAB_TYPES = ['tilt', 'redact', 'tumbler', 'cryptic'] as const;
 
 export type LabType = (typeof LAB_TYPES)[number];
 
@@ -20,6 +20,7 @@ export const LAB_LABEL: Record<LabType, string> = {
   tilt: 'Tilt',
   redact: 'Redact',
   tumbler: 'Tumbler',
+  cryptic: 'Cryptic',
 };
 
 /** The id prefix after "DP·" for each Lab type (tools/build-feed.js TYPE_OF_ID). */
@@ -27,6 +28,7 @@ export const LAB_OF_ID: Record<string, LabType> = {
   TILT: 'tilt',
   REDA: 'redact',
   TUMB: 'tumbler',
+  CRYP: 'cryptic',
 };
 
 /** A daily or Lab type's name: "Mini", "Redact". */
@@ -45,11 +47,20 @@ export function labTypeOfId(id: string): LabType | null {
 }
 
 /**
+ * Trials taken off early, by Alec: type → the first London day it is no longer listed, before
+ * its last puzzle's date would retire it (the website's front.js LAB_RETIRED). Redact: 20 Nov
+ * 2026, after the day-6 read-out; Cryptic took its slot from 21 Nov.
+ */
+export const LAB_RETIRED: Partial<Record<LabType, string>> = { redact: '2026-11-21' };
+
+/**
  * A trial is running while its newest released puzzle is today's or yesterday's (one a
  * day); after that it is retired: its puzzles stay playable in the Archive.
  */
-export function labRunning(newest: string | undefined, today: string): boolean {
+export function labRunning(newest: string | undefined, today: string, type?: LabType): boolean {
   if (!newest) return false;
+  const off = type ? LAB_RETIRED[type] : undefined;
+  if (off && today >= off) return false;
   const y = new Date(Date.parse(`${today}T12:00:00Z`) - 86_400_000).toISOString().slice(0, 10);
   return newest >= y;
 }

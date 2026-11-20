@@ -1,0 +1,466 @@
+[
+  {
+    "path": "reports/2026-11-21-word-cryptic-0001.html",
+    "date": "2026-11-21",
+    "data": {
+      "type": "cryptic",
+      "id": "DP·CRYP·0001",
+      "band": "medium",
+      "n": 7,
+      "clue": "Pub profit is a steal",
+      "enum": "7",
+      "kind": "charade",
+      "def": [3, 5],
+      "ind": null,
+      "sol": "P3KjlXlwGxGQ8HF5fhNocrLWMSE8cviVcnFiEWwgt9VqcnJwhfZ5fhAZNCKt0SomcHD/l3JxYnYFGYyMY7DZzKvE0rCtESg5rNwwci0/4sNYVRBVITar2SomMD+slRwSVUk0PKPeLXBjC+D5XxBDWCM+stgwJmNwq9kQURBSLDGw1ic3eSSq0hBAWVQnNbGXMDstcLHeVFUQUz1wsd4nN3Vwo9lUENKx2DmxVcPPeTyr2VtDEEUsNa+XNz15JKrSEFRVVy0+q8MqPTd+4JsScnFjZHiywiF7eXvi8HF5fhFsILDYJTsteeKKEHJxYwMRi/lvcjhwscNVUVwfZg3ulS4zKzvgjWtrAB13De7sd35oYJ/qHBJUVCJy+OxyZnVi8+ocEkNUJ3L42TY+NS0="
+    }
+  },
+  {
+    "path": "reports/2026-11-22-word-cryptic-0002.html",
+    "date": "2026-11-22",
+    "data": {
+      "type": "cryptic",
+      "id": "DP·CRYP·0002",
+      "band": "medium",
+      "n": 5,
+      "clue": "Dusty, messy den",
+      "enum": "5",
+      "kind": "anagram",
+      "def": [2, 3],
+      "ind": [1, 2],
+      "sol": "P3KjlXlwCgSX82kSHBA0MbDEJnBjcqPZUVdCUylw6tomISop65dfVhB2EQOW7mNveQOW4nRpEh5mNbrHLzMwPuCNaxLSstg9p8QwK7vQX5dDUUlBZCSq0mM+PCS20kJDEF0icIbiEAYAcKPFVRBaRykyrtInfHt84PNlY2RrZCKn1jEgOD6l0lQQ0rTWcJHjFhYAfOLWEFRVXGpyn5thPzgiqZUKa2sCaGWf6m9wPTWklQprAQFoYfTqb3AqNaGVCl5FXigt"
+    }
+  },
+  {
+    "path": "reports/2026-11-23-word-cryptic-0003.html",
+    "date": "2026-11-23",
+    "data": {
+      "type": "cryptic",
+      "id": "DP·CRYP·0003",
+      "band": "medium",
+      "n": 5,
+      "clue": "Hut found in taxicab interior",
+      "enum": "5",
+      "kind": "hidden",
+      "def": [0, 1],
+      "ind": [1, 3],
+      "sol": "P3KjlXlwGhGA/n4SHBE0MbDEJnBjcqreVFRVXWR4pNg2PD1wq9kZEERSPDmB9gFyEB620kJZX0FkbeL0AhAQHuCbElVIQygxq9lhaAJyIDesVl9GKjTi3i2w2c3ixFFJQxMwOKeXIjwqJ6fFEFlDEyw5ptMmPHk5rJdEWFUTMz+w0zByLTijwxBWX18oP7WZYX57JKPPWXNxcWQZjMMmIDA/sJfStqITBxGA/g1+eTHi30VEHhEZfODaIiAycvjsawEHH3Zjn+pvcD01pJUKawAfdw3ulTA3OnL42UVcXE4="
+    }
+  },
+  {
+    "path": "reports/2026-11-24-word-cryptic-0004.html",
+    "date": "2026-11-24",
+    "data": {
+      "type": "cryptic",
+      "id": "DP·CRYP·0004",
+      "band": "medium",
+      "n": 5,
+      "clue": "Smell posted, we hear",
+      "enum": "5",
+      "kind": "sounds",
+      "def": [0, 1],
+      "ind": [2, 4],
+      "sol": "P3KjlXlwChOH+WQSHBY0MbDEJnBjcrHYRV5UR2Q8q9wmcnEnp5dYVVFGbXCR8g0GeXiy2ENEVVBtcP+XEBEcHpaVHBJVTDQ8o94tcGML4FWwrEdRZDin1jGw2c3ixFFJQxQwOKeXIjwqJ6fFEENfQSo0sZcvOzI14tZeX0RcISLiwCwgPX7gmxJjdXoQcOrHLCEtNaaeEENfQSo0sZcvOzI14uRzdX5gaHCjlzA/PDyumRJtHBYpMbDcYWgCC/SbAQJtaWhyptIlcGML8psFbRwWNzWhlXk8LDyuyg=="
+    }
+  },
+  {
+    "path": "reports/2026-11-25-word-cryptic-0005.html",
+    "date": "2026-11-25",
+    "data": {
+      "type": "cryptic",
+      "id": "DP·CRYP·0005",
+      "band": "medium",
+      "n": 5,
+      "clue": "Royal lager sent back",
+      "enum": "5",
+      "kind": "reversal",
+      "def": [0, 1],
+      "ind": [2, 4],
+      "sol": "P3KjlXlwCxWF9nwSHBc0MbDEJnBjco72d3ViFTY1tNIxITw04p9DVV5BZDKj1Ch7eW3i5XV3cXlmfODSOyI1MavZEgprF6bQXsQmPC1woNZTW9K12XCx1joheTHiwF9CVBUtI+LFJiQ8IrHSVB4SGWYcg/AGAHkyo9RbR1FHICPiVcXAeQKH8HF8HBU2P7vWL3x7De6VXVFCXmZqmex1fmhhn+ocElRQInL47HN+bA3ulUNVUxd+PrfbLy8="
+    }
+  },
+  {
+    "path": "reports/2026-11-26-word-cryptic-0006.html",
+    "date": "2026-11-26",
+    "data": {
+      "type": "cryptic",
+      "id": "DP·CRYP·0006",
+      "band": "medium",
+      "n": 5,
+      "clue": "Sat outside, we perspire",
+      "enum": "5",
+      "kind": "container",
+      "def": [3, 4],
+      "ind": [1, 2],
+      "sol": "P3KjlXlwCgeH9mQSHBQ0MbDEJnBjcpH2ZBBfQzAjq9Mmcg4V4ooQYxhhAXmD42NveQOV8nFkEhpmNbrHLzMwPuCNaxLSttg/t8MwOz01IDetEENXPSPi2C03eSCr0lNVEEE2MbLEYzMrP7fZVBBRWCskqtIxfHt84ORxZBBXNj+32SdyDhXiVbaiEGVsB4eeAgZ1cJHgdXFkDGQgp8UwIjAip5kSbRwUKTGw3GFoAgvymwNtHG11Y+6Gdg8EfODTVVYSDB9h9JtxZgR84MRVUxIMKiWu2z4="
+    }
+  },
+  {
+    "path": "reports/2026-11-27-word-cryptic-0007.html",
+    "date": "2026-11-27",
+    "data": {
+      "type": "cryptic",
+      "id": "DP·CRYP·0007",
+      "band": "medium",
+      "n": 7,
+      "clue": "Calm case on the ward",
+      "enum": "7",
+      "kind": "double",
+      "def": [0, 1],
+      "ind": null,
+      "sol": "P3KjlXlwCRGW/nV+ZBVocrLWMSE8cviVYHFkfgEelpdrMTg8r54QUV5TZACD4woXFwTin1EQU1Y3NeLYLXItOKeXR1FCU21y7pUmKik8o95eEgpsZh6tlzA7Pj6y2ENEChcwOKeXID4sNeLeQxBEQCtwptIlOzc5tt5fXkMXKzbiwys3eSOj2lUQR1g2NOyVb3AaMa7aEA0QZwUEi/INBnVwo9lUEFEXJzGx0mM9N3C231UQR1Y2NOKKYwIYBIvyfmQeFRl84NoiIDJy+OxtHBJTITbgjRhidWSfmxJDVVRmapmCb2BoDb8="
+    }
+  },
+  {
+    "path": "reports/2026-11-28-word-cryptic-0008.html",
+    "date": "2026-11-28",
+    "data": {
+      "type": "cryptic",
+      "id": "DP·CRYP·0008",
+      "band": "medium",
+      "n": 5,
+      "clue": "Respond to crate breaking",
+      "enum": "5",
+      "kind": "anagram",
+      "def": [0, 1],
+      "ind": [3, 4],
+      "sol": "P3KjlXlwCxWD9GQSHBo0MbDEJnBjcqPZUVdCWSlw6tUxNzg7q9lXGRBXInCB5QIGHHD/l2J1cXsQa+JVw84tPyA3rRBcUSo7sZc3PXkkqtIQVFVeLT6rwyo9N3LulVVIQFQlOayVeQl7skIrUkJVWS85rNCh0sRwsdZJQxBMLDXi2yYmLTWwxBBfVhgHAoPjBnI4IqeXWkVdWig1pplhfnsTkPZkdRBKITGwxSI8PjWml9K2ohgWFYP0F355IqfEQF9eXGpyn5thPzgiqZUKa2sJdXzzgR4PdXKm0lYSCmN0fPXqb3AqNaGVCl5FVCgt"
+    }
+  },
+  {
+    "path": "reports/2026-11-29-word-cryptic-0009.html",
+    "date": "2026-11-29",
+    "data": {
+      "type": "cryptic",
+      "id": "DP·CRYP·0009",
+      "band": "medium",
+      "n": 5,
+      "clue": "Map book found in flat lasagne",
+      "enum": "5",
+      "kind": "hidden",
+      "def": [0, 2],
+      "ind": [2, 4],
+      "sol": "P3KjlXlwGASO9mMSHBs0MbDEJnBjcqreVFRVV2R4pNg2PD1wq9kZEFZVBQTi+wIBODes0hANEHgQHIPkYX57NbrHXFFZV2ZqmZWh0sU2rcJeVBBQKrJCKmMhOCmxl0RYVRklPrHAJiB5ObGXWFlUXSE+4t4tci04p5dHX0JdN3C23yImeTat21xfRxdmfODRLxMNcI72Y1FXVyFwIDHRchgEjvZjHBBYZD2jx2MwNj+pmRJtHBspMbDcYWgCC/CHHAIGZBl84NMmNHtqmYccCG0VZiOn1GFoNyWu200="
+    }
+  },
+  {
+    "path": "reports/2026-11-30-word-cryptic-0010.html",
+    "date": "2026-11-30",
+    "data": {
+      "type": "cryptic",
+      "id": "DP·CRYP·0010",
+      "band": "medium",
+      "n": 6,
+      "clue": "Battle lair for keeper",
+      "enum": "6",
+      "kind": "charade",
+      "def": [3, 4],
+      "ind": null,
+      "sol": "P3KjlXlwDhGQ83V+ExxmIKPFMDd7auDgcWIRGCYxtsMvN3Bw6Zd0dX8QbDyj3jF7eW3i4HFidXUKa+JVw84/P7BVsK0RXC0+qcRjJjZwtt9VEFVVIjms3jc7Nj7gmxJVSUAoMavZYWgCcozYEENYVyogrcQ3aHkkqtIQQFhVJzWxlzA7LXCx3lRVEVI9cLHeJzd1cKPZVBDTsNg2rcWh0sRwrt5eW0IQMDin2mMmNnC231UQVVUiOazeNzs2PuyVHBJmcRZw6tUiJi08p54QGxF0AR7iny8zMCLrlw0QZnEWFIf5b3I4cKnSVUBUQmpyn5thPzgiqZUKa2oAaGafmxhldWHz6m0cE1QhNuCNGGNvfPCFbRwTQyEz4I0tJzU8vw=="
+    }
+  },
+  {
+    "path": "reports/2026-12-01-word-cryptic-0011.html",
+    "date": "2026-12-01",
+    "data": {
+      "type": "cryptic",
+      "id": "DP·CRYP·0011",
+      "band": "medium",
+      "n": 6,
+      "clue": "Prize, we hear, to interfere",
+      "enum": "6",
+      "kind": "sounds",
+      "def": [4, 5],
+      "ind": [1, 3],
+      "sol": "P3KjlXlwFBWG83x1Ex1mIKPFMDd7auDEX0VfVTdwrt4oN3l4tdIQWFRQNnni+gYWGBzin0BCWEsheeKKYx8cFIb7dQsR08TMttih0sRwrt5eW0IRMD/iwys3eTSn0VleWEUtP6yVb3A8KLLbUVlfE34L4FXDzi414t9VUUPTxM3ixCIrKnC231UQUF83J6fFYyE2JazTQxBdWC814tYtPS04p8UQR15DIH7gm2EfHBSD+xAYQUMtKqeeYyE2JazTQxBdWC814voGFh0ch5sQWV9FISKk0jE3d3KfmxJdUEMvcvjsGGJ1ZZ/qHBJVVCJy+Oxya3Vi+uocEkJUJ3L42TY+NS0="
+    }
+  },
+  {
+    "path": "reports/2026-12-02-word-cryptic-0012.html",
+    "date": "2026-12-02",
+    "data": {
+      "type": "cryptic",
+      "id": "DP·CRYP·0012",
+      "band": "medium",
+      "n": 5,
+      "clue": "Lever pulled back to celebrate",
+      "enum": "5",
+      "kind": "reversal",
+      "def": [4, 5],
+      "ind": [1, 3],
+      "sol": "P3KjlXlwCxWU8nwSHRA0MbDEJnBjco7yZnVjEjY1tNIxITw04p9ARV1eITTi1SIxMnniihBidGQBHPmXodLFJK1VsK0RXi0+qcRjJjZwtt9VEFVXIjms3jc7Nj7gmxJVSUIoMavZYWgCciA3rEBEXig1ppchMzo7IDetEEJTPSPi1mMlNiKml1lDEUAhJqfFMDc9fuCbEnx0ZAEC4tUiMTIno8VUQxHQwsLi5QYEHBzul1NVXVcmIqPDJnx7De6VXVFDWWZqmexzfmwNn5sSVFRUZmqZhXJ+amCfmxJDVFFmaqzCLz4k"
+    }
+  },
+  {
+    "path": "reports/2026-12-03-word-cryptic-0013.html",
+    "date": "2026-12-03",
+    "data": {
+      "type": "cryptic",
+      "id": "DP·CRYP·0013",
+      "band": "medium",
+      "n": 6,
+      "clue": "Con keeps art in box",
+      "enum": "6",
+      "kind": "container",
+      "def": [4, 5],
+      "ind": [1, 2],
+      "sol": "P3KjlXlwGhGQ439+Ex9mIKPFMDd7auD0f34RWCE1ssRjEwsE4ooQcxlyFgTr+A1yZHCB9mJkfn1/cCA33zs3skIqEFxYXS8j4sMsci04p5dUVVdaKjm23iw8e3zg0khAXVItPuCNGHC70F7cVVVBQKbQX5cwMyAj4theVRFDLTWh0mM6NjymxBBRX1wwOKfFYzs3I6vTVRBYR2py7pUAHRdwo8VfRV9XZBGQ42Ow38Li9BhxY2dtH4ybYxEYApb4fgoRUmQyrc9tcAR84NpRQloRfguZh29hBHyZhgAcAAAZDe6VJzc/cvjsAQcdAXQN7pUwNzpy+NlFXF1O"
+    }
+  },
+  {
+    "path": "reports/2026-12-04-word-cryptic-0014.html",
+    "date": "2026-12-04",
+    "data": {
+      "type": "cryptic",
+      "id": "DP·CRYP·0014",
+      "band": "medium",
+      "n": 5,
+      "clue": "Field throw",
+      "enum": "5",
+      "kind": "double",
+      "def": [0, 1],
+      "ind": null,
+      "sol": "P3KjlXlwCRmW9HgSHRY0MbDEJnBjcpL+ZHN5FGw2q9IvNnBwo9lUEGF9EBOKl2smMSKtwBkSHRYhKLLbIjs3cvjsEn5eFDc5pdkzPSok+JdEWFQUJzy30mM7KnC2wF8QVVEiOazeNzs2PrGXX1YRQCw14sQiPzxwtdhCVB8WaHKDlyU7PDymlw0QYX0QE4qbYzM3NOLDXxBFXDY/tZd+cgkZlvR4HhNpaHKv1jE5e2qZ6hwSVVEicvjsc35sDe6VQ1VSFn4L9JtyYwQt"
+    }
+  },
+  {
+    "path": "reports/2026-12-05-word-cryptic-0015.html",
+    "date": "2026-12-05",
+    "data": {
+      "type": "cryptic",
+      "id": "DP·CRYP·0015",
+      "band": "medium",
+      "n": 7,
+      "clue": "Senator ruined in betrayal",
+      "enum": "7",
+      "kind": "anagram",
+      "def": [3, 4],
+      "ind": [1, 2],
+      "sol": "P3KjlXlwDQKH9mN/fxdocrLWMSE8cviVUV5QUjYxr5drICw5rNJUGRFaInCR8g0TDR+Qlw0QZWcBEZH4DWl5skIrWV7Ttdlwrt4tOSpwttgQRFlQZDSn0So8MCSr2F4SHRchKLLbIjs3cvjsEtKxqTYlq9kmNrvQX5dDUUhGZCSq0mM+PCS20kJDEVoicJHyDRMNH5CXUUJUFS4lr9UvNz1+4JsSY3R7BQSN5WMgPDGwxVFeVlAgcCAx0XINAof2Y39/GWQyp8MxMyAxrpkSbR0XKTGw3GFoAgvymwdtbBlmNKfRYWgCYfqbAgZsGWYjp9RhaDclrttN"
+    }
+  },
+  {
+    "path": "reports/2026-12-06-word-cryptic-0016.html",
+    "date": "2026-12-06",
+    "data": {
+      "type": "cryptic",
+      "id": "DP·CRYP·0016",
+      "band": "medium",
+      "n": 5,
+      "clue": "Bird spotted in her onions",
+      "enum": "5",
+      "kind": "hidden",
+      "def": [0, 1],
+      "ind": [1, 3],
+      "sol": "P3KjlXlwERWQ+H4SHRQ0MbDEJnBjcqreVFRUWGR4sccsJi01ppdZXhgWDBWQlwwcMD+sxBANEX4BAo35YX57NbrHXFFYWGZqmZWh0sUjsthERFRSZDmsVcPPeSOjzkMQRV4hcKPZMCU8IuLeQxBZXyA0p9ljOzdwtt9VEEZZNjSxlzc6OCTi0V9cXVkzfuCbYRocAuL4flleWDdwIDHRchEVkPh+HBFXZDKrxSd8ew3ulV1RQ11mapnscmR1YvDqbRwTUiE24I0YYnVkn5sSQ1RVZmqswi8+JA=="
+    }
+  },
+  {
+    "path": "reports/2026-12-07-word-cryptic-0017.html",
+    "date": "2026-12-07",
+    "data": {
+      "type": "cryptic",
+      "id": "DP·CRYP·0017",
+      "band": "medium",
+      "n": 8,
+      "clue": "Shot in news report",
+      "enum": "8",
+      "kind": "charade",
+      "def": [2, 4],
+      "ind": null,
+      "sol": "P3KjlXlwGwWO+3VkeHlmfODHIiAqNeCNEnJkewgVlpdrITE/tp4QGxF+CnD/lwEHFRyH43l+ExtmNbrHLzMwPuCNaxJ/WGQjq9AtIjYjto0QRFlSZCCr0iA3KnCx3kQQQl4gNeLVOnIqOabSHBBQWSBwIDffOzeyQioQQ0VWKjSxlyU9K3Crw0NVXVFqcu6VAQcVHIfjEBhCXysk65dochAe4ooQcmR7CBWW/g1+eTHi2VVHQhc2NbLYMSZ3cp+bEl1QRS9y+OwYYnVkn5trBR0AGQ3ulSc3P3L47AgcAA4ZfODEJjF7aqzCXFxM"
+    }
+  },
+  {
+    "path": "reports/2026-12-08-word-cryptic-0018.html",
+    "date": "2026-12-08",
+    "data": {
+      "type": "cryptic",
+      "id": "DP·CRYP·0018",
+      "band": "medium",
+      "n": 5,
+      "clue": "Animal feet, we hear, take a break",
+      "enum": "5",
+      "kind": "sounds",
+      "def": [4, 7],
+      "ind": [2, 4],
+      "sol": "P3KjlXlwCRGX5HUSHRo0MbDEJnBjcrHYRV5VS2Q8q9wmcnEnp5dYVVBKbXCS9hQBeXij2VldUFRkNqfSN3t5beLncWVifWZ84NI7IjUxq9kSCmoaptBewCZyMTWjxdKwrBg3MbvEYyYxNeLWXkNGXTZwsdg2PD0j4ttZW1QYJT6twys3K3C12EJUHxpocpL2FAF5eKPZWV1QVGQ2p9I3e3kjrcJeVEIYKDmp0mMCGAWR8hwQRVkvNeLWYzArNaPcHhJsFGY9o8UocGMLmYccAQBlGXzg0yY0e2qZhQIcAgwZfODEJjF7aqzCXFxM"
+    }
+  },
+  {
+    "path": "reports/2026-12-09-word-cryptic-0019.html",
+    "date": "2026-12-09",
+    "data": {
+      "type": "cryptic",
+      "id": "DP·CRYP·0019",
+      "band": "medium",
+      "n": 4,
+      "clue": "Skewer tips back",
+      "enum": "4",
+      "kind": "reversal",
+      "def": [0, 1],
+      "ind": [2, 3],
+      "sol": "P3KjlXlwCgCL4xIcE0klIrHSYWh7BIvnYxBDXDI1sMQmNnl4oNZTWxgZeXCR5woGe3zg0khAXVgtPuCNGHC70F7VUVNa28TN4sQiKypwo5dHX0NdZDmxlzE3LzWwxFVUHxtocpb+EwF5MqPUW0dQSyAj4lXFwHkDkv5kHBFYZCOp0jQ3K37g6hwSXFg2O+CNGAlufPOGbW0dGyA1pJV5CWl89OocEkJcJ3L42TY+NS0="
+    }
+  },
+  {
+    "path": "reports/2026-12-10-word-cryptic-0020.html",
+    "date": "2026-12-10",
+    "data": {
+      "type": "cryptic",
+      "id": "DP·CRYP·0020",
+      "band": "medium",
+      "n": 6,
+      "clue": "Fiend keeping right mate",
+      "enum": "6",
+      "kind": "container",
+      "def": [3, 4],
+      "ind": [1, 2],
+      "sol": "P3KjlXlwHwKL8n50EBxmIKPFMDd7auDxeXV8dGQ7p9IzOzc34uUQGEBZIzi2nmNveRbq5Rl5d34AcP+XBQAQFYzzEhwQVTwgrtYqPHtqmZXSsK5bITWy3i01u9Bfl0NRS0NkP6zSYyIwNaHSEFhdXCAj4tYtPS04p8UQWVxDLTSnlyomd3LulXZ5d34AcKPFLCc3NOLlEBhAWSM4tp5jsN/C4vEYYht5AR6Gm2MUCxmH+XQKElFkPaPDJnx7De6VXVFAW2ZqmexzfmwN7uwBBB4BfQ2fm2E2PDbgjWsCAhx2ZJ+bYSE8M+CNXkVeXDk="
+    }
+  },
+  {
+    "path": "reports/2026-12-11-word-cryptic-0021.html",
+    "date": "2026-12-11",
+    "data": {
+      "type": "cryptic",
+      "id": "DP·CRYP·0021",
+      "band": "medium",
+      "n": 5,
+      "clue": "Put off market stand",
+      "enum": "5",
+      "kind": "double",
+      "def": [0, 2],
+      "ind": null,
+      "sol": "P3KjlXlwCgSD+3wSHhM0MbDEJnBjcpHjcXx+EWwgt8NjPT8265dRXlYRFwSD+w9ycT2jxVtVRhE3JKPZJ3t7fODSSEBeUC0+4I0YcBc/4sRZV1xBKyO2jWMmMTXi1FxFVxEtI+LDND15NKfRWV5bRS0/rMRjPT9wtt9VEEFQKTXiwCwgPX7gmxJgR0VkP6TRY295A5b2fHweESU+ppcicjQxsNxVRBJCMDGs02NveQOW9nx8HBMZfODaIiAycvjsbRwQVSE24I0YYnVnn5sSQ1dSZmqZj29gaQ2/"
+    }
+  },
+  {
+    "path": "reports/2026-12-12-word-cryptic-0022.html",
+    "date": "2026-12-12",
+    "data": {
+      "type": "cryptic",
+      "id": "DP·CRYP·0022",
+      "band": "medium",
+      "n": 5,
+      "clue": "Want, we hear, to work dough",
+      "enum": "5",
+      "kind": "sounds",
+      "def": [4, 6],
+      "ind": [1, 3],
+      "sol": "P3KjlXlwEh6H9nQSHhA0MbDEJnBjcrHYRV5WQWQ8q9wmcnEnp5dYVVNAbXCM8gYWeXi11l5EGxJ5cIn5BhMda+JVsKxGXabQX5cvOzc7sZdEXxJGLDXi0yY0MD6rw1lfXBBocqfPMz44OayVCmsQ0MTMtdJjOjwxsFWwrRJBJSmxlzc6PHCj2UNHV0BkI63CLTYqcK7eW1USUyo/tt8mIHknrcVUHhAeZh6H8gdycSej2UQZEkErJazTMHI1OanSEHt8dwUU7pc0PSs74tNfRVVaanKfm2E/OCKplQpraQJoZJ/qb3A9NaSVCmsDCmhi+upvcCo1oZUKXkdeKC0="
+    }
+  },
+  {
+    "path": "reports/2026-12-13-word-cryptic-0023.html",
+    "date": "2026-12-13",
+    "data": {
+      "type": "cryptic",
+      "id": "DP·CRYP·0023",
+      "band": "medium",
+      "n": 7,
+      "clue": "Secure flat hair",
+      "enum": "7",
+      "kind": "charade",
+      "def": [0, 1],
+      "ind": null,
+      "sol": "P3KjlXlwCRGG+39zeRFocrLWMSE8cviVYHF2E2w2rtY3e3l74vt/c3kTbDij3jF7eW3i53F0fnwHG+CbYTchIK7WWV4QCR9yjNhjITA3rMdfQ0YJZDmslyJyOjijxVFUVxMwOKeXMzs8M6fEEENbXjQ8u5cwOy1wsd5UVRJRPXCx3ic3d3LulWBxdhNsNq7WN3t5e+L7f3N5E2w4o94xe3lt4udxdH58BxvulzA3OiWw0h4Sbx9mPaPFKHBjC5mAHAEDbmgL84VvY28Nn5sSVFdVZmqZh29kBHzgxFVTEAkqJa7bPg=="
+    }
+  },
+  {
+    "path": "reports/2026-12-14-word-cryptic-0024.html",
+    "date": "2026-12-14",
+    "data": {
+      "type": "cryptic",
+      "id": "DP·CRYP·0024",
+      "band": "medium",
+      "n": 5,
+      "clue": "Excavated denim returned",
+      "enum": "5",
+      "kind": "reversal",
+      "def": [0, 1],
+      "ind": [2, 3],
+      "sol": "P3KjlXlwFBmM8nQSHhY0MbDEJnBjcobyfnl/FDY1tNIxITw04p9CVUZBNj6n02pyZHCP/n51dhZocqfPMz44OayVCmsQ1sTMsNI3Jys+p9PSsK8UNzG7xGMzeSetxVQQW0dkIqfBJiAqNaaZEhwQcAEei/pjMDgzqcBRQlZHZLJEJWMfEB6H8xwQV0wnMbTWNzc9fuDqHBJfVTY74I0YCWhg7oYFbW8YZjSn0WFoAmDujm0cEEchM+CNLSc1PL8="
+    }
+  },
+  {
+    "path": "reports/2026-12-15-word-cryptic-0025.html",
+    "date": "2026-12-15",
+    "data": {
+      "type": "cryptic",
+      "id": "DP·CRYP·0025",
+      "band": "medium",
+      "n": 4,
+      "clue": "Side with fresh meat",
+      "enum": "4",
+      "kind": "anagram",
+      "def": [0, 1],
+      "ind": [2, 3],
+      "sol": "P3KjlXlwDRWD+hIcEEUlIrHSYWh7EazWV0JTWH5wj/ICBnkip9ZCQlNbIzWml6HUy3CW8nF9EBlmNbrHLzMwPuCNaxLQtdg2sNIwOrvQX5dDUUtGZCSq0mM+PCS20kJDEloicI/yAgZ5MbDSEFpHWCY8p9NtcHVyj/JxZBJHITGwxSI8PjWml9K2oBUQFYP6Y3q70F7EWVRX18TN65lhD3Vyr9ZCWxAPHwvzgW9gaQ2fmxJUV1NmapmHb2YEfODEVVMQDyolrts+"
+    }
+  },
+  {
+    "path": "reports/2026-12-16-word-cryptic-0026.html",
+    "date": "2026-12-16",
+    "data": {
+      "type": "cryptic",
+      "id": "DP·CRYP·0026",
+      "band": "medium",
+      "n": 5,
+      "clue": "Planet in clear thought",
+      "enum": "5",
+      "kind": "hidden",
+      "def": [0, 1],
+      "ind": [1, 2],
+      "sol": "P3KjlXlwHBGQ43gSHhQ0MbDEJnBjcoreVFRXWGQnrcUnaHkzrvJxYhJiDD+30CsmebJEJRB1c2QQGOCbYTchIK7WWV4QDB9yIDffOzeyQioQQ1NPN3C23yZyOD6xwFVCEl83cKreJzY8PuLeXhBGXiFwtdgxNipwoNJDWVZTZDm2mWF+ezOu8nFiEmIMP7fQKyZ5skQlEHVzZBAY4p+h0sUgrtZeVUbUxM3rmWEPdXKv1kJbEAwfC/OFb2NhDZ+bElRXUGZqmYdvZAR84MRVUxAMKiWu2z4="
+    }
+  },
+  {
+    "path": "reports/2026-12-17-word-cryptic-0027.html",
+    "date": "2026-12-17",
+    "data": {
+      "type": "cryptic",
+      "id": "DP·CRYP·0027",
+      "band": "medium",
+      "n": 5,
+      "clue": "Sat in fabric",
+      "enum": "5",
+      "kind": "charade",
+      "def": [2, 3],
+      "ind": null,
+      "sol": "P3KjlXlwChGW/n4SHhU0MbDEJnBjcoHfUUJTUyFq4uQCBnl4o8QQR0BeMCSn2WpycnCL+RAYU0RkJ7DeNyY8PuuXDRBhdhAZjJVvcDwosttRWVwVfgvg+SxyKjml2UBfQUN+cLbfJnIpOafUVUMSRC0k4sQqNjxwoM4QQ1tTIX7gm2EBGATin1FDEkA2ObbDJjxwcOmXeX4SHyUj4sAxOy0kp9kZEA8XFxGW/g1ycbJCK1ZRUEUtMyA33nt3cp+bEl1TRS9y+OwYYnVjn5trBB4BGQ3ulSc3P3L47AccAwQZfODEJjF7aqzCXFxP"
+    }
+  },
+  {
+    "path": "reports/2026-12-18-word-cryptic-0028.html",
+    "date": "2026-12-18",
+    "data": {
+      "type": "cryptic",
+      "id": "DP·CRYP·0028",
+      "band": "medium",
+      "n": 4,
+      "clue": "Hang on for heaviness, we hear",
+      "enum": "4",
+      "kind": "sounds",
+      "def": [0, 2],
+      "ind": [4, 6],
+      "sol": "P3KjlXlwDhGL4xIcEEglIrHSYWh7A63CXlRBGCg5qdJ5cg4Vi/B4ZBIQLDWjwSo8PCOxnhBDXU0qNLGXLzsyNeLgcXlmGmhyp88zPjg5rJUKaxDaxMy10mM6PDGwVbCtEkslKbGXNzo8cKPZQ0dXSmQjrcItNipwrt5bVRJZKj+23yYgeSetxVQeEBRmB4f+BBoNcOrfVVFEUSo1scRqcio/t9lUQxJULTunlxQTEATin9KwrlAlPqWXLDy70F+eHhJvFGY9o8UocGMLmYYCHAAJGQ3ulSc3P3L47AAcBWVocrHSIHBjPrfbXE0="
+    }
+  },
+  {
+    "path": "reports/2026-12-19-word-cryptic-0029.html",
+    "date": "2026-12-19",
+    "data": {
+      "type": "cryptic",
+      "id": "DP·CRYP·0029",
+      "band": "medium",
+      "n": 5,
+      "clue": "Instrument starts to play in a new orchestra",
+      "enum": "5",
+      "kind": "acrostic",
+      "def": [0, 1],
+      "ind": [1, 3],
+      "sol": "P3KjlXlwCRmD+X8SHhs0MbDEJnBjcoTeQkNGGSg1tsMmICpq4udcUUsZDT7i9mMcPCfi+EJTWlw3JLDWY7DfwuLneXF8dmZ84NI7IjUxq9kSCmkbptBexDczKySxl0Rf0LnZcLHWOiF5JKPcVRBGUSFwpN4xIS1wrtJERFdLZD+klyYzOjjiwF9CVhkmNbHeJzd5ObaZEhwQaSgxu5cKPHkR4vlVRxJ2NjOq0jAmKzHiVbaiEmkNEYz4Y3q70F7eXkNGSzE9p9k3sNnN65kSbR4bKTGw3GFoAgvwhhwCAGRoC/CBb2BuDe7sAgkeCnQN7uxwY3Vj8OocawEMaGP06h5+ezSn0RIKaQloYfLqb3AqNaGVCl5HVSgt"
+    }
+  }
+]

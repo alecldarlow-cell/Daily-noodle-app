@@ -30,7 +30,7 @@ export function labTrials(items: readonly LabFeedItem[], today: string): LabTria
   for (const type of LAB_TYPES) {
     const newest = all.find((it) => it.type === type);
     if (!newest) continue;
-    if (labRunning(newest.date, today)) current.push(newest);
+    if (labRunning(newest.date, today, type)) current.push(newest);
     else retired.add(type);
   }
   return { current, all, retired };
