@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen, within } from '@testing-library/react-native';
 import { router } from 'expo-router';
-import { Linking, StyleSheet } from 'react-native';
+import { Linking, Platform, StyleSheet } from 'react-native';
 
 import { buildLine } from '@/shared/build';
 import { APP_SETTINGS_KEY, DEFAULT_SETTINGS, readSettings, saveSettings } from '@/shared/settings';
@@ -9,7 +9,15 @@ import { tokensFor } from '@/shared/theme';
 
 import { fakeClient, memoryStorage } from '../../tests/fakeClient';
 import { SWITCH_THUMB } from '../SettingsCard/SettingsCard';
-import { AccountScreen, CONTACT_EMAIL, NOTICES_URL, deletionRequestUrl } from './AccountScreen';
+import {
+  AccountScreen,
+  CONTACT_EMAIL,
+  NOTICES_URL,
+  PLAY_APP_URL,
+  PLAY_WEB_URL,
+  deletionRequestUrl,
+  openRating,
+} from './AccountScreen';
 
 jest.mock('expo-router', () => ({ router: { navigate: jest.fn() } }));
 
@@ -322,5 +330,56 @@ describe('GIVEN a signed-in player', () => {
     expect(decodeURIComponent(deletionRequestUrl(null))).toMatch(
       /Sign-in email: \(the address I sign in with\)/,
     );
+  });
+});
+
+describe('GIVEN the Rate Daily Noodle row (Alec, 20 Nov 2026: no ratings yet)', () => {
+  const os = Platform.OS;
+  afterEach(() => {
+    Platform.OS = os;
+    jest.restoreAllMocks();
+  });
+
+  describe('WHEN the player is on Android and taps it', () => {
+    it('THEN the Play Store opens on the app’s listing', async () => {
+      Platform.OS = 'android';
+      const open = jest.spyOn(Linking, 'openURL').mockResolvedValue(undefined);
+      await render(<AccountScreen client={null} />);
+      const row = screen.getByRole('link', { name: 'Rate Daily Noodle' });
+      await act(async () => fireEvent.press(row));
+      expect(open).toHaveBeenCalledWith(PLAY_APP_URL);
+      expect(open).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('WHEN the Play Store app won’t open', () => {
+    it('THEN the listing opens on the web instead, and the tap is recorded anonymously', async () => {
+      const open = jest
+        .spyOn(Linking, 'openURL')
+        .mockRejectedValueOnce(new Error('no market'))
+        .mockResolvedValue(undefined);
+      const record = jest.fn();
+      openRating(record);
+      await flush();
+      expect(open).toHaveBeenNthCalledWith(1, PLAY_APP_URL);
+      expect(open).toHaveBeenNthCalledWith(2, PLAY_WEB_URL);
+      expect(record).toHaveBeenCalledWith('review_link', { from: 'account' }, 'review');
+    });
+
+    it('THEN a failed recording still opens the listing', async () => {
+      const open = jest.spyOn(Linking, 'openURL').mockResolvedValue(undefined);
+      openRating(() => {
+        throw new Error('boom');
+      });
+      expect(open).toHaveBeenCalledWith(PLAY_APP_URL);
+    });
+  });
+
+  describe('WHEN the player is on an iPhone (no App Store listing yet)', () => {
+    it('THEN there is no rate row', async () => {
+      Platform.OS = 'ios';
+      await render(<AccountScreen client={null} />);
+      expect(screen.queryByTestId('account-rate')).toBeNull();
+    });
   });
 });

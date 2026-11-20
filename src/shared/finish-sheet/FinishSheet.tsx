@@ -191,10 +191,10 @@ export function FinishSheet(props: FinishSheetProps) {
   useEffect(() => {
     if (!celebrate || !solved) return;
     const h = setTimeout(() => {
-      void askForReview({ celebrate, solved, today: isToday, streak });
+      void askForReview({ celebrate, solved, today: isToday, streak, type });
     }, REVIEW_DELAY_MS);
     return () => clearTimeout(h);
-  }, [celebrate, solved, isToday, streak]);
+  }, [celebrate, solved, isToday, streak, type]);
   const [sharing, setSharing] = useState(false);
   const live = useRef(true);
   useEffect(

@@ -2,7 +2,14 @@ import * as StoreReview from 'expo-store-review';
 
 import { appStorage } from '@/shared/storage';
 
-import { askForReview, REVIEW_KEY, REVIEW_STREAK, shouldAsk, type ReviewMoment } from '../review';
+import {
+  askForReview,
+  resetReviewLog,
+  REVIEW_KEY,
+  REVIEW_STREAK,
+  shouldAsk,
+  type ReviewMoment,
+} from '../review';
 
 const store = StoreReview as jest.Mocked<typeof StoreReview>;
 const WIN: ReviewMoment = { celebrate: true, solved: true, today: true, streak: REVIEW_STREAK };
@@ -66,6 +73,57 @@ describe('GIVEN a player finishing a puzzle (ADR-010)', () => {
       store.requestReview.mockRejectedValue(new Error('no store'));
       await expect(askForReview(WIN, '0.5.0')).resolves.toBe(false);
       expect(appStorage.getItem(REVIEW_KEY)).toBe('0.5.0');
+    });
+  });
+});
+
+describe('GIVEN the ask is recorded anonymously (Alec, 20 Nov 2026: count the asks)', () => {
+  const log = jest.fn();
+  beforeEach(() => {
+    log.mockReset();
+    resetReviewLog();
+  });
+
+  describe('WHEN the store is asked for its sheet', () => {
+    it('THEN one review_ask is recorded with the type, streak and version, and nothing else', async () => {
+      await askForReview({ ...WIN, type: 'mini' }, '0.5.0', log);
+      expect(log).toHaveBeenCalledTimes(1);
+      expect(log).toHaveBeenCalledWith('review_ask', {
+        type: 'mini',
+        streak: REVIEW_STREAK,
+        v: '0.5.0',
+      });
+    });
+  });
+
+  describe('WHEN it is not the moment', () => {
+    it('THEN nothing is recorded', async () => {
+      await askForReview({ ...WIN, streak: 1 }, '0.5.0', log);
+      expect(log).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('WHEN the store can’t show its sheet', () => {
+    it('THEN one review_skip is recorded for the launch, however many wins follow', async () => {
+      store.hasAction.mockResolvedValue(false);
+      await askForReview(WIN, '0.5.0', log);
+      await askForReview(WIN, '0.5.0', log);
+      expect(log).toHaveBeenCalledTimes(1);
+      expect(log).toHaveBeenCalledWith('review_skip', {
+        type: '',
+        streak: REVIEW_STREAK,
+        v: '0.5.0',
+      });
+    });
+  });
+
+  describe('WHEN recording throws', () => {
+    it('THEN the store is still asked', async () => {
+      log.mockImplementation(() => {
+        throw new Error('boom');
+      });
+      await expect(askForReview(WIN, '0.5.0', log)).resolves.toBe(true);
+      expect(store.requestReview).toHaveBeenCalledTimes(1);
     });
   });
 });

@@ -1251,3 +1251,11 @@ Alec ran an outside review of the app and asked for its findings to be checked a
 - **Site and database:** migration `lab_sync` applied first (a key the database refuses fails the whole push); site PR dailynoodle#139 (dn-sync.js the same, and the Puzzles front page now syncs on open).
 - **Tests proved:** syncEngine: Lab saves merge both ways, each type keeps its latest vote, junk entries ignored, the voter code stays on the phone; `npm run check` green (1,808 tests).
 - **Native:** none. JS only, ships by Update production.
+
+## 20 Nov 2026 — Count the rating asks; Rate Daily Noodle row
+
+- **Alec, 20 Nov:** no ratings or reviews five days after 0.5.0 went live, though many players have five-day streaks. The ask (ADR-010) is wired correctly, but Google rations its sheet and never says whether it showed, so we can't tell a dead trigger from a hidden sheet. He chose (20 Nov) to count the asks and add a rating link.
+- **What:** `askForReview` records an anonymous `review_ask` {type, streak, v} when it asks the store, and `review_skip` (once per launch) when the store says it can't show its sheet, through `recorder.event` like `archive_open` (path `review`; `log_events` takes any `^[a-z_]{3,40}$` event, no database change). Account › Help & privacy gains **Rate Daily Noodle**, opening the Play listing (`market://`, then the web page), recorded as `review_link`; hidden on iPhones (no App Store listing).
+- **Reading it:** `select event, count(*), count(distinct anon_id) from events where event like 'review_%' group by 1`. Many asks and no ratings means Google is holding the sheet back; few asks means the trigger.
+- **Tests proved:** review: one `review_ask` with type, streak and version; nothing when it isn't the moment; one `review_skip` per launch however many wins; a throwing recorder still asks. Account: the row opens `market://`, falls back to the web listing, records the tap, still opens if recording throws, and isn't shown on iOS. `npm run check` green.
+- **Native:** none. JS only, ships by Update production.

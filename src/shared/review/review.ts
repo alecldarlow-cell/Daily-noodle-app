@@ -2,6 +2,7 @@ import Constants from 'expo-constants';
 import * as StoreReview from 'expo-store-review';
 
 import { appStorage } from '@/shared/storage';
+import { appRecorder } from '@/shared/track';
 
 /**
  * The store's own "rate this app" sheet (ADR-010; Alec, 10 Nov 2026): asked for at most once
@@ -24,7 +25,26 @@ export interface ReviewMoment {
   today: boolean;
   /** The type's day streak after this finish. */
   streak: number;
+  /** The puzzle type, for the anonymous ask record. */
+  type?: string;
 }
+
+/**
+ * Records that the app asked the store for its sheet ('review_ask'), or wanted to and the
+ * store said it couldn't ('review_skip'), as an anonymous event like `archive_open` (Alec,
+ * 20 Nov 2026: no ratings yet, so count the asks). The store never says whether its sheet
+ * showed, so this counts asks, not ratings. Never a nickname, email or player id.
+ */
+export type ReviewLog = (ev: 'review_ask' | 'review_skip', props: Record<string, unknown>) => void;
+
+let skipSaid = false;
+
+/** For tests: forget that this launch already recorded a skip. */
+export function resetReviewLog(): void {
+  skipSaid = false;
+}
+
+const appLog: ReviewLog = (ev, props) => appRecorder.event(ev, props, 'review');
 
 /** Whether this finish is the moment to ask, for this version. */
 export function shouldAsk(m: ReviewMoment, version: string, asked: string | null): boolean {
@@ -38,14 +58,30 @@ export function shouldAsk(m: ReviewMoment, version: string, asked: string | null
 export async function askForReview(
   m: ReviewMoment,
   version: string = Constants.expoConfig?.version ?? '0.0.0',
+  log: ReviewLog = appLog,
 ): Promise<boolean> {
   try {
     if (!shouldAsk(m, version, appStorage.getItem(REVIEW_KEY))) return false;
-    if (!(await StoreReview.isAvailableAsync()) || !(await StoreReview.hasAction())) return false;
+    const props = { type: m.type ?? '', streak: m.streak, v: version };
+    if (!(await StoreReview.isAvailableAsync()) || !(await StoreReview.hasAction())) {
+      // Once per launch: the version keeps its one go, so every later win would say it again.
+      if (!skipSaid) safeLog(log, 'review_skip', props);
+      skipSaid = true;
+      return false;
+    }
     appStorage.setItem(REVIEW_KEY, version);
+    safeLog(log, 'review_ask', props);
     await StoreReview.requestReview();
     return true;
   } catch {
     return false;
+  }
+}
+
+function safeLog(log: ReviewLog, ev: 'review_ask' | 'review_skip', props: Record<string, unknown>) {
+  try {
+    log(ev, props);
+  } catch {
+    // Recording must never stop the ask.
   }
 }
