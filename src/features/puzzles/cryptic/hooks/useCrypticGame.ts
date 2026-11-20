@@ -105,7 +105,7 @@ export function useCrypticGame(file: PuzzleFile<CrypticData>, deps: Deps = {}) {
     finished.current = true;
     const clock = read();
     setEndSecs(clock);
-    const f = commitFinish(state, clock, !!resumed, saves, store, now());
+    const f = commitFinish(state, clock, !!resumed, saves, store, now(), resumed?.state.hints ?? 0);
     if (f.first) announceFinish({ path: file.path, type: null, detail: f.detail });
     setInfo(f);
   }, [state, read, saves, store, now, file.path, resumed]);

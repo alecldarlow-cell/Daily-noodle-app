@@ -159,6 +159,8 @@ export function commitFinish(
   saves: SaveStore,
   kv: KV,
   now: number,
+  /** Hints already taken when this session picked the clue up: the tracker counts this session's (dn-track.js). */
+  hintsBefore = 0,
 ): Finished {
   const id = state.p.id;
   const first = !saves.getDone(SAVE_KEY, id);
@@ -186,7 +188,7 @@ export function commitFinish(
       secs,
       checks: 0,
       reveals: 0,
-      hints: state.hints,
+      hints: Math.max(0, state.hints - hintsBefore),
     },
     first,
   };
