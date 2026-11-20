@@ -3,6 +3,7 @@ import { act, fireEvent, render, renderHook, screen } from '@testing-library/rea
 import * as RN from 'react-native';
 
 import { appStorage } from '@/shared/storage';
+import { puzzleTokensFor } from '@/shared/theme';
 import { mockSite, renderWithProviders } from '@/shared/testing';
 
 import { boardFont, TILE_PAD } from '../components/LinkBoard';
@@ -166,6 +167,31 @@ describe('GIVEN Link’s board in play', () => {
       expect(say).toHaveBeenCalledWith('Not a group');
       expect(screen.getByTestId('link-msg')).toHaveProp('accessibilityLiveRegion', 'polite');
       expect(screen.getByLabelText('3 mistakes left')).toBeOnTheScreen();
+    });
+  });
+
+  describe('WHEN a wrong four is entered and a tile tapped straight after', () => {
+    it('THEN "One away" shows amber and "Not a group" red, each held 3 s before the tap clears it', async () => {
+      await renderWithProviders(<LinkScreen file={file78} />);
+      await press('Play');
+      const tap = (w: string) => fireEvent.press(screen.getByTestId(`tile-${w}`));
+      const color = () => RN.StyleSheet.flatten(screen.getByTestId('link-msg').props.style).color;
+      for (const w of [G[0]![0]!, G[0]![1]!, G[0]![2]!, G[1]![0]!]) await tap(w);
+      await press('Submit');
+      await run(300);
+      expect(screen.getByTestId('link-msg')).toHaveTextContent('ONE AWAY');
+      expect(color()).toBe(puzzleTokensFor('light').near);
+      await press('Deselect');
+      expect(screen.getByTestId('link-msg')).toHaveTextContent('');
+      for (const w of [G[0]![0]!, G[0]![1]!, G[1]![0]!, G[2]![0]!]) await tap(w);
+      await press('Submit');
+      await run(300);
+      expect(color()).toBe(puzzleTokensFor('light').bad);
+      await tap(G[2]![0]!); // lets one of the four go
+      await run(2000);
+      expect(screen.getByTestId('link-msg')).toHaveTextContent('NOT A GROUP');
+      await run(1000);
+      expect(screen.getByTestId('link-msg')).toHaveTextContent('');
     });
   });
 
