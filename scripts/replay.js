@@ -52,6 +52,7 @@ const TYPES = {
   redact: () => require('./replay/redact'),
   tumbler: () => require('./replay/tumbler'),
   tilt: () => require('./replay/tilt'),
+  cryptic: () => require('./replay/cryptic'),
 };
 
 const args = process.argv.slice(2);

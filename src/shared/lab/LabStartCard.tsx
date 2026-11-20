@@ -9,6 +9,7 @@ export const PLAYED_LABEL: Record<LabType, string> = {
   tilt: 'mazes played',
   redact: 'boards played',
   tumbler: 'words found',
+  cryptic: 'clues solved',
 };
 
 interface LabStartCardProps {

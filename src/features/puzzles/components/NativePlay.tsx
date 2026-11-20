@@ -11,6 +11,9 @@ import { enabled as bordersEnabled } from '../borders';
 import { BordersScreen } from '../borders/components/BordersScreen';
 import { validate as validateBorders, type BordersData } from '../borders/model';
 import { DokuScreen } from '../doku/components/DokuScreen';
+import { enabled as crypticEnabled } from '../cryptic';
+import { CrypticScreen } from '../cryptic/components/CrypticScreen';
+import { validate as validateCryptic, type CrypticData } from '../cryptic/model';
 import { enabled as dokuEnabled } from '../doku';
 import { validate as validateDoku, type DokuData } from '../doku/model';
 import { enabled as linkEnabled } from '../link';
@@ -60,6 +63,7 @@ export const NATIVE: Record<string, boolean> = {
   redact: redactEnabled,
   tumbler: tumblerEnabled,
   tilt: tiltEnabled,
+  cryptic: crypticEnabled,
 };
 
 /**
@@ -79,6 +83,7 @@ const VALIDATE: Record<string, (f: PuzzleFile) => boolean> = {
   redact: (f) => validateRedact(f.data).ok,
   tumbler: (f) => validateTumbler(f.data).ok,
   tilt: (f) => validateTilt(f.data).ok,
+  cryptic: (f) => validateCryptic(f.data).ok,
 };
 
 /** Puzzle types with a native player, each on once its replay has passed on every puzzle. */
@@ -153,6 +158,8 @@ export function NativePlay({ type, file, fallback }: NativePlayProps) {
       <TumblerScreen key={file} file={data as PuzzleFile<TumblerData>} />
     ) : type === 'tilt' ? (
       <TiltScreen key={file} file={data as PuzzleFile<TiltData>} />
+    ) : type === 'cryptic' ? (
+      <CrypticScreen key={file} file={data as PuzzleFile<CrypticData>} />
     ) : (
       <BordersScreen key={file} file={data as PuzzleFile<BordersData>} />
     );

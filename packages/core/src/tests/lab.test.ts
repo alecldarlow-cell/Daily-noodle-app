@@ -1,6 +1,7 @@
 import { PUZZLE_TYPES, typeOfId } from '../ids';
 import {
   isLabType,
+  LAB_RETIRED,
   LAB_TYPES,
   labelOf,
   labPlayed,
@@ -21,6 +22,7 @@ describe('GIVEN the Lab types', () => {
     ['DP·TILT·0024', 'tilt'],
     ['DP·REDA·0024', 'redact'],
     ['DP·TUMB·0024', 'tumbler'],
+    ['DP·CRYP·0001', 'cryptic'],
   ])('THEN %s is the Lab type %s', (id, type) => {
     expect(labTypeOfId(id)).toBe(type);
     expect(isLabType(type)).toBe(true);
@@ -33,6 +35,9 @@ describe('GIVEN the Lab types', () => {
 });
 
 describe('GIVEN a trial whose newest puzzle has a date', () => {
+  it('THEN only Redact is retired early', () => {
+    expect(LAB_RETIRED).toEqual({ redact: '2026-11-21' });
+  });
   it('WHEN it is today or yesterday THEN it is running', () => {
     expect(labRunning('2026-11-11', '2026-11-11')).toBe(true);
     expect(labRunning('2026-11-10', '2026-11-11')).toBe(true);
@@ -44,6 +49,12 @@ describe('GIVEN a trial whose newest puzzle has a date', () => {
   });
   it('WHEN the day before crosses a month THEN it still counts', () => {
     expect(labRunning('2026-10-31', '2026-11-01')).toBe(true);
+  });
+  it('WHEN a trial was taken off early (Redact, 20 Nov 2026) THEN it stops on its day, whatever its last date', () => {
+    expect(labRunning('2026-11-20', '2026-11-20', 'redact')).toBe(true);
+    expect(labRunning('2026-11-20', '2026-11-21', 'redact')).toBe(false);
+    expect(labRunning('2026-12-19', '2026-11-22', 'redact')).toBe(false);
+    expect(labRunning('2026-11-20', '2026-11-21', 'tumbler')).toBe(true);
   });
 });
 

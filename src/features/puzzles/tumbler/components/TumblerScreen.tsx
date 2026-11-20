@@ -1,4 +1,4 @@
-import { LAB_LABEL } from '@noodle/core';
+import { LAB_LABEL, LAB_TYPES, labSaveKey } from '@noodle/core';
 import { router } from 'expo-router';
 import { useCallback, useRef, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
@@ -29,7 +29,7 @@ export const HOW = [
   'Make any real word on the outlined line and Submit it. Green: right letter on the right wheel. Amber: the letter is in the word but belongs to another wheel. Grey: not in the word. The clues stay marked on the wheels and your submits are listed below. Submit the hidden word to solve it; the clock is the score.',
 ];
 
-const LAB_KEYS = ['digi-tilt-v1', 'digi-redact-v1', 'digi-tumbler-v1'];
+const LAB_KEYS = LAB_TYPES.map(labSaveKey);
 
 /** Tumbler, played natively: a Lab trial, with the Lab's start card and finish. */
 export function TumblerScreen({ file }: { file: PuzzleFile<TumblerData> }) {

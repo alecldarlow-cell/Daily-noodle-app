@@ -15,7 +15,7 @@ import { missingFunction, type RevDoc, type SyncApi } from '../api/syncApi';
  * 2026, Alec, as the website's dn-sync.js), the league identity and the Lab votes document.
  */
 export const SYNC_KEY =
-  /^digi-(mini|doku|sweep|path|link|tangle|borders|reckon|tally|tilt|redact|tumbler)-(v1|streak)$/;
+  /^digi-(mini|doku|sweep|path|link|tangle|borders|reckon|tally|tilt|redact|tumbler|cryptic)-(v1|streak)$/;
 /** App-only: when this phone last synced, for the Account screen. */
 export const LAST_SYNC_KEY = 'noodle-app-sync';
 /** Pull, merge and push again at most this many times when another device wrote in between. */
