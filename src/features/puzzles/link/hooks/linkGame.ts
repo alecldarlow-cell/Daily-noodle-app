@@ -14,6 +14,7 @@ import {
   roundToKeep,
   SAVE_KEY,
   SETTLE_MS,
+  VERDICT_HOLD,
   shuffle,
   timerText,
   type LinkData,
@@ -26,7 +27,14 @@ export type Phase = 'start' | 'play' | 'finished';
 
 /** A board move from the screen; Shuffle and Play again are dealt here. */
 export type ScreenMove =
-  | Exclude<Move, { t: 'shuffle' } | { t: 'again' } | { t: 'land' } | { t: 'revealed' }>
+  | Exclude<
+      Move,
+      | { t: 'shuffle' }
+      | { t: 'again' }
+      | { t: 'land' }
+      | { t: 'revealed' }
+      | { t: 'verdictEnd'; n: number }
+    >
   | { t: 'shuffle' }
   | { t: 'again' };
 
@@ -213,6 +221,11 @@ export class LinkGame {
       else this.keep(at);
     }
     if (move.t === 'land' && before.settling && !s.over) this.keep(at);
+    // A verdict holds its line VERDICT_HOLD ms (a tap in that time clears it after).
+    if (s.hold && s.hold.n !== before.hold?.n) {
+      const n = s.hold.n;
+      this.later(() => this.step({ t: 'verdictEnd', n }), VERDICT_HOLD);
+    }
     if (s.settling && !before.settling)
       this.later(() => this.step({ t: 'land' }), this.reduced ? 0 : SETTLE_MS);
     if (s.revealing && !before.revealing) {

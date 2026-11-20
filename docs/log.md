@@ -1259,3 +1259,10 @@ Alec ran an outside review of the app and asked for its findings to be checked a
 - **Reading it:** `select event, count(*), count(distinct anon_id) from events where event like 'review_%' group by 1`. Many asks and no ratings means Google is holding the sheet back; few asks means the trigger.
 - **Tests proved:** review: one `review_ask` with type, streak and version; nothing when it isn't the moment; one `review_skip` per launch however many wins; a throwing recorder still asks. Account: the row opens `market://`, falls back to the web listing, records the tap, still opens if recording throws, and isn't shown on iOS. `npm run check` green.
 - **Native:** none. JS only, ships by Update production.
+
+## 20 Nov 2026 — Link: "One away" and "Not a group" told apart, and held
+
+- **Alec, 20 Nov (player feedback):** the two warnings looked the same and vanished too quickly; make them different colours, or show them longer. Both done, web and app. Site PR first: alecldarlow-cell/dailynoodle#141.
+- **What:** "One away" is tone `near` (amber, `pt.near` on `pt.nearTint`), "Not a group" stays `bad` (red on `pt.badTint`), each in a pill whose padding its margins take back, so nothing moves. The model's `hold` keeps a verdict up for `VERDICT_HOLD` (3 s) through tile taps; `verdictEnd {n}` (scheduled by `linkGame`, timed by `simulate`) clears it if a tap asked. Deselect, "Four at a time", "Already tried", a landing and the reveal end it at once, as `engines/link.js` does.
+- **Tests proved:** model: the hold through a tap, a stale `verdictEnd` ignored, no tap keeps the line, the three moves that end it; polish: amber then red, held 2.3 s after a tap, gone by 3.3 s. Differential replay against the site branch: 36/36 runs identical (1,134 moves, 6 Links). `npm run check` green (1,820 tests).
+- **Native:** none. JS only, ships by Update production.
