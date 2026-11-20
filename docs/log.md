@@ -1269,3 +1269,10 @@ Alec ran an outside review of the app and asked for its findings to be checked a
 - **Replay:** `scripts/replay/cryptic.js` with `oracle.ts` / `simulate.ts` (solve, tries, hints, reveal, resume): `node scripts/replay.js --type cryptic --all` identical to engines/cryptic.js on all 29 pages, 145 runs, 1,290 moves. The one difference found on the way: the play event's `hints` counts this session's hints only (dn-track.js counts Hint taps on the page), so a resumed clue no longer reports hints taken before.
 - **Tests proved:** every one of the 29 Cryptic pages (`tests/pages.json`, from the site) passes the gate and solves by typing its answer; the hint ladder, reveal-all, wrong answers, saves in the page's shape, resume from a website save, the Lab finish and recap; Redact retired on its day. `npm run check` green (1,897 tests).
 - **Native:** none. JS only, ships by Update production.
+
+## 20 Nov 2026 — The Lab in the Archive
+
+- **Alec, 20 Nov:** "add the played lab puzzles to the archive … a lab filter and each could have their normal puzzle icon with a little pink lab label".
+- **What:** `ArchiveScreen`: All also lists the Lab puzzles you've played (finished, or part-played: "Continue"), among the dailies by date; Hide done hides the finished ones; a daily type shows only its own. The Lab choice was already there (every Lab puzzle before today, retired ones marked). `PuzzleRow` takes `lab`: a small pink "LAB TRIAL" label (`labSoft`/`labInk`) on the tile's foot, and "Lab trial" in the row's spoken label. Website the same: dailynoodle#142.
+- **Tests proved:** ArchiveLab: played Lab puzzles in All with the label, part-played says Continue, Hide done, unplayed stay out, a daily type shows none, every Lab row labelled. `npm run check` green.
+- **Native:** none. JS only, ships by Update production.
