@@ -255,6 +255,15 @@ describe('GIVEN a game played to the end', () => {
       expect(apply(s, { t: 'del' })).toBe(s);
     });
 
+    it('THEN a solve helped by Check or Reveal saves h: 1, as engines/mini.js does (21 Nov 2026)', () => {
+      const s = solveAll();
+      s.used.checks = 1;
+      expect(finish(s, 30).rec).toEqual({ s: 30, h: 1 });
+      s.used.checks = 0;
+      s.used.reveals = 2;
+      expect(finish(s, 30).rec).toEqual({ s: 30, h: 1 });
+    });
+
     it('THEN finish gives the web’s record, outcome and tracker detail', () => {
       const s = solveAll();
       expect(finish(s, 87.9)).toEqual({

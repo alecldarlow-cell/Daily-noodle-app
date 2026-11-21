@@ -54,6 +54,7 @@ export function TallyScreen({ file }: { file: PuzzleFile<TallyData> }) {
         celebrate={fresh}
         type="tally"
         path={file.path}
+        id={file.id}
         n={n}
         date={file.date}
         title="Solved"

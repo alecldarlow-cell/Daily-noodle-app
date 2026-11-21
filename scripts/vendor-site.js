@@ -50,6 +50,18 @@ function lift(src, name, file) {
       else if (c === quote) quote = null;
       continue;
     }
+    // Comments can hold an apostrophe ("the player's"), which must not open a string
+    // (21 Nov 2026: front.js resultText's Cryptic comment stopped the lift).
+    if (c === '/' && src[i + 1] === '/') {
+      const nl = src.indexOf('\n', i);
+      i = nl < 0 ? src.length : nl;
+      continue;
+    }
+    if (c === '/' && src[i + 1] === '*') {
+      const end = src.indexOf('*/', i + 2);
+      i = end < 0 ? src.length : end + 1;
+      continue;
+    }
     if (c === '"' || c === "'" || c === '`') quote = c;
     else if (c === '{' || c === '(' || c === '[') {
       depth++;

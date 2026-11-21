@@ -34,6 +34,7 @@ export function ReckonScreen({
         celebrate={fresh}
         type="reckon"
         path={file.path}
+        id={file.id}
         n={serial(file.data.id)}
         date={file.data.date}
         title="Reckoned"

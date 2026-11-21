@@ -52,6 +52,7 @@ export function PathScreen({ file }: { file: PuzzleFile<PathData> }) {
         celebrate={fresh}
         type="path"
         path={file.path}
+        id={file.id}
         n={n}
         date={file.date}
         title="Path complete"

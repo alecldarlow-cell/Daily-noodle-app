@@ -56,6 +56,7 @@ export function MiniScreen({ file }: { file: PuzzleFile<MiniData> }) {
         celebrate={fresh}
         type="mini"
         path={file.path}
+        id={file.id}
         n={n}
         date={file.date}
         title="Solved"

@@ -83,6 +83,7 @@ export function SweepScreen({ file }: { file: PuzzleFile<SweepData> }) {
         celebrate={fresh}
         type="sweep"
         path={file.path}
+        id={file.id}
         n={n}
         date={file.date}
         title={game.info.title}
