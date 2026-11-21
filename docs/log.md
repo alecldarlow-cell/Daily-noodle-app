@@ -1277,7 +1277,15 @@ Alec ran an outside review of the app and asked for its findings to be checked a
 - **Tests proved:** ArchiveLab: played Lab puzzles in All with the label, part-played says Continue, Hide done, unplayed stay out, a daily type shows none, every Lab row labelled. `npm run check` green.
 - **Native:** none. JS only, ships by Update production.
 
+## 21 Nov 2026 — No Hint on Path or Sweep
+
+- **Alec, 21 Nov:** "Remove the path hint button … Remove sweep hint button. Leave mini checks." Path and Sweep are solved unaided so the planned gold stars can be judged on time for them (design: project doc `claude/rewards-review-2026-11-21.md`).
+- **Site first:** dailynoodle#143 (engines hide and remove the button, notes and How to play drop Hint).
+- **What:** `PathScreen` loses its Hint button (Undo stays); `SweepScreen` loses its Hint button (Dig and Flag stay). The models' hint actions and Sweep's prover stay (the oracle and replay use them); nothing dispatches them from the screens. Finish notes aren't shown for these two in the app, so no wording changes here. The play event's `hints` is now always 0 for both.
+- **Tests:** PathScreen, Path polish, SweepScreen and Sweep polish now expect no Hint button; the Sweep archive test that pressed Hint on a wrong flag is gone with the feature. Path and Sweep suites 128/128, lint and typecheck clean.
+- **Stale test fixed first:** `TodayLab.test.tsx` failed on main from 21 Nov (its fixture used Redact with the real date, and `LAB_RETIRED` retires Redact that day, as intended). Alec asked for it fixed so this could go live: #168 moves the fixture to Cryptic, no app code changed.
+- **Native:** none. JS only, ships by Update production.
+
 ## 2026-11-21 — Cryptic definition hint visibility (outside WP order)
 
 - PR #166: hinted definition now on the brand tint as well as underlined (the brand-blue hairline was near-invisible in dark mode; Android ignores underline colour). CrypticScreen test covers it.
-- TodayLab.test.tsx went red on main on 21 Nov (Redact retired); fixed on main in fce0ec9, so this PR keeps that version.
