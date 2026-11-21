@@ -40,10 +40,6 @@ export interface Tokens {
   labSoft: string;
   labInk: string;
   labLine: string;
-  /** A gold star's result words (21 Nov 2026): 6.4:1 on the light canvas, the star's own gold on dark. */
-  goldInk: string;
-  /** The gold star line's disc (21 Nov 2026). */
-  goldSoft: string;
 }
 
 const light: Tokens = {
@@ -70,8 +66,6 @@ const light: Tokens = {
   labSoft: '#FBEAF1',
   labInk: '#C2185B',
   labLine: '#F2CFDD',
-  goldInk: '#7A5600',
-  goldSoft: '#FFF3C4',
 };
 
 const dark: Tokens = {
@@ -98,8 +92,6 @@ const dark: Tokens = {
   labSoft: '#2A1621',
   labInk: '#F48FB8',
   labLine: '#45283A',
-  goldInk: '#F2C94C',
-  goldSoft: '#3A2E0A',
 };
 
 /** Tokens for a colour scheme; anything other than 'dark' gets the light set, as the site does. */

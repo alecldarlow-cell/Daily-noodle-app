@@ -1304,3 +1304,9 @@ Alec ran an outside review of the app and asked for its findings to be checked a
 - **Alec, 21 Nov:** after seeing the bare corner star on his phone (it sat on the tile's numbers), picked option A from a mock: the gold star as the tick's own disc and ring, a touch larger, a gold face and a dark star. Website the same: dailynoodle#145.
 - **What:** `PuzzleRow`'s gold mark is a 28 pt disc (gold face, 2.5 pt ring in the canvas colour, as the tick's) holding `assets/images/gold-star-mark.png` (the site's star SVG in dark gold, drawn in Chromium). The finish sheet keeps its big bare star.
 - **Tests:** PuzzleCard checks the disc's size and ring. JS and one image only, ships by Update production.
+
+## 21 Nov 2026 — Gold: one coin everywhere, green result words
+
+- **Alec, 21 Nov:** after the gold disc on his phone ("is it gold enough?"; the finish page's star "isn't the same"; "the gold text looks yellow"), chose one shaded coin everywhere with every result's words kept green. Website the same: dailynoodle#146.
+- **What:** `assets/images/gold-coin.png` (the site's coin SVG: shaded gold face, darker rim, shine, dark star) is the corner mark in `PuzzleRow` (in the tick's canvas ring, 28 pt), the finish sheet's 30 pt icon on its "Gold star" row and the big mark beside the result. The three earlier star images and the `goldInk`/`goldSoft` tokens are gone; the "Gold star" words are bold ink, and card results stay the accent green.
+- **Tests:** PuzzleCard, finishSheet and gold suites unchanged and green. JS and one image, ships by Update production.
