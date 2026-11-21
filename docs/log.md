@@ -1278,5 +1278,6 @@ Alec ran an outside review of the app and asked for its findings to be checked a
 - **Native:** none. JS only, ships by Update production.
 
 ## 2026-11-21 — Cryptic definition hint visibility (outside WP order)
+
 - PR #166: hinted definition now on the brand tint as well as underlined (the brand-blue hairline was near-invisible in dark mode; Android ignores underline colour). CrypticScreen test covers it.
-- Needs Alec: TodayLab.test.tsx fails on main from today (lab-row-redact missing; real clock, a Lab trial date lapsed), which blocks CI for every PR. Not edited.
+- TodayLab.test.tsx went red on main on 21 Nov: it used Redact as a running trial, but Redact was taken off from 21 Nov (LAB_RETIRED). Fixture now uses Cryptic and asserts Redact is hidden (Alec approved the fix). Full check green.
