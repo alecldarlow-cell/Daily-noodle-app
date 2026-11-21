@@ -7,8 +7,8 @@ import { FONT, useTokens } from '@/shared/theme';
 import { PuzzleTile } from '../PuzzleTile/PuzzleTile';
 import { Standfirst } from './Standfirst';
 
-/** The gold star (assets/images/gold-star-small.png, drawn from the site's star SVG). */
-const GOLD_STAR = require('../../../../assets/images/gold-star-small.png') as number;
+/** The dark star on the gold disc (assets/images/gold-star-mark.png, the site's star SVG). */
+const GOLD_STAR = require('../../../../assets/images/gold-star-mark.png') as number;
 
 interface PuzzleRowProps {
   type: AnyType;
@@ -138,13 +138,13 @@ export function PuzzleRow({
             </View>
           ) : null}
           {gold ? (
-            // a gold star replaces the tick (21 Nov 2026): the star itself, no disc
-            <Image
-              source={GOLD_STAR}
-              accessible={false}
+            // a gold star replaces the tick (21 Nov 2026, Alec's option A): the tick's own disc
+            // and ring, a touch larger, a gold face and a dark star
+            <View
               testID={testID ? `${testID}-gold` : undefined}
-              style={styles.gold}
-            />
+              style={[styles.gold, { borderColor: t.canvas }]}>
+              <Image source={GOLD_STAR} accessible={false} style={styles.goldStar} />
+            </View>
           ) : played ? (
             <View
               testID={testID ? `${testID}-mark` : undefined}
@@ -238,7 +238,19 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   tick: { fontFamily: FONT.bodyBold, fontSize: 13, lineHeight: 15 },
-  gold: { position: 'absolute', top: -10, right: -10, width: 32, height: 32 },
+  gold: {
+    position: 'absolute',
+    top: -8,
+    right: -8,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    borderWidth: 2.5,
+    backgroundColor: '#F2C230',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  goldStar: { width: 15, height: 15 },
   // The Lab label sits on the tile's foot, as the played mark sits on its corner.
   lab: {
     position: 'absolute',

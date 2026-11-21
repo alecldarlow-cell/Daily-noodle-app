@@ -122,6 +122,13 @@ describe('GIVEN a puzzle card', () => {
         />,
       );
       expect(screen.getByTestId('c-gold')).toBeOnTheScreen();
+      // option A (21 Nov 2026): a disc like the tick's, a touch larger, with the same ring
+      expect(screen.getByTestId('c-gold')).toHaveStyle({
+        width: 28,
+        height: 28,
+        borderRadius: 14,
+        borderWidth: 2.5,
+      });
       expect(screen.queryByTestId('c-mark')).toBeNull();
       expect(
         screen.getByRole('button', { name: 'Mini 106, Solved in 0:30, gold star' }),
