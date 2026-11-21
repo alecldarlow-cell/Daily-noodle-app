@@ -102,9 +102,8 @@ const HELD = { opacity: 0.75 };
 
 /** Gold, for a personal best and a streak milestone (the podium's first-place metal). */
 const GOLD = { face: '#E8B931', rim: '#B88A12', ink: '#5A4300' };
-/** The gold star (21 Nov 2026): the big one beside the result, the small one on its line's disc. */
-const GOLD_STAR = require('../../../assets/images/gold-star.png') as number;
-const GOLD_STAR_SMALL = require('../../../assets/images/gold-star-small.png') as number;
+/** The gold coin (21 Nov 2026, one design everywhere): big beside the result, small leading its line. */
+const GOLD_COIN = require('../../../assets/images/gold-coin.png') as number;
 /** The streak's disc: an ember face with a rim, so it reads at the coin's size (Alec, 8 Nov 2026). */
 export const EMBER = { face: '#4A2414', rim: '#C2702E' };
 
@@ -365,7 +364,7 @@ export function FinishSheet(props: FinishSheetProps) {
           {goldWhy ? (
             <Entrance play={celebrate} delay={420} from={0.3} rise={0}>
               <Image
-                source={GOLD_STAR}
+                source={GOLD_COIN}
                 accessible={false}
                 style={styles.goldStar}
                 testID="finish-gold-star"
@@ -405,16 +404,9 @@ export function FinishSheet(props: FinishSheetProps) {
             <View style={styles.reward} testID="finish-reward">
               {goldWhy ? (
                 <View style={styles.rewardRow} testID="finish-gold">
-                  <View
-                    accessible={false}
-                    style={[
-                      styles.icon,
-                      { backgroundColor: t.goldSoft, borderColor: GOLD.face, borderWidth: 2 },
-                    ]}>
-                    <Image source={GOLD_STAR_SMALL} style={styles.goldSmall} />
-                  </View>
+                  <Image source={GOLD_COIN} accessible={false} style={styles.icon} />
                   <Text style={[styles.rewardMain, { color: pt.ink }]} testID="finish-gold-line">
-                    <Text style={{ color: t.goldInk }}>Gold star</Text>
+                    <Text style={styles.goldWord}>Gold star</Text>
                     {` · ${goldWhy}`}
                   </Text>
                 </View>
@@ -515,7 +507,7 @@ const styles = StyleSheet.create({
   heroRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   heroFill: { flex: 1 },
   goldStar: { width: 92, height: 92 },
-  goldSmall: { width: 18, height: 18 },
+  goldWord: { fontFamily: FONT.displayHeavy },
   outcome: { fontSize: 18, lineHeight: 24, fontFamily: FONT.sansSemi, marginTop: 6 },
   note: { fontSize: 14, lineHeight: 20, marginTop: 4, fontFamily: FONT.sans },
   strong: { fontFamily: FONT.sansSemi },

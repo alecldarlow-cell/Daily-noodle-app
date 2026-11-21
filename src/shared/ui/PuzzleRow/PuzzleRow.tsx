@@ -7,8 +7,8 @@ import { FONT, useTokens } from '@/shared/theme';
 import { PuzzleTile } from '../PuzzleTile/PuzzleTile';
 import { Standfirst } from './Standfirst';
 
-/** The dark star on the gold disc (assets/images/gold-star-mark.png, the site's star SVG). */
-const GOLD_STAR = require('../../../../assets/images/gold-star-mark.png') as number;
+/** The gold coin (assets/images/gold-coin.png, the site's coin SVG): one design everywhere. */
+const GOLD_COIN = require('../../../../assets/images/gold-coin.png') as number;
 
 interface PuzzleRowProps {
   type: AnyType;
@@ -109,9 +109,7 @@ export function PuzzleRow({
   const resultColour = played?.done
     ? played.lost
       ? t.muted
-      : gold
-        ? t.goldInk
-        : t.accent
+      : t.accent
     : played
       ? t.startedInk
       : t.faint;
@@ -138,12 +136,12 @@ export function PuzzleRow({
             </View>
           ) : null}
           {gold ? (
-            // a gold star replaces the tick (21 Nov 2026, Alec's option A): the tick's own disc
-            // and ring, a touch larger, a gold face and a dark star
+            // a gold result's coin replaces the tick (21 Nov 2026), in the tick's own ring, a touch
+            // larger; the result words stay green for every finish (gold words read as yellow)
             <View
               testID={testID ? `${testID}-gold` : undefined}
-              style={[styles.gold, { borderColor: t.canvas }]}>
-              <Image source={GOLD_STAR} accessible={false} style={styles.goldStar} />
+              style={[styles.gold, { borderColor: t.canvas, backgroundColor: t.canvas }]}>
+              <Image source={GOLD_COIN} accessible={false} style={styles.goldCoin} />
             </View>
           ) : played ? (
             <View
@@ -246,11 +244,10 @@ const styles = StyleSheet.create({
     height: 28,
     borderRadius: 14,
     borderWidth: 2.5,
-    backgroundColor: '#F2C230',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  goldStar: { width: 15, height: 15 },
+  goldCoin: { width: 23, height: 23 },
   // The Lab label sits on the tile's foot, as the played mark sits on its corner.
   lab: {
     position: 'absolute',
