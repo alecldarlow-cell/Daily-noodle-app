@@ -40,16 +40,23 @@ import {
  */
 export const CLUE_FONT = FONT.serif;
 
-/** One run of the clue, marked as the page marks it. */
+/**
+ * One run of the clue, marked as the page marks it. The website's definition line is a 3px
+ * brand underline; React Native has no underline thickness, and Android ignores
+ * textDecorationColor, so a hairline in brand blue all but vanished on the dark theme. The
+ * definition also sits on the brand tint so the hint reads on both themes and both platforms.
+ */
 function Run({ run, mark }: { run: ClueRun; mark: string }) {
   const pt = usePuzzleTokens();
   return (
     <Text
+      testID={run.d ? 'cryptic-def' : undefined}
       style={[
         run.d && {
           textDecorationLine: 'underline',
           textDecorationColor: pt.brand,
           textDecorationStyle: 'solid',
+          backgroundColor: pt.brandTint,
         },
         run.m && { backgroundColor: mark, color: pt.onActive },
         run.i && { fontStyle: 'italic' },
