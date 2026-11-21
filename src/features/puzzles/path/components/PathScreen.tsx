@@ -107,9 +107,6 @@ export function PathScreen({ file }: { file: PuzzleFile<PathData> }) {
           <Pressable accessibilityRole="button" onPress={() => dispatch({ t: 'undo' })} style={btn}>
             <Text style={[styles.btnText, { color: pt.ink }]}>Undo</Text>
           </Pressable>
-          <Pressable accessibilityRole="button" onPress={() => dispatch({ t: 'hint' })} style={btn}>
-            <Text style={[styles.btnText, { color: pt.ink }]}>Hint</Text>
-          </Pressable>
         </View>
       </View>
     </SafeAreaView>

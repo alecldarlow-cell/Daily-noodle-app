@@ -45,7 +45,7 @@ function Message({ msg, color }: { msg: string; color: string }) {
   );
 }
 
-/** Sweep, played natively: start card, board, Dig and Flag, Hint, finish sheet. */
+/** Sweep, played natively: start card, board, Dig and Flag, finish sheet (no Hint since 21 Nov 2026, as the website). */
 export function SweepScreen({ file }: { file: PuzzleFile<SweepData> }) {
   const { back, next: openNext } = usePlayerExit();
   const pt = usePuzzleTokens();
@@ -168,13 +168,6 @@ export function SweepScreen({ file }: { file: PuzzleFile<SweepData> }) {
         <View style={styles.modes}>
           {modeBtn(false)}
           {modeBtn(true)}
-          <Pressable
-            accessibilityRole="button"
-            onPress={() => dispatch({ t: 'hint' })}
-            testID="sweep-hint"
-            style={pressable([styles.hint, { borderColor: pt.ink, backgroundColor: pt.card }])}>
-            <Text style={[styles.btnText, { color: pt.ink }]}>Hint</Text>
-          </Pressable>
         </View>
         <Message msg={copy.msg} color={pt.inkSoft} />
       </View>
@@ -210,14 +203,5 @@ const styles = StyleSheet.create({
   neg: { color: '#fff', borderRadius: 4, paddingHorizontal: 5, overflow: 'hidden' },
   msg: { fontFamily: FONT.sans, fontSize: 13, lineHeight: 18, textAlign: 'center', minHeight: 18 },
   bold: { fontFamily: FONT.display },
-  hint: {
-    minHeight: 48,
-    minWidth: 76,
-    borderWidth: 1.5,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 12,
-  },
   btnText: { fontSize: 14, fontFamily: FONT.sansMedium },
 });
