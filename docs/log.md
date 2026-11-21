@@ -1276,3 +1276,12 @@ Alec ran an outside review of the app and asked for its findings to be checked a
 - **What:** `ArchiveScreen`: All also lists the Lab puzzles you've played (finished, or part-played: "Continue"), among the dailies by date; Hide done hides the finished ones; a daily type shows only its own. The Lab choice was already there (every Lab puzzle before today, retired ones marked). `PuzzleRow` takes `lab`: a small pink "LAB TRIAL" label (`labSoft`/`labInk`) on the tile's foot, and "Lab trial" in the row's spoken label. Website the same: dailynoodle#142.
 - **Tests proved:** ArchiveLab: played Lab puzzles in All with the label, part-played says Continue, Hide done, unplayed stay out, a daily type shows none, every Lab row labelled. `npm run check` green.
 - **Native:** none. JS only, ships by Update production.
+
+## 21 Nov 2026 — No Hint on Path or Sweep
+
+- **Alec, 21 Nov:** "Remove the path hint button … Remove sweep hint button. Leave mini checks." Path and Sweep are solved unaided so the planned gold stars can be judged on time for them (design: project doc `claude/rewards-review-2026-11-21.md`).
+- **Site first:** dailynoodle#143 (engines hide and remove the button, notes and How to play drop Hint).
+- **What:** `PathScreen` loses its Hint button (Undo stays); `SweepScreen` loses its Hint button (Dig and Flag stay). The models' hint actions and Sweep's prover stay (the oracle and replay use them); nothing dispatches them from the screens. Finish notes aren't shown for these two in the app, so no wording changes here. The play event's `hints` is now always 0 for both.
+- **Tests:** PathScreen, Path polish, SweepScreen and Sweep polish now expect no Hint button; the Sweep archive test that pressed Hint on a wrong flag is gone with the feature. Path and Sweep suites 128/128, lint and typecheck clean.
+- **Needs Alec:** `TodayLab.test.tsx` fails on main from today (21 Nov): its fixture uses Redact with the real date, and `LAB_RETIRED = {redact: '2026-11-21'}` now hides Redact, as intended. A red check outside this change, so not touched here; the fix is to move that fixture to a running trial (Cryptic). Until then every app PR's `check` is red.
+- **Native:** none. JS only, ships by Update production.

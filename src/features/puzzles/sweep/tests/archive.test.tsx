@@ -1,10 +1,8 @@
 import { dayBefore, londonDay } from '@noodle/core';
 import { act, fireEvent, screen } from '@testing-library/react-native';
-import { StyleSheet } from 'react-native';
 
 import { appStorage } from '@/shared/storage';
 import { mockSite, renderWithProviders } from '@/shared/testing';
-import { puzzleTokensFor } from '@/shared/theme';
 
 import { SweepScreen } from '../components/SweepScreen';
 import { PAST_MSG, shownCopy } from '../copy';
@@ -26,8 +24,6 @@ jest.mock('expo-router', () => ({
 }));
 jest.setTimeout(30_000);
 
-const START = 22;
-const sq = (i: number) => screen.getByTestId(`sq-${i}`);
 const playBtn = () => fireEvent.press(screen.getByRole('button', { name: 'Play' }));
 const today = () => londonDay();
 
@@ -85,24 +81,6 @@ describe('GIVEN an old Sweep, never played, opened after today’s Sweep was pla
       expect(screen.getByTestId('sweep-msg')).toHaveTextContent(PAST_MSG);
       // the flame is Sweep's own live streak, as the start card showed it
       expect(screen.getByText('🔥4')).toBeOnTheScreen();
-    });
-  });
-
-  describe('WHEN a flag sits on a provably safe square and Hint is pressed', () => {
-    it('THEN that flag is ringed dark and pulses, so it stands out from the marigold of the rest', async () => {
-      await renderWithProviders(<SweepScreen file={file94} />);
-      await playBtn();
-      await fireEvent.press(sq(START));
-      await fireEvent(sq(3), 'longPress');
-      expect(screen.queryByTestId('sweep-hint-pulse')).toBeNull();
-      await fireEvent.press(screen.getByRole('button', { name: 'Hint' }));
-      expect(screen.getByTestId('sweep-msg')).toHaveTextContent(WRONG_FLAG);
-      expect(screen.getAllByTestId('sweep-hint-pulse')).toHaveLength(1);
-      const style = StyleSheet.flatten(sq(3).props.style);
-      expect(style).toMatchObject({
-        borderWidth: 3,
-        borderColor: puzzleTokensFor('light').onActive,
-      });
     });
   });
 });

@@ -67,10 +67,10 @@ describe('GIVEN a Path move the model rejects', () => {
 });
 
 describe('GIVEN Path’s controls', () => {
-  it('THEN Undo and Hint show the pressed look while held', async () => {
+  it('THEN Undo shows the pressed look while held', async () => {
     await renderWithProviders(<PathScreen file={file92} />);
     await play();
-    for (const name of ['Undo', 'Hint'])
+    for (const name of ['Undo'])
       expect(await heldStyle(screen.getByRole('button', { name }))).toMatchObject(PRESSED);
   });
 });

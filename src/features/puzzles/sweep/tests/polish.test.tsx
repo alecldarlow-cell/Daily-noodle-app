@@ -39,11 +39,11 @@ afterEach(async () => {
 });
 
 describe('GIVEN a Sweep on the board', () => {
-  describe('WHEN Dig, Flag and Hint are held', () => {
+  describe('WHEN Dig and Flag are held', () => {
     it('THEN each shows the pressed look', async () => {
       await renderWithProviders(<SweepScreen file={file94} />);
       await play();
-      for (const id of ['sweep-mode-dig', 'sweep-mode-flag', 'sweep-hint'])
+      for (const id of ['sweep-mode-dig', 'sweep-mode-flag'])
         expect(await heldStyle(screen.getByTestId(id))).toMatchObject(PRESSED);
     });
   });

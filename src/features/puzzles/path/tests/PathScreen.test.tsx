@@ -76,7 +76,7 @@ describe('GIVEN a Path not yet played', () => {
     expect(screen.getByText('0:03')).toBeOnTheScreen();
   });
 
-  it('THEN taps grow either end, Undo takes back, Hint places a forced square', async () => {
+  it('THEN taps grow either end, Undo takes back, and there is no Hint (21 Nov 2026)', async () => {
     await renderWithProviders(<PathScreen file={file92} />);
     await fireEvent.press(screen.getByRole('button', { name: 'Play' }));
     await tapValue(36);
@@ -88,8 +88,7 @@ describe('GIVEN a Path not yet played', () => {
     expect(msg()).toHaveTextContent(
       'Not next to the active end — the path grows one square at a time.',
     );
-    await fireEvent.press(screen.getByRole('button', { name: 'Hint' }));
-    expect(screen.getByTestId('sq-2-5')).toHaveAccessibleName(/35/);
+    expect(screen.queryByRole('button', { name: 'Hint' })).toBeNull();
   });
 
   it('THEN the complete thread is saved, the streak bumped, the finish announced, and the sheet shows', async () => {
