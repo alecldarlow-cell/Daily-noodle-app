@@ -1276,3 +1276,7 @@ Alec ran an outside review of the app and asked for its findings to be checked a
 - **What:** `ArchiveScreen`: All also lists the Lab puzzles you've played (finished, or part-played: "Continue"), among the dailies by date; Hide done hides the finished ones; a daily type shows only its own. The Lab choice was already there (every Lab puzzle before today, retired ones marked). `PuzzleRow` takes `lab`: a small pink "LAB TRIAL" label (`labSoft`/`labInk`) on the tile's foot, and "Lab trial" in the row's spoken label. Website the same: dailynoodle#142.
 - **Tests proved:** ArchiveLab: played Lab puzzles in All with the label, part-played says Continue, Hide done, unplayed stay out, a daily type shows none, every Lab row labelled. `npm run check` green.
 - **Native:** none. JS only, ships by Update production.
+
+## 2026-11-21 — Cryptic definition hint visibility (outside WP order)
+- PR #166: hinted definition now on the brand tint as well as underlined (the brand-blue hairline was near-invisible in dark mode; Android ignores underline colour). CrypticScreen test covers it.
+- Needs Alec: TodayLab.test.tsx fails on main from today (lab-row-redact missing; real clock, a Lab trial date lapsed), which blocks CI for every PR. Not edited.
