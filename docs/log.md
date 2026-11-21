@@ -1298,3 +1298,9 @@ Alec ran an outside review of the app and asked for its findings to be checked a
 - **Vendor:** `scripts/vendor-site.js` skips comments while lifting (an apostrophe in a front.js comment had stopped it lifting `resultText`, so the vendored copy couldn't be refreshed); re-vendored, and the differential test now checks `playedState` with gold against front.js.
 - **Tests:** gold.test (every rule either side of its threshold, the site's dn-core.js giving the same reasons, Lab and broken records, playedState), finishSheet (big star and line on a gold Path, none on a slow one or a lost Sweep, 🏆 on a personal best), PuzzleCard (gold star replaces the tick, spoken), Mini model (`h: 1`).
 - **Native:** none. JS and two images only, ships by Update production.
+
+## 21 Nov 2026 — Gold star in a disc
+
+- **Alec, 21 Nov:** after seeing the bare corner star on his phone (it sat on the tile's numbers), picked option A from a mock: the gold star as the tick's own disc and ring, a touch larger, a gold face and a dark star. Website the same: dailynoodle#145.
+- **What:** `PuzzleRow`'s gold mark is a 28 pt disc (gold face, 2.5 pt ring in the canvas colour, as the tick's) holding `assets/images/gold-star-mark.png` (the site's star SVG in dark gold, drawn in Chromium). The finish sheet keeps its big bare star.
+- **Tests:** PuzzleCard checks the disc's size and ring. JS and one image only, ships by Update production.
