@@ -1285,3 +1285,7 @@ Alec ran an outside review of the app and asked for its findings to be checked a
 - **Tests:** PathScreen, Path polish, SweepScreen and Sweep polish now expect no Hint button; the Sweep archive test that pressed Hint on a wrong flag is gone with the feature. Path and Sweep suites 128/128, lint and typecheck clean.
 - **Stale test fixed first:** `TodayLab.test.tsx` failed on main from 21 Nov (its fixture used Redact with the real date, and `LAB_RETIRED` retires Redact that day, as intended). Alec asked for it fixed so this could go live: #168 moves the fixture to Cryptic, no app code changed.
 - **Native:** none. JS only, ships by Update production.
+
+## 2026-11-21 — Cryptic definition hint visibility (outside WP order)
+
+- PR #166: hinted definition now on the brand tint as well as underlined (the brand-blue hairline was near-invisible in dark mode; Android ignores underline colour). CrypticScreen test covers it.

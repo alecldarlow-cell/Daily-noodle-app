@@ -9,7 +9,7 @@ import { mockSite, renderWithProviders } from '@/shared/testing';
 import type { PuzzleFile } from '../../types';
 import { CrypticScreen, HOUSE_LINE } from '../components/CrypticScreen';
 import { beatMs } from '../hooks/useCrypticGame';
-import { SAVE_KEY, type CrypticData } from '../model';
+import { SAVE_KEY, spanChars, type CrypticData } from '../model';
 import answers from './answers.json';
 import pages from './pages.json';
 
@@ -96,7 +96,14 @@ describe('GIVEN a Cryptic not yet played', () => {
     expect(screen.getByTestId('cryptic-msg')).toHaveTextContent(
       'Not quite. Nothing lost: try again.',
     );
+    expect(screen.queryByTestId('cryptic-def')).toBeNull();
     await press('cryptic-hint');
+    // The first hint marks the definition: underlined and on the brand tint, so it shows on dark.
+    const def = screen.getByTestId('cryptic-def');
+    expect(def).toHaveTextContent(
+      page.data.clue.slice(...spanChars(page.data.clue, page.data.def)!),
+    );
+    expect(def).toHaveStyle({ textDecorationLine: 'underline', backgroundColor: '#DCE4FF' });
     await press('cryptic-hint');
     expect(screen.getByTestId('cryptic-hint-panel')).toHaveTextContent(/Clue type/i);
     expect(screen.getByTestId('cryptic-hint-panel')).toHaveTextContent(/Charade/);
