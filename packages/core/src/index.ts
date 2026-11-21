@@ -1,4 +1,5 @@
 export { londonDay, dayBefore, isDay } from './london';
+export { gold } from './gold';
 export {
   BOARD_KEY,
   BOARD_TYPES,

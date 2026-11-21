@@ -373,13 +373,13 @@ describe('GIVEN a finish sheet (design B3)', () => {
         }),
       );
     const mini = { type: 'mini' as const, n: '117', title: 'Solved', hero: '1:30' };
-    it('THEN with three earlier finishes the main line is the gold-star best, over the streak', async () => {
+    it('THEN with three earlier finishes the main line is the personal best (a trophy since gold stars, 21 Nov 2026), over the streak', async () => {
       saves(90, 102, 130, 200);
       await renderWithProviders(withSlot(sheet(mini)));
       expect(screen.getByTestId('finish-reward-main')).toHaveTextContent(
         'Your fastest Mini yet, by 12s',
       );
-      expect(screen.getByTestId('finish-reward-icon-pb', hidden)).toHaveTextContent('★');
+      expect(screen.getByTestId('finish-reward-icon-pb', hidden)).toHaveTextContent('🏆');
       expect(screen.queryByText('26-day Mini streak')).toBeNull();
       expect(screen.getByTestId('fake-league')).toBeOnTheScreen();
     });
@@ -387,6 +387,56 @@ describe('GIVEN a finish sheet (design B3)', () => {
       saves(90, 102, 130);
       await renderWithProviders(withSlot(sheet(mini)));
       expect(screen.getByTestId('finish-reward-main')).toHaveTextContent('26-day Mini streak');
+    });
+  });
+
+  describe('WHEN the saved result is gold (21 Nov 2026)', () => {
+    const save = (rec: object) =>
+      appStorage.setItem(
+        'digi-path-v1',
+        JSON.stringify({ v: 1, done: { 'DP·PATH·0091': { ...rec, d: '2026-11-01' } } }),
+      );
+    const path = {
+      type: 'path' as const,
+      n: '91',
+      title: 'Path complete',
+      hero: '0:15',
+      id: 'DP·PATH·0091',
+    };
+    it('THEN the big star shows beside the result and its line says why, above the streak', async () => {
+      save({ t: '0:15' });
+      await renderWithProviders(withSlot(sheet(path)));
+      expect(screen.getByTestId('finish-gold-star')).toBeOnTheScreen();
+      expect(screen.getByTestId('finish-gold-line')).toHaveTextContent('Gold star · Under 0:20');
+      expect(order(['finish-gold', 'finish-reward-main'])).toEqual([
+        'finish-gold',
+        'finish-reward-main',
+      ]);
+    });
+    it('THEN a slower result has neither', async () => {
+      save({ t: '0:45' });
+      await renderWithProviders(withSlot(sheet({ ...path, hero: '0:45' })));
+      expect(screen.queryByTestId('finish-gold-star')).toBeNull();
+      expect(screen.queryByTestId('finish-gold')).toBeNull();
+    });
+    it('THEN a lost round never shows gold, whatever its time', async () => {
+      appStorage.setItem(
+        'digi-sweep-v1',
+        JSON.stringify({ v: 1, done: { 'DP·SWEEP·X': { o: 'loss', s: 9, b: 3 } } }),
+      );
+      await renderWithProviders(
+        withSlot(
+          sheet({
+            type: 'sweep',
+            n: '95',
+            title: 'Boom.',
+            hero: '0:09',
+            id: 'DP·SWEEP·X',
+            solved: false,
+          }),
+        ),
+      );
+      expect(screen.queryByTestId('finish-gold-star')).toBeNull();
     });
   });
 

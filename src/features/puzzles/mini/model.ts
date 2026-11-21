@@ -85,6 +85,8 @@ export type Move =
 /** The record the web writes to `digi-mini-v1` › done[id] (before putDone adds `d`). */
 export interface MiniRecord {
   s: number;
+  /** 1 when Check or Reveal was used (21 Nov 2026, as engines/mini.js), so gold stars can tell; absent means none. */
+  h?: 1;
 }
 export type MiniOutcome = 'solved';
 export interface MiniEnd {
@@ -488,7 +490,7 @@ export function finish(
 ): { rec: MiniRecord; outcome: MiniOutcome; end: MiniEnd } {
   const secs = Math.max(0, Math.floor(clockSecs));
   return {
-    rec: { s: secs },
+    rec: s.used.checks || s.used.reveals ? { s: secs, h: 1 } : { s: secs },
     outcome: 'solved',
     end: { secs, checks: s.track.checks, reveals: s.track.reveals, hints: s.track.hints },
   };

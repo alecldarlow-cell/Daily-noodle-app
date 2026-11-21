@@ -61,6 +61,7 @@ export function BordersScreen({
         celebrate={fresh}
         type="borders"
         path={file.path}
+        id={file.id}
         n={serial(file.data.id)}
         date={file.data.date}
         title="Spotted"

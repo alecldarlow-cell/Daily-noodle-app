@@ -5,6 +5,7 @@
 import { dayBefore, londonDay } from './london';
 import type { PuzzleType } from './ids';
 import type { SaveDoc } from './types';
+import { gold } from './gold';
 
 type Obj = Record<string, unknown>;
 
@@ -65,7 +66,10 @@ export function resultText(type: PuzzleType, r: Obj): string {
   return '';
 }
 
-export type PlayedState = { done: true; lost: boolean; text: string } | { done: false };
+/** `gold`: a gold star's reason (21 Nov 2026, `gold()`), only when the result is gold. */
+export type PlayedState =
+  | { done: true; lost: boolean; text: string; gold?: string }
+  | { done: false };
 
 /** A card's state from its type's save: finished (with wording), in progress, or null. */
 export function playedState(type: PuzzleType, id: string, doc: SaveDoc | null): PlayedState | null {
@@ -74,10 +78,12 @@ export function playedState(type: PuzzleType, id: string, doc: SaveDoc | null): 
     doc.done && typeof doc.done === 'object' ? (doc.done[id] as Obj | undefined) : undefined;
   if (r) {
     const isObj = typeof r === 'object';
+    const g = gold(type, r);
     return {
       done: true,
       lost: isObj && (r.o === 'loss' || r.o === 'gave'),
       text: (isObj && resultText(type, r)) || 'Played',
+      ...(g ? { gold: g } : {}),
     };
   }
   const d = doc.days && doc.days[id];

@@ -1,11 +1,14 @@
 import type { AnyType, PlayedState } from '@noodle/core';
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
+import { Image, Pressable, StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
 
 import { FONT, useTokens } from '@/shared/theme';
 
 import { PuzzleTile } from '../PuzzleTile/PuzzleTile';
 import { Standfirst } from './Standfirst';
+
+/** The gold star (assets/images/gold-star-small.png, drawn from the site's star SVG). */
+const GOLD_STAR = require('../../../../assets/images/gold-star-small.png') as number;
 
 interface PuzzleRowProps {
   type: AnyType;
@@ -89,7 +92,15 @@ export function PuzzleRow({
   const result = played?.done ? played.text : played ? 'Continue' : null;
   const time = played && !played.done ? roundTime : undefined;
   const offline = kept ? 'Downloaded' : undefined;
-  const label = [title, lab ? 'Lab trial' : null, result ?? when, time, offline?.toLowerCase()]
+  const gold = played?.done && played.gold ? played.gold : '';
+  const label = [
+    title,
+    lab ? 'Lab trial' : null,
+    result ?? when,
+    gold ? 'gold star' : null,
+    time,
+    offline?.toLowerCase(),
+  ]
     .filter(Boolean)
     .join(', ');
   const meta = [when, offline].filter((s): s is string => !!s);
@@ -98,7 +109,9 @@ export function PuzzleRow({
   const resultColour = played?.done
     ? played.lost
       ? t.muted
-      : t.accent
+      : gold
+        ? t.goldInk
+        : t.accent
     : played
       ? t.startedInk
       : t.faint;
@@ -124,7 +137,15 @@ export function PuzzleRow({
               </Text>
             </View>
           ) : null}
-          {played ? (
+          {gold ? (
+            // a gold star replaces the tick (21 Nov 2026): the star itself, no disc
+            <Image
+              source={GOLD_STAR}
+              accessible={false}
+              testID={testID ? `${testID}-gold` : undefined}
+              style={styles.gold}
+            />
+          ) : played ? (
             <View
               testID={testID ? `${testID}-mark` : undefined}
               style={[
@@ -217,6 +238,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   tick: { fontFamily: FONT.bodyBold, fontSize: 13, lineHeight: 15 },
+  gold: { position: 'absolute', top: -10, right: -10, width: 32, height: 32 },
   // The Lab label sits on the tile's foot, as the played mark sits on its corner.
   lab: {
     position: 'absolute',

@@ -1289,3 +1289,12 @@ Alec ran an outside review of the app and asked for its findings to be checked a
 ## 2026-11-21 — Cryptic definition hint visibility (outside WP order)
 
 - PR #166: hinted definition now on the brand tint as well as underlined (the brand-blue hairline was near-invisible in dark mode; Android ignores underline colour). CrypticScreen test covers it.
+
+## 21 Nov 2026 — Gold stars
+
+- **Alec, 21 Nov:** after a player asked for "a reward or gold star system": gold stars only, for a really good result (about one finish in ten), no currency; speed may be used; not on Account; share line unchanged; Archive plays earn gold; back-date them all. Design and data: project doc `claude/rewards-review-2026-11-21.md`.
+- **Site first:** dailynoodle#144 (`dnCore.gold`, finish sheet, Puzzles cards, Archive rows, Mini `h` flag).
+- **What:** `@noodle/core` `gold(type, record)` (`packages/core/src/gold.ts`), a port of `dnCore.gold`: Mini under 0:40 with no checks or reveals; Doku under 0:30; Sweep won under 0:30; Path under 0:20; Tally under 1:00; Link no mistakes under 1:00; Tangle 40+; Borders 10/10; Reckon 750+; never Lab. `playedState` adds `gold` (only when gold), so Today and the Archive rows show a gold star in place of the tick (`PuzzleRow`, `assets/images/gold-star-small.png`) and read "gold star". The finish sheet takes the puzzle's `id` (all nine screens pass `file.id`) and, for a gold saved result, shows a big star beside the result (`gold-star.png`, entering after the result) and a "Gold star · why" row above the streak; the screen reader hears it. A personal best's disc now shows 🏆 instead of ★, so "gold star" means one thing. Mini's record carries `h: 1` when Check or Reveal was used. New tokens `goldInk`, `goldSoft`. The two star PNGs were drawn from the site's star SVG in Chromium (no new dependency).
+- **Vendor:** `scripts/vendor-site.js` skips comments while lifting (an apostrophe in a front.js comment had stopped it lifting `resultText`, so the vendored copy couldn't be refreshed); re-vendored, and the differential test now checks `playedState` with gold against front.js.
+- **Tests:** gold.test (every rule either side of its threshold, the site's dn-core.js giving the same reasons, Lab and broken records, playedState), finishSheet (big star and line on a gold Path, none on a slow one or a lost Sweep, 🏆 on a personal best), PuzzleCard (gold star replaces the tick, spoken), Mini model (`h: 1`).
+- **Native:** none. JS and two images only, ships by Update production.
