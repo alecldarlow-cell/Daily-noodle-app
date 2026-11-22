@@ -6,10 +6,10 @@
  * - solve: tap 1, then 2 to 35 in order (tools/tests/play.js path).
  * - ends: both ends in turn, the 36 counting down and the 1 up, meeting in the middle,
  *   with each kind of refused tap along the way.
- * - hints: Hint until neither end is forced, then one true step, and again; a tap
- *   onto a given elsewhere and one that would strand a number.
+ * - refused: true steps, unaided, with a tap onto a given elsewhere and one that would
+ *   strand a number along the way (Hint went on 21 Nov 2026: the page has none).
  * - undo: a wrong turn three squares long, taken back with Undo, then on to the end
- *   with a Hint and an Undo of a checkpoint.
+ *   with an Undo of a checkpoint.
  */
 import { dayBefore, londonDay } from '@noodle/core';
 
@@ -25,8 +25,8 @@ import {
   type PathState,
 } from './model';
 
-export type Variant = 'solve' | 'ends' | 'hints' | 'undo';
-export const VARIANTS: readonly Variant[] = ['solve', 'ends', 'hints', 'undo'];
+export type Variant = 'solve' | 'ends' | 'refused' | 'undo';
+export const VARIANTS: readonly Variant[] = ['solve', 'ends', 'refused', 'undo'];
 
 export interface Step {
   move: Move;
@@ -108,7 +108,7 @@ class Player {
     const r = head[0] >= 2 ? head[0] - 2 : head[0] + 2;
     return [r, head[1]];
   }
-  /** One true step from the low end (when Hint can't help). */
+  /** One true step from the low end. */
   finishStep() {
     if (this.solved) return;
     this.choose('low');
@@ -165,20 +165,16 @@ function ends(pl: Player) {
       });
       if (given) pl.tap(given);
     }
-    if (round === 3 && !pl.solved) pl.do({ t: 'hint' }, pl.gap(20_000, 60_000)); // a long think
     low = !low;
   }
   pl.finish();
 }
 
-function hints(pl: Player) {
+/** Unaided (no Hint since 21 Nov 2026): true steps, with refused taps along the way. */
+function refused(pl: Player) {
   for (let k = 0; k < 90 && !pl.solved; k++) {
-    const before = pl.state;
-    pl.do({ t: 'hint' }, pl.gap(600, 2000));
-    if (sameValues(pl.state, before)) {
-      if (k % 4 === 1) refusals(pl);
-      pl.finishStep();
-    }
+    if (k % 4 === 1) refusals(pl);
+    pl.finishStep();
   }
   pl.finish();
 }
@@ -215,7 +211,6 @@ function undo(pl: Player) {
     wrong++;
   }
   for (let k = 0; k < wrong; k++) pl.do({ t: 'undo' }, pl.gap(300, 900));
-  pl.do({ t: 'hint' });
   // on to a checkpoint, through it, back and through again
   for (let k = 0; k < 40 && !pl.solved; k++) {
     const s = pl.state;
@@ -234,7 +229,7 @@ function undo(pl: Player) {
   pl.finish();
 }
 
-const PLAY: Record<Variant, (pl: Player) => void> = { solve, ends, hints, undo };
+const PLAY: Record<Variant, (pl: Player) => void> = { solve, ends, refused, undo };
 
 /** The moves of one variant. Every list ends with the thread complete. */
 export function moves(data: PathData, variant: Variant): Step[] {
@@ -283,7 +278,7 @@ export function scenario(data: PathData, variant: Variant, date: string): Scenar
         },
         reopen: false,
       };
-    case 'hints':
+    case 'refused':
       // a streak saved before 18 Oct 2026 with a day's gap: Path allows no grace day
       return {
         variant,

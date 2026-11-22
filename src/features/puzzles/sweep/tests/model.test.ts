@@ -144,7 +144,7 @@ describe('GIVEN the board open', () => {
     expect(s.over && s.won).toBe(true);
     expect(s.msg).toBe('Swept in <b>00:42</b>. Nice.');
     expect(s.endSecs).toBe(42);
-    expect(finishNote(s, true)).toBe('All seven mines found, no hints.');
+    expect(finishNote(s, true)).toBe('All seven mines found.'); // no Hint line since 21 Nov 2026
     expect(finishNote(s, false)).toBe('All seven mines found.');
     expect(finish(s).rec).toEqual({ o: 'win', s: 42 });
     expect(endDetail(s)).toEqual({
@@ -201,7 +201,7 @@ describe('GIVEN Hint', () => {
       s = MINES.includes(i) ? play(s, { t: 'press', i }) : play(s, { t: 'tap', i });
     }
     expect(s.won).toBe(true);
-    expect(finishNote(s, true)).toMatch(/^All seven mines found, with \w+ hints\.$/);
+    expect(finishNote(s, true)).toBe('All seven mines found.'); // hints no longer counted (21 Nov 2026)
     const after = play(s, { t: 'hint' });
     expect(after.usedHints).toBe(s.usedHints);
     expect(after.hints).toBe(s.hints + 1);

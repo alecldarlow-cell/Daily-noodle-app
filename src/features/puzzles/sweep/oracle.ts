@@ -5,13 +5,13 @@
  * a long press also holds for PRESS_HOLD_MS before it).
  *
  * - solve: dig the start, then every safe square in turn (tools/tests/play.js sweep).
- * - boom: a Hint, then a mine (play.js sweep {boom}); Play again (not recorded) and a
- *   replay won with flags (run.js finish:sweep-boom goes on to Play again).
- * - hint: solved by Hint alone, flagging what it calls a mine (play.js sweepByHint).
- * - wrongflag: a long-press flag on a square the numbers prove safe, then by Hint, which
- *   names it (run.js sweep:hint (a)).
- * - unproved: a flag on a square the numbers can't decide yet, then by Hint, which must
- *   ignore it (run.js sweep:hint (b)).
+ * - boom: a mine (play.js sweep {boom}); Play again (not recorded) and a replay won with
+ *   flags (run.js finish:sweep-boom goes on to Play again).
+ * - deduce: solved by deduction alone, flagging every proved mine. No Hint since 21 Nov
+ *   2026 (the page has no Hint button), so these lists never press it.
+ * - wrongflag: a long-press flag on a square the numbers prove safe, which comes off once
+ *   the numbers show it, then by deduction.
+ * - unproved: a flag on a square the numbers can't decide yet, then by deduction.
  * - flags: Flag mode; too many flags round a number (crossed out), every mine flagged,
  *   one safe square flagged so all 36 are called (the nudge), then fixed.
  */
@@ -28,11 +28,11 @@ import {
   type SweepState,
 } from './model';
 
-export type Variant = 'solve' | 'boom' | 'hint' | 'wrongflag' | 'unproved' | 'flags';
+export type Variant = 'solve' | 'boom' | 'deduce' | 'wrongflag' | 'unproved' | 'flags';
 export const VARIANTS: readonly Variant[] = [
   'solve',
   'boom',
-  'hint',
+  'deduce',
   'wrongflag',
   'unproved',
   'flags',
@@ -118,15 +118,26 @@ class Player {
     this.do({ t: 'tap', i }, this.gap(150, 500));
     this.setMode(false);
   }
-  /** Press Hint, then dig or flag the square it marks, until the board is done. */
-  byHint() {
-    for (let k = 0; k < 60 && !this.over; k++) {
-      this.do({ t: 'hint' }, this.gap(500, 2600));
-      const m = this.state.mark;
-      if (!m) break;
-      // a mine is flagged; a flag Hint calls wrong comes off; a safe square is dug
-      if (this.mine(m.i) || this.state.flagged.has(m.i)) this.flagByMode(m.i);
-      else this.do({ t: 'tap', i: m.i });
+  /**
+   * Solved by deduction alone (no Hint since 21 Nov 2026): a flag the numbers prove safe
+   * comes off, then a proved-safe square is dug or a proved mine flagged, until done.
+   */
+  byProof() {
+    for (let k = 0; k < 80 && !this.over; k++) {
+      const { K, S } = provable(this.state);
+      const wrong = [...this.state.flagged].find((i) => S.has(i));
+      if (wrong !== undefined) {
+        this.flagByMode(wrong);
+        continue;
+      }
+      const safe = [...S].find((i) => this.hidden(i) && !this.state.flagged.has(i));
+      if (safe !== undefined) {
+        this.do({ t: 'tap', i: safe }, this.gap(500, 2600));
+        continue;
+      }
+      const mine = [...K].find((i) => this.hidden(i) && !this.state.flagged.has(i));
+      if (mine === undefined) break;
+      this.flagByMode(mine);
     }
     this.digRest();
   }
@@ -139,7 +150,6 @@ function solve(pl: Player) {
 
 function boom(pl: Player) {
   pl.digStart();
-  pl.do({ t: 'hint' });
   pl.do({ t: 'tap', i: pl.p.mines[0]! }, 3000);
   pl.do({ t: 'again' }, 800);
   // the replay: two mines flagged by long press, one in Flag mode, the rest dug
@@ -151,9 +161,9 @@ function boom(pl: Player) {
   pl.digRest();
 }
 
-function hint(pl: Player) {
+function deduce(pl: Player) {
   pl.digStart();
-  pl.byHint();
+  pl.byProof();
 }
 
 function wrongflag(pl: Player) {
@@ -161,7 +171,7 @@ function wrongflag(pl: Player) {
   const { S } = provable(pl.state);
   const x = [...S].find((i) => pl.hidden(i));
   if (x !== undefined) pl.do({ t: 'press', i: x });
-  pl.byHint();
+  pl.byProof();
 }
 
 function unproved(pl: Player) {
@@ -171,7 +181,7 @@ function unproved(pl: Player) {
   const undecided = [...Array(CELLS).keys()].filter((i) => pl.hidden(i) && !K.has(i) && !S.has(i));
   const x = undecided.find((i) => NB[i]!.some(open)) ?? undecided[0];
   if (x !== undefined) pl.flagByMode(x);
-  pl.byHint();
+  pl.byProof();
 }
 
 function flags(pl: Player) {
@@ -204,7 +214,7 @@ function flags(pl: Player) {
 const PLAY: Record<Variant, (pl: Player) => void> = {
   solve,
   boom,
-  hint,
+  deduce,
   wrongflag,
   unproved,
   flags,
@@ -267,7 +277,7 @@ export function scenario(data: SweepData, variant: Variant, date: string): Scena
         seed: { 'digi-sweep-v1': other, 'digi-sweep-streak': streak(days(date, 1), 4, 6) },
         reopen: true,
       };
-    case 'hint':
+    case 'deduce':
       // a streak saved before 18 Oct 2026 (no tz): one extra day of gap is allowed
       return {
         variant,

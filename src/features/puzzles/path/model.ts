@@ -672,13 +672,10 @@ export function endDetail(s: PathState, clockSecs: number): Record<string, unkno
   return { type: SITE_TYPE, tv: 3, outcome: 'solved', ...finish(s, clockSecs).end };
 }
 
-const W = ['no', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'];
-
-/** The finish sheet's one line; none on a reopened puzzle. */
-export function finishNote(s: PathState, fresh: boolean): string {
-  const h = s.usedHints;
-  if (!fresh) return '';
-  return h
-    ? `One to 36 with ${h === 1 ? 'one hint' : (W[h] || h) + ' hints'}.`
-    : 'One to 36 without a hint.';
+/**
+ * The finish sheet's one line; none on a reopened puzzle. No Hint on Path (21 Nov 2026,
+ * engines/path.js finishSheet), so the line no longer counts hints.
+ */
+export function finishNote(_s: PathState, fresh: boolean): string {
+  return fresh ? 'Every square, one to 36.' : '';
 }
