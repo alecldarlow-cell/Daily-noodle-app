@@ -1,11 +1,14 @@
 import type { AnyType, PlayedState } from '@noodle/core';
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
+import { Image, Pressable, StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
 
 import { FONT, useTokens } from '@/shared/theme';
 
 import { PuzzleTile } from '../PuzzleTile/PuzzleTile';
 import { Standfirst } from './Standfirst';
+
+/** The gold coin (assets/images/gold-coin.png, the site's coin SVG): one design everywhere. */
+const GOLD_COIN = require('../../../../assets/images/gold-coin.png') as number;
 
 interface PuzzleRowProps {
   type: AnyType;
@@ -26,6 +29,8 @@ interface PuzzleRowProps {
   onHowTo?: () => void;
   /** The hairline under the card; off for the last daily when the Lab panel follows (15 Nov 2026). */
   rule?: boolean;
+  /** A Lab trial's puzzle: a small pink "Lab trial" label on its tile (Alec, 20 Nov 2026, the Archive). */
+  lab?: boolean;
   testID?: string;
 }
 
@@ -72,6 +77,7 @@ export function PuzzleRow({
   onPress,
   onHowTo,
   rule = true,
+  lab = false,
   testID,
 }: PuzzleRowProps) {
   const t = useTokens();
@@ -86,7 +92,17 @@ export function PuzzleRow({
   const result = played?.done ? played.text : played ? 'Continue' : null;
   const time = played && !played.done ? roundTime : undefined;
   const offline = kept ? 'Downloaded' : undefined;
-  const label = [title, result ?? when, time, offline?.toLowerCase()].filter(Boolean).join(', ');
+  const gold = played?.done && played.gold ? played.gold : '';
+  const label = [
+    title,
+    lab ? 'Lab trial' : null,
+    result ?? when,
+    gold ? 'gold star' : null,
+    time,
+    offline?.toLowerCase(),
+  ]
+    .filter(Boolean)
+    .join(', ');
   const meta = [when, offline].filter((s): s is string => !!s);
   const right = result ? [result, time].filter(Boolean).join(' · ') : null;
   const howToShown = !!onHowTo && !result;
@@ -110,7 +126,24 @@ export function PuzzleRow({
         style={({ pressed }) => [styles.press, { opacity: pressed ? 0.7 : 1 }]}>
         <View>
           <PuzzleTile type={type} mask={mask} testID={testID ? `${testID}-tile` : undefined} />
-          {played ? (
+          {lab ? (
+            <View
+              testID={testID ? `${testID}-lab` : undefined}
+              style={[styles.lab, { backgroundColor: t.labSoft, borderColor: t.canvas }]}>
+              <Text maxFontSizeMultiplier={1} style={[styles.labText, { color: t.labInk }]}>
+                LAB TRIAL
+              </Text>
+            </View>
+          ) : null}
+          {gold ? (
+            // a gold result's coin replaces the tick (21 Nov 2026), in the tick's own ring, a touch
+            // larger; the result words stay green for every finish (gold words read as yellow)
+            <View
+              testID={testID ? `${testID}-gold` : undefined}
+              style={[styles.gold, { borderColor: t.canvas, backgroundColor: t.canvas }]}>
+              <Image source={GOLD_COIN} accessible={false} style={styles.goldCoin} />
+            </View>
+          ) : played ? (
             <View
               testID={testID ? `${testID}-mark` : undefined}
               style={[
@@ -203,6 +236,29 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   tick: { fontFamily: FONT.bodyBold, fontSize: 13, lineHeight: 15 },
+  gold: {
+    position: 'absolute',
+    top: -8,
+    right: -8,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    borderWidth: 2.5,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  goldCoin: { width: 23, height: 23 },
+  // The Lab label sits on the tile's foot, as the played mark sits on its corner.
+  lab: {
+    position: 'absolute',
+    left: 6,
+    bottom: -7,
+    borderRadius: 7,
+    borderWidth: 2,
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+  },
+  labText: { fontFamily: FONT.bodyBold, fontSize: 9, letterSpacing: 0.6 },
   dot: { width: 7, height: 7, borderRadius: 3.5 },
   // The tile's height, with the callout row pinned to its foot.
   body: { flex: 1, minHeight: TILE },

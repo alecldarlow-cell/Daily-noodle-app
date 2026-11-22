@@ -51,11 +51,12 @@ afterEach(async () => {
   });
 });
 
+// 21 Nov 2026: Redact retired (LAB_RETIRED) and Cryptic took its slot, so the running trials are Tilt, Tumbler, Cryptic
 describe('GIVEN three trials running and one retired', () => {
   const lab = [
     card('tilt', 'logic-tilt', 'DP·TILT·0025', today, 25),
-    card('redact', 'word-redact', 'DP·REDA·0035', today, 35),
-    card('redact', 'word-redact', 'DP·REDA·0034', yesterday, 34),
+    card('cryptic', 'word-cryptic', 'DP·CRYP·0002', today, 2),
+    card('cryptic', 'word-cryptic', 'DP·CRYP·0001', yesterday, 1),
     card('tumbler', 'word-tumbler', 'DP·TUMB·0035', yesterday, 35),
   ];
   describe('WHEN Today opens with one rated and one played', () => {
@@ -65,8 +66,8 @@ describe('GIVEN three trials running and one retired', () => {
         JSON.stringify({ tilt: { v: 'yes', at: 1 }, mini: { v: 'yes' } }),
       );
       appStorage.setItem(
-        'digi-redact-v1',
-        JSON.stringify({ v: 1, done: { 'DP·REDA·0035': { t: '1:40', s: 100 } } }),
+        'digi-cryptic-v1',
+        JSON.stringify({ v: 1, done: { 'DP·CRYP·0002': { t: '1:40', s: 100 } } }),
       );
       mockSite({ 'puzzles-today.json': todayList(), 'feed-lite.json': feed(lab) });
       await renderWithProviders(<TodayScreen />);
@@ -82,7 +83,7 @@ describe('GIVEN three trials running and one retired', () => {
       expect(within(panel).queryByText(/RATED/)).toBeNull();
       // 16 Nov: Tilt was rated on an earlier puzzle, but today's is new, so it's still "Try it"
       expect(within(screen.getByTestId('lab-row-tilt')).getByText('Try it')).toBeOnTheScreen();
-      expect(within(screen.getByTestId('lab-row-redact')).getByText('Rate it')).toBeOnTheScreen();
+      expect(within(screen.getByTestId('lab-row-cryptic')).getByText('Rate it')).toBeOnTheScreen();
       expect(within(screen.getByTestId('lab-row-tumbler')).getByText('Try it')).toBeOnTheScreen();
       // the dailies' count is untouched by the Lab
       expect(screen.getByTestId('today-count')).toHaveTextContent('8 puzzles');
@@ -104,7 +105,7 @@ describe('GIVEN three trials running and one retired', () => {
       await screen.findByTestId('lab-panel');
       expect(within(screen.getByTestId('lab-row-tilt')).getByText('✓ Done')).toBeOnTheScreen();
       expect(within(screen.getByTestId('lab-row-tumbler')).getByText('Continue')).toBeOnTheScreen();
-      expect(within(screen.getByTestId('lab-row-redact')).getByText('Try it')).toBeOnTheScreen();
+      expect(within(screen.getByTestId('lab-row-cryptic')).getByText('Try it')).toBeOnTheScreen();
     });
   });
   describe('WHEN a row is tapped', () => {

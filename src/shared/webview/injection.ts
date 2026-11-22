@@ -9,6 +9,11 @@
  *   visitor, and the privacy page's switch applies to both (shared/track);
  * - routes the finish sheet's Share to the phone's share sheet;
  * - forwards the site's `dn:puzzle_end` event (for leagues, WP5).
+ * The seed is written on the WebView's first load only. The script runs again on every page
+ * load in the same WebView (the finish sheet's Reload, a guide page and back), and by then the
+ * page's own storage is newer than the seed, which was read when the WebView opened: writing it
+ * again would put the page back to how it was then (issue #172). `load` names one opening of
+ * one WebView; the page's sessionStorage remembers it. Without sessionStorage it seeds each time.
  * It must stay plain ES5 and end with `true;` (react-native-webview's rule).
  */
 
@@ -18,12 +23,22 @@
  * and rated, on the app's Lab panel.
  */
 export const BRIDGED_KEY =
-  /^(digi-(mini|doku|sweep|path|link|tangle|borders|reckon|tally|tilt|redact|tumbler)-(v1|streak)|noodle-lab-votes-v1)$/;
+  /^(digi-(mini|doku|sweep|path|link|tangle|borders|reckon|tally|tilt|redact|tumbler|cryptic)-(v1|streak)|noodle-lab-votes-v1)$/;
 
 /** The site tracker's own keys (dn-track.js), shared both ways. '' in the app means absent. */
 export const ID_KEY = /^digi\.(aid|sid|last|optout)$/;
 
-export function buildInjection(seed: Record<string, string>): string {
+/** The page's sessionStorage key holding the `load` already seeded (see buildInjection). */
+export const LOAD_KEY = 'dn-app-bridge-load';
+
+let opened = 0;
+/** A new name for one opening of a WebView, never repeated in this run of the app. */
+export function newLoadId(): string {
+  opened += 1;
+  return `${Date.now().toString(36)}.${opened}`;
+}
+
+export function buildInjection(seed: Record<string, string>, load = ''): string {
   const safe: Record<string, string> = {};
   for (const [k, v] of Object.entries(seed))
     if ((BRIDGED_KEY.test(k) || (ID_KEY.test(k) && v !== '')) && typeof v === 'string') safe[k] = v;
@@ -46,17 +61,29 @@ export function buildInjection(seed: Record<string, string>): string {
     try { return (window.DN_PUZZLE && window.DN_PUZZLE.id) || ''; } catch (e) { return ''; }
   }
   var seed = ${literal};
+  var LOAD = ${JSON.stringify(load).replace(/</g, '\\u003c')};
+  // A later page load in the same WebView: the page's storage is newer than the seed.
+  var again = false;
+  if (LOAD) {
+    try {
+      var ss = window.sessionStorage;
+      again = ss.getItem('${LOAD_KEY}') === LOAD;
+      ss.setItem('${LOAD_KEY}', LOAD);
+    } catch (e) {}
+  }
   var ls = null;
   try { ls = window.localStorage; } catch (e) {}
   if (ls) {
-    for (var k in seed) {
-      if (Object.prototype.hasOwnProperty.call(seed, k)) {
-        try { ls.setItem(k, seed[k]); } catch (e) {}
+    if (!again) {
+      for (var k in seed) {
+        if (Object.prototype.hasOwnProperty.call(seed, k)) {
+          try { ls.setItem(k, seed[k]); } catch (e) {}
+        }
       }
-    }
-    // Opted out in the app: no visitor code on the page either (dn-track.js's setOptOut).
-    if (seed['digi.optout'] === '1') {
-      try { ls.removeItem('digi.aid'); ls.removeItem('digi.aid.prev'); ls.removeItem('digi.sid'); ls.removeItem('digi.last'); } catch (e) {}
+      // Opted out in the app: no visitor code on the page either (dn-track.js's setOptOut).
+      if (seed['digi.optout'] === '1') {
+        try { ls.removeItem('digi.aid'); ls.removeItem('digi.aid.prev'); ls.removeItem('digi.sid'); ls.removeItem('digi.last'); } catch (e) {}
+      }
     }
     // Saves and tracker keys only this page had (from before the app knew them) go up to the app.
     try {

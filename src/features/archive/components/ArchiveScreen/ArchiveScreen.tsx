@@ -1,4 +1,5 @@
 import {
+  isLabType,
   LAB_LABEL,
   LAB_TYPES,
   labPlayed,
@@ -86,10 +87,6 @@ export function ArchiveScreen() {
   const { byId, rounds, held } = usePlayed(items, day);
   // Finished, won or lost, counts as done; started but unfinished does not (as the cards' ✓).
   const finished = useMemo(() => new Set(Object.keys(byId).filter((id) => byId[id]?.done)), [byId]);
-  const sections = useMemo(
-    () => groupArchive(items, type, status, finished, day),
-    [items, type, status, finished, day],
-  );
   // The Lab's trials: every Lab puzzle before today, with its own saves (11 Nov 2026).
   const trials = useLabTrials();
   const labDocs = useStoredDocs(LAB_KEYS);
@@ -106,6 +103,23 @@ export function ArchiveScreen() {
     () => groupArchive(trials.all, null, status, labDone, day),
     [trials.all, status, labDone, day],
   );
+  // All also lists the Lab puzzles you've played, finished or part-played, among the dailies
+  // by date, each with its Lab label (Alec, 20 Nov 2026). Unplayed ones stay under Lab.
+  const labPlayedItems = useMemo(
+    () => trials.all.filter((it) => !!labPlayed(it.id, labDocs[labSaveKey(it.type)] as never)),
+    [trials.all, labDocs],
+  );
+  const sections = useMemo(() => {
+    if (type) return groupArchive(items, type, status, finished, day);
+    const done = new Set([...finished, ...labDone]);
+    return groupArchive<ArchiveItem | LabFeedItem>(
+      [...items, ...labPlayedItems],
+      null,
+      status,
+      done,
+      day,
+    );
+  }, [items, type, status, finished, day, labPlayedItems, labDone]);
   const { refresh, refreshing } = useManualRefresh(q, () => q.refetch());
   const offline = isConnectionError(q.error);
   const paths = useMemo(() => items.map((it) => it.path), [items]);
@@ -148,6 +162,7 @@ export function ArchiveScreen() {
       detail={item.standfirst}
       when={labWhen(relDay(item.date, day), trials.retired.has(item.type))}
       played={labPlayed(item.id, labDocs[labSaveKey(item.type)] as never)}
+      lab
       onPress={() => {
         appRecorder.event('archive_play', { type: item.type, id: item.id }, 'archive.html');
         openPuzzle({ type: item.type, name: LAB_LABEL[item.type], path: item.path }, null);
@@ -288,7 +303,7 @@ export function ArchiveScreen() {
             </Text>
           )}
           renderItem={({ item }) =>
-            lab ? renderLab(item as LabFeedItem) : renderRow(item as ArchiveItem)
+            isLabType(item.type) ? renderLab(item as LabFeedItem) : renderRow(item as ArchiveItem)
           }
           ListFooterComponent={<View style={styles.footer} />}
         />

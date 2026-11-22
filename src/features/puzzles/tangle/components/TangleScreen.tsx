@@ -59,6 +59,7 @@ export function TangleScreen({ file }: { file: PuzzleFile<TangleData> }) {
         celebrate={engine.s.freshResult}
         type="tangle"
         path={file.path}
+        id={file.id}
         n={engine.P.n}
         date={engine.P.date}
         title={f.title}

@@ -1,4 +1,5 @@
 export { londonDay, dayBefore, isDay } from './london';
+export { gold } from './gold';
 export {
   BOARD_KEY,
   BOARD_TYPES,
@@ -66,6 +67,7 @@ export {
 } from './ids';
 export {
   LAB_TYPES,
+  LAB_RETIRED,
   LAB_LABEL,
   LAB_OF_ID,
   LAB_VOTES_KEY,

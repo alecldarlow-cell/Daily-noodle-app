@@ -65,6 +65,7 @@ export function LinkScreen({ file }: { file: PuzzleFile<LinkData> }) {
         celebrate={fresh}
         type="link"
         path={file.path}
+        id={file.id}
         n={n}
         date={file.date}
         title={f.title}

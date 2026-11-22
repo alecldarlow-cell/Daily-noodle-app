@@ -1,9 +1,10 @@
-import { shortLink, TYPE_LABEL, type PuzzleType, type TodayItem } from '@noodle/core';
+import { gold, shortLink, TYPE_LABEL, type PuzzleType, type TodayItem } from '@noodle/core';
 import { router } from 'expo-router';
 import { useEffect, useRef, useState, type ComponentRef, type ReactNode } from 'react';
 import {
   AccessibilityInfo,
   ActivityIndicator,
+  Image,
   Pressable,
   ScrollView,
   Share,
@@ -74,6 +75,8 @@ export interface FinishSheetProps {
   recap?: { title: string; sub?: string; node: ReactNode };
   /** Placed at the very end (Link's "Play again (not recorded)"). */
   after?: ReactNode;
+  /** The puzzle's id ("DP·PATH·0091"): its saved result decides the gold star (21 Nov 2026). */
+  id?: string;
   /** "reports/<file>.html": the page's path, for the provided board slot (leagues). */
   path?: string;
   /** Drawn in the board slot instead of the provided one. */
@@ -99,10 +102,12 @@ const HELD = { opacity: 0.75 };
 
 /** Gold, for a personal best and a streak milestone (the podium's first-place metal). */
 const GOLD = { face: '#E8B931', rim: '#B88A12', ink: '#5A4300' };
+/** The gold coin (21 Nov 2026, one design everywhere): big beside the result, small leading its line. */
+const GOLD_COIN = require('../../../assets/images/gold-coin.png') as number;
 /** The streak's disc: an ember face with a rim, so it reads at the coin's size (Alec, 8 Nov 2026). */
 export const EMBER = { face: '#4A2414', rim: '#C2702E' };
 
-/** The reward line's 30 pt round lead: ★ or 🔥 on gold, or 🔥 on an ember disc; all rimmed. */
+/** The reward line's 30 pt round lead: 🏆 (a personal best; was ★ until gold stars, 21 Nov 2026) or 🔥 on gold, or 🔥 on an ember disc; all rimmed. */
 function RewardIcon({ kind }: { kind: RewardKind }) {
   const gold = kind !== 'streak';
   return (
@@ -122,7 +127,7 @@ function RewardIcon({ kind }: { kind: RewardKind }) {
           styles.iconText,
           kind === 'pb' && { color: GOLD.ink, fontFamily: FONT.displayHeavy },
         ]}>
-        {kind === 'pb' ? '★' : '🔥'}
+        {kind === 'pb' ? '🏆' : '🔥'}
       </Text>
     </View>
   );
@@ -144,7 +149,7 @@ function RewardIcon({ kind }: { kind: RewardKind }) {
  */
 export function FinishSheet(props: FinishSheetProps) {
   const { type, n, date, title, hero, heroNode, note, share, stats, recap, after } = props;
-  const { path, boardSlot, onBack, onNext, celebrate = false, solved = true } = props;
+  const { id, path, boardSlot, onBack, onNext, celebrate = false, solved = true } = props;
   const renderSlot = useBoardSlot();
   // A tag the board slot adds once the result is on the board (🏆 for a league record).
   const [tag, setTag] = useState('');
@@ -161,12 +166,23 @@ export function FinishSheet(props: FinishSheetProps) {
   const kicker = `${name} ${n}${when ? ` · ${when}` : ''}`;
   const pb = solved ? personalBest(type, resultValue(type, hero, stats), name, save) : null;
   const main = solved ? rewardLine(pb, dayStreak(stats), name) : null;
+  // Gold star (21 Nov 2026, Alec): a really good result, by @noodle/core's gold(), from the save
+  const doneRec =
+    id && save && typeof save === 'object'
+      ? (save as { done?: Record<string, unknown> }).done?.[id]
+      : undefined;
+  const goldWhy = solved ? gold(type, doneRec) : '';
   const shownNote = note && NOTE_TYPES.includes(type) ? note : null;
   // A fresh finish replaces the board in the same route, so a screen reader would be left on
   // a square that is gone: say the result, and move focus to the heading (finish.js focuses
   // .fin-title the same way). A finished puzzle reopened says nothing.
   const titleRef = useRef<ComponentRef<typeof Text>>(null);
-  const said = announcement(title, hero, main?.text ?? null);
+  const said = announcement(
+    title,
+    hero,
+    [goldWhy ? `Gold star, ${goldWhy}` : null, main?.text ?? null].filter(Boolean).join('. ') ||
+      null,
+  );
   useEffect(() => {
     if (!celebrate) return;
     const h = setTimeout(() => {
@@ -325,25 +341,37 @@ export function FinishSheet(props: FinishSheetProps) {
             {kicker.toUpperCase()}
           </Text>
         </Entrance>
-        <Entrance play={celebrate} delay={90} from={0.9}>
-          {heroNode ? (
-            <View style={styles.heroNode} testID="finish-hero" accessibilityLabel={hero}>
-              {heroNode}
-            </View>
-          ) : (
-            <Text
-              testID="finish-hero"
-              maxFontSizeMultiplier={1.3}
-              adjustsFontSizeToFit
-              numberOfLines={1}
-              style={[styles.hero, { color: pt.ink }]}>
-              {heroVal}
-              {heroUnit ? (
-                <Text style={[styles.heroUnit, { color: soft }]}>{` ${heroUnit}`}</Text>
-              ) : null}
-            </Text>
-          )}
-        </Entrance>
+        <View style={goldWhy ? styles.heroRow : null}>
+          <Entrance play={celebrate} delay={90} from={0.9} style={goldWhy ? styles.heroFill : null}>
+            {heroNode ? (
+              <View style={styles.heroNode} testID="finish-hero" accessibilityLabel={hero}>
+                {heroNode}
+              </View>
+            ) : (
+              <Text
+                testID="finish-hero"
+                maxFontSizeMultiplier={1.3}
+                adjustsFontSizeToFit
+                numberOfLines={1}
+                style={[styles.hero, { color: pt.ink }]}>
+                {heroVal}
+                {heroUnit ? (
+                  <Text style={[styles.heroUnit, { color: soft }]}>{` ${heroUnit}`}</Text>
+                ) : null}
+              </Text>
+            )}
+          </Entrance>
+          {goldWhy ? (
+            <Entrance play={celebrate} delay={420} from={0.3} rise={0}>
+              <Image
+                source={GOLD_COIN}
+                accessible={false}
+                style={styles.goldStar}
+                testID="finish-gold-star"
+              />
+            </Entrance>
+          ) : null}
+        </View>
         <Entrance play={celebrate} delay={180}>
           <Text
             ref={titleRef}
@@ -374,6 +402,15 @@ export function FinishSheet(props: FinishSheetProps) {
             {/* Two rows, icons in one column at one size (Alec, 8 Nov 2026): the reward, then
                 the league with its podium disc (or a blank of the same width). */}
             <View style={styles.reward} testID="finish-reward">
+              {goldWhy ? (
+                <View style={styles.rewardRow} testID="finish-gold">
+                  <Image source={GOLD_COIN} accessible={false} style={styles.icon} />
+                  <Text style={[styles.rewardMain, { color: pt.ink }]} testID="finish-gold-line">
+                    <Text style={styles.goldWord}>Gold star</Text>
+                    {` · ${goldWhy}`}
+                  </Text>
+                </View>
+              ) : null}
               {main ? (
                 <View style={styles.rewardRow}>
                   <RewardIcon kind={main.kind} />
@@ -467,6 +504,10 @@ const styles = StyleSheet.create({
   },
   heroUnit: { fontSize: 26, fontFamily: FONT.display, letterSpacing: 0 },
   heroNode: { marginTop: 14, marginBottom: 4 },
+  heroRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  heroFill: { flex: 1 },
+  goldStar: { width: 92, height: 92 },
+  goldWord: { fontFamily: FONT.displayHeavy },
   outcome: { fontSize: 18, lineHeight: 24, fontFamily: FONT.sansSemi, marginTop: 6 },
   note: { fontSize: 14, lineHeight: 20, marginTop: 4, fontFamily: FONT.sans },
   strong: { fontFamily: FONT.sansSemi },

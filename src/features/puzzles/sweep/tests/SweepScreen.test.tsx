@@ -73,8 +73,8 @@ describe('GIVEN a Sweep not yet played', () => {
     });
   });
 
-  describe('WHEN the start is dug, a mine flagged by long press and Hint pressed', () => {
-    it('THEN the opening shows, the counter drops and Hint says why', async () => {
+  describe('WHEN the start is dug and a mine flagged by long press', () => {
+    it('THEN the opening shows, the counter drops, and there is no Hint (21 Nov 2026)', async () => {
       await renderWithProviders(<SweepScreen file={file94} />);
       await playBtn();
       await tap(0); // locked
@@ -86,19 +86,13 @@ describe('GIVEN a Sweep not yet played', () => {
       await fireEvent.press(screen.getByTestId('sweep-mode-flag'));
       await tap(4); // off again in Flag mode
       expect(screen.getByTestId('sweep-left')).toHaveTextContent('7');
-      // the count rides in the Flag button, which says it; Hint shares the row
+      // the count rides in the Flag button, which says it
       expect(
         within(screen.getByTestId('sweep-mode-flag')).getByTestId('sweep-left'),
       ).toBeOnTheScreen();
       expect(screen.getByRole('button', { name: 'Flag, 7 mines left' })).toBeOnTheScreen();
-      expect(screen.getByTestId('sweep-hint').parent).toBe(
-        screen.getByTestId('sweep-mode-flag').parent,
-      );
-      await fireEvent.press(screen.getByRole('button', { name: 'Dig' }));
-      await fireEvent.press(screen.getByRole('button', { name: 'Hint' }));
-      expect(screen.getByTestId('sweep-msg')).toHaveTextContent(
-        'This 1 has only one hidden square next to it, so that square is a mine.',
-      );
+      expect(screen.queryByTestId('sweep-hint')).toBeNull();
+      expect(screen.queryByRole('button', { name: 'Hint' })).toBeNull();
     });
   });
 

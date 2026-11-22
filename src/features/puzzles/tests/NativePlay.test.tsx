@@ -9,6 +9,7 @@ import { hasNativePlayer, NATIVE, NativePlay } from '../components/NativePlay';
 import { enabled as tallyEnabled } from '../tally';
 import { enabled as redactEnabled } from '../redact';
 import { enabled as tiltEnabled } from '../tilt';
+import { enabled as crypticEnabled } from '../cryptic';
 import { enabled as bordersEnabled } from '../borders';
 import { file15 } from '../borders/tests/fixtures';
 import { enabled as dokuEnabled } from '../doku';
@@ -57,6 +58,7 @@ describe('GIVEN the play route asks which types play natively', () => {
     expect(hasNativePlayer('reckon')).toBe(reckonEnabled);
     expect(hasNativePlayer('borders')).toBe(bordersEnabled);
     expect(hasNativePlayer('redact')).toBe(redactEnabled);
+    expect(hasNativePlayer('cryptic')).toBe(crypticEnabled);
     expect(NATIVE).toEqual({
       mini: enabled,
       link: linkEnabled,
@@ -70,6 +72,7 @@ describe('GIVEN the play route asks which types play natively', () => {
       redact: redactEnabled,
       tumbler: tumblerEnabled,
       tilt: tiltEnabled,
+      cryptic: crypticEnabled,
     });
     expect(hasNativePlayer('toString')).toBe(false);
     expect(hasNativePlayer(undefined)).toBe(false);

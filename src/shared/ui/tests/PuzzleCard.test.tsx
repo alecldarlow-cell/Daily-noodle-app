@@ -107,6 +107,35 @@ describe('GIVEN a puzzle card', () => {
     });
   });
 
+  describe('WHEN its result is gold (21 Nov 2026)', () => {
+    it('THEN a gold star replaces the tick and the result is read as gold', async () => {
+      await render(
+        <PuzzleRow
+          {...base}
+          played={{
+            done: true,
+            lost: false,
+            text: 'Solved in 0:30',
+            gold: 'Under 0:40 with no checks or reveals',
+          }}
+          onPress={jest.fn()}
+        />,
+      );
+      expect(screen.getByTestId('c-gold')).toBeOnTheScreen();
+      // option A (21 Nov 2026): a disc like the tick's, a touch larger, with the same ring
+      expect(screen.getByTestId('c-gold')).toHaveStyle({
+        width: 28,
+        height: 28,
+        borderRadius: 14,
+        borderWidth: 2.5,
+      });
+      expect(screen.queryByTestId('c-mark')).toBeNull();
+      expect(
+        screen.getByRole('button', { name: 'Mini 106, Solved in 0:30, gold star' }),
+      ).toBeOnTheScreen();
+    });
+  });
+
   describe('WHEN it is in progress', () => {
     it('THEN it says Continue (AF-020) and the tile carries a dot, not a tick', async () => {
       await render(<PuzzleRow {...base} played={{ done: false }} onPress={jest.fn()} />);

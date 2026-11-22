@@ -57,19 +57,20 @@ export function LeaguesScreen({
   // its first showing, which is fetching already) and every minute while it stays in view.
   const [settings, setSettings] = useState(false);
   const shownOnce = useRef(false);
+  const refetchMine = mine.refetch;
   useEffect(() => {
     if (!focused) return;
     const refresh = () => {
-      void mine.refetch();
+      void refetchMine();
       void qc.invalidateQueries({ queryKey: BOARD_QUERY });
     };
     if (shownOnce.current) refresh();
     shownOnce.current = true;
     const id = setInterval(refresh, AUTO_REFRESH_MS);
     return () => clearInterval(id);
-    // mine.refetch is stable for the query's life; qc is the app's one client.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [focused]);
+    // Both stay the same across renders (mine.refetch is the query observer's own, qc the app's
+    // one client), so the minute's timer restarts only when focus changes (#172, tested).
+  }, [focused, refetchMine, qc]);
 
   let body;
   if (view.k === 'start') body = <StartForm flow={flow} />;

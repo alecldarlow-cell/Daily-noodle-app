@@ -1,9 +1,13 @@
 import vm from 'vm';
 
-import { buildInjection } from '../injection';
+import { buildInjection, LOAD_KEY, newLoadId } from '../injection';
 
 /** A minimal browser for the injected script: Storage, navigator, document events, the WebView bridge. */
-function browser(initial: Record<string, string> = {}, puzzleId = 'DP·TANG·0018') {
+function browser(
+  initial: Record<string, string> = {},
+  puzzleId = 'DP·TANG·0018',
+  session?: { getItem(k: string): string | null; setItem(k: string, v: string): void },
+) {
   class Storage {
     private m = new Map<string, string>();
     get length() {
@@ -30,6 +34,7 @@ function browser(initial: Record<string, string> = {}, puzzleId = 'DP·TANG·001
     localStorage,
     DN_PUZZLE: { id: puzzleId },
     ReactNativeWebView: { postMessage: (s: string) => posted.push(JSON.parse(s)) },
+    ...(session ? { sessionStorage: session } : {}),
   };
   const navigator: Record<string, unknown> = { share: () => Promise.reject(new Error('native')) };
   const document = {
@@ -169,6 +174,84 @@ describe('GIVEN a puzzle page about to load in the app', () => {
         { t: 'id', key: 'digi.optout', value: '1' },
         { t: 'id', key: 'digi.aid', value: null },
       ]);
+    });
+  });
+});
+
+/** One WebView's sessionStorage, kept across its page loads (a new browser() is a new document). */
+function session() {
+  const m = new Map<string, string>();
+  return {
+    getItem: (k: string) => m.get(k) ?? null,
+    setItem: (k: string, v: string) => void m.set(k, v),
+    m,
+  };
+}
+
+// Issue #172: the seed is read when the WebView opens; a later load in it must not put it back.
+describe('GIVEN a puzzle page that loads again in the same WebView (Reload, a guide page and back)', () => {
+  const seed = { [MINI]: doc({ v: 1, done: {} }) };
+  const played = doc({ v: 1, done: { a: { s: 41 } } });
+
+  describe('WHEN the page saved a result between the two loads', () => {
+    it('THEN the second load keeps the page’s newer save, not the seed from when it opened', () => {
+      const ss = session();
+      const first = browser({}, 'DP·MINI·0105', ss);
+      vm.runInContext(buildInjection(seed, 'mini#0#a'), first.ctx);
+      expect(first.localStorage.getItem(MINI)).toBe(seed[MINI]);
+      const page = first.localStorage.getItem.bind(first.localStorage);
+      first.localStorage.setItem(MINI, played);
+
+      // The same WebView, a new document: same localStorage and sessionStorage, same script.
+      const again = browser({ [MINI]: page(MINI)! }, 'DP·MINI·0105', ss);
+      vm.runInContext(buildInjection(seed, 'mini#0#a'), again.ctx);
+      expect(again.localStorage.getItem(MINI)).toBe(played);
+      expect(again.posted).toEqual([]);
+      expect(ss.m.get(LOAD_KEY)).toBe('mini#0#a');
+    });
+
+    it('THEN a tracker opt-in made on the page is not undone by the app’s old opt-out', () => {
+      const ss = session();
+      const out = { 'digi.optout': '1' };
+      vm.runInContext(buildInjection(out, 'privacy#0#a'), browser({}, '', ss).ctx);
+      const again = browser({ 'digi.aid': 'new-code' }, '', ss);
+      vm.runInContext(buildInjection(out, 'privacy#0#a'), again.ctx);
+      expect(again.localStorage.getItem('digi.aid')).toBe('new-code');
+    });
+  });
+
+  describe('WHEN a new WebView opens the page (another load name)', () => {
+    it('THEN the app’s saves are written again, as on any first load', () => {
+      const ss = session();
+      vm.runInContext(buildInjection(seed, 'mini#0#a'), browser({}, '', ss).ctx);
+      const next = browser({ [MINI]: played }, '', ss);
+      vm.runInContext(buildInjection(seed, 'mini#1#a'), next.ctx);
+      expect(next.localStorage.getItem(MINI)).toBe(seed[MINI]);
+    });
+  });
+
+  describe('WHEN the page has no sessionStorage, or it throws', () => {
+    it('THEN every load is seeded, as before', () => {
+      const none = browser({ [MINI]: played });
+      vm.runInContext(buildInjection(seed, 'mini#0#a'), none.ctx);
+      expect(none.localStorage.getItem(MINI)).toBe(seed[MINI]);
+      const broken = {
+        getItem: () => {
+          throw new Error('denied');
+        },
+        setItem: () => {},
+      };
+      const b = browser({ [MINI]: played }, '', broken);
+      expect(vm.runInContext(buildInjection(seed, 'mini#0#a'), b.ctx)).toBe(true);
+      expect(b.localStorage.getItem(MINI)).toBe(seed[MINI]);
+    });
+  });
+
+  describe('WHEN load names are made and written into the script', () => {
+    it('THEN each is new, and one that could end the script is escaped', () => {
+      expect(newLoadId()).not.toBe(newLoadId());
+      const js = buildInjection({}, 'a</script><script>x');
+      expect(js).not.toContain('</script>');
     });
   });
 });

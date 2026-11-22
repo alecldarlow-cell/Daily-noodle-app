@@ -1265,4 +1265,64 @@ Alec ran an outside review of the app and asked for its findings to be checked a
 - **Alec, 20 Nov (player feedback):** the two warnings looked the same and vanished too quickly; make them different colours, or show them longer. Both done, web and app. Site PR first: alecldarlow-cell/dailynoodle#141.
 - **What:** "One away" is tone `near` (amber, `pt.near` on `pt.nearTint`), "Not a group" stays `bad` (red on `pt.badTint`), each in a pill whose padding its margins take back, so nothing moves. The model's `hold` keeps a verdict up for `VERDICT_HOLD` (3 s) through tile taps; `verdictEnd {n}` (scheduled by `linkGame`, timed by `simulate`) clears it if a tap asked. Deselect, "Four at a time", "Already tried", a landing and the reveal end it at once, as `engines/link.js` does.
 - **Tests proved:** model: the hold through a tap, a stale `verdictEnd` ignored, no tap keeps the line, the three moves that end it; polish: amber then red, held 2.3 s after a tap, gone by 3.3 s. Differential replay against the site branch: 36/36 runs identical (1,134 moves, 6 Links). `npm run check` green (1,820 tests).
+
+## 20 Nov 2026 — Cryptic in the Lab (native); Redact retired
+
+- **Alec, 20 Nov:** after the day-6 Lab read-out (Redact: half its starters never finished, fewest came back), retire Redact and put Cryptic in its slot from 21 Nov, on the website and in the app ("publish to the app").
+- **Site first:** dailynoodle#127 (Cryptic pages from 21 Nov to 19 Dec, Redact's unreleased days removed, `LAB_RETIRED` on the website's From the Lab), and migration `lab_cryptic` applied live (votes, admin read-out, type regexes and sync accept Cryptic).
+- **What:** `src/features/puzzles/cryptic`: model (a line-by-line port of engines/cryptic.js: the wrapped answer, the gate, typing, Delete, Clear, Enter, the hint ladder, reveal-all finishes), finishing (`digi-cryptic-v1` done `{t, s, h}` and `cur {id, letters, hints, s, at}` as the page keeps them; `digi-cryptic-streak`; share `🕵️ Cryptic #N — 0:48 · 1 hint · 🔥n`), the screen (Lab start card, the clue as printed in an ACROSS card with the answer as one crossword light, Hint/Reveal and Clear, the clue-type panel, an on-screen keyboard with Enter, the Lab finish with "How it works"). Core: `LAB_TYPES` adds cryptic (`DP·CRYP`), `LAB_RETIRED = {redact: '2026-11-21'}` so Redact leaves Today's Lab panel on the 21st (it stays in the Archive, marked Retired). Sync and the web-view bridge carry `digi-cryptic-v1/-streak`. Tile from the site's `assets/cryptic-thumb.svg` (rendered as the other tiles; Tumbler's re-render is byte-identical). "Learn the clue types" opens the site guide at `#cryptic`.
+- **Font:** the clue is set in the house Instrument Serif, not the website's Georgia (fonts.test: Android drops a custom face under a system one).
+- **Replay:** `scripts/replay/cryptic.js` with `oracle.ts` / `simulate.ts` (solve, tries, hints, reveal, resume): `node scripts/replay.js --type cryptic --all` identical to engines/cryptic.js on all 29 pages, 145 runs, 1,290 moves. The one difference found on the way: the play event's `hints` counts this session's hints only (dn-track.js counts Hint taps on the page), so a resumed clue no longer reports hints taken before.
+- **Tests proved:** every one of the 29 Cryptic pages (`tests/pages.json`, from the site) passes the gate and solves by typing its answer; the hint ladder, reveal-all, wrong answers, saves in the page's shape, resume from a website save, the Lab finish and recap; Redact retired on its day. `npm run check` green (1,897 tests).
+- **Native:** none. JS only, ships by Update production.
+
+## 20 Nov 2026 — The Lab in the Archive
+
+- **Alec, 20 Nov:** "add the played lab puzzles to the archive … a lab filter and each could have their normal puzzle icon with a little pink lab label".
+- **What:** `ArchiveScreen`: All also lists the Lab puzzles you've played (finished, or part-played: "Continue"), among the dailies by date; Hide done hides the finished ones; a daily type shows only its own. The Lab choice was already there (every Lab puzzle before today, retired ones marked). `PuzzleRow` takes `lab`: a small pink "LAB TRIAL" label (`labSoft`/`labInk`) on the tile's foot, and "Lab trial" in the row's spoken label. Website the same: dailynoodle#142.
+- **Tests proved:** ArchiveLab: played Lab puzzles in All with the label, part-played says Continue, Hide done, unplayed stay out, a daily type shows none, every Lab row labelled. `npm run check` green.
+- **Native:** none. JS only, ships by Update production.
+
+## 21 Nov 2026 — No Hint on Path or Sweep
+
+- **Alec, 21 Nov:** "Remove the path hint button … Remove sweep hint button. Leave mini checks." Path and Sweep are solved unaided so the planned gold stars can be judged on time for them (design: project doc `claude/rewards-review-2026-11-21.md`).
+- **Site first:** dailynoodle#143 (engines hide and remove the button, notes and How to play drop Hint).
+- **What:** `PathScreen` loses its Hint button (Undo stays); `SweepScreen` loses its Hint button (Dig and Flag stay). The models' hint actions and Sweep's prover stay (the oracle and replay use them); nothing dispatches them from the screens. Finish notes aren't shown for these two in the app, so no wording changes here. The play event's `hints` is now always 0 for both.
+- **Tests:** PathScreen, Path polish, SweepScreen and Sweep polish now expect no Hint button; the Sweep archive test that pressed Hint on a wrong flag is gone with the feature. Path and Sweep suites 128/128, lint and typecheck clean.
+- **Stale test fixed first:** `TodayLab.test.tsx` failed on main from 21 Nov (its fixture used Redact with the real date, and `LAB_RETIRED` retires Redact that day, as intended). Alec asked for it fixed so this could go live: #168 moves the fixture to Cryptic, no app code changed.
+- **Native:** none. JS only, ships by Update production.
+
+## 2026-11-21 — Cryptic definition hint visibility (outside WP order)
+
+- PR #166: hinted definition now on the brand tint as well as underlined (the brand-blue hairline was near-invisible in dark mode; Android ignores underline colour). CrypticScreen test covers it.
+
+## 21 Nov 2026 — Gold stars
+
+- **Alec, 21 Nov:** after a player asked for "a reward or gold star system": gold stars only, for a really good result (about one finish in ten), no currency; speed may be used; not on Account; share line unchanged; Archive plays earn gold; back-date them all. Design and data: project doc `claude/rewards-review-2026-11-21.md`.
+- **Site first:** dailynoodle#144 (`dnCore.gold`, finish sheet, Puzzles cards, Archive rows, Mini `h` flag).
+- **What:** `@noodle/core` `gold(type, record)` (`packages/core/src/gold.ts`), a port of `dnCore.gold`: Mini under 0:40 with no checks or reveals; Doku under 0:30; Sweep won under 0:30; Path under 0:20; Tally under 1:00; Link no mistakes under 1:00; Tangle 40+; Borders 10/10; Reckon 750+; never Lab. `playedState` adds `gold` (only when gold), so Today and the Archive rows show a gold star in place of the tick (`PuzzleRow`, `assets/images/gold-star-small.png`) and read "gold star". The finish sheet takes the puzzle's `id` (all nine screens pass `file.id`) and, for a gold saved result, shows a big star beside the result (`gold-star.png`, entering after the result) and a "Gold star · why" row above the streak; the screen reader hears it. A personal best's disc now shows 🏆 instead of ★, so "gold star" means one thing. Mini's record carries `h: 1` when Check or Reveal was used. New tokens `goldInk`, `goldSoft`. The two star PNGs were drawn from the site's star SVG in Chromium (no new dependency).
+- **Vendor:** `scripts/vendor-site.js` skips comments while lifting (an apostrophe in a front.js comment had stopped it lifting `resultText`, so the vendored copy couldn't be refreshed); re-vendored, and the differential test now checks `playedState` with gold against front.js.
+- **Tests:** gold.test (every rule either side of its threshold, the site's dn-core.js giving the same reasons, Lab and broken records, playedState), finishSheet (big star and line on a gold Path, none on a slow one or a lost Sweep, 🏆 on a personal best), PuzzleCard (gold star replaces the tick, spoken), Mini model (`h: 1`).
+- **Native:** none. JS and two images only, ships by Update production.
+
+## 21 Nov 2026 — Gold star in a disc
+
+- **Alec, 21 Nov:** after seeing the bare corner star on his phone (it sat on the tile's numbers), picked option A from a mock: the gold star as the tick's own disc and ring, a touch larger, a gold face and a dark star. Website the same: dailynoodle#145.
+- **What:** `PuzzleRow`'s gold mark is a 28 pt disc (gold face, 2.5 pt ring in the canvas colour, as the tick's) holding `assets/images/gold-star-mark.png` (the site's star SVG in dark gold, drawn in Chromium). The finish sheet keeps its big bare star.
+- **Tests:** PuzzleCard checks the disc's size and ring. JS and one image only, ships by Update production.
+
+## 21 Nov 2026 — Gold: one coin everywhere, green result words
+
+- **Alec, 21 Nov:** after the gold disc on his phone ("is it gold enough?"; the finish page's star "isn't the same"; "the gold text looks yellow"), chose one shaded coin everywhere with every result's words kept green. Website the same: dailynoodle#146.
+- **What:** `assets/images/gold-coin.png` (the site's coin SVG: shaded gold face, darker rim, shine, dark star) is the corner mark in `PuzzleRow` (in the tick's canvas ring, 28 pt), the finish sheet's 30 pt icon on its "Gold star" row and the big mark beside the result. The three earlier star images and the `goldInk`/`goldSoft` tokens are gone; the "Gold star" words are bold ink, and card results stay the accent green.
+- **Tests:** PuzzleCard, finishSheet and gold suites unchanged and green. JS and one image, ships by Update production.
+
+## 22 Nov 2026 — Hook-dependency disables explained or fixed (queue #172)
+
+- **Queue:** issue #172 (p1, careful), from the 7 Nov code review: `react-hooks/exhaustive-deps` was off with no reason in `LeaguesScreen.tsx`, `PuzzleWebView.tsx` and `SitePageWebView.tsx`. All three disables are gone; none needed a reason comment.
+- **Stale-data bug found (the web views):** the bridge script runs on every page load in a WebView (Android `onPageStarted`, iOS a document-start user script), but its seed was read once, when the WebView opened. So a second load in the same WebView (the finish sheet's Reload near midnight, or a guide page and back to the puzzle) wrote that old seed over the page's newer saves: a puzzle just finished showed as it was when opened. Same on the privacy page: an opt-in made there was undone by the app's old opt-out.
+- **What:** `buildInjection(seed, load)` takes a load name for one opening of one WebView (`file#attempt#id`, `newLoadId()` per mount) and keeps it in the page's sessionStorage (`dn-app-bridge-load`, a new key); a later load with the same name skips writing the seed (and the opt-out clearing), keeping the page's own storage. A new opening or Try again gets a new name and seeds as before; without sessionStorage it seeds every time, as before. `file`/`path` and `attempt` are now real inputs to the memo, so the deps are complete.
+- **LeaguesScreen:** the refresh effect lists `mine.refetch` and the query client. Both are stable (TanStack's observer is made once per hook and binds `refetch`), so behaviour is unchanged.
+- **Tests proved:** injection: a second load in the same WebView keeps the page's newer save and sends nothing up; a page opt-in survives; a new load name reseeds; no or throwing sessionStorage seeds as before; load names are unique and escaped. The first two fail on the old script. PuzzleWebView and SitePageWebView: a re-render keeps the load name, and a new opening or Try again gets a new one. Leagues: re-rendering in view neither refreshes at once nor restarts the minute (fails if `refetch` were a new function each render). `npm run check` green (1,917 tests, 98.4% lines).
+- **Needs Alec:** review and merge (labelled careful). Worth a phone check: finish a puzzle in a web view, open How to play from the finish sheet and come back, or use Reload, and the result should still show.
 - **Native:** none. JS only, ships by Update production.

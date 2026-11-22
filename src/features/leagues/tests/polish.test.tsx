@@ -143,6 +143,35 @@ describe('GIVEN a player in a league', () => {
       }
     });
 
+    // Issue #172: the timer's effect now lists mine.refetch and the query client; both must stay
+    // the same across renders, or every render would refresh at once and restart the minute.
+    it('THEN re-rendering while in view neither asks again at once nor restarts the minute', async () => {
+      jest.useFakeTimers();
+      try {
+        inFamily();
+        const view = await renderWithProviders(<LeaguesScreen focused />);
+        await waitFor(() => expect(screen.getByTestId('overall-board')).toBeOnTheScreen());
+        const boards = m.boardOverall.mock.calls.length;
+        const lists = m.boardMine.mock.calls.length;
+        await act(async () => jest.advanceTimersByTime(AUTO_REFRESH_MS / 2));
+        for (let i = 0; i < 3; i++)
+          await act(async () =>
+            view.rerender(
+              <QueryProvider client={view.client}>
+                <LeaguesScreen focused />
+              </QueryProvider>,
+            ),
+          );
+        expect(m.boardOverall.mock.calls.length).toBe(boards);
+        expect(m.boardMine.mock.calls.length).toBe(lists);
+        // The minute counts from the first showing, not from the last re-render.
+        await act(async () => jest.advanceTimersByTime(AUTO_REFRESH_MS / 2));
+        await waitFor(() => expect(m.boardOverall.mock.calls.length).toBe(boards + 1));
+      } finally {
+        jest.useRealTimers();
+      }
+    });
+
     it('THEN coming back to the tab asks again at once (not on its first showing)', async () => {
       inFamily();
       const view = await renderWithProviders(<LeaguesScreen focused />);
