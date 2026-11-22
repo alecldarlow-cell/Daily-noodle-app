@@ -25,6 +25,7 @@ import {
   roundToKeep,
   SAVE_KEY,
   SETTLE_MS,
+  VERDICT_HOLD,
   showsShare,
   STREAK_KEY,
   timerText,
@@ -196,8 +197,16 @@ export function simulate(
     sheetAt = at + (sc.reduced ? 0 : f.won ? 1200 : 500);
   };
   const snaps: Snapshot[] = [];
+  // A verdict's hold ends VERDICT_HOLD ms after the guess, between moves (the page's timer).
+  let verdictAt = Infinity;
+  const holdEnds = (t: number) => {
+    if (t < verdictAt || !state.hold) return;
+    state = apply(state, { t: 'verdictEnd', n: state.hold.n });
+    verdictAt = Infinity;
+  };
   for (const step of sc.steps) {
     const m = step.move;
+    holdEnds(now);
     const real = realMove(
       m,
       m.t === 'shuffle' ? deal(state.live) : m.t === 'again' ? deal(allTiles(data)) : [],
@@ -209,6 +218,8 @@ export function simulate(
       sheetAt = Infinity;
       dirty = false;
     }
+    if (state.hold && state.hold.n !== before.hold?.n) verdictAt = now + VERDICT_HOLD;
+    if (!state.hold) verdictAt = Infinity;
     const guessed = state.guesses.length > before.guesses.length;
     if (guessed) dirty = true;
     if (guessed && !state.settling) {
@@ -229,6 +240,7 @@ export function simulate(
       finishNow(at);
     }
     now += step.ms;
+    holdEnds(now);
     snaps.push(snapshot(state, shown(now), now >= sheetAt));
   }
   if (!info) throw new Error(`simulate: ${sc.variant} never finished ${data.id}`);

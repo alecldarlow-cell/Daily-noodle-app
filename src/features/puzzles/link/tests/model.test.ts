@@ -112,7 +112,7 @@ describe('GIVEN a fresh board', () => {
   describe('WHEN a wrong four is submitted', () => {
     it('THEN three of a group is one away and costs a mistake, and the same four again costs nothing', () => {
       let s = pick(fresh(), [G[0]![0]!, G[0]![1]!, G[0]![2]!, G[1]![0]!]);
-      expect(s.msg).toEqual({ text: 'One away', tone: 'bad' });
+      expect(s.msg).toEqual({ text: 'One away', tone: 'near' });
       expect(s.mistakes).toBe(1);
       expect(s.guesses).toEqual([[1, 1, 1, 2]]);
       s = apply(s, { t: 'submit' });
@@ -121,6 +121,45 @@ describe('GIVEN a fresh board', () => {
       s = pick(apply(s, { t: 'deselect' }), [G[0]![0]!, G[0]![1]!, G[1]![0]!, G[1]![1]!]);
       expect(s.msg).toEqual({ text: 'Not a group', tone: 'bad' });
       expect(s.mistakes).toBe(2);
+    });
+
+    it('THEN a tap keeps the verdict up until its hold ends, then the line clears', () => {
+      // GIVEN "One away" just said, WHEN a tile is tapped, THEN the verdict stays
+      let s = pick(fresh(), [G[0]![0]!, G[0]![1]!, G[0]![2]!, G[1]![0]!]);
+      s = apply(apply(s, { t: 'deselect' }), { t: 'tile', w: G[2]![0]! });
+      expect(s.msg.text).toBe('');
+      s = pick(fresh(), [G[0]![0]!, G[0]![1]!, G[0]![2]!, G[1]![0]!]);
+      expect(s.hold).toEqual({ n: 1, clear: false });
+      s = apply(s, { t: 'tile', w: G[1]![0]! });
+      expect(s.msg).toEqual({ text: 'One away', tone: 'near' });
+      expect(s.hold).toEqual({ n: 1, clear: true });
+      // a stale hold's end does nothing; the right one clears the line
+      expect(apply(s, { t: 'verdictEnd', n: 7 })).toBe(s);
+      s = apply(s, { t: 'verdictEnd', n: 1 });
+      expect(s.msg).toEqual({ text: '', tone: '' });
+      expect(s.hold).toBeNull();
+    });
+
+    it('THEN with no tap in the hold the verdict stays until the next tap', () => {
+      let s = pick(fresh(), [G[0]![0]!, G[0]![1]!, G[1]![0]!, G[1]![1]!]);
+      s = apply(s, { t: 'verdictEnd', n: 1 });
+      expect(s.msg).toEqual({ text: 'Not a group', tone: 'bad' });
+      expect(apply(s, { t: 'verdictEnd', n: 1 })).toBe(s);
+      s = apply(s, { t: 'tile', w: G[0]![0]! });
+      expect(s.msg.text).toBe('');
+    });
+
+    it('THEN Deselect, "Four at a time" and "Already tried" end the hold at once', () => {
+      const s = pick(fresh(), [G[0]![0]!, G[0]![1]!, G[1]![0]!, G[1]![1]!]);
+      expect(apply(s, { t: 'deselect' }).hold).toBeNull();
+      expect(apply(s, { t: 'tile', w: G[3]![0]! })).toMatchObject({
+        hold: null,
+        msg: { text: 'Four at a time' },
+      });
+      expect(apply(s, { t: 'submit' })).toMatchObject({
+        hold: null,
+        msg: { text: 'Already tried that one' },
+      });
     });
 
     it('THEN the guess is recorded in board order, not tap order', () => {

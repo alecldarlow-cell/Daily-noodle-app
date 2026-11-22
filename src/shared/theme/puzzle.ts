@@ -21,6 +21,10 @@ export interface PuzzleTokens {
   onWord: string;
   good: string;
   bad: string;
+  /** Link's "One away" (link.css .msg.near) and the verdicts' pills behind it and "Not a group". */
+  near: string;
+  nearTint: string;
+  badTint: string;
   brand: string;
   /** Links on the finish sheet (finish.css --f-actInk): "See today’s board". */
   actInk: string;
@@ -63,6 +67,9 @@ const light: PuzzleTokens = {
   onWord: '#141726',
   good: '#157A52',
   bad: '#E4483B',
+  near: '#A85A00',
+  nearTint: 'rgba(255,166,0,0.18)',
+  badTint: 'rgba(228,72,59,0.12)',
   brand: '#2E5BFF',
   actInk: '#1B3B9E',
   sheet: '#F1F0EC',
@@ -93,6 +100,9 @@ const dark: PuzzleTokens = {
   onWord: '#ECEEF4',
   good: '#4CC793',
   bad: '#FF7A6E',
+  near: '#FFB547',
+  nearTint: 'rgba(255,181,71,0.16)',
+  badTint: 'rgba(255,122,110,0.16)',
   brand: '#3D63FF',
   actInk: '#A9BBFF',
   sheet: '#1B1E29',

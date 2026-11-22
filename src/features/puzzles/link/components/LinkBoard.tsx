@@ -67,6 +67,21 @@ export function LinkBoard({ state, dispatch, past = false }: LinkBoardProps) {
   const pt = usePuzzleTokens();
   const colors = useBoardColors();
   const msg = shownMsg(state, past);
+  const near = msg.tone === 'near';
+  const verdict = near || msg.tone === 'bad';
+  const line = (
+    <Text
+      maxFontSizeMultiplier={1.3}
+      accessibilityLiveRegion="polite"
+      style={[
+        styles.msg,
+        { color: near ? pt.near : msg.tone === 'bad' ? pt.bad : pt.inkSoft },
+        verdict && styles.msgBad,
+      ]}
+      testID="link-msg">
+      {verdict ? msg.text.toUpperCase() : msg.text}
+    </Text>
+  );
   useAnnounce(msg.text, `${state.guesses.length}|${state.mistakes}|${msg.text}`);
   const off = disabled(state);
   const motion = useReduceMotion() === false;
@@ -242,17 +257,15 @@ export function LinkBoard({ state, dispatch, past = false }: LinkBoardProps) {
           ),
         )}
       </View>
-      <Text
-        maxFontSizeMultiplier={1.3}
-        accessibilityLiveRegion="polite"
-        style={[
-          styles.msg,
-          { color: msg.tone === 'bad' ? pt.bad : pt.inkSoft },
-          msg.tone === 'bad' && styles.msgBad,
-        ]}
-        testID="link-msg">
-        {msg.tone === 'bad' ? msg.text.toUpperCase() : msg.text}
-      </Text>
+      {verdict ? (
+        // "One away" amber, "Not a group" red, each in its pill (link.css, 20 Nov 2026);
+        // the pill's padding is taken back by its margins, so nothing below moves.
+        <View style={[styles.verdict, { backgroundColor: near ? pt.nearTint : pt.badTint }]}>
+          {line}
+        </View>
+      ) : (
+        line
+      )}
       <View style={styles.controls}>
         {(
           [
@@ -324,7 +337,15 @@ const styles = StyleSheet.create({
   livesText: { fontFamily: FONT.sans, fontSize: 10, letterSpacing: 1.6, marginRight: 4 },
   pip: { width: 9, height: 9, borderRadius: 5 },
   msg: { minHeight: 20, textAlign: 'center', marginTop: 10, fontFamily: FONT.sans, fontSize: 13 },
-  msgBad: { fontFamily: FONT.display, letterSpacing: 1.2 },
+  msgBad: { fontFamily: FONT.display, letterSpacing: 1.2, marginTop: 0 },
+  verdict: {
+    alignSelf: 'center',
+    marginTop: 7,
+    marginBottom: -3,
+    paddingHorizontal: 12,
+    paddingVertical: 3,
+    borderRadius: 999,
+  },
   controls: { flexDirection: 'row', gap: 8, marginTop: 10 },
   btn: {
     flex: 1,
