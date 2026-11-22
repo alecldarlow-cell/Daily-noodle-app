@@ -2,7 +2,16 @@
  * One unfinished round per puzzle (22 Nov 2026): @noodle/core's rounds helpers against the
  * site's own dn-core.js (vendored), on seeded random saves, and the rules themselves.
  */
-import { dropRound, keepRound, mergeRounds, roundFor, ROUNDS_KEPT } from '../rounds';
+import { labPlayed } from '../lab';
+import {
+  dropRound,
+  forgetRound,
+  holdsRound,
+  keepRound,
+  mergeRounds,
+  roundFor,
+  ROUNDS_KEPT,
+} from '../rounds';
 import { mergeProgress } from '../saves';
 import { loadDnCore } from './site';
 import { rng, type Rng } from './gen';
@@ -97,5 +106,24 @@ describe('GIVEN a save from before rounds', () => {
     expect(roundFor({ v: 1, cur: { id: 'A' } }, 'B')).toBeNull();
     expect(roundFor({ v: 1, done: { A: 1 }, cur: { id: 'A' } }, 'A')).toBeNull();
     expect(roundFor(null, 'A')).toBeNull();
+  });
+});
+
+describe('GIVEN a Lab save with a round per puzzle', () => {
+  it('THEN each part-played puzzle reads as in progress, and forgetting one leaves the other', () => {
+    const s: Record<string, unknown> = { v: 1, done: {} };
+    keepRound(s, { id: 'A' }, 1);
+    keepRound(s, { id: 'B' }, 2);
+    expect(labPlayed('A', s as never)).toEqual({ done: false });
+    expect(labPlayed('B', s as never)).toEqual({ done: false });
+    expect(holdsRound(s, 'A')).toBe(true);
+    forgetRound(s, 'B');
+    expect(holdsRound(s, 'B')).toBe(false);
+    expect(s.cur).toBeUndefined();
+    expect(holdsRound(s, 'A')).toBe(true);
+    forgetRound(s, 'A');
+    expect(holdsRound(s, 'A')).toBe(false);
+    expect(holdsRound(null, 'A')).toBe(false);
+    expect(labPlayed('C', s as never)).toBeNull();
   });
 });

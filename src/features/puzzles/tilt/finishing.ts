@@ -1,6 +1,6 @@
 /**
  * What happens when a Tilt maze is got out of, what a reopened one shows, and the unfinished
- * maze in `digi-tilt-v1.cur`, exactly as engines/tilt.js finish, finishSheet, restoreDone,
+ * maze in `digi-tilt-v1.rounds[id]` (the latest also in `.cur`, 22 Nov 2026), exactly as engines/tilt.js finish, finishSheet, restoreDone,
  * saveCur, clearCur and restoreCur do them. The screen and the replay both call these.
  */
 import {
@@ -13,6 +13,10 @@ import {
   type GridStreak,
   type KV,
   type SaveStore,
+  forgetRound,
+  holdsRound,
+  keepRound,
+  roundFor,
 } from '@noodle/core';
 
 import {
@@ -45,7 +49,12 @@ export interface Finished extends FinishInfo {
   first: boolean;
 }
 
-type Save = { v?: number; done?: unknown; cur?: Record<string, unknown> | null };
+type Save = {
+  v?: number;
+  done?: unknown;
+  cur?: Record<string, unknown> | null;
+  rounds?: Record<string, unknown>;
+};
 
 function readJson(kv: KV, key: string): unknown {
   try {
@@ -96,17 +105,20 @@ export function saveCur(
   if (state.solved || saves.getDone(SAVE_KEY, id)) return;
   const s = readSave(kv);
   if (state.turns)
-    s.cur = {
-      id,
-      pos: state.pos,
-      g: state.g,
-      rot: state.rot,
-      n: state.turns,
-      trail: state.trail,
-      s: Math.round(secs),
-      at: now,
-    };
-  else if (s.cur && s.cur.id === id) delete s.cur;
+    keepRound(
+      s,
+      {
+        id,
+        pos: state.pos,
+        g: state.g,
+        rot: state.rot,
+        n: state.turns,
+        trail: state.trail,
+        s: Math.round(secs),
+      },
+      now,
+    );
+  else if (holdsRound(s, id)) forgetRound(s, id);
   else return;
   if (!s.v) s.v = 1;
   kv.setItem(SAVE_KEY, JSON.stringify(s));
@@ -114,15 +126,15 @@ export function saveCur(
 
 function clearCur(kv: KV, id: string): void {
   const s = readSave(kv);
-  if (s.cur && s.cur.id === id) {
-    delete s.cur;
+  if (holdsRound(s, id)) {
+    forgetRound(s, id);
     kv.setItem(SAVE_KEY, JSON.stringify(s));
   }
 }
 
 /** The maze kept for this puzzle, as it was left, or null (the engine's checks). */
 export function restoreCur(kv: KV, data: TiltData): { state: TiltState; secs: number } | null {
-  const c = readSave(kv).cur as Record<string, unknown> | null | undefined;
+  const c = roundFor(readSave(kv), data.id) as Record<string, unknown> | null | undefined;
   const N = data.n;
   if (!c || c.id !== data.id || !Array.isArray(c.pos) || c.pos.length !== 2) return null;
   const [r, cc] = c.pos as number[];

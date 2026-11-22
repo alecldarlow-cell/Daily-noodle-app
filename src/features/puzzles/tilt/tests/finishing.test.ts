@@ -30,9 +30,12 @@ describe('GIVEN a maze part-turned', () => {
     const { kv, saves } = setup();
     const s = apply(apply(init(tilt5), { t: 'turn', dir: 1 }), { t: 'turn', dir: 1 });
     saveCur(kv, s, 12.4, saves, AT);
+    const kept = { id: ID, pos: s.pos, g: s.g, rot: 2, n: 2, trail: s.trail, s: 12, at: AT };
+    // the round is kept under its puzzle too (one per puzzle, 22 Nov 2026)
     expect(doc(kv, SAVE_KEY)).toEqual({
       v: 1,
-      cur: { id: ID, pos: s.pos, g: s.g, rot: 2, n: 2, trail: s.trail, s: 12, at: AT },
+      rounds: { [ID]: kept },
+      cur: kept,
     });
     const back = restoreCur(kv, tilt5)!;
     expect(back.secs).toBe(12);

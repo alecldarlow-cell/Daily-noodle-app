@@ -1,6 +1,6 @@
 /**
  * What happens when a Tumbler is solved, what a reopened one shows, and the unfinished board
- * in `digi-tumbler-v1.cur`, exactly as engines/tumbler.js finish, finishSheet, restoreDone,
+ * in `digi-tumbler-v1.rounds[id]` (the latest also in `.cur`, 22 Nov 2026), exactly as engines/tumbler.js finish, finishSheet, restoreDone,
  * saveCur, clearCur and restoreCur do them, so the website and the app share one save. The
  * screen and the replay both call these.
  */
@@ -12,6 +12,10 @@ import {
   type GridStreak,
   type KV,
   type SaveStore,
+  forgetRound,
+  holdsRound,
+  keepRound,
+  roundFor,
 } from '@noodle/core';
 
 import {
@@ -45,7 +49,12 @@ export interface Finished extends FinishInfo {
   first: boolean;
 }
 
-type Save = { v?: number; done?: unknown; cur?: Record<string, unknown> | null };
+type Save = {
+  v?: number;
+  done?: unknown;
+  cur?: Record<string, unknown> | null;
+  rounds?: Record<string, unknown>;
+};
 
 function readJson(kv: KV, key: string): unknown {
   try {
@@ -94,8 +103,8 @@ export function saveCur(
   if (state.solved || saves.getDone(SAVE_KEY, id)) return;
   const s = readSave(kv);
   if (state.turns || state.tries.length)
-    s.cur = { id, o: state.off, w: state.tries, t: state.turns, s: Math.round(secs), at: now };
-  else if (s.cur && s.cur.id === id) delete s.cur;
+    keepRound(s, { id, o: state.off, w: state.tries, t: state.turns, s: Math.round(secs) }, now);
+  else if (holdsRound(s, id)) forgetRound(s, id);
   else return;
   if (!s.v) s.v = 1;
   kv.setItem(SAVE_KEY, JSON.stringify(s));
@@ -103,8 +112,8 @@ export function saveCur(
 
 function clearCur(kv: KV, id: string): void {
   const s = readSave(kv);
-  if (s.cur && s.cur.id === id) {
-    delete s.cur;
+  if (holdsRound(s, id)) {
+    forgetRound(s, id);
     kv.setItem(SAVE_KEY, JSON.stringify(s));
   }
 }
@@ -115,7 +124,7 @@ export function restoreCur(
   data: TumblerData,
 ): { state: TumblerState; secs: number } | null {
   const fresh = init(data);
-  const c = readSave(kv).cur as {
+  const c = roundFor(readSave(kv), data.id) as {
     id?: unknown;
     o?: unknown;
     w?: unknown;

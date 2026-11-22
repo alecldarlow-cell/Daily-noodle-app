@@ -5,6 +5,7 @@
  * would keep as a daily (digi-<type>-v1, DP·<ID>·NNNN), so a trial that graduates moves
  * from LAB_TYPES to PUZZLE_TYPES and nothing is renamed.
  */
+import { holdsRound } from './rounds';
 import { TYPE_LABEL, type PuzzleType } from './ids';
 import { clock, type PlayedState } from './played';
 import type { SaveDoc } from './types';
@@ -122,8 +123,8 @@ export function labPlayed(id: string, doc: SaveDoc | null): PlayedState | null {
     const t = typeof r === 'object' && r ? clock((r as { s?: unknown }).s) : '';
     return { done: true, lost: false, text: t ? `Solved in ${t}` : 'Played' };
   }
-  const cur = (doc as { cur?: { id?: unknown } | null }).cur;
-  return cur && cur.id === id ? { done: false } : null;
+  // its own round (one per puzzle, 22 Nov 2026), or the old `cur`
+  return holdsRound(doc, id) ? { done: false } : null;
 }
 
 /** A Lab type's save key: the one it keeps as a daily. */

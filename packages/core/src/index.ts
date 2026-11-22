@@ -1,6 +1,14 @@
 export { londonDay, dayBefore, isDay } from './london';
 export { gold } from './gold';
-export { roundFor, keepRound, dropRound, mergeRounds, ROUNDS_KEPT } from './rounds';
+export {
+  roundFor,
+  keepRound,
+  dropRound,
+  mergeRounds,
+  holdsRound,
+  forgetRound,
+  ROUNDS_KEPT,
+} from './rounds';
 export {
   BOARD_KEY,
   BOARD_TYPES,

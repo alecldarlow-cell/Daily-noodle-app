@@ -1,6 +1,6 @@
 /**
  * What happens when a Cryptic is solved, what a reopened one shows, and the unfinished clue in
- * `digi-cryptic-v1.cur`, exactly as engines/cryptic.js finish, finishSheet, restoreDone,
+ * `digi-cryptic-v1.rounds[id]` (the latest also in `.cur`, 22 Nov 2026), exactly as engines/cryptic.js finish, finishSheet, restoreDone,
  * saveCur, clearCur and restoreCur do them, so the website and the app share one save.
  */
 import {
@@ -11,6 +11,10 @@ import {
   type GridStreak,
   type KV,
   type SaveStore,
+  forgetRound,
+  holdsRound,
+  keepRound,
+  roundFor,
 } from '@noodle/core';
 
 import {
@@ -52,7 +56,12 @@ export interface Finished extends FinishInfo {
   first: boolean;
 }
 
-type Save = { v?: number; done?: unknown; cur?: Record<string, unknown> | null };
+type Save = {
+  v?: number;
+  done?: unknown;
+  cur?: Record<string, unknown> | null;
+  rounds?: Record<string, unknown>;
+};
 
 function readJson(kv: KV, key: string): unknown {
   try {
@@ -101,14 +110,17 @@ export function saveCur(
   if (state.solved || saves.getDone(SAVE_KEY, id)) return;
   const s = readSave(kv);
   if (state.hints || state.letters.some(Boolean))
-    s.cur = {
-      id,
-      letters: state.letters.slice(),
-      hints: state.hints,
-      s: Math.round(secs),
-      at: now,
-    };
-  else if (s.cur && s.cur.id === id) delete s.cur;
+    keepRound(
+      s,
+      {
+        id,
+        letters: state.letters.slice(),
+        hints: state.hints,
+        s: Math.round(secs),
+      },
+      now,
+    );
+  else if (holdsRound(s, id)) forgetRound(s, id);
   else return;
   if (!s.v) s.v = 1;
   kv.setItem(SAVE_KEY, JSON.stringify(s));
@@ -116,8 +128,8 @@ export function saveCur(
 
 function clearCur(kv: KV, id: string): void {
   const s = readSave(kv);
-  if (s.cur && s.cur.id === id) {
-    delete s.cur;
+  if (holdsRound(s, id)) {
+    forgetRound(s, id);
     kv.setItem(SAVE_KEY, JSON.stringify(s));
   }
 }
@@ -129,7 +141,7 @@ export function restoreCur(
 ): { state: CrypticState; secs: number } | null {
   const fresh = init(data);
   const N = data.n;
-  const c = readSave(kv).cur as {
+  const c = roundFor(readSave(kv), data.id) as {
     id?: unknown;
     letters?: unknown;
     hints?: unknown;

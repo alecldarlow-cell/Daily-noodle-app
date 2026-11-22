@@ -69,3 +69,16 @@ export function mergeRounds(a: unknown, b: unknown, done: unknown, activeId?: st
   }
   return pruneRounds(out, done, activeId);
 }
+
+/** True when save `s` holds a round for puzzle `id`: in `rounds`, or the old `cur` slot. */
+export function holdsRound(s: unknown, id: string): boolean {
+  if (!object(s)) return false;
+  return (object(s.cur) && s.cur.id === id) || (object(s.rounds) && object(s.rounds[id]));
+}
+
+/** Takes puzzle `id`'s round out of `rounds` and `cur`, as the engines' clearCur does. */
+export function forgetRound<T>(s: T, id: string): T {
+  dropRound(s, id);
+  if (object(s) && object(s.cur) && s.cur.id === id) delete s.cur;
+  return s;
+}
