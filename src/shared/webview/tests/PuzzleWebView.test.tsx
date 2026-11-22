@@ -117,3 +117,28 @@ describe('GIVEN a puzzle opened through the bridge', () => {
     expect(last.renderLoading()).toBeTruthy();
   });
 });
+
+// Issue #172: one load name per opening of the WebView, so its later page loads keep their saves.
+const loadOf = (js: string) => /var LOAD = "([^"]*)";/.exec(js)?.[1];
+
+describe('GIVEN a puzzle opened, re-rendered, reopened and retried', () => {
+  it('THEN a re-render keeps its load name, and a new opening or Try again gets a new one', async () => {
+    const { store, saves } = setup();
+    const view = await render(<PuzzleWebView file={FILE} store={store} saves={saves} />);
+    const first = loadOf(last.injectedJavaScriptBeforeContentLoaded);
+    expect(first).toMatch(new RegExp(`^${FILE}#0#`));
+    await view.rerender(<PuzzleWebView file={FILE} store={store} saves={saves} />);
+    expect(loadOf(last.injectedJavaScriptBeforeContentLoaded)).toBe(first);
+
+    await act(() => last.onError());
+    await act(() => fireEvent.press(screen.getByText('Try again')));
+    const retried = loadOf(last.injectedJavaScriptBeforeContentLoaded);
+    expect(retried).toMatch(new RegExp(`^${FILE}#1#`));
+
+    await view.unmount();
+    await render(<PuzzleWebView file={FILE} store={store} saves={saves} />);
+    const reopened = loadOf(last.injectedJavaScriptBeforeContentLoaded);
+    expect(reopened).toMatch(new RegExp(`^${FILE}#0#`));
+    expect(reopened).not.toBe(first);
+  });
+});

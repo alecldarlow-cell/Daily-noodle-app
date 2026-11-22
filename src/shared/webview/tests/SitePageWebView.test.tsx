@@ -144,3 +144,19 @@ describe('GIVEN the privacy page opened in the app', () => {
     });
   });
 });
+
+// Issue #172: as the puzzle pages, one load name per opening of the WebView.
+describe('GIVEN the privacy page opened, re-rendered and opened again', () => {
+  const loadOf = (js: string) => /var LOAD = "([^"]*)";/.exec(js)?.[1];
+
+  it('THEN a re-render keeps its load name and a new opening gets a new one', async () => {
+    const view = await render(<SitePageWebView path="/privacy.html" />);
+    const first = loadOf(last.injectedJavaScriptBeforeContentLoaded);
+    expect(first).toMatch(/^\/privacy\.html#0#/);
+    await view.rerender(<SitePageWebView path="/privacy.html" />);
+    expect(loadOf(last.injectedJavaScriptBeforeContentLoaded)).toBe(first);
+    await view.unmount();
+    await render(<SitePageWebView path="/privacy.html" />);
+    expect(loadOf(last.injectedJavaScriptBeforeContentLoaded)).not.toBe(first);
+  });
+});
