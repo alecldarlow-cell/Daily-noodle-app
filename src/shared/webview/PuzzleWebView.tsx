@@ -12,7 +12,7 @@ import { useTokens } from '@/shared/theme';
 import { announceFinish } from '@/shared/results';
 import { Note } from '@/shared/ui';
 
-import { buildInjection } from './injection';
+import { buildInjection, newLoadId } from './injection';
 import { applyId, applySave, parseMessage, seedFrom } from './messages';
 import { decide, pageUrl, typeOfFile } from './navigation';
 
@@ -35,9 +35,13 @@ export function PuzzleWebView({ file, onEnd, store = appStorage, saves = appSave
   const t = useTokens();
   const [failed, setFailed] = useState(false);
   const [attempt, setAttempt] = useState(0);
-  // Seed once per page load; later writes flow back through messages.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const injected = useMemo(() => buildInjection(seedFrom(store)), [file, attempt, store]);
+  const [opened] = useState(newLoadId);
+  // Seeded when this WebView opens (a new puzzle, Try again); later writes flow back through
+  // messages, and later loads in the same WebView keep the page's own, newer saves (#172).
+  const injected = useMemo(
+    () => buildInjection(seedFrom(store), `${file}#${attempt}#${opened}`),
+    [file, attempt, opened, store],
+  );
 
   const onMessage = (e: WebViewMessageEvent): void => {
     const m = parseMessage(e.nativeEvent.data);

@@ -9,7 +9,7 @@ import { appStorage, type CachedStorage } from '@/shared/storage';
 import { useTokens } from '@/shared/theme';
 import { Note } from '@/shared/ui';
 
-import { buildInjection } from './injection';
+import { buildInjection, newLoadId } from './injection';
 import { applyId, parseMessage, seedFrom } from './messages';
 import { decide } from './navigation';
 
@@ -52,10 +52,11 @@ export function SitePageWebView({ path, testID = 'site-webview', store = appStor
   const t = useTokens();
   const [failed, setFailed] = useState(false);
   const [attempt, setAttempt] = useState(0);
+  const [opened] = useState(newLoadId);
+  // As PuzzleWebView: seeded when this WebView opens, not again on its later page loads (#172).
   const injected = useMemo(
-    () => HIDE_MASTHEAD + buildInjection(seedFrom(store)),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [path, attempt, store],
+    () => HIDE_MASTHEAD + buildInjection(seedFrom(store), `${path}#${attempt}#${opened}`),
+    [path, attempt, opened, store],
   );
 
   // Only the tracker keys are taken from this page; it writes no puzzle saves.
