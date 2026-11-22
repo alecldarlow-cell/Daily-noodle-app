@@ -69,7 +69,7 @@ export function RedactScreen({ file }: { file: PuzzleFile<RedactData> }) {
       (it) => !!labPlayed(it.id, docs[labSaveKey(it.type)] as never)?.done,
     );
     const onNext = (it: LabFeedItem) =>
-      openPuzzle({ type: it.type, name: LAB_LABEL[it.type], path: it.path }, null, (href) =>
+      openPuzzle({ type: it.type, name: LAB_LABEL[it.type], path: it.path }, (href) =>
         router.replace(href),
       );
     return (

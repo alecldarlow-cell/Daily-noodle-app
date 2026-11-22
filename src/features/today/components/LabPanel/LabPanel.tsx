@@ -88,7 +88,7 @@ export function LabPanel() {
 }
 
 function open(it: LabFeedItem) {
-  openPuzzle({ type: it.type, name: LAB_LABEL[it.type], path: it.path }, null);
+  openPuzzle({ type: it.type, name: LAB_LABEL[it.type], path: it.path });
 }
 
 const styles = StyleSheet.create({

@@ -2,7 +2,7 @@
 import { londonDay } from '@noodle/core';
 import { act, fireEvent, screen, waitFor } from '@testing-library/react-native';
 import { router } from 'expo-router';
-import { Alert, type AlertButton } from 'react-native';
+import { Alert } from 'react-native';
 
 import { appStorage } from '@/shared/storage';
 import { mockSite, renderWithProviders } from '@/shared/testing';
@@ -108,29 +108,22 @@ describe('GIVEN yesterday’s Mini is kept part-way', () => {
   });
 
   describe('WHEN today’s Mini is tapped', () => {
-    it('THEN it asks before replacing that round, and can go to it instead', async () => {
+    it('THEN it opens straight away, with no "isn’t finished" question (one round per puzzle, 22 Nov 2026)', async () => {
       const alert = jest.spyOn(Alert, 'alert').mockImplementation(() => undefined);
+      // An earlier test opened this Mini moments ago: step past the double-tap guard.
+      const real = Date.now.bind(Date);
+      const clock = jest.spyOn(Date, 'now').mockImplementation(() => real() + 60_000);
       await renderWithProviders(<TodayScreen />);
       await waitFor(() => expect(screen.getByTestId('today-mini')).toBeOnTheScreen());
       expect(screen.getByRole('button', { name: 'Mini 105, Today' })).toBeOnTheScreen();
       await waitFor(() => expect(screen.queryByText('Yesterday.')).toBeNull());
       await fireEvent.press(screen.getByTestId('today-mini'));
-      expect(router.push).not.toHaveBeenCalled();
-      expect(alert.mock.calls[0]![0]).toBe('Mini 104 isn’t finished');
-      const buttons = alert.mock.calls[0]![2] as AlertButton[];
-      expect(buttons.map((b) => b.text)).toEqual([
-        'Cancel',
-        'Carry on with Mini 104',
-        'Start Mini 105 instead',
-      ]);
-      buttons[1]!.onPress!();
+      expect(alert).not.toHaveBeenCalled();
       expect(router.push).toHaveBeenCalledWith({
         pathname: '/play/[type]/[file]',
-        params: { type: 'mini', file: '2026-10-23-crossword-mini-0104' },
+        params: { type: 'mini', file: '2026-10-24-crossword-mini-0105' },
       });
-      // Another type is unaffected.
-      await fireEvent.press(screen.getByTestId('today-doku'));
-      expect(alert).toHaveBeenCalledTimes(1);
+      clock.mockRestore();
       alert.mockRestore();
     });
   });

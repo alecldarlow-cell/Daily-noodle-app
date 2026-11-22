@@ -84,6 +84,16 @@ function doc(r: Rng, ids: string[], around: string): Record<string, unknown> {
   if (r.chance(0.5)) d.best = r.int(0, 900);
   if (r.chance(0.3)) d.cur = r.chance(0.7) ? { id: r.pick(ids), i: r.int(0, 9) } : null;
   if (r.chance(0.3)) d.snd = r.chance(0.5);
+  // One round per puzzle (22 Nov 2026): some with `at`, some without, some not objects.
+  if (r.chance(0.4)) {
+    const rounds: Record<string, unknown> = {};
+    for (const id of ids)
+      if (r.chance(0.5))
+        rounds[id] = r.chance(0.9)
+          ? { id, i: r.int(0, 9), ...(r.chance(0.8) ? { at: r.int(0, 50) } : {}) }
+          : 7;
+    d.rounds = rounds;
+  }
   return d;
 }
 

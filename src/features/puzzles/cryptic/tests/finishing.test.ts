@@ -70,6 +70,30 @@ describe('GIVEN a Cryptic part-played', () => {
   });
 });
 
+describe('GIVEN another clue part-played (one round per puzzle, 22 Nov 2026)', () => {
+  it('WHEN this clue is played, reopened and solved THEN the other clue’s round is kept throughout', () => {
+    const k = kv();
+    const sv = store(k);
+    const other = { id: 'DP·CRYP·0002', letters: ['Z'], hints: 1, s: 5, at: 1 };
+    k.setItem(
+      SAVE_KEY,
+      JSON.stringify({ v: 1, done: {}, rounds: { [other.id]: other }, cur: other }),
+    );
+    let s = apply(init(P), { t: 'hint' });
+    saveCur(k, s, 10, sv, DAY);
+    const kept = JSON.parse(k.getItem(SAVE_KEY)!);
+    expect(Object.keys(kept.rounds).sort()).toEqual([other.id, P.id].sort());
+    expect(kept.cur.id).toBe(P.id);
+    expect(restoreCur(k, P)!.state.hints).toBe(1);
+    s = [...A].reduce((x, ch) => apply(x, { t: 'type', ch }), s);
+    s = apply(s, { t: 'enter' });
+    commitFinish(s, 30, false, sv, k, DAY);
+    const after = JSON.parse(k.getItem(SAVE_KEY)!);
+    expect(after.rounds).toEqual({ [other.id]: other });
+    expect(after.done[P.id]).toBeDefined();
+  });
+});
+
 describe('GIVEN a Cryptic solved with one hint', () => {
   it('THEN the result is saved as the page saves it, the streak bumps, and the share line reads as the website’s', () => {
     const k = kv();

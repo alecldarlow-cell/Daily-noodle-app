@@ -21,6 +21,8 @@
  * (1–4, M, Enter), and the Sound, Reduced motion and Full screen switches (WP12).
  */
 
+import { dropRound, keepRound, roundFor } from '@noodle/core';
+
 import { houseLine } from '@/shared/start-card/copy';
 
 export const SAVE_KEY = 'digi-borders-v1';
@@ -252,6 +254,8 @@ export interface Host {
   now(): number;
   today(): string;
   persist(save: BordersSave, report: boolean): BordersSave;
+  /** Date.now: when a kept round was saved (`at`, 22 Nov 2026); Date.now when absent. */
+  wall?(): number;
   /** atlasAdd on Borderline's save. */
   atlasAdd(name: string): boolean;
 }
@@ -294,7 +298,21 @@ export function init(P: BordersData, stored: unknown, now: number): BordersState
   return s;
 }
 
+/**
+ * One round per puzzle (22 Nov 2026), as the start of engines/borders.js persist: the round in
+ * play goes into rounds[id], stamped, and stays in cur; a finished puzzle's round is dropped.
+ */
+/** The wall clock a host gives, else Date.now. */
+export const wallNow = (host: Host) => (host.wall ? host.wall() : Date.now());
+
+export function stampRound(save: BordersSave, id: string, now: number): void {
+  if (save.cur && save.cur.id === id && !save.done[id])
+    keepRound(save, save.cur as unknown as Record<string, unknown>, now);
+  else if (save.done[id]) dropRound(save, id);
+}
+
 function persist(s: BordersState, host: Host, progress = true) {
+  stampRound(s.save, s.P.id, wallNow(host));
   const playing = !!(s.save.done[s.P.id] || (s.save.cur && s.save.cur.id === s.P.id));
   const aliased = !!s.cur && s.cur === s.save.cur;
   s.save = host.persist(s.save, progress && playing);
@@ -307,7 +325,7 @@ function start(s: BordersState, host: Host) {
     s.view = 'winModal';
     return;
   }
-  const c = s.save.cur;
+  const c = roundFor(s.save, s.P.id) as Round | null;
   const cur: Round =
     c && c.id === s.P.id && Array.isArray(c.ans)
       ? c
@@ -510,7 +528,7 @@ export function quizView(s: BordersState) {
 }
 
 export function homeView(s: BordersState, t: string, dayBefore: (d: string) => string) {
-  const c = s.save.cur && s.save.cur.id === s.P.id ? s.save.cur : null;
+  const c = roundFor(s.save, s.P.id) as Round | null;
   return {
     stats: [
       String(liveStreakOf(s.save, t, dayBefore)),

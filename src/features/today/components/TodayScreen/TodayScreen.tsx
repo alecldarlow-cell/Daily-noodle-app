@@ -47,7 +47,7 @@ export function TodayScreen({ open, onOpened }: { open?: PuzzleType; onOpened?: 
   // The Lab panel shows only while a trial runs; then it, not a rule, ends the dailies.
   const trials = useLabTrials();
   const labShown = status.kind === 'ready' && trials.current.length > 0;
-  const { byId, run, rounds, held } = usePlayed(items, day);
+  const { byId, run, rounds } = usePlayed(items, day);
   const refresh = status.refresh;
   const cards = useMemo(() => {
     const m: Record<string, FeedItem> = {};
@@ -62,17 +62,9 @@ export function TodayScreen({ open, onOpened }: { open?: PuzzleType; onOpened?: 
   useEffect(() => {
     if (paths.length && !offline) void keepToday(paths, appStorage);
   }, [paths, offline]);
-  /** A puzzle by id, for the replace-your-round question: its card's name and path. */
-  const named = (id: string) => {
-    const c = cards[id];
-    if (c) return { name: c.headline, path: c.path };
-    const i = items.find((x) => x.id === id);
-    return i ? { name: i.name, path: i.path } : {};
-  };
 
   const play = (it: (typeof items)[number], title: string) => {
-    const other = held(it.type, it.id);
-    openPuzzle({ type: it.type, name: title, path: it.path }, other ? named(other) : null);
+    openPuzzle({ type: it.type, name: title, path: it.path });
   };
   // A link's request, once today's list is here.
   const asked = useRef<PuzzleType | null>(null);

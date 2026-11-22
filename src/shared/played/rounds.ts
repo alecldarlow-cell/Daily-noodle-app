@@ -5,19 +5,26 @@
  * players write these keys.
  *
  * Rounds live in two places. Mini, Doku, Sweep and Path keep theirs in the app's own
- * one-slot-per-type keys (`noodle-app-progress-<type>`, features/puzzles/progress.ts).
- * Tangle, Borders and Reckon keep theirs in the site's save (`digi-tangle-v1` days,
- * `digi-borders-v1` / `digi-reckon-v1` / `digi-link-v1` / `digi-tally-v1` `cur`; Link's from
- * 29 Oct 2026, as the website's engines/link.js keeps it, AF-029).
+ * keys (`noodle-app-rounds-<type>`, one per puzzle, and the older one-per-type slot
+ * `noodle-app-progress-<type>`; features/puzzles/progress.ts). Tangle keeps its days in
+ * `digi-tangle-v1`; Borders, Reckon, Link and Tally keep one round per puzzle in their site
+ * save's `rounds` (22 Nov 2026; the single `cur` before, still read).
  */
-import { clock, type PuzzleType } from '@noodle/core';
+import { clock, roundFor, type PuzzleType } from '@noodle/core';
 
 /** The types whose round is kept in the app's own slot. */
 export type ProgressType = 'mini' | 'doku' | 'sweep' | 'path';
 export const PROGRESS_TYPES: readonly ProgressType[] = ['mini', 'doku', 'sweep', 'path'];
 
-/** `noodle-app-progress-mini` and so on: one slot per type, holding one puzzle's round. */
+/** `noodle-app-progress-mini` and so on: one slot per type, holding the latest round. */
 export const progressKey = (type: ProgressType) => `noodle-app-progress-${type}`;
+
+/**
+ * `noodle-app-rounds-mini` and so on (22 Nov 2026): every part-played puzzle's round of the
+ * type, `{id: round}`, so starting another puzzle never replaces one. The slot above still
+ * holds the latest, as before.
+ */
+export const roundsKey = (type: ProgressType) => `noodle-app-rounds-${type}`;
 
 /** App-only key prefix: a puzzle's data kept after its first open, so it plays offline. */
 export const PUZZLE_CACHE_PREFIX = 'noodle-app-puzzle:';
@@ -40,14 +47,22 @@ export interface Round {
 
 /**
  * The round kept for puzzle `id` of `type`, or null, from the type's parsed site save
- * (`site`, `digi-<type>-v1`) and, for the four grid types, its parsed progress slot (`slot`).
+ * (`site`, `digi-<type>-v1`) and, for the four grid types, its parsed rounds (`rounds`,
+ * `noodle-app-rounds-<type>`) and old one-round slot (`slot`). Every puzzle keeps its own
+ * round (22 Nov 2026): its own first, then the old slot or `cur` if that is this puzzle's.
  */
-export function roundOf(type: PuzzleType, id: string, site: unknown, slot: unknown): Round | null {
+export function roundOf(
+  type: PuzzleType,
+  id: string,
+  site: unknown,
+  slot: unknown,
+  rounds: unknown = null,
+): Round | null {
   if (obj(site) && obj(site.done) && site.done[id]) return null; // finished
   if (isProgressType(type)) {
-    if (!obj(slot) || slot.id !== id || !Array.isArray(slot.moves) || !slot.moves.length)
-      return null;
-    const secs = typeof slot.secs === 'number' && Number.isFinite(slot.secs) ? slot.secs : NaN;
+    const own = obj(rounds) && obj(rounds[id]) ? rounds[id] : slot;
+    if (!obj(own) || own.id !== id || !Array.isArray(own.moves) || !own.moves.length) return null;
+    const secs = typeof own.secs === 'number' && Number.isFinite(own.secs) ? own.secs : NaN;
     const time = clock(Math.floor(secs));
     return time ? { time } : {};
   }
@@ -57,42 +72,15 @@ export function roundOf(type: PuzzleType, id: string, site: unknown, slot: unkno
     const time = typeof d.left === 'number' ? clock(Math.ceil(Math.max(0, d.left))) : '';
     return time ? { time: `${time} left` } : {};
   }
-  if (type === 'borders' || type === 'reckon') {
-    const cur = obj(site) ? site.cur : null;
-    return obj(cur) && cur.id === id ? {} : null;
-  }
+  if (type === 'borders' || type === 'reckon') return roundFor(site, id) ? {} : null;
   if (type === 'link' || type === 'tally') {
-    // engines/link.js cur: {id, f, m, g, tr, l, s: seconds played, at}; tally.js: {id, g, notes, s, at}
-    const cur = obj(site) ? site.cur : null;
-    if (!obj(cur) || cur.id !== id) return null;
+    // engines/link.js round: {id, f, m, g, tr, l, s: seconds played, at}; tally.js: {id, g, notes, s, at}
+    const cur = roundFor(site, id);
+    if (!cur) return null;
     const time = typeof cur.s === 'number' ? clock(Math.floor(cur.s)) : '';
     return time ? { time } : {};
   }
   return null;
-}
-
-/**
- * The puzzle another round of `type` holds in its one slot, if starting `id` would take
- * that slot (replacing the other round once play starts): the grid types' progress slot,
- * and Borders', Reckon's, Link's and Tally's `cur`. Tangle keeps every day's round side by side, so
- * it never replaces one.
- */
-export function heldElsewhere(
-  type: PuzzleType,
-  id: string,
-  site: unknown,
-  slot: unknown,
-): string | null {
-  let held: unknown = null;
-  if (isProgressType(type)) {
-    if (obj(slot) && Array.isArray(slot.moves) && slot.moves.length) held = slot.id;
-  } else if (type === 'borders' || type === 'reckon' || type === 'link' || type === 'tally') {
-    held = obj(site) && obj(site.cur) ? site.cur.id : null;
-  }
-  if (typeof held !== 'string' || !held || held === id) return null;
-  // A round whose puzzle is already finished is nothing to lose.
-  if (obj(site) && obj(site.done) && site.done[held]) return null;
-  return held;
 }
 
 /** True when `x` looks like a puzzle's published data file (reports/<file>.json). */

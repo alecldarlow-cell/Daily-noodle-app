@@ -2,7 +2,7 @@
 import { londonDay } from '@noodle/core';
 import { act, fireEvent, screen, waitFor } from '@testing-library/react-native';
 import { router } from 'expo-router';
-import { Alert, type AlertButton } from 'react-native';
+import { Alert } from 'react-native';
 
 import { appStorage } from '@/shared/storage';
 import { mockSite, renderWithProviders } from '@/shared/testing';
@@ -112,28 +112,19 @@ describe('GIVEN a Mini left part-way', () => {
   });
 
   describe('WHEN another Mini is tapped', () => {
-    it('THEN it asks before replacing the kept round; Start opens the new one', async () => {
+    it('THEN it opens straight away and the kept round stays (one per puzzle, 22 Nov 2026)', async () => {
       const alert = jest.spyOn(Alert, 'alert').mockImplementation(() => undefined);
       await renderWithProviders(<ArchiveScreen />);
       await waitFor(() => expect(screen.getByTestId('archive-DP·MINI·0010')).toBeOnTheScreen());
       await fireEvent.press(screen.getByTestId('archive-DP·MINI·0010'));
-      expect(router.push).not.toHaveBeenCalled();
-      const buttons = alert.mock.calls[0]![2] as AlertButton[];
-      expect(buttons.map((b) => b.text)).toEqual([
-        'Cancel',
-        'Carry on with Mini 100',
-        'Start Mini 10 instead',
-      ]);
-      buttons[2]!.onPress!();
+      expect(alert).not.toHaveBeenCalled();
       expect(router.push).toHaveBeenCalledWith({
         pathname: '/play/[type]/[file]',
         params: { type: 'mini', file: '2026-07-19-mini-0010' },
       });
-      // The kept one and other types open straight away.
-      await fireEvent.press(screen.getByTestId('archive-DP·MINI·0100'));
-      await fireEvent.press(screen.getByTestId('archive-DP·PATH·0050'));
-      expect(alert).toHaveBeenCalledTimes(1);
-      expect(router.push).toHaveBeenCalledTimes(3);
+      expect(screen.getByTestId('archive-DP·MINI·0100-result')).toHaveTextContent(
+        /^Continue · 1:12$/,
+      );
       alert.mockRestore();
     });
   });

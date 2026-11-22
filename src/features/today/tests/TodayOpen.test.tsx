@@ -43,18 +43,21 @@ describe('GIVEN Today opened from a shared Mini link', () => {
     });
   });
 
-  describe('WHEN another Mini holds the kept round', () => {
-    it('THEN it asks first, as a tap on the card does', async () => {
+  describe('WHEN another Mini holds the latest kept round', () => {
+    it('THEN today’s Mini still opens straight away (one round per puzzle, 22 Nov 2026)', async () => {
       const alert = jest.spyOn(Alert, 'alert').mockImplementation(() => undefined);
+      // An earlier test opened this Mini moments ago: step past the double-tap guard.
+      const real = Date.now.bind(Date);
+      const clock = jest.spyOn(Date, 'now').mockImplementation(() => real() + 60_000);
       appStorage.setItem(
         'noodle-app-progress-mini',
         JSON.stringify({ v: 1, id: 'DP·MINI·0104', secs: 30, moves: [{ t: 'cell', r: 0, c: 0 }] }),
       );
       mockSite({ 'puzzles-today.json': todayList() });
       await renderWithProviders(<TodayScreen open="mini" />);
-      await waitFor(() => expect(alert).toHaveBeenCalledTimes(1));
-      expect(alert.mock.calls[0]![0]).toBe('Another Mini isn’t finished');
-      expect(router.push).not.toHaveBeenCalled();
+      await waitFor(() => expect(router.push).toHaveBeenCalledTimes(1));
+      expect(alert).not.toHaveBeenCalled();
+      clock.mockRestore();
       alert.mockRestore();
     });
   });

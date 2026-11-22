@@ -33,7 +33,14 @@ export const VARIANTS: readonly Variant[] = [
 
 /** A move as the oracle writes it: Shuffle and Play again without their (random) orders. */
 export type OracleMove =
-  | Exclude<Move, { t: 'shuffle' } | { t: 'again' } | { t: 'land' } | { t: 'revealed' }>
+  | Exclude<
+      Move,
+      | { t: 'shuffle' }
+      | { t: 'again' }
+      | { t: 'land' }
+      | { t: 'revealed' }
+      | { t: 'verdictEnd'; n: number }
+    >
   | { t: 'shuffle' }
   | { t: 'again' };
 

@@ -31,6 +31,8 @@ import {
   SAVE_KEY,
   scaleMarks,
   serial,
+  stampRound,
+  wallNow,
   type Host,
   type Move,
   type ReckonData,
@@ -175,6 +177,7 @@ export class Session {
       this.data.id,
       () => this.tick,
       () => this.today(),
+      () => this.wall(),
     );
     this.state = init(this.data, readSave(this.kv), this.tick);
     this.nf = this.next(this.tick);
@@ -193,6 +196,7 @@ export class Session {
     if (m.t === 'reload') {
       // pagehide saves the round as it stands, then the page opens again from the save
       const st = this.state;
+      stampRound(st.save, st.P.id, wallNow(this.host));
       const playing = !!(st.save.done[st.P.id] || (st.save.cur && st.save.cur.id === st.P.id));
       this.host.persist(st.save, playing);
       this.open();

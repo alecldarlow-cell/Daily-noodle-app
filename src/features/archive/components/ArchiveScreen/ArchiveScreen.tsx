@@ -84,7 +84,7 @@ export function ArchiveScreen() {
   // The Lab is a short list: always as a list.
   const view: View_ = calendarOn && !lab ? chosen : 'list';
   const items = q.data?.items ?? NO_ITEMS;
-  const { byId, rounds, held } = usePlayed(items, day);
+  const { byId, rounds } = usePlayed(items, day);
   // Finished, won or lost, counts as done; started but unfinished does not (as the cards' ✓).
   const finished = useMemo(() => new Set(Object.keys(byId).filter((id) => byId[id]?.done)), [byId]);
   // The Lab's trials: every Lab puzzle before today, with its own saves (11 Nov 2026).
@@ -124,11 +124,6 @@ export function ArchiveScreen() {
   const offline = isConnectionError(q.error);
   const paths = useMemo(() => items.map((it) => it.path), [items]);
   const kept = useKept(paths, offline && !!q.data);
-  const byIdItem = useMemo(() => {
-    const m: Record<string, ArchiveItem> = {};
-    for (const it of items) m[it.id] = it;
-    return m;
-  }, [items]);
 
   const renderRow = (item: ArchiveItem) => (
     <PuzzleRow
@@ -144,12 +139,7 @@ export function ArchiveScreen() {
       onHowTo={() => router.push({ pathname: '/how-to-play', params: { type: item.type } })}
       onPress={() => {
         appRecorder.event('archive_play', { type: item.type, id: item.id }, 'archive.html');
-        const other = held(item.type, item.id);
-        const o = other ? byIdItem[other] : undefined;
-        openPuzzle(
-          { type: item.type, name: item.headline, path: item.path },
-          other ? { name: o?.headline, path: o?.path } : null,
-        );
+        openPuzzle({ type: item.type, name: item.headline, path: item.path });
       }}
     />
   );
@@ -165,7 +155,7 @@ export function ArchiveScreen() {
       lab
       onPress={() => {
         appRecorder.event('archive_play', { type: item.type, id: item.id }, 'archive.html');
-        openPuzzle({ type: item.type, name: LAB_LABEL[item.type], path: item.path }, null);
+        openPuzzle({ type: item.type, name: LAB_LABEL[item.type], path: item.path });
       }}
     />
   );

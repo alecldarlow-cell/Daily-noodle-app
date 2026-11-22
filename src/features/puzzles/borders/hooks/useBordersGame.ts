@@ -9,7 +9,16 @@ import { appStorage, saves as appSaves, type CachedStorage } from '@/shared/stor
 
 import type { PuzzleFile } from '../../types';
 import { commitFinish, readSave, reopenInfo, saveHost, type FinishInfo } from '../finishing';
-import { apply, frame, init, type BordersData, type BordersState, type Move } from '../model';
+import {
+  apply,
+  frame,
+  init,
+  stampRound,
+  wallNow,
+  type BordersData,
+  type BordersState,
+  type Move,
+} from '../model';
 import { bordersFeel, bordersSnap } from './feel';
 import { bordersSound, bordersSoundSnap } from './sound';
 
@@ -38,7 +47,7 @@ export function useBordersGame(file: PuzzleFile<BordersData>, deps: Deps = {}) {
   const wall = deps.wall ?? Date.now;
   const id = file.data.id;
   const host = useMemo(
-    () => saveHost(saves, store, id, perf, () => londonDay(wall())),
+    () => saveHost(saves, store, id, perf, () => londonDay(wall()), wall),
     [saves, store, id, perf, wall],
   );
   const [initial] = useState(() => init(file.data, readSave(store), perf()));
@@ -79,6 +88,7 @@ export function useBordersGame(file: PuzzleFile<BordersData>, deps: Deps = {}) {
   useEffect(() => {
     const save = () => {
       const s = ref.current;
+      stampRound(s.save, s.P.id, wallNow(host));
       const playing = !!(s.save.done[s.P.id] || (s.save.cur && s.save.cur.id === s.P.id));
       host.persist(s.save, playing);
     };

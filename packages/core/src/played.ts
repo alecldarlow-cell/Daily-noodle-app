@@ -89,7 +89,12 @@ export function playedState(type: PuzzleType, id: string, doc: SaveDoc | null): 
   const d = doc.days && doc.days[id];
   if (type === 'tangle' && d && (d.state === 'playing' || d.state === 'suspended'))
     return { done: false };
-  if ((type === 'borders' || type === 'reckon' || type === 'tally') && doc.cur && doc.cur.id === id)
+  // A round kept for this puzzle: in `rounds` (one per puzzle, 22 Nov 2026) or the old `cur`.
+  const rounds = (doc as { rounds?: unknown }).rounds as Obj | undefined;
+  if (
+    (type === 'borders' || type === 'reckon' || type === 'tally') &&
+    ((doc.cur && doc.cur.id === id) || (rounds && typeof rounds === 'object' && rounds[id]))
+  )
     return { done: false };
   return null;
 }

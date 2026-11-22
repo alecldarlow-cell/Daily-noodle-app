@@ -19,6 +19,8 @@ import {
   NQ,
   recapTiles,
   SAVE_KEY,
+  stampRound,
+  wallNow,
   type BordersRecord,
   type BordersSave,
   type BordersState,
@@ -51,10 +53,12 @@ export function saveHost(
   id: string,
   now: () => number,
   today: () => string,
+  wall?: () => number,
 ): Host {
   return {
     now,
     today,
+    ...(wall ? { wall } : {}),
     persist: (save, report) => saves.saveProgress(SAVE_KEY, save, id, report) as BordersSave,
     atlasAdd: (name) => atlasAdd(kv, name),
   };
@@ -110,6 +114,7 @@ export function commitFinish(prev: BordersState, host: Host): Finished {
   s.save.done[s.P.id] = rec;
   s.save.cur = null;
   s.save.streak = bumpRoundStreak(s.save.streak || { last: null, n: 0, best: 0 }, t);
+  stampRound(s.save, s.P.id, wallNow(host)); // the finished puzzle's round goes (22 Nov 2026)
   s.save = host.persist(s.save, true);
   s.cur = null;
   s.shown = rec;

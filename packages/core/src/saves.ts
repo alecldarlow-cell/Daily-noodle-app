@@ -6,6 +6,7 @@
  * injectable for tests, and saveStreak writes to that storage synchronously.
  */
 import { dayBefore, londonDay } from './london';
+import { mergeRounds } from './rounds';
 import type { KV, SaveDoc } from './types';
 
 type Obj = Record<string, unknown>;
@@ -201,6 +202,12 @@ export function mergeProgress(
   if (current.streak || stored.streak) merged.streak = mergeStreak(current.streak, stored.streak);
   if ('best' in current || 'best' in stored)
     merged.best = Math.max(Number(current.best) || 0, Number(stored.best) || 0);
+  // One unfinished round per puzzle (22 Nov 2026), as dn-core.js.
+  if (object(current.rounds) || object(stored.rounds)) {
+    const rounds = mergeRounds(current.rounds, stored.rounds, merged.done, activeId);
+    if (Object.keys(rounds).length) merged.rounds = rounds;
+    else delete merged.rounds;
+  }
   return merged;
 }
 

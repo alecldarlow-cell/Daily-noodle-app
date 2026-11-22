@@ -18,6 +18,7 @@
  * clock runs on; with reduced motion it lands at once. `submit` leaves the state
  * settling and `land` commits it, so the screen (and the replay) decide when.
  */
+import { dropRound, keepRound, roundFor } from '@noodle/core';
 
 export interface LinkGroup {
   rank: number;
@@ -42,8 +43,9 @@ export interface LinkPuzzle {
   byName: Record<string, number>;
 }
 
-/** The message's class: plain, a wrong guess, or the waiting hint (link.css .msg.wait). */
-export type Tone = '' | 'bad' | 'wait';
+/** The message's class: plain, "One away" (near), another wrong guess (bad), or the waiting
+ * hint (link.css .msg.near / .msg.bad / .msg.wait). */
+export type Tone = '' | 'near' | 'bad' | 'wait';
 export type Timer = 'idle' | 'running' | 'stopped';
 
 export interface LinkState {
@@ -62,6 +64,12 @@ export interface LinkState {
   /** Guesses already made (sorted tiles joined by "|"): a repeat costs nothing. */
   tried: string[];
   msg: { text: string; tone: Tone };
+  /**
+   * A wrong guess's verdict ("One away", "Not a group") stays up VERDICT_HOLD ms even while
+   * tiles are tapped (engines/link.js, player feedback 20 Nov 2026): `n` is the guess it
+   * answers, `clear` that a tap asked for the line to go when the hold ends ('verdictEnd').
+   */
+  hold?: { n: number; clear: boolean } | null;
   /** A right four is settling (the page's `busy`), with the tiles it turned. */
   settling: { group: number; tiles: string[] } | null;
   /** Four mistakes: the remaining groups are revealed, then the finish. */
@@ -92,7 +100,9 @@ export type Move =
   /** The settle has landed (or reduced motion: at once). */
   | { t: 'land' }
   /** The remaining groups have been laid out after a loss. */
-  | { t: 'revealed' };
+  | { t: 'revealed' }
+  /** VERDICT_HOLD has passed since guess `n` was answered. */
+  | { t: 'verdictEnd'; n: number };
 
 /** The record the web writes to `digi-link-v1` › done[id] (before putDone adds `d`). */
 export interface LinkRecord {
@@ -112,6 +122,8 @@ export const MAX_MISTAKES = 4;
 export const SETTLE_MS = 80 * 3 + 300 + 540;
 /** After the fourth mistake the rest are laid out one group every 420 ms. */
 export const REVEAL_STEP_MS = 420;
+/** A verdict stays up at least this long (engines/link.js VERDICT_HOLD). */
+export const VERDICT_HOLD = 3000;
 export const REPLAY_NOTE =
   "Today's result is already in — this is a replay, and nothing is recorded.";
 export const OUT_NOTE = "Out of mistakes — here's the rest";
@@ -232,6 +244,7 @@ function started(s: LinkState, order: string[]): LinkState {
     tried: [],
     settling: null,
     revealing: false,
+    hold: null,
     // The clock waits at 0:00 with a hint until play starts (AF-028); a replay starts at once.
     msg: s.replayStarted ? { text: '', tone: '' } : { text: WAIT_HINT, tone: 'wait' },
     timer: s.replayStarted ? 'running' : 'idle',
@@ -315,6 +328,7 @@ function restore(s: LinkState, rec: Record<string, unknown>): LinkState | null {
     won,
     timer: 'stopped',
     restored: true,
+    hold: null,
     msg: {
       text: won
         ? `Linked in ${t}${mistakes ? ` · ${mistakes} mistake${mistakes > 1 ? 's' : ''}` : ' · perfect'}`
@@ -367,17 +381,21 @@ export function apply(prev: LinkState, move: Move): LinkState {
       else {
         if (s.sel.length >= 4) {
           s.msg = { text: 'Four at a time', tone: '' };
+          s.hold = null;
           return s;
         }
         s.sel.push(move.w);
       }
-      s.msg = { text: '', tone: '' };
+      // A tap clears the line, but a verdict only once its time is up.
+      if (s.hold) s.hold = { ...s.hold, clear: true };
+      else s.msg = { text: '', tone: '' };
       return s;
     }
     case 'deselect':
       if (s.over || busy || !s.sel.length) return prev;
       s.sel = [];
       s.msg = { text: '', tone: '' };
+      s.hold = null;
       return s;
     case 'shuffle':
       if (s.over || busy) return prev;
@@ -390,6 +408,7 @@ export function apply(prev: LinkState, move: Move): LinkState {
       const key = comboKey(picked);
       if (s.tried.includes(key)) {
         s.msg = { text: 'Already tried that one', tone: '' };
+        s.hold = null;
         return s;
       }
       s.tried = [...s.tried, key];
@@ -401,7 +420,9 @@ export function apply(prev: LinkState, move: Move): LinkState {
         s.settling = { group: [...counts.keys()][0]!, tiles: picked };
         return s;
       }
-      s.msg = { text: best === 3 ? 'One away' : 'Not a group', tone: 'bad' };
+      s.msg =
+        best === 3 ? { text: 'One away', tone: 'near' } : { text: 'Not a group', tone: 'bad' };
+      s.hold = { n: s.guesses.length, clear: false };
       s.mistakes++;
       if (s.mistakes >= MAX_MISTAKES) {
         s.over = true;
@@ -418,6 +439,7 @@ export function apply(prev: LinkState, move: Move): LinkState {
       s.sel = [];
       s.settling = null;
       s.msg = { text: '', tone: '' };
+      s.hold = null;
       if (s.solved.length === 4) {
         s.won = true;
         s.over = true;
@@ -436,6 +458,13 @@ export function apply(prev: LinkState, move: Move): LinkState {
       s.live = [];
       s.revealing = false;
       s.msg = { text: OUT_NOTE, tone: '' };
+      s.hold = null;
+      return s;
+    }
+    case 'verdictEnd': {
+      if (!s.hold || s.hold.n !== move.n) return prev;
+      if (s.hold.clear) s.msg = { text: '', tone: '' };
+      s.hold = null;
       return s;
     }
     case 'again': {
@@ -594,12 +623,12 @@ export function roundToKeep(
 }
 
 /**
- * curWrite: put `c` (or null to clear) into the save document `raw` read-modify-write,
+ * curWrite: put `c` (or null to clear puzzle `id`'s round) into the save document `raw` read-modify-write,
  * leaving `done` and everything else as it is. Returns the text to store, or null to
  * leave storage alone: a save it can't read is never overwritten, and clearing a round
  * that isn't there writes nothing.
  */
-export function withRound(raw: string | null, c: LinkRound | null): string | null {
+export function withRound(raw: string | null, c: LinkRound | null, id: string): string | null {
   let s: unknown = null;
   try {
     s = JSON.parse(raw || 'null');
@@ -611,8 +640,12 @@ export function withRound(raw: string | null, c: LinkRound | null): string | nul
     if (raw) return null;
     doc = { v: 1 };
   } else doc = s;
-  if (!c && !doc.cur) return null;
-  doc.cur = c;
+  // One round per puzzle in `rounds[id]` (22 Nov 2026), the latest also in `cur`.
+  if (c) keepRound(doc, c as unknown as Record<string, unknown>, c.at);
+  else if (doc.cur || (object(doc.rounds) && doc.rounds[id])) {
+    dropRound(doc, id);
+    if (object(doc.cur) && doc.cur.id === id) doc.cur = null;
+  } else return null;
   return JSON.stringify(doc);
 }
 
@@ -634,7 +667,7 @@ export function readRound(
   } catch {
     return null;
   }
-  const c = object(doc) ? doc.cur : null;
+  const c = roundFor(doc, p.id);
   if (!object(c) || c.id !== p.id) return null;
   if (object(doc) && object(doc.done) && doc.done[p.id]) return null;
   if (!Array.isArray(c.f) || c.f.length >= 4 || new Set(c.f).size !== c.f.length) return null;
@@ -702,6 +735,7 @@ export function resumeRound(
       sel: [],
       live: same ? r.l!.slice() : deal(rest),
       timer: 'idle',
+      hold: null,
       msg: { text: pausedNote(r.s), tone: 'wait' },
     },
     secs: r.s,

@@ -1,6 +1,6 @@
 /**
  * What happens when a Redact is solved, what a reopened one shows, and the unfinished board
- * in `digi-redact-v1.cur`, exactly as engines/redact.js finish, finishSheet, restoreDone,
+ * in `digi-redact-v1.rounds[id]` (the latest also in `.cur`, 22 Nov 2026), exactly as engines/redact.js finish, finishSheet, restoreDone,
  * saveCur, clearCur and restoreCur do them, so the website and the app share progress. The
  * screen and the replay both call these. Redact is a Lab trial: its own streak key is kept as
  * the page keeps it, but it never joins the overall run or the leagues.
@@ -13,6 +13,10 @@ import {
   type GridStreak,
   type KV,
   type SaveStore,
+  forgetRound,
+  holdsRound,
+  keepRound,
+  roundFor,
 } from '@noodle/core';
 
 import {
@@ -43,7 +47,12 @@ export interface Finished extends FinishInfo {
   first: boolean;
 }
 
-type Save = { v?: number; done?: unknown; cur?: Record<string, unknown> | null };
+type Save = {
+  v?: number;
+  done?: unknown;
+  cur?: Record<string, unknown> | null;
+  rounds?: Record<string, unknown>;
+};
 
 function readJson(kv: KV, key: string): unknown {
   try {
@@ -100,15 +109,18 @@ export function saveCur(
   if (state.solved || saves.getDone(SAVE_KEY, id)) return;
   const s = readSave(kv);
   if (state.taps)
-    s.cur = {
-      id,
-      b: state.black,
-      t: state.taps,
-      m: state.misses,
-      s: Math.round(secs),
-      at: now,
-    };
-  else if (s.cur && s.cur.id === id) delete s.cur;
+    keepRound(
+      s,
+      {
+        id,
+        b: state.black,
+        t: state.taps,
+        m: state.misses,
+        s: Math.round(secs),
+      },
+      now,
+    );
+  else if (holdsRound(s, id)) forgetRound(s, id);
   else return;
   if (!s.v) s.v = 1;
   kv.setItem(SAVE_KEY, JSON.stringify(s));
@@ -116,15 +128,15 @@ export function saveCur(
 
 function clearCur(kv: KV, id: string): void {
   const s = readSave(kv);
-  if (s.cur && s.cur.id === id) {
-    delete s.cur;
+  if (holdsRound(s, id)) {
+    forgetRound(s, id);
     kv.setItem(SAVE_KEY, JSON.stringify(s));
   }
 }
 
 /** The board kept for this puzzle, or null. */
 export function restoreCur(kv: KV, data: RedactData): { state: RedactState; secs: number } | null {
-  const c = readSave(kv).cur as {
+  const c = roundFor(readSave(kv), data.id) as {
     id?: unknown;
     b?: unknown;
     t?: unknown;

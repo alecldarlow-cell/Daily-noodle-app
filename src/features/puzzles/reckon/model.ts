@@ -20,6 +20,8 @@
  * only change those settings, which the save keeps as it found them).
  */
 
+import { dropRound, keepRound, roundFor } from '@noodle/core';
+
 import { houseLine } from '@/shared/start-card/copy';
 
 import * as units from './units';
@@ -347,6 +349,8 @@ export interface Host {
   today(): string;
   /** dnCore.saveProgress(KEY, save, P.id): returns the merged save. */
   persist(save: ReckonSave, report: boolean): ReckonSave;
+  /** Date.now: when a kept round was saved (`at`, 22 Nov 2026); Date.now when absent. */
+  wall?(): number;
 }
 
 const vr = (s: ReckonState) => (s.VR === 'R' ? s.R : s.VR);
@@ -466,7 +470,21 @@ function setIdx(s: ReckonState, i: number) {
 
 /* ---------- the engine's functions ---------- */
 
+/**
+ * One round per puzzle (22 Nov 2026), as the start of engines/reckon.js persist: the round in
+ * play goes into rounds[id], stamped, and stays in cur; a finished puzzle's round is dropped.
+ */
+/** The wall clock a host gives, else Date.now. */
+export const wallNow = (host: Host) => (host.wall ? host.wall() : Date.now());
+
+export function stampRound(save: ReckonSave, id: string, now: number): void {
+  if (save.cur && save.cur.id === id && !save.done[id])
+    keepRound(save, save.cur as unknown as Record<string, unknown>, now);
+  else if (save.done[id]) dropRound(save, id);
+}
+
 function persist(s: ReckonState, host: Host, progress = true) {
+  stampRound(s.save, s.P.id, wallNow(host));
   const playing = !!(s.save.done[s.P.id] || (s.save.cur && s.save.cur.id === s.P.id));
   const aliased = !!s.R && s.R === s.save.cur;
   s.save = host.persist(s.save, progress && playing);
@@ -502,7 +520,7 @@ function start(s: ReckonState, host: Host) {
     showResult(s, s.save.done[s.P.id]!);
     return;
   }
-  const c = s.save.cur;
+  const c = roundFor(s.save, s.P.id) as Round | null;
   const R: Round =
     c && c.id === s.P.id && Array.isArray(c.g) && Array.isArray(c.z)
       ? c
@@ -957,7 +975,7 @@ export function playView(s: ReckonState): PlayView {
 /** The start screen's words (renderHome). */
 export function homeView(s: ReckonState, t: string, dayBefore: (d: string) => string) {
   const n = liveStreak(s.save, t, dayBefore);
-  const c = s.save.cur && s.save.cur.id === s.P.id ? s.save.cur : null;
+  const c = roundFor(s.save, s.P.id) as Round | null;
   return {
     streak: n >= 1 ? n + '-day streak' : '',
     stats: [String(n), String(bestScore(s.save)), String(Object.keys(s.save.done || {}).length)],

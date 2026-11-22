@@ -8,6 +8,7 @@ import {
   PROGRESS_TYPES,
   progressKey,
   PUZZLE_CACHE_PREFIX,
+  roundsKey,
 } from './rounds';
 
 /**
@@ -31,8 +32,17 @@ function parsed(store: CachedStorage, key: string): Record<string, unknown> | nu
 function heldIds(store: CachedStorage): Set<string> {
   const ids = new Set<string>();
   const add = (x: unknown) => typeof x === 'string' && ids.add(x);
-  for (const t of PROGRESS_TYPES) add(parsed(store, progressKey(t))?.id);
-  for (const k of CUR_KEYS) add((parsed(store, k)?.cur as { id?: unknown } | undefined)?.id);
+  for (const t of PROGRESS_TYPES) {
+    add(parsed(store, progressKey(t))?.id);
+    Object.keys(parsed(store, roundsKey(t)) ?? {}).forEach(add);
+  }
+  for (const k of CUR_KEYS) {
+    const s = parsed(store, k);
+    add((s?.cur as { id?: unknown } | undefined)?.id);
+    // every puzzle's own round (22 Nov 2026)
+    const r = s?.rounds;
+    if (r && typeof r === 'object' && !Array.isArray(r)) Object.keys(r).forEach(add);
+  }
   const days = parsed(store, 'digi-tangle-v1')?.days as
     | Record<string, { state?: unknown }>
     | undefined;
