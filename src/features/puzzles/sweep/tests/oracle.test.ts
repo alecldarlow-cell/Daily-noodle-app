@@ -1,7 +1,7 @@
 import { createSaveStore } from '@noodle/core';
 
 import { commitFinish, isRanked, reopenInfo } from '../finishing';
-import { apply, init, restore, WRONG_FLAG } from '../model';
+import { apply, init, restore } from '../model';
 import { holdOf, moves, PRESS_HOLD_MS, scenario, startAt, VARIANTS } from '../oracle';
 import { memoryKV, simulate } from '../simulate';
 import { sweep94 } from './fixtures';
@@ -35,8 +35,9 @@ describe('GIVEN the oracle', () => {
   it('THEN the variants use the controls they are named for', () => {
     const kinds = (v: (typeof VARIANTS)[number]) => new Set(moves(sweep94, v).map((s) => s.move.t));
     expect(kinds('solve')).toEqual(new Set(['tap']));
-    expect(kinds('boom')).toEqual(new Set(['tap', 'hint', 'again', 'press', 'mode']));
-    expect(kinds('hint')).toContain('hint');
+    expect(kinds('boom')).toEqual(new Set(['tap', 'again', 'press', 'mode']));
+    // no Hint since 21 Nov 2026: no list presses it
+    for (const v of VARIANTS) expect(kinds(v)).not.toContain('hint');
     expect(kinds('wrongflag')).toContain('press');
     expect(kinds('flags')).toEqual(new Set(['tap', 'mode', 'press']));
     expect(holdOf({ t: 'press', i: 0 })).toBe(PRESS_HOLD_MS);
@@ -68,7 +69,7 @@ describe('GIVEN a scenario simulated on a fake clock', () => {
       expect(out.final.share).toMatch(/^💣 Sweep 18 Oct — swept in \d:\d\d$/);
       expect(out.final).toMatchObject({
         title: 'Swept',
-        note: 'All seven mines found, no hints.',
+        note: 'All seven mines found.',
         kick: 'Sweep 94',
         stats: ['1', '1', '1'],
         again: false,
@@ -84,7 +85,7 @@ describe('GIVEN a scenario simulated on a fake clock', () => {
   describe('WHEN a mine is hit with a live streak, then the board replayed', () => {
     const { out } = sim('boom');
     it('THEN the loss is kept, the streak reset, and the replay records nothing', () => {
-      expect(out.final.end).toMatchObject({ outcome: 'failed', hints: 1 });
+      expect(out.final.end).toMatchObject({ outcome: 'failed', hints: 0 });
       const save = out.final.save as { done: Record<string, { o: string; b: number }> };
       expect(save.done['DP·SWEEP·2026-10-18']).toMatchObject({ o: 'loss', b: 2 });
       expect(out.final.streak).toMatchObject({ streak: 0, best: 6, last: DATE });
@@ -99,19 +100,19 @@ describe('GIVEN a scenario simulated on a fake clock', () => {
     });
   });
 
-  describe('WHEN Hint is used with an old, unmarked streak', () => {
-    it('THEN the grace day carries the streak on and the hints are counted', () => {
-      const { out } = sim('hint');
+  describe('WHEN it is solved by deduction with an old, unmarked streak', () => {
+    it('THEN the grace day carries the streak on and no hints are counted', () => {
+      const { out } = sim('deduce');
       expect(out.final.streak).toMatchObject({ streak: 3, tz: 'L' });
-      expect((out.final.end as { hints: number }).hints).toBeGreaterThan(5);
-      expect(out.snaps.some((s) => s.cells.includes('!'))).toBe(true);
+      expect((out.final.end as { hints: number }).hints).toBe(0);
+      expect(out.final.note).toMatch(/^All \w+ mines found\.$/);
     });
   });
 
   describe('WHEN a provably wrong flag is laid with a lapsed streak', () => {
-    it('THEN Hint names it and the streak starts again', () => {
+    it('THEN it comes off, the board is solved and the streak starts again', () => {
       const { out } = sim('wrongflag');
-      expect(out.snaps.some((s) => s.msg === WRONG_FLAG)).toBe(true);
+      expect(out.final.note).toMatch(/^All \w+ mines found\.$/);
       expect(out.final.streak).toMatchObject({ streak: 1, best: 9 });
     });
   });

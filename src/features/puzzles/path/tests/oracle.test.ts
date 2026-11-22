@@ -26,8 +26,10 @@ describe('GIVEN the oracle', () => {
   it('THEN the variants use the controls they are named for', () => {
     const kinds = (v: (typeof VARIANTS)[number]) => new Set(moves(path92, v).map((s) => s.move.t));
     expect(kinds('solve')).toEqual(new Set(['cell']));
-    expect(kinds('hints')).toContain('hint');
-    expect(kinds('undo')).toEqual(new Set(['cell', 'undo', 'hint']));
+    // no Hint since 21 Nov 2026: no list presses it
+    expect(kinds('refused')).toEqual(new Set(['cell']));
+    expect(kinds('undo')).toEqual(new Set(['cell', 'undo']));
+    for (const v of VARIANTS) expect(kinds(v)).not.toContain('hint');
   });
 });
 
@@ -47,7 +49,7 @@ describe('GIVEN a scenario simulated on a fake clock', () => {
       expect(out.final).toMatchObject({
         share: `〰️ Path #92 — ${t}`,
         title: 'Path complete',
-        note: 'One to 36 without a hint.',
+        note: 'Every square, one to 36.',
         kick: 'Path 92',
         stats: ['1', '1', '1'],
       });
@@ -69,17 +71,17 @@ describe('GIVEN a scenario simulated on a fake clock', () => {
       expect(save.done['DP·PATH·0092']!.d).toBe('2026-10-19');
       expect(out.final.streak).toMatchObject({ last: '2026-10-19', streak: 5, best: 6 });
       expect(out.final.share).toMatch(/ · 🔥5$/);
-      expect(out.final.note).toBe('One to 36 with one hint.');
+      expect(out.final.note).toBe('Every square, one to 36.');
       expect(out.snaps[0]!.streak).toBe('4');
       expect(out.snaps.some((s) => s.cells.includes('~'))).toBe(true);
     });
   });
 
-  describe('WHEN Hint does much of it, with an old streak a day behind', () => {
+  describe('WHEN it is solved unaided with refused taps, with an old streak a day behind', () => {
     it('THEN Path gives no grace day: the streak starts again', () => {
-      const { out } = sim('hints');
+      const { out } = sim('refused');
       expect(out.final.streak).toMatchObject({ streak: 1, best: 2, tz: 'L' });
-      expect(out.final.note).toMatch(/^One to 36 with \w+ hints\.$/);
+      expect(out.final.note).toBe('Every square, one to 36.');
       expect(out.snaps[0]!.streak).toBe('0');
     });
   });

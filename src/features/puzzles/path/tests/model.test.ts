@@ -248,9 +248,9 @@ describe('GIVEN the thread complete', () => {
       end: { secs: 102, checks: 0, reveals: 0, hints: 0 },
     });
     expect(endDetail(s, 7)).toMatchObject({ type: 'logic-path', outcome: 'solved', secs: 7 });
-    expect(finishNote(s, true)).toBe('One to 36 without a hint.');
-    expect(finishNote({ ...s, usedHints: 1 }, true)).toBe('One to 36 with one hint.');
-    expect(finishNote({ ...s, usedHints: 3 }, true)).toBe('One to 36 with three hints.');
+    // no Hint since 21 Nov 2026: one line, whatever was counted
+    expect(finishNote(s, true)).toBe('Every square, one to 36.');
+    expect(finishNote({ ...s, usedHints: 3 }, true)).toBe('Every square, one to 36.');
     expect(finishNote(s, false)).toBe('');
   });
 

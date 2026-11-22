@@ -65,8 +65,6 @@ async function drive(p, move, H) {
       return press(p, cell(move.i));
     case 'mode':
       return H.tap(p, p.locator(move.flag ? '#modeFlag' : '#modeDig'));
-    case 'hint':
-      return H.tap(p, p.locator('#hint'));
     case 'again':
       return H.tap(p, p.locator('.fin > .fin-link').first());
     default:

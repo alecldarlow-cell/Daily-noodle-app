@@ -1,6 +1,6 @@
 /**
- * Path's half of scripts/replay.js: its pages, controls (a tap on a square, Undo and
- * Hint: the controls a phone has), board reader and finish reader.
+ * Path's half of scripts/replay.js: its pages, controls (a tap on a square and Undo: the
+ * controls a phone has; Hint went on 21 Nov 2026), board reader and finish reader.
  */
 const model = require('../../src/features/puzzles/path/model.ts');
 const { scenario, startAt, VARIANTS } = require('../../src/features/puzzles/path/oracle.ts');
@@ -35,8 +35,6 @@ async function drive(p, move, H) {
       return H.tap(p, p.locator('#grid .cell').nth(move.r * 6 + move.c));
     case 'undo':
       return H.tap(p, p.locator('#undoBtn'));
-    case 'hint':
-      return H.tap(p, p.locator('#hintBtn'));
     default:
       throw new Error(`replay: no control for move ${JSON.stringify(move)}`);
   }

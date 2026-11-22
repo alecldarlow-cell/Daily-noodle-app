@@ -748,10 +748,10 @@ const W = ['no', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight',
 /** The finish sheet's one line (finishSheet's note); `fresh` is false on a reopened puzzle. */
 export function finishNote(s: SweepState, fresh: boolean): string {
   const m = W[s.p.MS.size] || s.p.MS.size;
-  const h = s.usedHints;
   if (!s.won) return 'That was a mine. The grid never needed a guess; the step was there to find.';
-  if (!fresh) return `All ${m} mines found.`;
-  return `All ${m} mines found, ${h ? (h === 1 ? 'with one hint' : `with ${W[h] || h} hints`) : 'no hints'}.`;
+  // No Hint on Sweep (21 Nov 2026, engines/sweep.js showEnd): the same line fresh or reopened.
+  void fresh;
+  return `All ${m} mines found.`;
 }
 
 /** The page's clock text, "MM:SS". */
