@@ -18,6 +18,7 @@
  * clock runs on; with reduced motion it lands at once. `submit` leaves the state
  * settling and `land` commits it, so the screen (and the replay) decide when.
  */
+import { dropRound, keepRound, roundFor } from '@noodle/core';
 
 export interface LinkGroup {
   rank: number;
@@ -594,12 +595,12 @@ export function roundToKeep(
 }
 
 /**
- * curWrite: put `c` (or null to clear) into the save document `raw` read-modify-write,
+ * curWrite: put `c` (or null to clear puzzle `id`'s round) into the save document `raw` read-modify-write,
  * leaving `done` and everything else as it is. Returns the text to store, or null to
  * leave storage alone: a save it can't read is never overwritten, and clearing a round
  * that isn't there writes nothing.
  */
-export function withRound(raw: string | null, c: LinkRound | null): string | null {
+export function withRound(raw: string | null, c: LinkRound | null, id: string): string | null {
   let s: unknown = null;
   try {
     s = JSON.parse(raw || 'null');
@@ -611,8 +612,12 @@ export function withRound(raw: string | null, c: LinkRound | null): string | nul
     if (raw) return null;
     doc = { v: 1 };
   } else doc = s;
-  if (!c && !doc.cur) return null;
-  doc.cur = c;
+  // One round per puzzle in `rounds[id]` (22 Nov 2026), the latest also in `cur`.
+  if (c) keepRound(doc, c as unknown as Record<string, unknown>, c.at);
+  else if (doc.cur || (object(doc.rounds) && doc.rounds[id])) {
+    dropRound(doc, id);
+    if (object(doc.cur) && doc.cur.id === id) doc.cur = null;
+  } else return null;
   return JSON.stringify(doc);
 }
 
@@ -634,7 +639,7 @@ export function readRound(
   } catch {
     return null;
   }
-  const c = object(doc) ? doc.cur : null;
+  const c = roundFor(doc, p.id);
   if (!object(c) || c.id !== p.id) return null;
   if (object(doc) && object(doc.done) && doc.done[p.id]) return null;
   if (!Array.isArray(c.f) || c.f.length >= 4 || new Set(c.f).size !== c.f.length) return null;

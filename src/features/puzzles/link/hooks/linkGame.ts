@@ -178,7 +178,7 @@ export class LinkGame {
 
   private writeRound(c: Parameters<typeof withRound>[1]) {
     try {
-      const next = withRound(this.deps.store.getItem(SAVE_KEY), c);
+      const next = withRound(this.deps.store.getItem(SAVE_KEY), c, this.state.p.id);
       if (next !== null) this.deps.store.setItem(SAVE_KEY, next);
     } catch {
       /* the page's curWrite is quiet on failure */

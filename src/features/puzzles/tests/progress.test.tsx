@@ -16,10 +16,14 @@ import { file92, path92 } from '../path/tests/fixtures';
 import {
   clearProgress,
   isMoveOf,
+  keepProgress,
   MAX_MOVES,
   progressKey,
   readProgress,
+  readRounds,
   resumeRound,
+  ROUNDS_KEPT,
+  roundsKey,
   type ProgressType,
 } from '../progress';
 import { useSweepGame } from '../sweep/hooks/useSweepGame';
@@ -268,10 +272,61 @@ describe.each(cases)('GIVEN a $type round', (c) => {
       expect(store.getItem(progressKey(c.type))).toBe(other);
     });
   });
+  describe('WHEN another puzzle’s round is kept and this one is played (one round per puzzle, 22 Nov 2026)', () => {
+    it('THEN both rounds are kept under their own puzzles, and finishing clears only this one', async () => {
+      const other = { v: 1, id: 'DP·OTHER·0001', secs: 40, moves: [{ t: 'x' }], at: 1 };
+      store.setItem(roundsKey(c.type), JSON.stringify({ [other.id]: other }));
+      store.setItem(progressKey(c.type), JSON.stringify(other));
+      const { g } = await open(c);
+      await act(async () => g().play());
+      const moves = c.finish(g);
+      await playMoves(g, moves.slice(0, 2));
+      expect(Object.keys(readRounds(store, c.type)).sort()).toEqual(
+        [other.id, c.file.data.id].sort(),
+      );
+      await playMoves(g, moves.slice(2));
+      expect(g().info).toBeTruthy();
+      expect(Object.keys(readRounds(store, c.type))).toEqual([other.id]);
+    });
+  });
 });
 
 describe('GIVEN a kept round read back', () => {
   const isAny = (x: unknown): x is unknown => x !== undefined;
+
+  it('THEN its own round is found while the old slot holds another puzzle’s (22 Nov 2026)', () => {
+    const mine = { v: 1, id: 'a', secs: 9, moves: [{}], at: 5 };
+    const theirs = { v: 1, id: 'b', secs: 3, moves: [{}], at: 6 };
+    store.setItem(roundsKey('mini'), JSON.stringify({ a: mine, b: theirs }));
+    store.setItem(progressKey('mini'), JSON.stringify(theirs));
+    expect(readProgress(store, 'mini', 'a', isAny)?.secs).toBe(9);
+    expect(readProgress(store, 'mini', 'b', isAny)?.secs).toBe(3);
+    clearProgress(store, 'mini', 'a');
+    expect(Object.keys(readRounds(store, 'mini'))).toEqual(['b']);
+    expect(store.getItem(progressKey('mini'))).toContain('"b"');
+    clearProgress(store, 'mini', 'b');
+    expect(store.getItem(roundsKey('mini'))).toBe('');
+    expect(store.getItem(progressKey('mini'))).toBe('');
+  });
+
+  it('THEN the newest ten rounds are kept, the one being written always', () => {
+    for (let i = 1; i <= 12; i++)
+      keepProgress(store, 'sweep', { v: 1, id: `p${i}`, secs: i, moves: [{}] }, i * 10);
+    const kept = readRounds(store, 'sweep');
+    expect(Object.keys(kept)).toHaveLength(ROUNDS_KEPT);
+    expect(kept.p1).toBeUndefined();
+    expect(kept.p12).toBeDefined();
+    keepProgress(store, 'sweep', { v: 1, id: 'old', secs: 1, moves: [{}] }, 1);
+    expect(readRounds(store, 'sweep').old).toBeDefined();
+    expect(JSON.parse(store.getItem(progressKey('sweep'))!).id).toBe('old');
+  });
+
+  it('THEN unreadable rounds read as none', () => {
+    store.setItem(roundsKey('path'), '{oops');
+    expect(readRounds(store, 'path')).toEqual({});
+    store.setItem(roundsKey('path'), '[1]');
+    expect(readRounds(store, 'path')).toEqual({});
+  });
 
   it('THEN one longer than any real round is refused', () => {
     store.setItem(

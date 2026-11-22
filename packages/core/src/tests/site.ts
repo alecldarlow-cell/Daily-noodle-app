@@ -39,6 +39,10 @@ export interface DnCore {
   saveIssues: () => number;
   onSaveChange: Fn;
   retrySaves: () => Promise<boolean>;
+  roundFor: Fn;
+  keepRound: Fn;
+  dropRound: Fn;
+  mergeRounds: Fn;
 }
 
 export interface Site {

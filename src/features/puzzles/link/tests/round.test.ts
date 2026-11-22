@@ -54,19 +54,44 @@ describe('GIVEN a round to keep (engines/link.js curSave)', () => {
 
 describe('GIVEN the save document (curWrite)', () => {
   const c = roundToKeep(fresh(), 4, 9, true)!;
-  it('THEN the round goes in beside done, which is left as it was', () => {
+  const id = c.id;
+  it('THEN the round goes in beside done, which is left as it was, in rounds[id] and cur (22 Nov 2026)', () => {
     const doc = { v: 1, done: { X: { o: 'win' } } };
-    expect(JSON.parse(withRound(JSON.stringify(doc), c)!)).toEqual({ ...doc, cur: c });
-    expect(JSON.parse(withRound(null, c)!)).toEqual({ v: 1, cur: c });
+    expect(JSON.parse(withRound(JSON.stringify(doc), c, id)!)).toEqual({
+      ...doc,
+      rounds: { [id]: c },
+      cur: c,
+    });
+    expect(JSON.parse(withRound(null, c, id)!)).toEqual({ v: 1, rounds: { [id]: c }, cur: c });
   });
-  it('THEN clearing writes cur null only when there was one, and a save it can’t read is never touched', () => {
-    expect(withRound(JSON.stringify({ v: 1, done: {} }), null)).toBeNull();
-    expect(JSON.parse(withRound(JSON.stringify({ v: 1, cur: c }), null)!)).toEqual({
+  it('THEN another puzzle’s round stays when this one is kept', () => {
+    const other = { ...c, id: 'OTHER', at: 5 };
+    const doc = { v: 1, done: {}, rounds: { OTHER: other }, cur: other };
+    const out = JSON.parse(withRound(JSON.stringify(doc), c, id)!);
+    expect(out.rounds).toEqual({ OTHER: other, [id]: c });
+    expect(out.cur).toEqual(c);
+  });
+  it('THEN clearing writes cur null only when it was this puzzle’s, and a save it can’t read is never touched', () => {
+    expect(withRound(JSON.stringify({ v: 1, done: {} }), null, id)).toBeNull();
+    expect(JSON.parse(withRound(JSON.stringify({ v: 1, cur: c }), null, id)!)).toEqual({
       v: 1,
       cur: null,
     });
-    expect(withRound('{oops', c)).toBeNull();
-    expect(withRound(JSON.stringify({ v: 2 }), c)).toBeNull();
+    expect(
+      JSON.parse(withRound(JSON.stringify({ v: 1, rounds: { [id]: c }, cur: c }), null, id)!),
+    ).toEqual({ v: 1, cur: null });
+    const other = { ...c, id: 'OTHER' };
+    expect(
+      JSON.parse(
+        withRound(
+          JSON.stringify({ v: 1, rounds: { [id]: c, OTHER: other }, cur: other }),
+          null,
+          id,
+        )!,
+      ),
+    ).toEqual({ v: 1, rounds: { OTHER: other }, cur: other });
+    expect(withRound('{oops', c, id)).toBeNull();
+    expect(withRound(JSON.stringify({ v: 2 }), c, id)).toBeNull();
   });
 });
 
@@ -113,6 +138,16 @@ describe('GIVEN a kept round read back (curRead / curRestore)', () => {
     ['a bad time', { s: -1 }],
   ])('THEN %s is not a round', (_n, change) => {
     expect(readRound(fresh().p, doc({ ...base, ...change }))).toBeNull();
+  });
+  it('THEN its own round in rounds is read while cur holds another puzzle’s (22 Nov 2026)', () => {
+    const other = { ...base, id: 'DP·LINK·0001', f: [] };
+    const raw = JSON.stringify({
+      v: 1,
+      done: {},
+      rounds: { [link78.id]: base, [other.id]: other },
+      cur: other,
+    });
+    expect(readRound(fresh().p, raw)!.found).toEqual([0]);
   });
   it('THEN a finished puzzle, or an unreadable save, has none', () => {
     expect(readRound(fresh().p, doc(base, { [link78.id]: { o: 'win' } }))).toBeNull();

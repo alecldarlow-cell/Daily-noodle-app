@@ -27,6 +27,8 @@ import {
   quizView,
   SAVE_KEY,
   serial,
+  stampRound,
+  wallNow,
   type BordersData,
   type BordersState,
   type Host,
@@ -140,6 +142,7 @@ export class Session {
       this.data.id,
       () => this.tick,
       () => this.today(),
+      () => this.wall(),
     );
     this.state = init(this.data, readSave(this.kv), this.tick);
     this.nf = this.next(this.tick);
@@ -163,6 +166,7 @@ export class Session {
   move(m: Move) {
     if (m.t === 'reload') {
       const st = this.state;
+      stampRound(st.save, st.P.id, wallNow(this.host));
       const playing = !!(st.save.done[st.P.id] || (st.save.cur && st.save.cur.id === st.P.id));
       this.host.persist(st.save, playing);
       this.open();

@@ -9,7 +9,16 @@ import { appStorage, saves as appSaves, type CachedStorage } from '@/shared/stor
 
 import type { PuzzleFile } from '../../types';
 import { commitFinish, readSave, reopenInfo, saveHost, type FinishInfo } from '../finishing';
-import { apply, frame, init, type Move, type ReckonData, type ReckonState } from '../model';
+import {
+  apply,
+  frame,
+  init,
+  stampRound,
+  wallNow,
+  type Move,
+  type ReckonData,
+  type ReckonState,
+} from '../model';
 import { reckonFeel, reckonSnap } from './feel';
 import { reckonSound, reckonSoundSnap } from './sound';
 
@@ -40,7 +49,7 @@ export function useReckonGame(file: PuzzleFile<ReckonData>, deps: Deps = {}) {
   const wall = deps.wall ?? Date.now;
   const id = file.data.id;
   const host = useMemo(
-    () => saveHost(saves, id, perf, () => londonDay(wall())),
+    () => saveHost(saves, id, perf, () => londonDay(wall()), wall),
     [saves, id, perf, wall],
   );
   const [initial] = useState(() => init(file.data, readSave(store), perf()));
@@ -83,6 +92,7 @@ export function useReckonGame(file: PuzzleFile<ReckonData>, deps: Deps = {}) {
   useEffect(() => {
     const save = () => {
       const s = ref.current;
+      stampRound(s.save, s.P.id, wallNow(host));
       const playing = !!(s.save.done[s.P.id] || (s.save.cur && s.save.cur.id === s.P.id));
       host.persist(s.save, playing);
     };

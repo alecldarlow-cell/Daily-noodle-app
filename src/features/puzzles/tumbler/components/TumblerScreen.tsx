@@ -59,7 +59,7 @@ export function TumblerScreen({ file }: { file: PuzzleFile<TumblerData> }) {
       leaving.current = true;
       router.replace(href);
     };
-    openPuzzle({ type: it.type, name: LAB_LABEL[it.type], path: it.path }, null, go);
+    openPuzzle({ type: it.type, name: LAB_LABEL[it.type], path: it.path }, go);
   };
 
   if (game.phase === 'start')

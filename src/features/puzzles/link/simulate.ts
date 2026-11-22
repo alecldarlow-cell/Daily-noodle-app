@@ -161,7 +161,7 @@ export function simulate(
   // The round kept in digi-link-v1 › cur, as the page's curSave / curClear write it.
   let dirty = false;
   const writeRound = (c: Parameters<typeof withRound>[1]) => {
-    const next = withRound(kv.getItem(SAVE_KEY), c);
+    const next = withRound(kv.getItem(SAVE_KEY), c, state.p.id);
     if (next !== null) kv.setItem(SAVE_KEY, next);
   };
   const keep = (at: number) => {

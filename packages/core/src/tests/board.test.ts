@@ -315,6 +315,45 @@ describe('GIVEN a personal link opened in an install with saves of its own', () 
     expect(JSON.parse(t.getItem('digi-link-v1')!).days.T.state).toBe('done');
   });
 
+  it('THEN one round per puzzle merges as the site does: every puzzle kept, newer at wins, finished ones dropped (22 Nov 2026)', () => {
+    const r = (id: string, at: number, s = 9) => ({ id, g: [], s, at });
+    const cases: [Record<string, unknown>, Record<string, unknown>][] = [
+      [
+        { v: 1, done: {}, rounds: { A: r('A', 1), B: r('B', 5) }, cur: r('B', 5) },
+        { v: 1, done: {}, rounds: { A: r('A', 3, 40), C: r('C', 2) }, cur: r('A', 3, 40) },
+      ],
+      [
+        { v: 1, done: {}, rounds: { A: r('A', 9) } },
+        { v: 1, done: { A: { s: 10, d: '2026-11-22' } } },
+      ],
+      [
+        { v: 1, done: {} },
+        { v: 1, done: {}, rounds: { A: r('A', 2) } },
+      ],
+      [
+        { v: 1, done: {}, rounds: { A: r('A', 2) } },
+        { v: 1, done: {}, rounds: 'x' },
+      ],
+    ];
+    for (const [here, there] of cases) {
+      const d = { 'digi-tally-v1': JSON.stringify(there) };
+      const hash = `#dnmove=${b64urlEncode(JSON.stringify({ v: 1, d, h: '' }))}`;
+      const browser = new WebStorage({ 'digi-tally-v1': JSON.stringify(here) });
+      const app = new WebStorage({ 'digi-tally-v1': JSON.stringify(here) });
+      runMove(browser, hash);
+      importMove(app, unpackMove(`https://dailynoodle.co.uk/board.html${hash}`)!, () => 0);
+      expect(app.dump()).toEqual(browser.dump());
+    }
+    const a = new WebStorage({ 'digi-tally-v1': JSON.stringify(cases[0]![0]) });
+    importMove(a, { v: 1, d: { 'digi-tally-v1': JSON.stringify(cases[0]![1]) } }, () => 0);
+    const out = JSON.parse(a.getItem('digi-tally-v1')!);
+    expect(Object.keys(out.rounds).sort()).toEqual(['A', 'B', 'C']);
+    expect(out.rounds.A.s).toBe(40);
+    const f = new WebStorage({ 'digi-tally-v1': JSON.stringify(cases[1]![0]) });
+    importMove(f, { v: 1, d: { 'digi-tally-v1': JSON.stringify(cases[1]![1]) } }, () => 0);
+    expect(JSON.parse(f.getItem('digi-tally-v1')!).rounds).toEqual({});
+  });
+
   it('THEN anything that is not a personal link is refused', () => {
     expect(unpackMove('https://dailynoodle.co.uk/board.html?join=ABCD2345&v=2')).toBeNull();
     expect(unpackMove('#dnmove=!!!')).toBeNull();

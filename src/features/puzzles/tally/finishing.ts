@@ -1,12 +1,15 @@
 /**
  * What happens when a Tally is solved, what a reopened one shows, and the unfinished round
- * in `digi-tally-v1.cur`, exactly as engines/tally.js finish, finishSheet, restoreDone,
+ * in `digi-tally-v1.rounds[id]` (and the latest in `.cur`, 22 Nov 2026), exactly as engines/tally.js finish, finishSheet, restoreDone,
  * saveCur, clearCur and restoreCur do them. The screen and the replay both call these.
  */
 import {
   bumpPathStreak,
+  dropRound,
+  keepRound,
   livePathStreak,
   londonDay,
+  roundFor,
   shareTally,
   type GridStreak,
   type KV,
@@ -40,7 +43,12 @@ export interface Finished extends FinishInfo {
   first: boolean;
 }
 
-type Save = { v?: number; done?: unknown; cur?: Record<string, unknown> | null };
+type Save = {
+  v?: number;
+  done?: unknown;
+  cur?: Record<string, unknown> | null;
+  rounds?: Record<string, unknown>;
+};
 
 function readJson(kv: KV, key: string): unknown {
   try {
@@ -82,16 +90,30 @@ export function saveCur(
   if (state.solved || saves.getDone(SAVE_KEY, id)) return;
   const s = readSave(kv);
   if (state.g.some(Boolean) || state.notes.some(Boolean))
-    s.cur = { id, g: state.g, notes: state.notes, s: Math.round(secs), at: now };
-  else if (s.cur && s.cur.id === id) delete s.cur;
+    keepRound(s, { id, g: state.g, notes: state.notes, s: Math.round(secs) }, now);
+  else if (held(s, id)) dropAll(s, id);
   else return;
   kv.setItem(SAVE_KEY, JSON.stringify(s));
 }
 
+/** This puzzle's round is in the save: in `rounds` (22 Nov 2026) or the old `cur` slot. */
+function held(s: Save, id: string): boolean {
+  return !!(
+    (s.cur && s.cur.id === id) ||
+    (s.rounds && typeof s.rounds === 'object' && s.rounds[id])
+  );
+}
+
+/** Takes this puzzle's round out of `rounds` and `cur`, as engines/tally.js. */
+function dropAll(s: Save, id: string): void {
+  dropRound(s, id);
+  if (s.cur && s.cur.id === id) delete s.cur;
+}
+
 function clearCur(kv: KV, id: string): void {
   const s = readSave(kv);
-  if (s.cur && s.cur.id === id) {
-    delete s.cur;
+  if (held(s, id)) {
+    dropAll(s, id);
     kv.setItem(SAVE_KEY, JSON.stringify(s));
   }
 }
@@ -99,7 +121,12 @@ function clearCur(kv: KV, id: string): void {
 /** The round kept for this puzzle, on its board, or null. */
 export function restoreCur(kv: KV, data: TallyData): { state: TallyState; secs: number } | null {
   const fresh = init(data);
-  const c = readSave(kv).cur as { id?: unknown; g?: unknown; notes?: unknown; s?: unknown } | null;
+  const c = roundFor(readSave(kv), data.id) as {
+    id?: unknown;
+    g?: unknown;
+    notes?: unknown;
+    s?: unknown;
+  } | null;
   const cells = fresh.g.length;
   if (!c || c.id !== data.id || !Array.isArray(c.g) || c.g.length !== cells) return null;
   const list = (x: unknown[]) => x.map((v) => Number(v) || 0);

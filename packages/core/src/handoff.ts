@@ -194,6 +194,14 @@ export function mergeMoved(here: Obj, old: Obj): Obj {
       out[k] = u;
     } else if (k === 'streak' && isObj(out[k]) && isObj(old[k])) {
       out[k] = mergeMoved(out[k] as Obj, old[k] as Obj);
+    } else if (k === 'rounds' && isObj(out[k]) && isObj(old[k])) {
+      // One unfinished round per puzzle (22 Nov 2026): every puzzle's round survives, the
+      // newer `at` winning; finished puzzles' rounds are dropped below.
+      const rs: Obj = Object.assign({}, out[k]);
+      for (const [q, r] of Object.entries(old[k] as Obj))
+        if (isObj(r) && (!isObj(rs[q]) || (Number(r.at) || 0) > (Number((rs[q] as Obj).at) || 0)))
+          rs[q] = r;
+      out[k] = rs;
     } else if (k === 'cur' && isObj(old[k]) && Number(old[k].at) > 0) {
       // An unfinished round stamped with when it was saved (Link, 29 Oct 2026): the newer
       // one wins. Rounds without a stamp (Borders, Reckon) keep what's here.
@@ -201,6 +209,11 @@ export function mergeMoved(here: Obj, old: Obj): Obj {
       if (here == null || (isObj(here) && Number(old[k].at) > (Number(here.at) || 0)))
         out[k] = old[k];
     }
+  }
+  if (isObj(out.rounds) && isObj(out.done)) {
+    const left: Obj = {};
+    for (const n in out.rounds) if (!out.done[n]) left[n] = out.rounds[n];
+    out.rounds = left;
   }
   return out;
 }

@@ -1,6 +1,6 @@
 import type { TodayItem } from '@noodle/core';
 import { act, renderHook } from '@testing-library/react-native';
-import { Alert, BackHandler, type AlertButton } from 'react-native';
+import { Alert, BackHandler } from 'react-native';
 
 import { progressKey } from '@/shared/played';
 import { appStorage } from '@/shared/storage';
@@ -185,7 +185,7 @@ describe('GIVEN two copies of a puzzle stacked (its card tapped twice)', () => {
   });
 });
 
-describe('GIVEN another Doku’s round is kept in the Doku slot', () => {
+describe('GIVEN another Doku’s round is kept (every puzzle keeps its own, 22 Nov 2026)', () => {
   const dokuItem = {
     type: 'doku',
     id: 'DP·LEXI·0108',
@@ -197,7 +197,6 @@ describe('GIVEN another Doku’s round is kept in the Doku slot', () => {
     params: { type: 'doku', file: '2026-10-29-doku-108' },
   };
   let alert: jest.SpyInstance;
-  const buttons = () => alert.mock.calls[0]![2] as AlertButton[];
 
   beforeEach(() => {
     alert = jest.spyOn(Alert, 'alert').mockImplementation(() => undefined);
@@ -206,41 +205,19 @@ describe('GIVEN another Doku’s round is kept in the Doku slot', () => {
       JSON.stringify({ id: 'DP·LEXI·0107', moves: [[0, 'A']], secs: 30 }),
     );
   });
-  afterEach(() => appStorage.setItem(progressKey('doku'), 'null'));
+  afterEach(() => {
+    appStorage.setItem(progressKey('doku'), 'null');
+    alert.mockRestore();
+  });
 
   describe('WHEN Play more opens the next Doku', () => {
-    it('THEN it asks first, and opens the Doku in its place only when Start is pressed', async () => {
+    it('THEN it opens straight away, with no "isn’t finished" question, and Back closes it', async () => {
       const { result } = await renderHook(() => usePlayerExit());
       await act(() => result.current.next(dokuItem));
-      expect(alert).toHaveBeenCalledTimes(1);
-      expect(alert.mock.calls[0]![0]).toMatch(/ isn’t finished$/);
-      expect(mockRouter.replace).not.toHaveBeenCalled();
-      const start = buttons().find((b) => b.text === 'Start Doku 108 instead')!;
-      await act(() => start.onPress!());
+      expect(alert).not.toHaveBeenCalled();
       expect(mockRouter.replace).toHaveBeenCalledTimes(1);
       expect(mockRouter.replace).toHaveBeenCalledWith(route);
       expect(handlers[0]!()).toBe(true);
-    });
-  });
-
-  describe('WHEN the question is cancelled', () => {
-    it('THEN the player stays, and Back still closes it', async () => {
-      const { result } = await renderHook(() => usePlayerExit());
-      await act(() => result.current.next(dokuItem));
-      expect(buttons()[0]!.style).toBe('cancel');
-      expect(buttons()[0]!.onPress).toBeUndefined();
-      await act(() => result.current.back());
-      expect(mockRouter.replace).not.toHaveBeenCalled();
-      expect(mockRouter.back).toHaveBeenCalledTimes(1);
-    });
-  });
-
-  describe('WHEN Play more opens the Doku the slot already holds', () => {
-    it('THEN it opens straight away, as before', async () => {
-      const { result } = await renderHook(() => usePlayerExit());
-      await act(() => result.current.next({ ...dokuItem, id: 'DP·LEXI·0107' }));
-      expect(alert).not.toHaveBeenCalled();
-      expect(mockRouter.replace).toHaveBeenCalledWith(route);
     });
   });
 });

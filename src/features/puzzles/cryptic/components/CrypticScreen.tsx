@@ -58,7 +58,7 @@ export function CrypticScreen({ file }: { file: PuzzleFile<CrypticData> }) {
       leaving.current = true;
       router.replace(href);
     };
-    openPuzzle({ type: it.type, name: LAB_LABEL[it.type], path: it.path }, null, go);
+    openPuzzle({ type: it.type, name: LAB_LABEL[it.type], path: it.path }, go);
   };
 
   if (game.phase === 'start')

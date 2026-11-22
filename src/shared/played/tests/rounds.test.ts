@@ -1,4 +1,4 @@
-import { fileOf, heldElsewhere, isKept, progressKey, roundOf } from '../rounds';
+import { fileOf, isKept, progressKey, roundOf } from '../rounds';
 
 const slot = (id: string, secs: unknown = 245, moves: unknown[] = [{ t: 'key' }]) => ({
   v: 1,
@@ -85,37 +85,36 @@ describe('GIVEN Link’s save (its cur since 29 Oct 2026, AF-029/AF-020)', () =>
   });
 });
 
-describe('GIVEN a type with one kept round', () => {
-  describe('WHEN another puzzle of the type holds it', () => {
-    it('THEN starting this one would replace that one', () => {
-      expect(heldElsewhere('mini', 'A', null, slot('B'))).toBe('B');
-      expect(heldElsewhere('borders', 'A', { cur: { id: 'B' } }, null)).toBe('B');
-      expect(heldElsewhere('reckon', 'A', { cur: { id: 'B' } }, null)).toBe('B');
-      expect(heldElsewhere('link', 'A', { cur: { id: 'B', s: 9 } }, null)).toBe('B');
+describe('GIVEN every puzzle keeps its own round (22 Nov 2026)', () => {
+  describe('WHEN the latest round (slot or cur) is another puzzle’s', () => {
+    it('THEN this puzzle’s own round in rounds is still found, with its time', () => {
+      const rounds = { A: slot('A'), B: slot('B') };
+      expect(roundOf('mini', 'A', null, slot('B'), rounds)).toEqual({ time: '4:05' });
+      expect(roundOf('mini', 'B', null, slot('B'), rounds)).toEqual({ time: '4:05' });
+      expect(roundOf('mini', 'C', null, slot('B'), rounds)).toBeNull();
+      const site = {
+        rounds: { A: { id: 'A', s: 30 }, B: { id: 'B', s: 9 } },
+        cur: { id: 'B', s: 9 },
+      };
+      expect(roundOf('tally', 'A', site, null)).toEqual({ time: '0:30' });
+      expect(roundOf('link', 'A', site, null)).toEqual({ time: '0:30' });
+      expect(roundOf('borders', 'A', site, null)).toEqual({});
+      expect(roundOf('reckon', 'A', site, null)).toEqual({});
     });
   });
-  describe('WHEN this puzzle holds it, nobody does, or the holder is finished', () => {
-    it('THEN nothing is replaced', () => {
-      expect(heldElsewhere('mini', 'A', null, slot('A'))).toBeNull();
-      expect(heldElsewhere('mini', 'A', null, slot('B', 3, []))).toBeNull();
-      expect(heldElsewhere('mini', 'A', null, null)).toBeNull();
-      expect(heldElsewhere('borders', 'A', { cur: null }, null)).toBeNull();
-      expect(heldElsewhere('doku', 'A', { done: { B: { s: 3 } } }, slot('B'))).toBeNull();
-    });
-  });
-  describe('WHEN the type keeps rounds side by side (Tangle)', () => {
-    it('THEN nothing is ever replaced', () => {
-      const site = { days: { B: { state: 'playing' } }, cur: { id: 'B' } };
-      expect(heldElsewhere('tangle', 'A', site, null)).toBeNull();
+  describe('WHEN the puzzle is finished', () => {
+    it('THEN its kept round is not offered', () => {
+      const site = { done: { A: { s: 1 } }, rounds: { A: { id: 'A', s: 30 } } };
+      expect(roundOf('tally', 'A', site, null)).toBeNull();
+      expect(roundOf('doku', 'A', site, null, { A: slot('A') })).toBeNull();
     });
   });
 });
 
 describe('GIVEN Tally’s save', () => {
-  it('THEN its round is its `cur`, with its time, and holds the one slot', () => {
+  it('THEN a save from before rounds still reads its round from `cur`, with its time', () => {
     expect(roundOf('tally', 'T', { cur: { id: 'T', s: 95 } }, null)).toEqual({ time: '1:35' });
     expect(roundOf('tally', 'T', { cur: { id: 'T' } }, null)).toEqual({});
     expect(roundOf('tally', 'T', { cur: { id: 'U', s: 95 } }, null)).toBeNull();
-    expect(heldElsewhere('tally', 'A', { cur: { id: 'B' } }, null)).toBe('B');
   });
 });

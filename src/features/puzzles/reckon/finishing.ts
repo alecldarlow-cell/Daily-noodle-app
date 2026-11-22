@@ -15,6 +15,8 @@ import {
   noteFor,
   recapRows,
   SAVE_KEY,
+  stampRound,
+  wallNow,
   type Host,
   type ReckonRecord,
   type ReckonSave,
@@ -48,10 +50,12 @@ export function saveHost(
   id: string,
   now: () => number,
   today: () => string,
+  wall?: () => number,
 ): Host {
   return {
     now,
     today,
+    ...(wall ? { wall } : {}),
     persist: (save, report) => saves.saveProgress(SAVE_KEY, save, id, report) as ReckonSave,
   };
 }
@@ -118,6 +122,7 @@ export function commitFinish(prev: ReckonState, saves: SaveStore, host: Host): F
   s.save.done[s.P.id] = kept || Object.assign(rec, { d: t });
   s.save.best = Math.max(+s.save.best || 0, rec.p);
   s.save.cur = null;
+  stampRound(s.save, s.P.id, wallNow(host)); // the finished puzzle's round goes (22 Nov 2026)
   s.save = host.persist(s.save, true);
   s.R = null;
   s.VR = null;

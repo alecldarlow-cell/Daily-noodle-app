@@ -40,9 +40,7 @@ const LAB_KEYS = LAB_TYPES.map(labSaveKey);
 
 /** Opens another Lab trial in this screen's place (it isn't a daily: no kept round to ask about). */
 function openTrial(it: LabFeedItem) {
-  openPuzzle({ type: it.type, name: it.headline, path: it.path }, null, (href) =>
-    router.replace(href),
-  );
+  openPuzzle({ type: it.type, name: it.headline, path: it.path }, (href) => router.replace(href));
 }
 
 /** Tilt, played natively (Lab, 11 Nov 2026): the Lab start card, the maze, the Lab finish. */
