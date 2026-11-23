@@ -10,9 +10,9 @@ import { Animated, Easing, StyleSheet, type StyleProp, type ViewStyle } from 're
 import { SETTLE_MS } from '../model';
 
 /** link.js THE SETTLE: each tile turns 80 ms after the last; the flight starts 300 ms after the third. */
-export const FLIP_STEP_MS = 80;
-export const FLIGHT_AT_MS = 80 * 3 + 300;
-export const FLIGHT_MS = SETTLE_MS - FLIGHT_AT_MS;
+const FLIP_STEP_MS = 80;
+const FLIGHT_AT_MS = 80 * 3 + 300;
+const FLIGHT_MS = SETTLE_MS - FLIGHT_AT_MS;
 /** .tile.miss stays red this long; the wobble itself takes 520 ms. */
 export const MISS_MS = 760;
 const WOBBLE_MS = 520;

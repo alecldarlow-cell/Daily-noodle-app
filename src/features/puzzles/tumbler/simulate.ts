@@ -33,7 +33,7 @@ export interface Snapshot {
 }
 
 /** Each submitted row as the page draws it, newest first: letters with their clue, its number. */
-export function triesRows(s: Pick<TumblerState, 'tries' | 'p'>): string[] {
+function triesRows(s: Pick<TumblerState, 'tries' | 'p'>): string[] {
   const n = s.tries.length;
   return s.tries
     .slice()

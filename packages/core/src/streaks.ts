@@ -14,7 +14,7 @@ const EMPTY_GRID: GridStreak = { last: null, streak: 0, best: 0, dates: [] };
  * Whether day `t` continues streak `s`. A save written before 18 Oct 2026 (no tz mark)
  * may hold a UTC date, so it is allowed one extra day of gap, once.
  */
-export function followsOn(s: Pick<GridStreak, 'last' | 'tz'>, t: string): boolean {
+function followsOn(s: Pick<GridStreak, 'last' | 'tz'>, t: string): boolean {
   const y = dayBefore(t);
   return s.last === y || (!s.tz && s.last === dayBefore(y));
 }

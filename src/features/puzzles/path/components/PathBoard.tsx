@@ -9,7 +9,7 @@ import { endMark, lines, N, type Cell, type PathState } from '../model';
 import { pathColors } from './colors';
 
 /** How long a rejected square shakes (path.css .cell.shake, 0.3 s). */
-export const SHAKE_MS = 300;
+const SHAKE_MS = 300;
 
 /**
  * The rejected square's shake (path.css @keyframes shake: 4 px left, 4 px right), run

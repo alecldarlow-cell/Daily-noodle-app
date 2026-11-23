@@ -104,7 +104,7 @@ export function boardPid(kv: KV, mint: () => string): string {
   return s.pid;
 }
 
-export function boardLeagues(kv: KV): BoardLeague[] {
+function boardLeagues(kv: KV): BoardLeague[] {
   return readBoard(kv).leagues || [];
 }
 
@@ -253,7 +253,7 @@ export interface FeedPath {
   kind?: string;
 }
 
-export function clockSecs(v: unknown): number | null {
+function clockSecs(v: unknown): number | null {
   const m = String(v || '').match(/^(\d{1,4}):(\d{2})$/);
   return m ? +m[1]! * 60 + +m[2]! : null;
 }
@@ -295,7 +295,7 @@ const SAVES: { key: string; t: BoardTypeId; read: (r: Rec) => Obj }[] = [
 ];
 
 /** Every finished puzzle this install remembers, as board rows, found by its page in the feed. */
-export function savedResults(kv: KV, feed: readonly FeedPath[] | null | undefined): BackfillRow[] {
+function savedResults(kv: KV, feed: readonly FeedPath[] | null | undefined): BackfillRow[] {
   const byKey: Record<string, string> = {};
   for (const it of feed || []) {
     const T = boardTypeOfPath(it.path);

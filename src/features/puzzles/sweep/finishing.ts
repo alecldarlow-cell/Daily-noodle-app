@@ -63,7 +63,7 @@ const doneCount = (kv: KV) => {
 };
 
 /** The saved Sweep streak, or null (the engine's `store(true)`). */
-export function readStreak(kv: KV): GridStreak | null {
+function readStreak(kv: KV): GridStreak | null {
   const s = readJson(kv, STREAK_KEY);
   return s && typeof s === 'object' ? (s as GridStreak) : null;
 }

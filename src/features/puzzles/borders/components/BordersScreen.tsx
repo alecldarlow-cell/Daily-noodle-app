@@ -17,7 +17,7 @@ import { BordersQuiz } from './BordersQuiz';
 import { tilesHtml } from './drawing';
 import { Picture } from './Picture';
 
-export const BORDERLINE = 'https://dailynoodle.co.uk/reports/2026-10-05-quiz-borderline.html';
+const BORDERLINE = 'https://dailynoodle.co.uk/reports/2026-10-05-quiz-borderline.html';
 
 /** "Today's ten", easiest first: each outline with its name, the misses crossed. */
 function Recap({ info, c }: { info: FinishInfo; c: BordersColors }) {

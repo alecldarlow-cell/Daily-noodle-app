@@ -27,7 +27,7 @@ import { recordSubmission } from './submissions';
 import { BOARD_QUERY } from './useLeagues';
 
 /** board_submit's arguments for a finish, or null when nothing is sent. */
-export function submitFor(f: PuzzleFinish) {
+function submitFor(f: PuzzleFinish) {
   if (!inAnyLeague(appStorage)) return null;
   return submitArgs(getPid(), f.path, f.detail);
 }
@@ -69,7 +69,7 @@ export async function runBackfill(plan: BackfillPlan): Promise<number> {
 }
 
 /** A catch-up sends results from this many days back: enough for a spell with no signal. */
-export const CATCH_UP_DAYS = 14;
+const CATCH_UP_DAYS = 14;
 /** And looks at most this often. */
 export const CATCH_UP_EVERY_MS = 10 * 60_000;
 

@@ -11,7 +11,7 @@ import type { LinkGroup } from '../model';
  * green, and group 4 turned light in dark mode so it shows on the dark sheet; the text and
  * marks on each in the colour that reads on it.
  */
-export function useSheetGroups() {
+function useSheetGroups() {
   const dark = useColorScheme() === 'dark';
   const bg = dark ? '#11131A' : '#EDEEF2';
   const fill: Record<number, string> = {

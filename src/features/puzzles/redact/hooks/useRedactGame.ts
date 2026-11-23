@@ -33,7 +33,7 @@ import {
 export type Phase = 'start' | 'play' | 'finished';
 
 /** The site's tracker slug: a Lab trial has no daily type. */
-export const SLUG = 'word-redact';
+const SLUG = 'word-redact';
 /** After the solved grid's wave, the short hold before the sheet (the engine's HOLD). */
 const HOLD_MS = 250;
 const POP_MS = 600;

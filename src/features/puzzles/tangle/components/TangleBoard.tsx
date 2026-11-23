@@ -33,8 +33,8 @@ const MAX_SIDE = 420;
  * inside it), and the traced word and its toast each have a line of their own.
  */
 export const LIST_H = 150;
-export const WORD_H = 32;
-export const TOAST_H = 20;
+const WORD_H = 32;
+const TOAST_H = 20;
 /** The traced word's outlined slot: the word, its toast, the dashed edge's 1.5 pt a side and a breath. */
 export const CUR_H = WORD_H + TOAST_H + 4;
 

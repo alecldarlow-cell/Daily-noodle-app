@@ -32,10 +32,10 @@ import {
   type CrypticState,
 } from './model';
 
-export const RESUMED_NOTE = ' Picked up where you left off.';
+const RESUMED_NOTE = ' Picked up where you left off.';
 
 /** The note under the time: "No hints." / "2 hints." (the web's hero shows the hints beside it). */
-export const hintsNote = (h: number) => {
+const hintsNote = (h: number) => {
   const x = hintsText(h);
   return `${x[0]!.toUpperCase()}${x.slice(1)}.`;
 };
@@ -84,7 +84,7 @@ const doneCount = (kv: KV) => {
 /** Clues solved on this phone (the start card's number). */
 export const playedCount = doneCount;
 
-export function readStreak(kv: KV): GridStreak | null {
+function readStreak(kv: KV): GridStreak | null {
   const s = readJson(kv, STREAK_KEY);
   return s && typeof s === 'object' ? (s as GridStreak) : null;
 }

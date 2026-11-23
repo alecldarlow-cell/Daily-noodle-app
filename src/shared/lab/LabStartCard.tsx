@@ -5,7 +5,7 @@ import { longDate, startHead, useLondonDay } from '@/shared/time';
 import { PuzzleTile } from '@/shared/ui';
 
 /** What each trial counts on its start card, as the website's (engines/house.js). */
-export const PLAYED_LABEL: Record<LabType, string> = {
+const PLAYED_LABEL: Record<LabType, string> = {
   tilt: 'mazes played',
   redact: 'boards played',
   tumbler: 'words found',

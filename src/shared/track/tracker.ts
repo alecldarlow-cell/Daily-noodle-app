@@ -12,7 +12,6 @@
  */
 export const IDLE_MS = 30 * 60 * 1000;
 export const MAX_BATCH = 25;
-export const TRACK_KEY = /^digi\.(aid|sid|last|optout)$/;
 
 /** The app's storage. A removed code is stored as '' (the app's storage keeps no deletes); '' counts as absent. */
 export interface TrackKV {

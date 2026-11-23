@@ -37,7 +37,7 @@ const MOVES: MoveSpec = {
 const isMove = (x: unknown): x is Move => isMoveOf(MOVES, x);
 
 /** How long the solved board shows before the finish sheet rises (the page waits 1.45 s). */
-export const SHEET_DELAY_MS = 1450;
+const SHEET_DELAY_MS = 1450;
 
 interface Deps {
   store?: CachedStorage;

@@ -40,7 +40,7 @@ export interface Snapshot {
   sheet: boolean;
 }
 
-export const trailCode = (s: TiltState) =>
+const trailCode = (s: TiltState) =>
   s.trail
     .map((k) => {
       const [r, c] = k.split(',').map(Number);

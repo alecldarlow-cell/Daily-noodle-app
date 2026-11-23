@@ -6,9 +6,9 @@
  */
 
 /** The site's frame: its physics steps once per 60 Hz frame. */
-export const FRAME_MS = 1000 / 60;
+const FRAME_MS = 1000 / 60;
 /** The longest a piece lives, in frames (the site's 110 + up to 70). */
-export const MAX_FRAMES = 180;
+const MAX_FRAMES = 180;
 /** How long one burst is on screen. */
 export const BURST_MS = Math.ceil(MAX_FRAMES * FRAME_MS);
 /** The site's colours, in order (cobalt, marigold, green, navy, white). */

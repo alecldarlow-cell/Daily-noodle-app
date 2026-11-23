@@ -6,7 +6,7 @@ import { shortDate } from '@/shared/time';
 import type { DayRow, Outcome, OverallRow, PuzzleCard, RecordResult } from '../types';
 
 /** Board links carry the link-preview version (board.html PREVIEW_V). */
-export const PREVIEW_V = '2';
+const PREVIEW_V = '2';
 
 /** A league's board on the website (board.html's invite link). The app's own shares use join.html (below). */
 export function boardLink(code: string): string {

@@ -26,8 +26,8 @@
 
 export const N = 6;
 export const CELLS = 36;
-export const ix = (r: number, c: number) => r * N + c;
-export const rc = (i: number): [number, number] => [Math.floor(i / N), i % N];
+const ix = (r: number, c: number) => r * N + c;
+const rc = (i: number): [number, number] => [Math.floor(i / N), i % N];
 export const NB: readonly (readonly number[])[] = Array.from({ length: CELLS }, (_, i) => {
   const [r, c] = rc(i);
   const o: number[] = [];
@@ -42,7 +42,7 @@ export const NB: readonly (readonly number[])[] = Array.from({ length: CELLS }, 
 });
 
 /** Seven mines in thirty-six squares, every day (the engine's BAND). */
-export const MINES = 7;
+const MINES = 7;
 
 /** The page's `window.DN_PUZZLE` for a Sweep (coordinates 1-indexed [row, col]). */
 export interface SweepData {
@@ -57,7 +57,7 @@ export interface SweepData {
 export const SAVE_KEY = 'digi-sweep-v1';
 export const STREAK_KEY = 'digi-sweep-streak';
 /** The site's tracker names Sweep by its page slug. */
-export const SITE_TYPE = 'logic-sweep';
+const SITE_TYPE = 'logic-sweep';
 
 // ---- the gate (engines/sweep.js counts, cascade, deduceStep, solveNoGuess, countSolutions, validateSweep) ----
 
@@ -105,7 +105,7 @@ export interface Derived {
 export type Why = Constraint | Derived;
 const isDerived = (c: Why): c is Derived => 'A' in c;
 
-export function deduceStep(
+function deduceStep(
   revealed: ReadonlySet<number>,
   flagged: ReadonlySet<number>,
   n: readonly number[],
@@ -168,7 +168,7 @@ export function deduceStep(
 }
 
 /** Gate 1: deduction alone clears the board from the opening. */
-export function solveNoGuess(
+function solveNoGuess(
   ms: ReadonlySet<number>,
   opening: Iterable<number>,
   n: readonly number[],
@@ -201,7 +201,7 @@ export function solveNoGuess(
 }
 
 /** Gate 2: every mine placement consistent with the opening; exactly one must survive. */
-export function countSolutions(
+function countSolutions(
   opening: ReadonlySet<number>,
   n: readonly number[],
   total: number,
@@ -382,7 +382,7 @@ export const WRONG_FLAG = "This flag can't be right: this square is provably saf
 export const LOSS_MSG = 'That was a mine. The grid never needed a guess — the step was there.';
 export const LOSS_REPLAY_MSG = 'That was a mine. Replay — nothing recorded.';
 
-export function puzzleOf(data: SweepData): SweepPuzzle {
+function puzzleOf(data: SweepData): SweepPuzzle {
   const mines = data.mines.map(([r, c]) => [r - 1, c - 1] as const);
   const start = [data.start[0] - 1, data.start[1] - 1] as const;
   const v = validateSweep(mines, start);

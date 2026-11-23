@@ -32,13 +32,13 @@ import {
 export type Phase = 'start' | 'play' | 'finished';
 
 /** The site's slug for a Cryptic's events (dn-track.js PTYPE). */
-export const SLUG = 'word-cryptic';
+const SLUG = 'word-cryptic';
 
 /** The win beat (engines/cryptic.js winBeat): the squares pop left to right, a short hold. */
 export const beatMs = (n: number) => 90 * (n - 1) + 520 + 300;
 
 /** What a move feels like: the solve, a wrong answer, or a key. */
-export function crypticFeel(prev: CrypticState, next: CrypticState) {
+function crypticFeel(prev: CrypticState, next: CrypticState) {
   return strongest(
     next.solved && !prev.solved && 'success',
     next.wrong > prev.wrong && 'error',

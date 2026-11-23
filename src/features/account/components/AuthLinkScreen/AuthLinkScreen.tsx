@@ -11,7 +11,7 @@ import { authClient } from '../../api/authClient';
 import { completeLink } from '../../hooks/useAccount';
 
 /** How long to wait for the link (and Supabase) before saying it didn't work. */
-export const SIGN_IN_WAIT_MS = 15_000;
+const SIGN_IN_WAIT_MS = 15_000;
 
 /** No link arrived, or signing in never answered (a weak signal). */
 export const TOO_LONG = 'Signing in is taking too long. Check your connection and try again.';

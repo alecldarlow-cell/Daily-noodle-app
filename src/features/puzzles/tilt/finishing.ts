@@ -31,7 +31,7 @@ import {
   type TiltState,
 } from './model';
 
-export const RESUMED_NOTE = ' Picked up where you left off.';
+const RESUMED_NOTE = ' Picked up where you left off.';
 
 export interface FinishInfo {
   id: string;
@@ -75,7 +75,7 @@ const doneCount = (kv: KV) => {
   return s.done && typeof s.done === 'object' ? Object.keys(s.done).length : 0;
 };
 
-export function readStreak(kv: KV): GridStreak | null {
+function readStreak(kv: KV): GridStreak | null {
   const s = readJson(kv, STREAK_KEY);
   return s && typeof s === 'object' ? (s as GridStreak) : null;
 }

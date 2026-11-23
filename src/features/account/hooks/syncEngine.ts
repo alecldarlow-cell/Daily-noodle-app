@@ -14,7 +14,7 @@ import { missingFunction, type RevDoc, type SyncApi } from '../api/syncApi';
  * What sync carries: the dailies' and the Lab trials' saves and streaks (the Lab's from 17 Nov
  * 2026, Alec, as the website's dn-sync.js), the league identity and the Lab votes document.
  */
-export const SYNC_KEY =
+const SYNC_KEY =
   /^digi-(mini|doku|sweep|path|link|tangle|borders|reckon|tally|tilt|redact|tumbler|cryptic)-(v1|streak)$/;
 /** App-only: when this phone last synced, for the Account screen. */
 export const LAST_SYNC_KEY = 'noodle-app-sync';
@@ -46,8 +46,7 @@ function canon(v: unknown): unknown {
   for (const k of Object.keys(v).sort()) out[k] = canon(v[k]);
   return out;
 }
-export const same = (a: unknown, b: unknown) =>
-  JSON.stringify(canon(a)) === JSON.stringify(canon(b));
+const same = (a: unknown, b: unknown) => JSON.stringify(canon(a)) === JSON.stringify(canon(b));
 
 /**
  * Merge the account's documents into this phone by the personal-link rules (first result
@@ -63,7 +62,7 @@ const stamp = (x: unknown) =>
  * Lab votes: per type, the latest answer wins ({type: {v: 'yes'|'no', at}}), whichever device
  * gave it (as dn-sync.js). Only the answer shown: the counted vote is the server's.
  */
-export function newerVotes(here: unknown, there: unknown): Doc {
+function newerVotes(here: unknown, there: unknown): Doc {
   const out: Doc = isObj(here) ? { ...here } : {};
   if (isObj(there))
     for (const [t, b] of Object.entries(there)) {

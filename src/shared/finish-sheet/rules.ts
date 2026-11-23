@@ -138,10 +138,10 @@ export function dayStreak(stats: readonly { value: string | number; label: strin
 }
 
 /** The day streaks that are a milestone: the reward line says so, on a gold disc. */
-export const MILESTONES: readonly number[] = [7, 30, 50, 100, 365];
+const MILESTONES: readonly number[] = [7, 30, 50, 100, 365];
 
 /** How many earlier finishes a personal best needs before the sheet calls it one. */
-export const PB_MIN_EARLIER = 3;
+const PB_MIN_EARLIER = 3;
 
 type Rec = Record<string, unknown>;
 const isRec = (x: unknown): x is Rec => !!x && typeof x === 'object' && !Array.isArray(x);
@@ -252,7 +252,7 @@ export function rewardLine(
 }
 
 /** The small label over each type's recap, in the style of its old title. */
-export const RECAP_LABEL: Record<PuzzleType, string> = {
+const RECAP_LABEL: Record<PuzzleType, string> = {
   mini: 'YOUR GRID',
   doku: 'YOUR GRID',
   sweep: 'YOUR BOARD',

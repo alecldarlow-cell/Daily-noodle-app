@@ -90,7 +90,7 @@ interface GlobalErrors {
 }
 
 /** How long a fatal error's report gets to leave before the phone closes the app. */
-export const FATAL_GRACE_MS = 300;
+const FATAL_GRACE_MS = 300;
 
 /**
  * Reports what no screen caught, then lets React Native carry on as it would. Called once

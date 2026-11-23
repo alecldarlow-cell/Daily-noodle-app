@@ -116,7 +116,7 @@ export interface LinkRecord {
 export const SAVE_KEY = 'digi-link-v1';
 export const STREAK_KEY = 'digi-link-streak';
 /** The site's tracker names Link by its page slug. */
-export const SITE_TYPE = 'word-link';
+const SITE_TYPE = 'word-link';
 export const MAX_MISTAKES = 4;
 /** THE SETTLE: 80 ms × 3 + 300 ms to colour the four, then the 540 ms flight. */
 export const SETTLE_MS = 80 * 3 + 300 + 540;
@@ -203,7 +203,7 @@ export function validate(data: unknown): Validation {
 
 // ---- state ----
 
-export function puzzleOf(data: LinkData): LinkPuzzle {
+function puzzleOf(data: LinkData): LinkPuzzle {
   const byName: Record<string, number> = {};
   data.groups.forEach((g, i) => g.members.forEach((m) => (byName[m.toUpperCase()] = i)));
   return { id: data.id, band: data.band, groups: data.groups, byName };
@@ -701,7 +701,7 @@ export function readRound(
 }
 
 /** "Paused at 1:05 · tap a word to carry on" (curRestore's message). */
-export const pausedNote = (secs: number) =>
+const pausedNote = (secs: number) =>
   `Paused at ${dnTime(timerText(secs))} · tap a word to carry on`;
 
 /**

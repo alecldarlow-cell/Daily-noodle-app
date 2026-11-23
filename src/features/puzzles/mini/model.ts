@@ -99,7 +99,7 @@ export interface MiniEnd {
 export const SAVE_KEY = 'digi-mini-v1';
 export const STREAK_KEY = 'digi-mini-streak';
 /** The site's tracker names the Mini by its page slug. */
-export const SITE_TYPE = 'crossword-mini';
+const SITE_TYPE = 'crossword-mini';
 
 // ---- validate: refuse what the web player can't show or can't finish ----
 
@@ -150,7 +150,7 @@ export function validate(data: unknown): Validation {
 
 // ---- numbering and slots (engines/mini.js findSlots, numberGrid) ----
 
-export function findSlots(grid: string[][]): Slot[] | null {
+function findSlots(grid: string[][]): Slot[] | null {
   const slots: Slot[] = [];
   for (let r = 0; r < 5; r++) {
     let c = 0;
@@ -215,7 +215,7 @@ const answerOf = (p: MiniPuzzle, s: Slot) =>
     .toLowerCase();
 
 /** A word's clue, or "(5)" when the puzzle has none for it, as the engine shows. */
-export function clueFor(p: MiniPuzzle, s: Slot): string {
+function clueFor(p: MiniPuzzle, s: Slot): string {
   return p.clues[answerOf(p, s)] || `(${s.L})`;
 }
 
@@ -240,7 +240,7 @@ export function clueList(p: MiniPuzzle, dir: Dir): ClueLine[] {
 
 // ---- state ----
 
-export function puzzleOf(data: MiniData): MiniPuzzle {
+function puzzleOf(data: MiniData): MiniPuzzle {
   return {
     id: data.id,
     band: data.band,

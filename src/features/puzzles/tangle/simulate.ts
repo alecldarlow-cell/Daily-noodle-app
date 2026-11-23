@@ -91,7 +91,7 @@ export interface Snapshot {
   save: unknown;
 }
 
-export function snapshot(e: TangleEngine, kv: KV, today: string): Snapshot {
+function snapshot(e: TangleEngine, kv: KV, today: string): Snapshot {
   const s = e.s;
   const R = s.R;
   const playing = !!R && R.state === 'playing';
@@ -156,7 +156,7 @@ export interface Simulation {
   reopened: Sheet | null;
 }
 
-export function sheetOf(e: TangleEngine, today: string): Sheet {
+function sheetOf(e: TangleEngine, today: string): Sheet {
   const f = sheetInfo(e, today);
   const res = result(e, today);
   const r = f.recap;

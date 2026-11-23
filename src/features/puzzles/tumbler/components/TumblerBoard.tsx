@@ -59,7 +59,7 @@ interface BoardProps {
  * How a tile looks: the line outlined in ink (so green, amber and grey only ever mean clues), and
  * the submits' marks (model.ts wheelMarks; engines/tumbler.css k-g, k-x, k-n, k-a).
  */
-export function tileLook(
+function tileLook(
   mark: Mark,
   read: boolean,
   won: boolean,

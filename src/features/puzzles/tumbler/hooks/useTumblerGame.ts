@@ -33,7 +33,7 @@ import { tumblerFeel } from './feel';
 export type Phase = 'start' | 'play' | 'finished';
 
 /** The site's slug for a Tumbler's events (dn-track.js PTYPE). */
-export const SLUG = 'word-tumbler';
+const SLUG = 'word-tumbler';
 
 /** The win beat (engines/tumbler.js winBeat): the line's letters pop left to right, a hold. */
 export const beatMs = (n: number) => 160 * (n - 1) + 600 + 350;

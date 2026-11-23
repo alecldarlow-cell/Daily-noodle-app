@@ -66,7 +66,7 @@ export function snapshot(
   };
 }
 
-export function memoryKV(seed: Record<string, unknown> = {}): KV {
+function memoryKV(seed: Record<string, unknown> = {}): KV {
   const m = new Map<string, string>();
   for (const [k, v] of Object.entries(seed)) m.set(k, JSON.stringify(v));
   return {

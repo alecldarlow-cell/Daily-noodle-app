@@ -122,7 +122,7 @@ export interface DokuEnd {
 export const SAVE_KEY = 'digi-doku-v1';
 export const STREAK_KEY = 'digi-doku-streak';
 /** The site's tracker names the Doku by its page slug. */
-export const SITE_TYPE = 'logic-doku';
+const SITE_TYPE = 'logic-doku';
 
 type Band = { pool: number[]; maxT3: number; maxMean: number };
 const WORDS = ENGINE.WORDS as Record<string, Record<string, number>>;
@@ -177,7 +177,7 @@ export function findSlots(grid: string[][]): Slot[] | null {
   return slots;
 }
 
-export function numberGrid(grid: string[][]): number[][] {
+function numberGrid(grid: string[][]): number[][] {
   const nums = Array.from({ length: 5 }, () => Array<number>(5).fill(0));
   let n = 0;
   for (let r = 0; r < 5; r++)
@@ -331,7 +331,7 @@ const object = (x: unknown): x is Record<string, unknown> =>
   !!x && typeof x === 'object' && !Array.isArray(x);
 
 /** The ship gate exactly as engines/doku.js validateLexi runs it at load. */
-export function validateLexi(pz: DokuData): Validation {
+function validateLexi(pz: DokuData): Validation {
   const g = pz.grid.map((r) => r.map((x) => (x === '#' ? '#' : String(x).toLowerCase())));
   const slots = findSlots(g);
   const c: Record<string, boolean> = {};
@@ -401,7 +401,7 @@ export function validate(data: unknown): Validation {
 
 // ---- state ----
 
-export function puzzleOf(data: DokuData): DokuPuzzle {
+function puzzleOf(data: DokuData): DokuPuzzle {
   return {
     id: data.id,
     band: data.band,

@@ -6,7 +6,7 @@ import { FONT, usePuzzleTokens } from '@/shared/theme';
 import type { FinishInfo } from '../finishing';
 import type { ReckonColors } from './colors';
 
-export const BALLPARK = 'https://dailynoodle.co.uk/reports/2026-10-15-quiz-ballpark.html';
+const BALLPARK = 'https://dailynoodle.co.uk/reports/2026-10-15-quiz-ballpark.html';
 
 /** "Today's ten": each question, your guess and the answer, its points; a tap reviews it. */
 export function ReckonRecap({

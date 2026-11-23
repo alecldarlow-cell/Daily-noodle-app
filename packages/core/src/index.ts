@@ -1,4 +1,4 @@
-export { londonDay, dayBefore, isDay } from './london';
+export { londonDay, dayBefore } from './london';
 export { gold } from './gold';
 export {
   roundFor,
@@ -18,7 +18,6 @@ export {
   readBoard,
   writeBoard,
   boardPid,
-  boardLeagues,
   inAnyLeague,
   leaguesFromMine,
   submitArgs,
@@ -27,8 +26,6 @@ export {
   KEEP_KEY,
   keptPids,
   rememberKeep,
-  clockSecs,
-  savedResults,
   trackerIds,
   backfillPlan,
   BACKFILL_BATCH,
@@ -47,14 +44,10 @@ export {
   type FeedPath,
 } from './board';
 export {
-  MOVE_TAG,
-  MOVE_BASE,
   b64urlEncode,
   b64urlDecode,
-  mergeMoved,
   finished,
   unpackMove,
-  adoptBoard,
   importMove,
   packMove,
   type MovePayload,
@@ -64,21 +57,19 @@ export {
 export {
   PUZZLE_TYPES,
   TYPE_LABEL,
-  TYPE_OF_ID,
-  GRID_STREAK_TYPES,
   isPuzzleType,
   typeOfId,
   puzzleNumber,
   saveKey,
   streakKey,
   type PuzzleType,
+  GRID_STREAK_TYPES,
   type GridStreakType,
 } from './ids';
 export {
   LAB_TYPES,
   LAB_RETIRED,
   LAB_LABEL,
-  LAB_OF_ID,
   LAB_VOTES_KEY,
   LAB_VOTER_KEY,
   isLabType,
@@ -105,7 +96,6 @@ export {
   type SaveStoreOptions,
 } from './saves';
 export {
-  followsOn,
   bumpSolveStreak,
   recordResultStreak,
   bumpPathStreak,
@@ -146,8 +136,6 @@ export { acceptToday, type TodayItem, type TodayList } from './today';
 export {
   STATS_TYPES,
   STATS_MIN_SHOW,
-  STATS_MIN_TREND,
-  STATS_MIN_YEAR,
   readStats,
   statsRows,
   statsSummary,

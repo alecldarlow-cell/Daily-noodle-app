@@ -4,7 +4,6 @@ export {
   createTracker,
   optedOut,
   pageId,
-  TRACK_KEY,
   type Tracker,
   type TrackEvent,
   type TrackKV,

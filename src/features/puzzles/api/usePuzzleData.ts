@@ -11,10 +11,7 @@ export { PUZZLE_CACHE_PREFIX };
 
 const looksLikeFile = (x: unknown): x is PuzzleFile => isPuzzleData(x);
 
-export function cachedPuzzle(
-  file: string,
-  store: CachedStorage = appStorage,
-): PuzzleFile | undefined {
+function cachedPuzzle(file: string, store: CachedStorage = appStorage): PuzzleFile | undefined {
   try {
     const j: unknown = JSON.parse(store.getItem(PUZZLE_CACHE_PREFIX + file) ?? 'null');
     return looksLikeFile(j) ? j : undefined;

@@ -9,8 +9,8 @@ import { useReduceMotion } from './useReduceMotion';
  * the pale word colour, then settles, 0.6 s a square. Mini, Doku and Sweep start each
  * square 90 ms per step from the top-left corner (row + column); Path pulses all at once.
  */
-export const WAVE_STEP_MS = 90;
-export const WAVE_CELL_MS = 600;
+const WAVE_STEP_MS = 90;
+const WAVE_CELL_MS = 600;
 
 /** How long a wave of `steps` diagonal steps lasts. */
 export function waveMs(steps: number): number {
