@@ -25,7 +25,7 @@ export const MESSAGES: Record<string, string> = {
   offline: 'Couldn’t reach the leagues. Check your connection and try again.',
 };
 
-export const SOMETHING_WRONG = 'Something went wrong. Please try again.';
+const SOMETHING_WRONG = 'Something went wrong. Please try again.';
 
 /** A refused or failed board call: `code` is the server's reason, `message` the site's words. */
 export class BoardError extends Error {

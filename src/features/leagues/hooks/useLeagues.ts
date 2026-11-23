@@ -54,7 +54,7 @@ export const BOARD_QUERY = ['board'] as const;
  * The server's view of `pid`'s leagues, saved as `refresh()` saves it, unless the install
  * has adopted another player while it was on its way.
  */
-export async function refreshLeagues(pid: string = getPid()): Promise<void> {
+async function refreshLeagues(pid: string = getPid()): Promise<void> {
   const list = await boardMine(pid);
   if (stillPlayer(pid)) setLeagues(leaguesFromMine(list));
 }
@@ -69,7 +69,7 @@ function refreshAll(qc: QueryClient, pid: string) {
  * finish-sheet moment fetched for one player is never shown to another after the install
  * adopts a different identity ("Already in this league?"). '' before one is minted.
  */
-export function useBoardPid(): string {
+function useBoardPid(): string {
   return useBoardState().pid ?? '';
 }
 

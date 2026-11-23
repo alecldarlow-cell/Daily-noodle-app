@@ -33,8 +33,3 @@ export function dayBefore(day: string): string {
   d.setUTCDate(d.getUTCDate() - 1);
   return d.toISOString().slice(0, 10);
 }
-
-/** True for a well-formed YYYY-MM-DD string. */
-export function isDay(s: unknown): s is string {
-  return typeof s === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(s);
-}

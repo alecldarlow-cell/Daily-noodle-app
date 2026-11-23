@@ -15,7 +15,7 @@ import {
  * How much kept puzzle data a phone holds. Android's saves live in a 6 MB database
  * (AsyncStorage's limit) with the results and streaks, which must always have room.
  */
-export const KEPT_BUDGET = 2_000_000;
+const KEPT_BUDGET = 2_000_000;
 
 const CUR_KEYS = ['digi-link-v1', 'digi-borders-v1', 'digi-reckon-v1', 'digi-tally-v1'];
 

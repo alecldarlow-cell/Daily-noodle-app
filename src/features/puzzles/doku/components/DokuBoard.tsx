@@ -7,7 +7,7 @@ import { FONT, usePuzzleTokens } from '@/shared/theme';
 import { activeWord, goodSquares, isLock, letterAt, type DokuState } from '../model';
 
 /** Given squares' background (house.css --cell-locked, light and dark). */
-export const useLockedColor = () => (useColorScheme() === 'dark' ? '#1E2230' : '#DFE3EC');
+const useLockedColor = () => (useColorScheme() === 'dark' ? '#1E2230' : '#DFE3EC');
 
 interface DokuBoardProps {
   state: DokuState;

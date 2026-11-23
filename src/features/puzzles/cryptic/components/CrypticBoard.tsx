@@ -38,7 +38,7 @@ import {
  * it in Georgia; the app keeps to its own bundled faces, as Android drops a custom face under
  * a system one or a weight (theme/tests/fonts.test.ts).
  */
-export const CLUE_FONT = FONT.serif;
+const CLUE_FONT = FONT.serif;
 
 /**
  * One run of the clue, marked as the page marks it. The website's definition line is a 3px
@@ -67,15 +67,7 @@ function Run({ run, mark }: { run: ClueRun; mark: string }) {
 }
 
 /** The clue as printed: a bold 1, the clue in the book serif, the enumeration in soft ink. */
-export function ClueText({
-  p,
-  runs,
-  size = 23,
-}: {
-  p: CrypticData;
-  runs: ClueRun[];
-  size?: number;
-}) {
+function ClueText({ p, runs, size = 23 }: { p: CrypticData; runs: ClueRun[]; size?: number }) {
   const pt = usePuzzleTokens();
   return (
     <View style={styles.clueRow}>

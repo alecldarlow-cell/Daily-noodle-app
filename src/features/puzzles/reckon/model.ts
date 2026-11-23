@@ -27,8 +27,8 @@ import { houseLine } from '@/shared/start-card/copy';
 import * as units from './units';
 
 export const SAVE_KEY = 'digi-reckon-v1';
-export const NQ = 10;
-export const SPAN = 2;
+const NQ = 10;
+const SPAN = 2;
 /**
  * Scoring goes with the page, as on the site. Rules 1: Ballpark's, on days without `r`.
  * Rules 2 (Alec, 3 Nov 2026): softer inner zones, the same 3× edge, a miss pays 20.
@@ -38,8 +38,8 @@ const RULES = {
   2: { b: [1.2, 1.6, 2.2, 3], p: [100, 80, 60, 40, 20] },
 } as const;
 const EASY_A_DAY = 4;
-export let BAND: readonly number[] = RULES[1].b;
-export let PTS: readonly number[] = RULES[1].p;
+let BAND: readonly number[] = RULES[1].b;
+let PTS: readonly number[] = RULES[1].p;
 export function setRules(P: { r?: unknown } | null | undefined): void {
   const t = RULES[P && P.r === 2 ? 2 : 1];
   BAND = t.b;
@@ -49,14 +49,14 @@ export const rulesText = (P: { r?: number }) =>
   P.r === 2
     ? 'Within 20% of the answer scores 100; within 60%, 80; within 2.2 times, 60; within three times either way, 40; anything further, 20. Gaps are measured from the smaller number, so half the answer scores the same as double it.'
     : null;
-export const ZN = ['Bullseye', 'Close', 'Ballpark', 'In range', 'Miss'] as const;
+const ZN = ['Bullseye', 'Close', 'Ballpark', 'In range', 'Miss'] as const;
 const MANT = [
   1, 1.05, 1.1, 1.15, 1.2, 1.25, 1.3, 1.35, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2, 2.1, 2.2, 2.3, 2.4,
   2.5, 2.6, 2.8, 3, 3.2, 3.4, 3.6, 3.8, 4, 4.2, 4.4, 4.6, 4.8, 5, 5.2, 5.4, 5.6, 5.8, 6, 6.25, 6.5,
   6.75, 7, 7.25, 7.5, 7.75, 8, 8.25, 8.5, 8.75, 9, 9.25, 9.5, 9.75,
 ];
 /** Ballpark's twelve packs: name and colour (the engine's PACKS, without the icons). */
-export const PACKS: Record<string, { n: string; c: string }> = {
+const PACKS: Record<string, { n: string; c: string }> = {
   earth: { n: 'Earth', c: '#2D8457' },
   space: { n: 'Space', c: '#4B4FC4' },
   places: { n: 'Places', c: '#BF542D' },
@@ -355,7 +355,7 @@ export interface Host {
 
 const vr = (s: ReckonState) => (s.VR === 'R' ? s.R : s.VR);
 export const live = (s: ReckonState) => !!s.R && s.VR === 'R' && s.Q === s.R.i;
-export const endRev = (s: ReckonState) => !!s.VR && s.VR !== 'R';
+const endRev = (s: ReckonState) => !!s.VR && s.VR !== 'R';
 export function score(r: { z?: (number | null | undefined)[] } | null | undefined): number {
   return ((r && r.z) || []).reduce<number>((s, z) => s + (z == null ? 0 : PTS[z]!), 0);
 }
@@ -411,7 +411,7 @@ export function init(P: ReckonData, stored: unknown, now: number): ReckonState {
 
 /* the units switch (16 Nov 2026): the question on screen's imperial view, if the player chose it for its
    kind (save.un, e.g. {dist:'i'}). Guesses are kept and scored in the fact's own unit: shown = metric × f. */
-export function unitsOf(s: ReckonState) {
+function unitsOf(s: ReckonState) {
   const q = s.P.qs[s.Q]!;
   const sp = units.spec(q);
   const un = s.save.un as Record<string, string> | undefined;
@@ -442,7 +442,7 @@ function nearestIn(LOGS: number[], lv: number): number {
   return lv - LOGS[a]! <= LOGS[b]! - lv ? a : b;
 }
 /** The ladder index nearest a log value on the question on screen (the engine's nearest). */
-export function nearest(s: ReckonState, lv: number): number {
+function nearest(s: ReckonState, lv: number): number {
   return nearestIn(logs(ladderOf(s)), lv);
 }
 /** Where a value sits on the scale, 0–100 (posOf). */
@@ -760,11 +760,6 @@ export function apply(prev: ReckonState, move: Move, host: Host): ReckonState {
       break;
   }
   return s;
-}
-
-/** The page reopened from its save: what boot() shows. */
-export function reopen(P: ReckonData, stored: unknown, now: number): ReckonState {
-  return init(P, stored, now);
 }
 
 /**

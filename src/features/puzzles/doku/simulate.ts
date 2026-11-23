@@ -33,7 +33,7 @@ import type { Scenario } from './oracle';
  * One square as the replay reads it: letter or '.', then * cursor, + in the word,
  * g green, L given or p placed.
  */
-export function squareCode(s: DokuState, r: number, c: number, good = goodSquares(s)): string {
+function squareCode(s: DokuState, r: number, c: number, good = goodSquares(s)): string {
   if (s.p.grid[r]![c] === '#') return '#';
   const w = activeWord(s);
   return (

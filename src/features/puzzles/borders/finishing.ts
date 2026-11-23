@@ -64,7 +64,7 @@ export function saveHost(
   };
 }
 
-export function sheetInfo(s: BordersState, rec: BordersRecord, t: string): FinishInfo {
+function sheetInfo(s: BordersState, rec: BordersRecord, t: string): FinishInfo {
   const n = liveStreakOf(s.save, t, dayBefore);
   return {
     id: s.P.id,
@@ -87,7 +87,7 @@ function trackedSecs(t: string): number | null {
 }
 
 /** The detail dn-track.js builds when the result box gains "on". */
-export function endDetail(info: FinishInfo, hints: number): Record<string, unknown> {
+function endDetail(info: FinishInfo, hints: number): Record<string, unknown> {
   return {
     type: 'geo-borders',
     tv: 3,

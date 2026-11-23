@@ -142,7 +142,7 @@ export function unwrap(sol: string, id: string): Solution {
 }
 
 /** The clue's words, punctuation ignored, as character ranges (tools/cryptic.js words()). */
-export function words(clue: string): { at: number; end: number }[] {
+function words(clue: string): { at: number; end: number }[] {
   const out: { at: number; end: number }[] = [];
   const re = /[A-Za-z’']+/g;
   let m: RegExpExecArray | null;

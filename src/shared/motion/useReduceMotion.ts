@@ -10,7 +10,7 @@ let known: boolean | null = null;
  * The phone's Reduce motion setting (iOS Reduce Motion, Android Remove animations),
  * kept up to date while the screen is open. `null` until the phone has answered.
  */
-export function usePhoneReduceMotion(): boolean | null {
+function usePhoneReduceMotion(): boolean | null {
   const [reduced, setReduced] = useState<boolean | null>(known);
   useEffect(() => {
     let on = true;

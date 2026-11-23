@@ -6,10 +6,10 @@
  */
 export const SAVE_KEY = 'digi-tally-v1';
 export const STREAK_KEY = 'digi-tally-streak';
-export const START_MSG = 'Tap a square, then a number.';
+const START_MSG = 'Tap a square, then a number.';
 export const RESUME_MSG = 'Carrying on where you left off.';
-export const NOTES_MSG = 'Notes on: numbers go in small.';
-export const NO_SQUARE_MSG = 'Tap a square first.';
+const NOTES_MSG = 'Notes on: numbers go in small.';
+const NO_SQUARE_MSG = 'Tap a square first.';
 /** The engine keeps the last 200 moves for Undo. */
 const UNDO_MAX = 200;
 

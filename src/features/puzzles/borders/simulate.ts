@@ -75,7 +75,7 @@ export interface Snapshot {
   saved?: unknown;
 }
 
-export function snapshot(s: BordersState, t: string): Snapshot {
+function snapshot(s: BordersState, t: string): Snapshot {
   const out: Snapshot = { view: s.view, paused: s.paused };
   if (s.view === 'home') {
     const h = homeView(s, t, dayBefore);
@@ -203,7 +203,7 @@ export interface Simulation {
   reopened: Pick<Outcome, 'share' | 'note' | 'hero' | 'stats' | 'streakLine' | 'tiles'> | null;
 }
 
-export const tileText = (f: FinishInfo) => f.tiles.map((x) => `${x.ok ? 'ok' : 'x'}:${x.caption}`);
+const tileText = (f: FinishInfo) => f.tiles.map((x) => `${x.ok ? 'ok' : 'x'}:${x.caption}`);
 const sheetStats = (f: FinishInfo) => [String(f.points), String(f.streak), String(f.best)];
 
 /** The sheet's line under the score (finish.js streakLine, AF-019): the day streak. */

@@ -24,7 +24,7 @@ import {
 import type { Scenario } from './oracle';
 
 /** One square as the replay reads it: letter or '.', then * cursor, + in the word, g/b marks. */
-export function squareCode(s: MiniState, r: number, c: number): string {
+function squareCode(s: MiniState, r: number, c: number): string {
   if (s.p.grid[r]![c] === '#') return '#';
   const active = status(s).active;
   const mark = s.checked[r]![c];

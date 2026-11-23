@@ -25,7 +25,7 @@ export const MINLEN = 3;
 export const ROUND = 90;
 export const KEY = 'digi-tangle-v1';
 /** The site's tracker names Tangle by its page slug. */
-export const SITE_TYPE = 'word-tangle';
+const SITE_TYPE = 'word-tangle';
 /** Neighbours of every tile, row-major, as the engine's NB. */
 export const NB: number[][] = (() => {
   const a: number[][] = [];
@@ -730,7 +730,7 @@ export function createTangle(P: TangleData, deps: Deps): TangleEngine {
 
 // ---- what the screens show ----
 
-export const liveStreakOf = (save: SaveDocument, t: string) => {
+const liveStreakOf = (save: SaveDocument, t: string) => {
   const s = save.streak || { n: 0, last: null };
   return s.last === t || s.last === dayBefore(t) ? s.n : 0;
 };

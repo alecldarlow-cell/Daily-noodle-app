@@ -13,7 +13,7 @@ const PAD = 26;
  * label strip under it is not part of the band, so a thumb aimed at Lock in that lands on
  * the labels touches nothing (7 Nov 2026, Alec: a press on Lock in moved his 300 to 4,600).
  */
-export const BAND = { above: 18, below: 14 };
+const BAND = { above: 18, below: 14 };
 
 interface Props {
   view: PlayView;

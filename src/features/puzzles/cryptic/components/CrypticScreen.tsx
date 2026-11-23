@@ -21,7 +21,7 @@ import { CrypticCard, CrypticKeyboard, CrypticRecap, HintButtons, HintPanel } fr
 /** The open page's line (the site's tools/standfirst.js). */
 export const HOUSE_LINE = 'One cryptic clue a day. Find the definition, crack the wordplay.';
 /** How to play: the rule sentence, then the guide's paragraphs (engines/house.js). */
-export const HOW = [
+const HOW = [
   'One cryptic clue a day. The definition is at one end; the rest is wordplay that builds the same answer.',
   'Every clue is two ways to the same answer: a plain definition at the start or the end, and wordplay (an anagram, a hidden word, a sound-alike…) that builds it letter by letter. Punctuation can be ignored. Type your answer and press Enter: a wrong one just shakes, and costs nothing.',
   'Hint underlines the definition, then names the clue type, then reveals a letter at a time. Your time is the score, with the hints you used beside it. The finish shows how the clue works.',

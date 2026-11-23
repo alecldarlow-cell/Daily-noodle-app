@@ -35,8 +35,8 @@ const SCORED: Partial<Record<PuzzleType, 1>> = { tangle: 1, borders: 1, reckon: 
 const STREAK_TYPES: readonly PuzzleType[] = ['mini', 'doku', 'sweep', 'path', 'link', 'tally'];
 const DAY = /^\d{4}-\d{2}-\d{2}$/;
 export const STATS_MIN_SHOW = 3;
-export const STATS_MIN_TREND = 5;
-export const STATS_MIN_YEAR = 10;
+const STATS_MIN_TREND = 5;
+const STATS_MIN_YEAR = 10;
 
 const num = (x: unknown): x is number => typeof x === 'number' && Number.isFinite(x);
 const obj = (x: unknown): x is Obj => !!x && typeof x === 'object' && !Array.isArray(x);

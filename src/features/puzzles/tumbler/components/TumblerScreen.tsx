@@ -23,7 +23,7 @@ import { TryRow, TumblerBoard, TumblerRecap } from './TumblerBoard';
 export const HOUSE_LINE =
   "Today's word is hidden in four wheels of letters. Give them a spin and close in on it.";
 /** How to play: the rule sentence, then the guide's paragraphs (engines/house.js). */
-export const HOW = [
+const HOW = [
   'A four-letter word is hidden in the wheels. Make words on the outlined line and submit them for clues until you find it.',
   'Each wheel holds one letter of the hidden word and six others. Tap a wheel’s arrow, or drag it down, to turn it; wheels only turn down and wrap round. Only the outlined line counts.',
   'Make any real word on the outlined line and Submit it. Green: right letter on the right wheel. Amber: the letter is in the word but belongs to another wheel. Grey: not in the word. The clues stay marked on the wheels and your submits are listed below. Submit the hidden word to solve it; the clock is the score.',

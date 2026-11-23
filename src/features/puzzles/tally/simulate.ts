@@ -25,7 +25,7 @@ import type { Scenario } from './oracle';
 const TICK_MS = 250;
 
 /** One square: number or '.', then its marks, then the notes showing and its clue's state. */
-export function squareCode(s: TallyState, i: number, c: ReturnType<typeof view>[number]): string {
+function squareCode(s: TallyState, i: number, c: ReturnType<typeof view>[number]): string {
   return (
     (c.v ? String(c.v) : '.') +
     (c.bad ? '!' : '') +

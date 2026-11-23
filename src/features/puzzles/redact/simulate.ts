@@ -26,7 +26,7 @@ import type { Scenario } from './oracle';
 const TICK_MS = 250;
 
 /** Every square: its letter, '#' when blacked out, 'g' once the crossword is solved. */
-export function cellsCode(s: RedactState): string {
+function cellsCode(s: RedactState): string {
   const off = new Set(s.black);
   return Array.from(
     s.p.letters,

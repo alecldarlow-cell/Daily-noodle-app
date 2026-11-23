@@ -8,7 +8,7 @@
 export const SAVE_KEY = 'digi-tilt-v1';
 export const STREAK_KEY = 'digi-tilt-streak';
 /** The page's message before the first turn (its markup's #msg). */
-export const START_MSG = 'Turn the maze; the ball drops until it hits a wall.';
+const START_MSG = 'Turn the maze; the ball drops until it hits a wall.';
 export const RESUME_MSG = 'Carrying on where you left off.';
 export const STILL_MSG = 'Nothing moved: the ball was already resting that way.';
 /** The engine keeps the last 300 turns for Undo. */

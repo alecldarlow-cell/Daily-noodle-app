@@ -122,7 +122,7 @@ export function Msg({ text, ok }: { text: string; ok?: boolean }) {
 }
 
 /** The site's League rules (privacy.html#league-rules, 8 Nov 2026). */
-export const LEAGUE_RULES_URL = 'https://dailynoodle.co.uk/privacy.html#league-rules';
+const LEAGUE_RULES_URL = 'https://dailynoodle.co.uk/privacy.html#league-rules';
 export const RULES_NEEDED = 'Tick the box to agree to the league rules.';
 
 /**

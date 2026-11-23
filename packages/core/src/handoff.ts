@@ -11,8 +11,8 @@ import type { KV } from './types';
 
 type Obj = Record<string, unknown>;
 
-export const MOVE_TAG = '#dnmove=';
-export const MOVE_BASE = 'https://dailynoodle.co.uk/board.html';
+const MOVE_TAG = '#dnmove=';
+const MOVE_BASE = 'https://dailynoodle.co.uk/board.html';
 
 export interface MoveLeague {
   code: string;
@@ -151,7 +151,7 @@ const DAY_MS = 864e5;
  * run and the higher best, recounting the run from both lists of days; for an unfinished
  * round (`cur`) stamped with `at`, the newer one; anything else keeps what's here.
  */
-export function mergeMoved(here: Obj, old: Obj): Obj {
+function mergeMoved(here: Obj, old: Obj): Obj {
   const out: Obj = {};
   for (const k in here) out[k] = here[k];
   if (isStreak(here) && isStreak(old)) {
@@ -238,7 +238,7 @@ const PID = /^[0-9a-f-]{36}$/i;
  * league (or is the same player) it becomes that player; if it is in a league as someone
  * else the choice is left pending (`pend`), never made silently.
  */
-export function adoptBoard(kv: KV, b: Obj, now: () => number = Date.now): void {
+function adoptBoard(kv: KV, b: Obj, now: () => number = Date.now): void {
   if (!PID.test((b.pid as string) || '')) return;
   const ls = (Array.isArray(b.leagues) ? (b.leagues as unknown[]) : [])
     .filter((l): l is Obj => isObj(l) && /^[A-Z0-9]{4,12}$/.test((l.code as string) || ''))

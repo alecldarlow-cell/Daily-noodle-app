@@ -30,7 +30,7 @@ import type { Scenario } from './oracle';
 export const SHEET_DELAY_MS = 900;
 
 /** One square as the replay reads it: its number or '.', * the active end, ^ the other end, ~ shaken. */
-export function squareCode(s: PathState, r: number, c: number, shaken: boolean): string {
+function squareCode(s: PathState, r: number, c: number, shaken: boolean): string {
   const v = s.cellValue[r]![c];
   const m = endMark(s, r, c);
   return (
@@ -105,7 +105,7 @@ export interface Simulation {
   reopened: Pick<Outcome, 'share' | 'note' | 'hero' | 'stats' | 'streakLine'> | null;
 }
 
-export function memoryKV(seed: Record<string, unknown> = {}): KV {
+function memoryKV(seed: Record<string, unknown> = {}): KV {
   const m = new Map<string, string>();
   for (const [k, v] of Object.entries(seed)) m.set(k, JSON.stringify(v));
   return {

@@ -25,7 +25,7 @@ export function saveBoard(s: BoardState, store: CachedStorage = appStorage): voi
 }
 
 /** Change some fields of the saved state, keeping the rest. */
-export function patchBoard(patch: Partial<BoardState>, store: CachedStorage = appStorage): void {
+function patchBoard(patch: Partial<BoardState>, store: CachedStorage = appStorage): void {
   saveBoard({ ...loadBoard(store), ...patch }, store);
 }
 
@@ -67,5 +67,3 @@ export function currentLeague(s: BoardState): BoardLeague | null {
   const ls = s.leagues || [];
   return ls.find((l) => l.code === s.cur) ?? ls[0] ?? null;
 }
-
-export const hasPin = (s: BoardState) => (s.leagues || []).some((l) => l.pin);

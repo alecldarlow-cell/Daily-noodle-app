@@ -57,7 +57,7 @@ export interface BoardPick {
   date: string | null;
 }
 
-export function pickFrom(p: LeaguesParams): BoardPick {
+function pickFrom(p: LeaguesParams): BoardPick {
   const view =
     p.p === 'all' || p.p === 'records' || (!!p.p && p.p in BOARD_TYPE) ? (p.p as BoardView) : null;
   const date = /^\d{4}-\d{2}-\d{2}$/.test(p.d ?? '') ? p.d! : null;

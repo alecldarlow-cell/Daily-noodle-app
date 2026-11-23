@@ -14,14 +14,14 @@ export const LAST_TODAY_KEY = TODAY_CACHE_KEY;
 export { cachedToday };
 
 /** The site's list exists but is dated another day (its nightly build hasn't run yet). */
-export class NotTodayYet extends Error {
+class NotTodayYet extends Error {
   constructor(readonly listDay: unknown) {
     super(`Today's list is still dated ${String(listDay)}`);
   }
 }
 
 /** Retry gaps while the list is yesterday's: 1, 5, then 15 minutes. */
-export const NEARLY_RETRY_MS = [60_000, 300_000, 900_000] as const;
+const NEARLY_RETRY_MS = [60_000, 300_000, 900_000] as const;
 
 /**
  * Today's puzzles. A list is used only when it is dated today in London (the finish

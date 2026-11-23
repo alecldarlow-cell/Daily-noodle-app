@@ -23,7 +23,7 @@ export interface SyncApi {
   pushRev(saves: Record<string, RevDoc>): Promise<PushRevResult>;
 }
 
-export class SyncError extends Error {
+class SyncError extends Error {
   code?: string;
   constructor(message: string, code?: string) {
     super(message);

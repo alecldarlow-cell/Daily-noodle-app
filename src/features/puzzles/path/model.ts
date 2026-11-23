@@ -38,7 +38,7 @@ export interface PathData {
 export const SAVE_KEY = 'digi-path-v1';
 export const STREAK_KEY = 'digi-path-streak';
 /** The site's tracker names Path by its page slug. */
-export const SITE_TYPE = 'logic-path';
+const SITE_TYPE = 'logic-path';
 
 /** The page's first line under the board (every Path page has the same one). */
 export const START_MSG =
@@ -54,16 +54,16 @@ export function neighbors(r: number, c: number): Cell[] {
   if (c < N - 1) out.push([r, c + 1]);
   return out;
 }
-export const manhattan = (a: readonly number[], b: readonly number[]) =>
+const manhattan = (a: readonly number[], b: readonly number[]) =>
   Math.abs(a[0]! - b[0]!) + Math.abs(a[1]! - b[1]!);
 
-export function pathFromSolution(sol: number[][]): Cell[] {
+function pathFromSolution(sol: number[][]): Cell[] {
   const cells = new Array<Cell>(TOTAL + 1);
   for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) cells[sol[r]![c]!] = [r, c];
   return cells.slice(1);
 }
 
-export function turnCount(cells: Cell[]): number {
+function turnCount(cells: Cell[]): number {
   let turns = 0;
   let prevDir: string | null = null;
   for (let i = 1; i < cells.length; i++) {
@@ -124,7 +124,7 @@ function candidatesFor(v: number, valCell: (Cell | null)[], cellUsed: boolean[][
   return cands;
 }
 
-export function solveNoGuess(lockedList: Locked[]): { solved: boolean } {
+function solveNoGuess(lockedList: Locked[]): { solved: boolean } {
   const valCell = new Array<Cell | null>(TOTAL + 1).fill(null);
   const cellUsed = Array.from({ length: N }, () => Array<boolean>(N).fill(false));
   for (const [r, c, v] of lockedList) {
@@ -148,7 +148,7 @@ export function solveNoGuess(lockedList: Locked[]): { solved: boolean } {
   return { solved: valCell.slice(1).every((x) => x !== null) };
 }
 
-export function countSolutions(lockedList: Locked[], cap: number): number {
+function countSolutions(lockedList: Locked[], cap: number): number {
   const lockedByValue = new Map(lockedList.map(([r, c, v]) => [v, [r - 1, c - 1] as Cell]));
   const cellVal = Array.from({ length: N }, () => Array<number>(N).fill(0));
   let count = 0;
@@ -200,7 +200,7 @@ export function countSolutions(lockedList: Locked[], cap: number): number {
   return count;
 }
 
-export function validatePath(p: Pick<PathData, 'solution' | 'locked'>): {
+function validatePath(p: Pick<PathData, 'solution' | 'locked'>): {
   pass: boolean;
   checks: Record<string, boolean>;
   turns: number;
@@ -327,7 +327,7 @@ export interface PathState {
 
 export type Move = { t: 'cell'; r: number; c: number } | { t: 'undo' } | { t: 'hint' };
 
-export function puzzleOf(data: PathData): PathPuzzle {
+function puzzleOf(data: PathData): PathPuzzle {
   const lockedByValue = new Map(data.locked.map(([r, c, v]) => [v, [r - 1, c - 1] as Cell]));
   const one = lockedByValue.get(1)!;
   const end = lockedByValue.get(TOTAL)!;
@@ -387,7 +387,7 @@ export function restore(data: PathData, rec: unknown): PathState {
   return s;
 }
 
-export function valueCellMap(s: PathState): (Cell | null)[] {
+function valueCellMap(s: PathState): (Cell | null)[] {
   const m = new Array<Cell | null>(TOTAL + 1).fill(null);
   for (let r = 0; r < N; r++)
     for (let c = 0; c < N; c++) {

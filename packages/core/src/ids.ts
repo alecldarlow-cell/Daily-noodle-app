@@ -26,7 +26,7 @@ export const TYPE_LABEL: Record<PuzzleType, string> = {
 };
 
 /** The id prefix after "DP·" for each type (tools/build-feed.js TYPE_OF_ID). */
-export const TYPE_OF_ID: Record<string, PuzzleType> = {
+const TYPE_OF_ID: Record<string, PuzzleType> = {
   MINI: 'mini',
   LEXI: 'doku',
   SWEEP: 'sweep',

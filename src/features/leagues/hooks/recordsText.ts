@@ -50,8 +50,6 @@ const plural = (n: number, one: string) => `${n} ${one}${n === 1 ? '' : 's'}`;
 export const playerLine = (p: RecordsPlayer) =>
   `${plural(p.wins, 'win')} · ${plural(p.titles, 'title')} · best streak ${p.longest}`;
 
-export const isCrowned = (d: Records | undefined, nick: string) => !!d?.crown?.includes(nick);
-
 export const RECORDS_HOW =
   'Records count finished puzzles only; on a tie, whoever set it first keeps it. A daily win needs at least one ' +
   'other player to have finished that puzzle, and a weekly title (the All puzzles week) at least two players. A perfect day is every ' +

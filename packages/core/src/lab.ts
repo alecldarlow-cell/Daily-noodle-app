@@ -25,7 +25,7 @@ export const LAB_LABEL: Record<LabType, string> = {
 };
 
 /** The id prefix after "DP·" for each Lab type (tools/build-feed.js TYPE_OF_ID). */
-export const LAB_OF_ID: Record<string, LabType> = {
+const LAB_OF_ID: Record<string, LabType> = {
   TILT: 'tilt',
   REDA: 'redact',
   TUMB: 'tumbler',

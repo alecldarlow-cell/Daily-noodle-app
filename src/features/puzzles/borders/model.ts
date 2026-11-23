@@ -28,9 +28,9 @@ import { houseLine } from '@/shared/start-card/copy';
 export const SAVE_KEY = 'digi-borders-v1';
 export const ATLAS_KEY = 'digi-borderline-v1';
 export const NQ = 10;
-export const PLAN = [1, 1, 1, 2, 2, 2, 2, 2, 3, 3] as const;
-export const ATLAS_TOTAL = 168;
-export const LANDS = ['#F2C4C0', '#F3DC8E', '#C6DDA0', '#D6C8E8', '#F4C99A'] as const;
+const PLAN = [1, 1, 1, 2, 2, 2, 2, 2, 3, 3] as const;
+const ATLAS_TOTAL = 168;
+const LANDS = ['#F2C4C0', '#F3DC8E', '#C6DDA0', '#D6C8E8', '#F4C99A'] as const;
 const W = ['no', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'];
 
 export interface BordersQ {
@@ -132,7 +132,7 @@ interface Atlas {
   found: Record<string, number>;
   [k: string]: unknown;
 }
-export function atlasRead(raw: string | null): Atlas | null {
+function atlasRead(raw: string | null): Atlas | null {
   try {
     const s = JSON.parse(raw || 'null') as Atlas | null;
     return s && s.v === 1 && s.found && typeof s.found === 'object' ? s : null;

@@ -92,7 +92,7 @@ const AUTH = /(^|[#&?])(access_token|refresh_token|code|error|error_description|
  * A leaderboard share's puzzle and day (join.html?c=CODE&p=mini&d=2026-10-29; AF-010, 29 Oct
  * 2026), kept only when valid, as the site's join.html passes them on to board.html.
  */
-export function shareBoard(u: URL): { p?: string; d?: string } {
+function shareBoard(u: URL): { p?: string; d?: string } {
   const out: { p?: string; d?: string } = {};
   const p = u.searchParams.get('p');
   const d = u.searchParams.get('d');

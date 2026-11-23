@@ -10,7 +10,7 @@ import { readAuthLink } from './authLink';
 import { LAST_SYNC_KEY, runSync } from './syncEngine';
 
 /** Where the email link sends the player back to: this app's auth path. */
-export function redirectUrl(): string {
+function redirectUrl(): string {
   return 'dailynoodle://auth';
 }
 

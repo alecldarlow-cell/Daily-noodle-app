@@ -36,7 +36,7 @@ export const SHEET_DELAY_MS = 1450;
  * out) open, f flagged, h hidden (L locked until the start is dug); then ! for Hint's
  * mark and @ for a ringed number.
  */
-export function squareCode(s: SweepState, i: number): string {
+function squareCode(s: SweepState, i: number): string {
   let code: string;
   if (s.boomed.has(i)) code = 'x';
   else if (s.revealed.has(i))

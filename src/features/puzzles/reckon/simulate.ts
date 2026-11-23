@@ -239,7 +239,7 @@ export interface Simulation {
 }
 
 /** The recap rows as their text reads on the page: question, guess and answer, points. */
-export const rowText = (f: FinishInfo) => f.rows.map((r) => `${r.q}${r.line}${r.pts}`);
+const rowText = (f: FinishInfo) => f.rows.map((r) => `${r.q}${r.line}${r.pts}`);
 const sheetStats = (f: FinishInfo) => [f.time, String(f.streak), String(f.best)];
 
 /** The sheet's line under the score (finish.js streakLine, AF-019): the day streak. */

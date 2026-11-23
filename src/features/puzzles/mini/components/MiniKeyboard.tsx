@@ -24,14 +24,14 @@ export const DEL_MAX = 72;
 /** Key height: tall on most phones; the old height on short screens so the board keeps its room. */
 export const KEY_TALL = 56;
 export const KEY_SHORT = 46;
-export const TALL_FROM = 700;
+const TALL_FROM = 700;
 export function keyHeight(windowHeight: number): number {
   return windowHeight >= TALL_FROM ? KEY_TALL : KEY_SHORT;
 }
 
 /** The Mini screen's side padding, how far the keyboard reaches into it, and its widest content. */
 const SCREEN_PAD = 12;
-export const KB_BLEED = 8;
+const KB_BLEED = 8;
 const SCREEN_MAX = 560;
 
 /** The keyboard's width before it has been measured: the window less the screen's padding, plus the bleed. */

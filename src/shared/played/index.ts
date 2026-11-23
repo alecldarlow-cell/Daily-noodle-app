@@ -1,5 +1,5 @@
 export { useKept, usePlayed } from './usePlayed';
-export { KEPT_BUDGET, keepToday, trimPuzzles } from './keepPuzzles';
+export { keepToday, trimPuzzles } from './keepPuzzles';
 export { openPuzzle, pushPuzzle, type Opener } from './openPuzzle';
 export {
   fileOf,

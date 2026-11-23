@@ -23,7 +23,7 @@ interface Deps {
 }
 
 /** The engine with what the screen hands it: the board's layout, reduced motion, repaints. */
-export class TangleHost {
+class TangleHost {
   readonly engine: TangleEngine;
   private rects: Rect[] = [];
   private reduced = false;
