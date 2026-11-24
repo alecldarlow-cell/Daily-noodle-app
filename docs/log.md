@@ -1352,7 +1352,7 @@ Alec ran an outside review of the app and asked for its findings to be checked a
 - **Tests proved:** new core `surface.test` (every barrel value is defined; the removed helpers are gone, which fails on the old main; the used ones remain). `tsc` is the check that nothing imported a de-exported name. Replays against site main: reckon 16/16, link 24/24, borders 16/16, sweep 18/18 identical; every replay driver and model, oracle and simulator still loads. `npm run check` green.
 - **Native:** none. No behaviour change; JS only.
 
-## 24 Nov 2026 — Board.tsx split into its parts (queue #174)
+## 24 Nov 2026 — Board.tsx split into its parts (queue #174, PR #184)
 
 - **Queue:** issue #174 (p2, M, careful): `src/features/leagues/components/Board.tsx` was 1,006 lines (the rest of the G5 Board split). Split with no change in behaviour or look; every function body and style moved as it was.
 - **What:** `Board.tsx` (281 lines) keeps the pager, the swipe, which board shows, and `claimsSwipe`/`swipeStep`/`ordinal`; it re-exports `reportUrl`. New: `BoardNotices.tsx` (`BoardFailed`, `TopCard`, the `noodle-board-pinlater` and `noodle-app-sync` keys, unchanged), `BoardViews.tsx` (`DayView`, `OverallView`), `BoardRows.tsx` (`Row`, `NotesLine`, `ShareBtn`), `LeagueSettings.tsx` (`Settings`, `confirm`, `reportUrl`), `boardShared.ts` (`RecordsCtx`, `share`, `syncOn`). Five unused styles (`youLine`, `youText`, `youBold`, `links`, `linkText`) were dropped. No storage key, puzzle id or path changed.
