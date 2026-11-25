@@ -3,6 +3,8 @@ name: Site drift
 # Nightly: has the site changed a rule @noodle/core ports? Clones the public site repo,
 # checks the vendored copies, and if they are stale re-vendors and reruns the
 # differential tests against the new code. Red means the app no longer matches the site.
+# It also rebuilds the Reckon units fixture from the site and fails if the committed one
+# differs (queue #175, 25 Nov 2026).
 on:
   schedule:
     - cron: '23 4 * * *'
@@ -37,3 +39,7 @@ jobs:
           npx jest packages/core --ci
           echo "::warning::The site changed code @noodle/core vendors. Tests above show whether the port still matches; re-vendor in a pull request either way."
           exit 1
+      - name: Reckon units fixture current?
+        # runs even when the step above failed, so one red run reports both
+        if: ${{ !cancelled() }}
+        run: node scripts/reckon-units-fixture.js ../dailynoodle --check
