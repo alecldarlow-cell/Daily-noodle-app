@@ -6,6 +6,7 @@ import {
   labSaveKey,
   PUZZLE_TYPES,
   TYPE_LABEL,
+  type LabType,
   type PuzzleType,
 } from '@noodle/core';
 import { router } from 'expo-router';
@@ -50,6 +51,12 @@ import type { ArchiveItem } from '../../types';
 
 const NO_ITEMS: ArchiveItem[] = [];
 const LAB_KEYS = LAB_TYPES.map(labSaveKey);
+/**
+ * Lab types whose every past puzzle is listed in All, played or not (Alec, 26 Nov 2026: missed
+ * Cryptics should be easy to catch up on); the other trials join All only once played. The
+ * website's archive.js LAB_IN_ALL keeps the same list.
+ */
+export const LAB_IN_ALL: readonly LabType[] = ['cryptic'];
 
 /** The picker's choice: a daily type, the Lab's trials (11 Nov 2026), or All (null). */
 type Pick_ = PuzzleType | 'lab' | null;
@@ -104,9 +111,14 @@ export function ArchiveScreen() {
     [trials.all, status, labDone, day],
   );
   // All also lists the Lab puzzles you've played, finished or part-played, among the dailies
-  // by date, each with its Lab label (Alec, 20 Nov 2026). Unplayed ones stay under Lab.
+  // by date, each with its Lab label (Alec, 20 Nov 2026), and every past Cryptic (LAB_IN_ALL).
+  // Other unplayed ones stay under Lab.
   const labPlayedItems = useMemo(
-    () => trials.all.filter((it) => !!labPlayed(it.id, labDocs[labSaveKey(it.type)] as never)),
+    () =>
+      trials.all.filter(
+        (it) =>
+          LAB_IN_ALL.includes(it.type) || !!labPlayed(it.id, labDocs[labSaveKey(it.type)] as never),
+      ),
     [trials.all, labDocs],
   );
   const sections = useMemo(() => {

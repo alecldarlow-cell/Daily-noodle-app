@@ -1366,3 +1366,11 @@ Alec ran an outside review of the app and asked for its findings to be checked a
 - **What:** the script takes `--check`: it rebuilds the facts from the site clone, compares them byte for byte with the committed fixture, writes nothing, and exits 1 naming each fact added, gone or changed (first twenty, then a count) and how to regenerate. `site-drift.yml` runs it as a last step with `if: !cancelled()`, so a red vendored-code step still gets the fixture checked too. The script's body moved into `build`/`differences`/`main` (exported for the tests); the write mode is unchanged.
 - **Tests proved:** new `scripts/tests/unitsFixture.test.ts`: no differences on the same facts; a changed, a new and a gone fact each named; reordering still stale; a broken or non-list file reported, not thrown; `--check` exits 0 and leaves the file alone when current, exits 1 and writes nothing when stale or missing; the site path is taken from either side of `--check`; the write mode's output passes the check; the workflow step runs the check, without `continue-on-error`, even after a failed step. Run against site main (cc64bf6): `--check` says current (549 facts), and the write mode reproduces the committed fixture byte for byte. Against a copy of the site with the km→miles factor changed: exit 1, the km facts listed, fixture untouched. `npm run check` green (1,949 tests, 98.42% lines).
 - **Native:** none. CI and a script only; nothing ships to phones.
+
+## 26 Nov 2026 — Every past Cryptic in the Archive's All (outside WP order)
+
+- **Alec, 26 Nov:** asked for Cryptic Lab puzzles to show in the Archive on the app and the website. Played ones already showed (All, with the Lab label) and every past one showed under Lab; asked what he expected, he chose **unplayed Cryptics in All**.
+- **Site first:** dailynoodle#167 (`LAB_IN_ALL = ['cryptic']` in archive.js, SITE.md, new ARCHIVE-LAB-03 which fails on main).
+- **What:** `ArchiveScreen` `LAB_IN_ALL = ['cryptic']`: All lists every Cryptic before today, played or not, with its Lab label; other trials still join All only once played; Hide done hides finished ones; today's stays on Today.
+- **Tests proved:** new ArchiveLab case (fails on the old screen). `npm run check` green (1,950 tests).
+- **Native:** none. JS only, ships by Update production.
