@@ -1,7 +1,7 @@
 /**
  * Tumbler's rules, ported line by line from dailynoodle engines/tumbler.js (Lab, 6 Nov 2026):
- * a hidden word in four wheels of letters. Wheels turn down only and wrap round; the outlined
- * line (row 1) is read and submitted. A real word gets Wordle-style clues; the hidden word
+ * a hidden word in four wheels of letters. Wheels turn down and wrap round, and a tapped letter
+ * comes to the line (26 Nov 2026); the outlined line (the middle row) is read and submitted. A real word gets Wordle-style clues; the hidden word
  * solves it. Pure TypeScript with no React or storage; the screen and the differential
  * replay (scripts/replay.js) both play it.
  */
@@ -10,8 +10,15 @@ export const STREAK_KEY = 'digi-tumbler-streak';
 /** The page's message before anything is played (its markup). */
 export const START_MSG = 'Make a word on the outlined line and submit it for clues.';
 export const RESUME_MSG = 'Carrying on where you left off.';
-/** The row of each wheel that is read: the outlined line. */
-export const READ = 1;
+/**
+ * The row of each wheel that is drawn as the outlined line: the middle row (Alec, 26 Nov 2026;
+ * row 1 before). Offsets keep their old meaning: the letter on the line is
+ * wheels[k][(LINE + off[k]) mod size], so boards start on the same word, saved rounds
+ * (`cur.o`) resume on the same line and the site's gate still holds.
+ */
+export const READ = 3;
+/** The wheel position the offsets count from: the line as it was first drawn (row 1). */
+export const LINE = 1;
 
 export interface TumblerData {
   type: 'tumbler';
@@ -29,16 +36,22 @@ export interface TumblerState {
   /** Letters per wheel. */
   size: number;
   words: ReadonlySet<string>;
-  /** Each wheel's offset: the letter at row i is wheels[k][(i + off[k]) mod size]. */
+  /** Each wheel's offset: the letter at row i is wheels[k][(i - READ + LINE + off[k]) mod size]. */
   off: number[];
   /** The words submitted, oldest first. */
   tries: string[];
   turns: number;
   solved: boolean;
   msg: string;
+  /**
+   * The last tap to pick, for the board to draw: wheel k glided d tiles (down if positive) and
+   * its letter landed on the line; `seq` counts picks, so the board glides once per pick.
+   */
+  glide?: { k: number; d: number; seq: number } | null;
 }
 
-export type Move = { t: 'turn'; k: number } | { t: 'submit' };
+/** turn: a wheel a step down; pick: bring the letter at row i of wheel k to the line; submit. */
+export type Move = { t: 'turn'; k: number } | { t: 'pick'; k: number; i: number } | { t: 'submit' };
 
 /** g green (right wheel), a amber (another wheel), x grey: the engine's clue(). */
 export type Clue = 'g' | 'a' | 'x';
@@ -84,7 +97,7 @@ export function init(p: TumblerData): TumblerState {
 /** The letter on wheel k at row i. */
 export function letter(s: TumblerState, k: number, i: number): string {
   const P = s.size;
-  return s.p.wheels[k]![(((i + s.off[k]!) % P) + P) % P]!;
+  return s.p.wheels[k]![(((i - READ + LINE + s.off[k]!) % P) + P) % P]!;
 }
 
 /** The word on the outlined line, lower case. */
@@ -163,6 +176,14 @@ export function apply(s: TumblerState, m: Move): TumblerState {
     off[m.k] = (off[m.k]! - 1 + s.size) % s.size;
     return { ...s, off, turns: s.turns + 1, msg: '' };
   }
+  if (m.t === 'pick') {
+    if (m.k < 0 || m.k >= s.p.n || m.i < 0 || m.i >= s.size || m.i === READ) return s;
+    const d = pickSteps(s.size, m.i);
+    const off = s.off.slice();
+    off[m.k] = (((off[m.k]! - d) % s.size) + s.size) % s.size;
+    const seq = (s.glide?.seq ?? 0) + 1;
+    return { ...s, off, turns: s.turns + 1, msg: '', glide: { k: m.k, d, seq } };
+  }
   const w = lineWord(s);
   if (!s.words.has(w))
     return { ...s, msg: `${w.toUpperCase()} isn’t a word we know, so it doesn’t count.` };
@@ -177,7 +198,7 @@ export function restoreDone(p: TumblerData, tries: unknown): TumblerState {
   const s = init(p);
   const off = p.wheels.map((w, k) => {
     const i = w.indexOf(p.secret[k]!.toUpperCase());
-    return (((i - READ) % s.size) + s.size) % s.size;
+    return (((i - LINE) % s.size) + s.size) % s.size;
   });
   return {
     ...s,
@@ -185,6 +206,15 @@ export function restoreDone(p: TumblerData, tries: unknown): TumblerState {
     tries: Array.isArray(tries) ? (tries as string[]) : [p.secret],
     solved: true,
   };
+}
+
+/**
+ * Tap to pick (engines/tumbler.js pick): the tiles a wheel glides to bring row i to the line, the
+ * shortest way round (positive: down). At most three on a seven-letter wheel; 4 goes down 3 up.
+ */
+export function pickSteps(size: number, i: number): number {
+  const d = (((READ - i) % size) + size) % size;
+  return d > size / 2 ? d - size : d;
 }
 
 /** "Tumbler 25" from "DP·TUMB·0025". */

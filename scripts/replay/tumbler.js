@@ -1,6 +1,6 @@
 /**
- * Tumbler's half of scripts/replay.js: its pages, controls (each wheel's down arrow and
- * Submit: the controls a phone has), board reader and finish reader.
+ * Tumbler's half of scripts/replay.js: its pages, controls (each wheel's down arrow, a tap on
+ * a letter, and Submit: the controls a phone has), board reader and finish reader.
  */
 const model = require('../../src/features/puzzles/tumbler/model.ts');
 const { scenario, startAt, VARIANTS } = require('../../src/features/puzzles/tumbler/oracle.ts');
@@ -28,6 +28,10 @@ async function drive(p, move, H) {
   switch (move.t) {
     case 'turn':
       return H.tap(p, p.locator(`#down${move.k + 1}`));
+    case 'pick':
+      // tap to pick (26 Nov 2026): tap the letter, then wait out the page's glide
+      await H.tap(p, p.locator('#board .wheel').nth(move.k).locator('.tile').nth(move.i));
+      return p.waitForTimeout(450);
     case 'submit':
       return H.tap(p, p.locator('#submitBtn'));
     default:

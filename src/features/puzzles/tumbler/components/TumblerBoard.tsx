@@ -1,6 +1,16 @@
-import { useMemo } from 'react';
-import { PanResponder, Pressable, StyleSheet, Text, useColorScheme, View } from 'react-native';
+import { useLayoutEffect, useMemo, useRef, useState } from 'react';
+import {
+  Animated,
+  Easing,
+  PanResponder,
+  Pressable,
+  StyleSheet,
+  Text,
+  useColorScheme,
+  View,
+} from 'react-native';
 
+import { useReduceMotion } from '@/shared/motion';
 import { FONT, usePuzzleTokens } from '@/shared/theme';
 import { Chevron, pressable } from '@/shared/ui';
 
@@ -53,7 +63,17 @@ interface BoardProps {
   /** The line's letters turn green (the win beat, or a reopened board). */
   won?: boolean;
   onTurn: (k: number) => void;
+  /** Tap to pick: bring the letter at row i of wheel k to the line. */
+  onPick?: (k: number, i: number) => void;
 }
+
+/** The gap between a wheel's tiles. */
+const GAP = 5;
+/** Tap to pick's glide (engines/tumbler.js pick): 150 ms plus 75 ms a tile, eased. */
+export const glideMs = (d: number) => 150 + 75 * Math.abs(d);
+const GLIDE_EASE = Easing.bezier(0.22, 0.8, 0.3, 1);
+/** The pulse once the letter lands (tumbler.css dn-tumbler-land): up to 1.12 and back. */
+export const PULSE_MS = 420;
 
 /**
  * How a tile looks: the line outlined in ink (so green, amber and grey only ever mean clues), and
@@ -133,7 +153,11 @@ function tileLook(
   }
 }
 
-/** One wheel: its tiles, the outlined line, a drag down turning it a step a tile. */
+/**
+ * One wheel: its tiles, the outlined line, a drag down turning it a step a tile, and a tap on a
+ * letter bringing it to the line (Alec, 26 Nov 2026): the wheel is drawn at its new position
+ * at once, slid back to where it was, then glides home and the line's letter pulses.
+ */
 function Wheel({
   state,
   k,
@@ -141,6 +165,7 @@ function Wheel({
   won,
   marks,
   onTurn,
+  onPick,
 }: {
   state: TumblerState;
   k: number;
@@ -148,9 +173,40 @@ function Wheel({
   won: boolean;
   marks: (k: number, L: string) => Mark;
   onTurn: (k: number) => void;
+  onPick?: (k: number, i: number) => void;
 }) {
   const pt = usePuzzleTokens();
   const tc = tumblerColors(useColorScheme() === 'dark');
+  const reduce = useReduceMotion();
+  const [slide] = useState(() => new Animated.Value(0));
+  const [pulse] = useState(() => new Animated.Value(0));
+  const seen = useRef(state.glide?.seq ?? 0);
+  const glide = state.glide;
+  // Set before the frame is drawn, so the new letters never flash in place before gliding.
+  useLayoutEffect(() => {
+    const seq = glide?.seq ?? 0;
+    if (!glide || seq === seen.current) return;
+    seen.current = seq;
+    if (glide.k !== k || reduce !== false) return;
+    slide.setValue(-glide.d * (t + GAP));
+    pulse.setValue(0);
+    Animated.sequence([
+      Animated.timing(slide, {
+        toValue: 0,
+        duration: glideMs(glide.d),
+        easing: GLIDE_EASE,
+        useNativeDriver: true,
+      }),
+      Animated.timing(pulse, {
+        toValue: 1,
+        duration: PULSE_MS,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [glide, k, t, reduce, slide, pulse]);
+  const lift = pulse.interpolate({ inputRange: [0, 0.35, 1], outputRange: [1, 1.12, 1] });
+  const ring = pulse.interpolate({ inputRange: [0, 0.35, 1], outputRange: [0, 1, 0] });
   // A drag down turns the wheel a step for each 60% of a tile (engines/tumbler.js swipe).
   const pan = useMemo(() => {
     const drag = { y0: 0 };
@@ -170,57 +226,72 @@ function Wheel({
     <View
       {...pan.panHandlers}
       accessibilityLabel={`Wheel ${k + 1}`}
-      style={[styles.wheel, { gap: 5 }]}
+      style={styles.wheelClip}
       testID={`tumbler-wheel-${k}`}>
-      {Array.from({ length: state.size }, (_, i) => {
-        const read = i === READ;
-        const L = letter(state, k, i);
-        const mark = marks(k, L);
-        const look = tileLook(mark, read, won, { ...pt, ...tc });
-        return (
-          <View
-            key={i}
-            accessible={read}
-            accessibilityLabel={read ? lineLabel(state, k) : undefined}
-            style={[
-              styles.tile,
-              {
-                width: t * 1.25,
-                height: t,
-                backgroundColor: look.bg,
-                borderColor: look.border,
-                borderWidth: look.width,
-                borderStyle: look.dashed ? 'dashed' : 'solid',
-                opacity: look.opacity,
-              },
-            ]}
-            testID={`tumbler-tile-${k}-${i}`}>
-            <Text style={[styles.tileText, { fontSize: t * 0.48, color: look.fg }]}>{L}</Text>
-            {look.dot ? (
-              <View
+      <Animated.View style={[styles.wheel, { gap: GAP, transform: [{ translateY: slide }] }]}>
+        {Array.from({ length: state.size }, (_, i) => {
+          const read = i === READ;
+          const L = letter(state, k, i);
+          const mark = marks(k, L);
+          const look = tileLook(mark, read, won, { ...pt, ...tc });
+          return (
+            <Animated.View
+              key={i}
+              style={read ? { transform: [{ scale: lift }] } : undefined}
+              testID={read ? `tumbler-line-${k}` : undefined}>
+              {read ? (
+                <Animated.View
+                  pointerEvents="none"
+                  style={[styles.ring, { borderRadius: 14, borderColor: pt.brand, opacity: ring }]}
+                />
+              ) : null}
+              <Pressable
+                accessible
+                accessibilityRole={read ? undefined : 'button'}
+                accessibilityLabel={read ? lineLabel(state, k) : `Bring ${L} to the line`}
+                disabled={read || state.solved || !onPick}
+                onPress={() => onPick?.(k, i)}
                 style={[
-                  styles.dot,
+                  styles.tile,
                   {
-                    top: t * 0.1,
-                    right: t * 0.12,
-                    width: t * 0.16,
-                    height: t * 0.16,
-                    borderRadius: t * 0.08,
-                    backgroundColor: tc.amber,
+                    width: t * 1.25,
+                    height: t,
+                    backgroundColor: look.bg,
+                    borderColor: look.border,
+                    borderWidth: look.width,
+                    borderStyle: look.dashed ? 'dashed' : 'solid',
+                    opacity: look.opacity,
                   },
                 ]}
-                testID={`tumbler-dot-${k}-${i}`}
-              />
-            ) : null}
-          </View>
-        );
-      })}
+                testID={`tumbler-tile-${k}-${i}`}>
+                <Text style={[styles.tileText, { fontSize: t * 0.48, color: look.fg }]}>{L}</Text>
+                {look.dot ? (
+                  <View
+                    style={[
+                      styles.dot,
+                      {
+                        top: t * 0.1,
+                        right: t * 0.12,
+                        width: t * 0.16,
+                        height: t * 0.16,
+                        borderRadius: t * 0.08,
+                        backgroundColor: tc.amber,
+                      },
+                    ]}
+                    testID={`tumbler-dot-${k}-${i}`}
+                  />
+                ) : null}
+              </Pressable>
+            </Animated.View>
+          );
+        })}
+      </Animated.View>
     </View>
   );
 }
 
 /** The four wheels and, under each, its down arrow (the page's #down1…#down4). */
-export function TumblerBoard({ state, width, height, won = false, onTurn }: BoardProps) {
+export function TumblerBoard({ state, width, height, won = false, onTurn, onPick }: BoardProps) {
   const pt = usePuzzleTokens();
   const t = tileFor(width, height);
   const marks = useMemo(() => wheelMarks(state), [state]);
@@ -229,7 +300,16 @@ export function TumblerBoard({ state, width, height, won = false, onTurn }: Boar
     <View style={styles.board} testID="tumbler-board">
       <View style={styles.row}>
         {ks.map((k) => (
-          <Wheel key={k} state={state} k={k} t={t} won={won} marks={marks} onTurn={onTurn} />
+          <Wheel
+            key={k}
+            state={state}
+            k={k}
+            t={t}
+            won={won}
+            marks={marks}
+            onTurn={onTurn}
+            onPick={onPick}
+          />
         ))}
       </View>
       <View style={styles.row}>
@@ -301,7 +381,16 @@ export function TumblerRecap({ secret, tries }: { secret: string; tries: readonl
 const styles = StyleSheet.create({
   board: { alignItems: 'center', gap: 7 },
   row: { flexDirection: 'row', gap: 10, justifyContent: 'center' },
+  // Letters gliding past the top or bottom are hidden; the side room keeps the pulse's ring.
+  wheelClip: {
+    overflow: 'hidden',
+    paddingHorizontal: 6,
+    marginHorizontal: -6,
+    paddingVertical: 4,
+    marginVertical: -4,
+  },
   wheel: { alignItems: 'center' },
+  ring: { position: 'absolute', top: -4, bottom: -4, left: -4, right: -4, borderWidth: 3 },
   tile: { borderRadius: 10, borderWidth: 1.5, alignItems: 'center', justifyContent: 'center' },
   dot: { position: 'absolute' },
   tileText: { fontFamily: FONT.sansSemi },
