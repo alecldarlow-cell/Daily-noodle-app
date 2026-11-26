@@ -75,6 +75,19 @@ class Player {
       )
         this.do({ t: 'turn', k });
   }
+  /** Tap each wheel's letter of `word` to bring it to the line (tap to pick, 26 Nov 2026). */
+  pickTo(word: string) {
+    const { p } = this.state;
+    for (let k = 0; k < p.n; k++) {
+      const L = word[k]!.toUpperCase();
+      if (letter(this.state, k, READ) === L) continue;
+      for (let i = 0; i < this.state.size; i++)
+        if (letter(this.state, k, i) === L) {
+          this.do({ t: 'pick', k, i });
+          break;
+        }
+    }
+  }
   submit(ms?: number) {
     this.do({ t: 'submit' }, ms);
   }
@@ -125,7 +138,7 @@ function turns(pl: Player, rand: () => number) {
   const { p } = pl.state;
   for (let n = 0; n < pl.state.size; n++) pl.do({ t: 'turn', k: 2 }); // round and back
   pl.do({ t: 'turn', k: 0 }, 45_000); // a long think
-  pl.make(otherWord(p, rand));
+  pl.pickTo(otherWord(p, rand)); // letters tapped onto the line, not turned
   pl.submit();
   solve(pl);
 }
