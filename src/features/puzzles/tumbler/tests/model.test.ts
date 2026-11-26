@@ -4,7 +4,10 @@ import {
   init,
   letter,
   lineLabel,
+  LINE,
   lineWord,
+  pickSteps,
+  READ,
   restoreDone,
   START_MSG,
   submitsText,
@@ -19,7 +22,7 @@ import { tumbler25 } from './fixtures';
 const turnTo = (s: TumblerState, word: string) => {
   let x = s;
   for (let k = 0; k < 4; k++)
-    for (let n = 0; n < 7 && letter(x, k, 1) !== word[k]!.toUpperCase(); n++)
+    for (let n = 0; n < 7 && letter(x, k, READ) !== word[k]!.toUpperCase(); n++)
       x = apply(x, { t: 'turn', k });
   return x;
 };
@@ -45,22 +48,60 @@ describe('GIVEN a Tumbler board', () => {
   });
 
   describe('WHEN it opens', () => {
-    it('THEN the outlined line reads the second row and the page’s message shows', () => {
+    it('THEN the outlined line is the middle row, starts on the same word as before the move, and the page’s message shows', () => {
       const s = init(tumbler25);
       expect(lineWord(s)).toBe('teds');
       expect(s.msg).toBe(START_MSG);
       expect(lineLabel(s, 0)).toBe('Line letter 1: T');
+      // 26 Nov 2026: drawn at row 3, read from the wheels' old line position (LINE), so saves hold
+      expect(READ).toBe(3);
+      expect(
+        tumbler25.wheels
+          .map((w) => w[LINE])
+          .join('')
+          .toLowerCase(),
+      ).toBe('teds');
+      expect(letter(s, 0, 0)).toBe(tumbler25.wheels[0]![(LINE - READ + 7) % 7]);
+    });
+  });
+
+  describe('WHEN a letter off the line is tapped (tap to pick, Alec 26 Nov 2026)', () => {
+    it('THEN it comes to the line the shortest way round, at most three tiles, and counts one turn', () => {
+      expect([0, 1, 2, 4, 5, 6].map((i) => pickSteps(7, i))).toEqual([3, 2, 1, -1, -2, -3]);
+      const s0 = init(tumbler25);
+      for (let k = 0; k < 4; k++)
+        for (let i = 0; i < 7; i++) {
+          if (i === READ) continue;
+          const want = letter(s0, k, i);
+          const s = apply(s0, { t: 'pick', k, i });
+          expect(letter(s, k, READ)).toBe(want);
+          expect(s.turns).toBe(1);
+          expect(s.glide).toEqual({ k, d: pickSteps(7, i), seq: 1 });
+          // the other wheels don't move
+          for (let j = 0; j < 4; j++) if (j !== k) expect(s.off[j]).toBe(s0.off[j]);
+        }
+    });
+    it('THEN each pick counts on, a turn keeps the last glide, and the line, a bad wheel or a solved board are ignored', () => {
+      const s0 = init(tumbler25);
+      const a = apply(apply(s0, { t: 'pick', k: 0, i: 0 }), { t: 'pick', k: 1, i: 6 });
+      expect(a.glide).toEqual({ k: 1, d: -3, seq: 2 });
+      expect(apply(a, { t: 'turn', k: 2 }).glide).toBe(a.glide);
+      expect(apply(s0, { t: 'pick', k: 0, i: READ })).toBe(s0);
+      expect(apply(s0, { t: 'pick', k: 9, i: 0 })).toBe(s0);
+      expect(apply(s0, { t: 'pick', k: 0, i: 7 })).toBe(s0);
+      const won = restoreDone(tumbler25, ['teds']);
+      expect(apply(won, { t: 'pick', k: 0, i: 0 })).toBe(won);
     });
   });
 
   describe('WHEN a wheel turns', () => {
     it('THEN it moves down one, wrapping, and counts the turn', () => {
       let s = apply(init(tumbler25), { t: 'turn', k: 0 });
-      expect(letter(s, 0, 1)).toBe('R');
+      expect(letter(s, 0, READ)).toBe('R');
       expect(s.turns).toBe(1);
       expect(s.msg).toBe('');
       for (let i = 0; i < 6; i++) s = apply(s, { t: 'turn', k: 0 });
-      expect(letter(s, 0, 1)).toBe('T');
+      expect(letter(s, 0, READ)).toBe('T');
       expect(apply(s, { t: 'turn', k: 9 })).toBe(s);
     });
   });
@@ -112,7 +153,7 @@ describe('GIVEN a Tumbler board', () => {
     const m = wheelMarks(s);
     it('THEN the line shows the submit row: amber, grey, amber, green', () => {
       expect(s.tries).toEqual(['toes']);
-      expect([0, 1, 2, 3].map((k) => m(k, letter(s, k, 1)))).toEqual(['n', 'x', 'n', 'g']);
+      expect([0, 1, 2, 3].map((k) => m(k, letter(s, k, READ)))).toEqual(['n', 'x', 'n', 'g']);
     });
     it('THEN a grey letter fades on every wheel and an amber one is dotted where it could go', () => {
       expect(m(2, 'O')).toBe('x');

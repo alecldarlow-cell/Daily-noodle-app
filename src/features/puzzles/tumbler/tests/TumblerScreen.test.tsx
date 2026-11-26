@@ -1,7 +1,8 @@
 import { act, fireEvent, screen } from '@testing-library/react-native';
 import { router } from 'expo-router';
-import { AppState } from 'react-native';
+import { AccessibilityInfo, AppState } from 'react-native';
 
+import { forgetReduceMotion } from '@/shared/motion';
 import { onFinish, onVisit, type PuzzleFinish, type PuzzleVisit } from '@/shared/results';
 import { appStorage } from '@/shared/storage';
 import { mockSite, renderWithProviders } from '@/shared/testing';
@@ -9,7 +10,7 @@ import { mockSite, renderWithProviders } from '@/shared/testing';
 import { HOUSE_LINE, TumblerScreen } from '../components/TumblerScreen';
 import { BOARD_CHROME, dragStep, tileFor } from '../components/TumblerBoard';
 import { beatMs } from '../hooks/useTumblerGame';
-import { letter, SAVE_KEY, type TumblerState } from '../model';
+import { letter, READ, SAVE_KEY, type TumblerState } from '../model';
 import { file25 } from './fixtures';
 
 jest.mock('expo-router', () => ({
@@ -181,6 +182,48 @@ describe('GIVEN a Tumbler already solved', () => {
       });
     }
   });
+});
+
+describe('GIVEN a Tumbler in play (tap to pick, Alec 26 Nov 2026)', () => {
+  const tapTo = async (word: string) => {
+    for (let k = 0; k < 4; k++) {
+      if (readLine()[k] === word[k]) continue;
+      const i = [0, 1, 2, 3, 4, 5, 6].find(
+        (r) =>
+          screen.getByTestId(`tumbler-tile-${k}-${r}`).props.accessibilityLabel ===
+          `Bring ${word[k]!.toUpperCase()} to the line`,
+      )!;
+      await fireEvent.press(screen.getByTestId(`tumbler-tile-${k}-${i}`));
+    }
+  };
+  it.each([
+    ['reduced', true],
+    ['full', false],
+  ])(
+    'WHEN letters are tapped with %s motion THEN each comes to the middle line, one turn a tap, and the word solves it',
+    async (_m, reduced) => {
+      forgetReduceMotion();
+      jest.spyOn(AccessibilityInfo, 'isReduceMotionEnabled').mockResolvedValue(reduced);
+      await renderWithProviders(<TumblerScreen file={file25} />);
+      await fireEvent.press(screen.getByRole('button', { name: 'Play' }));
+      // the line tile can't be picked; the others say what a tap does
+      expect(screen.getByTestId(`tumbler-tile-0-${READ}`).props.accessibilityLabel).toMatch(
+        /^Line letter 1: /,
+      );
+      await tapTo('deer');
+      await act(async () => {
+        await new Promise((r) => setTimeout(r, 900));
+      });
+      expect(readLine()).toBe('deer');
+      const cur = JSON.parse(appStorage.getItem(SAVE_KEY) ?? 'null') as {
+        cur?: { t: number };
+      } | null;
+      expect(cur?.cur?.t ?? 0).toBeLessThanOrEqual(4);
+      await tapTo(file25.data.secret);
+      await submit();
+      expect(screen.getByTestId('tumbler-try-' + file25.data.secret)).toBeOnTheScreen();
+    },
+  );
 });
 
 describe('GIVEN the board’s sizes', () => {

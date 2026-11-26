@@ -25,7 +25,7 @@ export const HOUSE_LINE =
 /** How to play: the rule sentence, then the guide's paragraphs (engines/house.js). */
 const HOW = [
   'A four-letter word is hidden in the wheels. Make words on the outlined line and submit them for clues until you find it.',
-  'Each wheel holds one letter of the hidden word and six others. Tap a wheel’s arrow, or drag it down, to turn it; wheels only turn down and wrap round. Only the outlined line counts.',
+  'Each wheel holds one letter of the hidden word and six others. Tap a letter to bring it to the outlined line in the middle, or turn a wheel down with its arrow or by dragging it; the wheels wrap round. Only the outlined line counts.',
   'Make any real word on the outlined line and Submit it. Green: right letter on the right wheel. Amber: the letter is in the word but belongs to another wheel. Grey: not in the word. The clues stay marked on the wheels and your submits are listed below. Submit the hidden word to solve it; the clock is the score.',
 ];
 
@@ -45,6 +45,7 @@ export function TumblerScreen({ file }: { file: PuzzleFile<TumblerData> }) {
   const { state, dispatch } = game;
   const leaving = useRef(false);
   const onTurn = useCallback((k: number) => dispatch({ t: 'turn', k }), [dispatch]);
+  const onPick = useCallback((k: number, i: number) => dispatch({ t: 'pick', k, i }), [dispatch]);
   /** The body's height, measured, so the tiles shrink until the latest submit is in view. */
   const [bodyH, setBodyH] = useState<number | undefined>(undefined);
 
@@ -120,6 +121,7 @@ export function TumblerScreen({ file }: { file: PuzzleFile<TumblerData> }) {
             height={bodyH}
             won={state.solved}
             onTurn={onTurn}
+            onPick={onPick}
           />
           <Pressable
             accessibilityRole="button"
