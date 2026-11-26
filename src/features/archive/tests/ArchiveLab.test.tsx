@@ -117,6 +117,48 @@ describe('GIVEN Lab puzzles in the list', () => {
     expect(screen.getByTestId('archive-DP·TILT·0002')).toBeOnTheScreen();
   });
 
+  it('WHEN All is shown and no Cryptic was played THEN every Cryptic before today is among the dailies with its Lab label; Hide done hides a finished one', async () => {
+    // Alec, 26 Nov 2026: unplayed Cryptics in All, so missed days are easy to catch up on
+    const twoAgo = dayBefore(yesterday);
+    const cryptic = (n: number, date: string) => ({
+      path: `reports/${date}-word-cryptic-000${n}.html`,
+      type: 'cryptic',
+      id: `DP·CRYP·000${n}`,
+      date,
+      headline: `Cryptic 000${n}`,
+      standfirst: 'c',
+    });
+    mockSite({
+      'feed-lite.json': {
+        ...FEED_LITE,
+        items: [
+          ...FEED_LITE.items,
+          ...lab,
+          cryptic(1, twoAgo),
+          cryptic(2, yesterday),
+          cryptic(3, today),
+        ],
+      },
+    });
+    appStorage.setItem(
+      'digi-cryptic-v1',
+      JSON.stringify({ v: 1, done: { 'DP·CRYP·0001': { t: '0:48', s: 48, h: 1 } } }),
+    );
+    await renderWithProviders(<ArchiveScreen />);
+    await waitFor(() => expect(screen.getByTestId('archive-DP·MINI·0105')).toBeOnTheScreen());
+    const done = await screen.findByTestId('archive-DP·CRYP·0001');
+    expect(within(done).getByText('Cryptic 1')).toBeOnTheScreen();
+    expect(within(done).getByText(/Solved in 0:48/)).toBeOnTheScreen();
+    expect(screen.getByTestId('archive-DP·CRYP·0002')).toBeOnTheScreen();
+    expect(screen.getByTestId('archive-DP·CRYP·0002-lab')).toHaveTextContent('LAB TRIAL');
+    // today's is on Today; other trials still join All only once played
+    expect(screen.queryByTestId('archive-DP·CRYP·0003')).toBeNull();
+    expect(screen.queryByTestId('archive-DP·TILT·0002')).toBeNull();
+    await fireEvent.press(screen.getByTestId('archive-hide-done'));
+    expect(screen.queryByTestId('archive-DP·CRYP·0001')).toBeNull();
+    expect(screen.getByTestId('archive-DP·CRYP·0002')).toBeOnTheScreen();
+  });
+
   it('WHEN a daily type is picked THEN no Lab puzzle shows, played or not', async () => {
     appStorage.setItem(
       'digi-redact-v1',
