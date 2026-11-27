@@ -1,0 +1,26 @@
+# One puzzle from Today: its start card, then (if there is one) its board after Play.
+appId: ${APP_ID}
+---
+- tapOn: Today
+- extendedWaitUntil:
+    visible:
+      id: today-${TYPE}
+    timeout: 20000
+- tapOn:
+    id: today-${TYPE}
+- extendedWaitUntil:
+    visible:
+      id: play-screen
+    timeout: 15000
+- waitForAnimationToEnd
+- takeScreenshot: ${SET}-${TYPE}-start
+- tapOn:
+    text: 'Play|Start|Continue|Resume'
+    optional: true
+- waitForAnimationToEnd
+- takeScreenshot: ${SET}-${TYPE}-play
+- back
+- extendedWaitUntil:
+    visible:
+      id: today-screen
+    timeout: 10000

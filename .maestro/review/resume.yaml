@@ -1,0 +1,28 @@
+# Leave a puzzle part-played, close the app, come back: it should open where it was (#202).
+# Screenshots before and after, to compare by eye.
+appId: ${APP_ID}
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible:
+      id: today-screen
+    timeout: 40000
+- tapOn:
+    id: today-borders
+- tapOn:
+    id: borders-play-button
+- tapOn:
+    id: borders-opt-0
+- tapOn: 'Next'
+- takeScreenshot: resume-before
+- stopApp
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: today-screen
+    timeout: 40000
+- tapOn:
+    id: today-borders
+- waitForAnimationToEnd
+- takeScreenshot: resume-after

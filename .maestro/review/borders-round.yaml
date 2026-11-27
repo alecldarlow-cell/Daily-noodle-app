@@ -1,0 +1,30 @@
+# Borders (#190): three questions in a row, a screenshot of each map, to check the outline
+# redraws in place (no blank page between questions).
+appId: ${APP_ID}
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible:
+      id: today-screen
+    timeout: 40000
+- tapOn:
+    id: today-borders
+- tapOn:
+    id: borders-play-button
+- assertVisible:
+    id: borders-map
+- takeScreenshot: borders-q1
+- tapOn:
+    id: borders-opt-0
+- tapOn: 'Next'
+- takeScreenshot: borders-q2-instant
+- waitForAnimationToEnd
+- takeScreenshot: borders-q2
+- tapOn: 'Show on map (half points)'
+- waitForAnimationToEnd
+- takeScreenshot: borders-q2-inset
+- tapOn:
+    id: borders-opt-1
+- tapOn: 'Next'
+- takeScreenshot: borders-q3-instant
