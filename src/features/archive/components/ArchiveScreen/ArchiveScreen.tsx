@@ -254,7 +254,23 @@ export function ArchiveScreen() {
         />
       ) : null}
       {q.data && view === 'list' && shown.length === 0 ? (
-        <Note testID="archive-empty" title={hideDone ? 'All done here' : 'No puzzles match'} />
+        // An empty list always offers a next step (#191, review of 27 Nov 2026), never a dead end.
+        hideDone ? (
+          <Note
+            testID="archive-empty"
+            title="All done here"
+            body="You’ve finished every puzzle in this list."
+            action={{ label: 'Back to Today', onPress: () => router.navigate('/') }}
+            alt={{ label: 'Show finished ones', onPress: () => setHideDone(false) }}
+          />
+        ) : (
+          <Note
+            testID="archive-empty"
+            title="No puzzles match"
+            action={pick ? { label: 'Show all puzzles', onPress: () => setType(null) } : undefined}
+            alt={{ label: 'Back to Today', onPress: () => router.navigate('/') }}
+          />
+        )
       ) : null}
       {view === 'calendar' ? (
         <ScrollView
@@ -277,7 +293,10 @@ export function ArchiveScreen() {
         <SectionList
           sections={shown}
           keyExtractor={(it) => it.path}
-          stickySectionHeadersEnabled={false}
+          // Sticky months (#191): a long scroll never loses its place. The header carries the
+          // canvas colour so rows slide under it cleanly.
+          stickySectionHeadersEnabled
+          testID="archive-list"
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
@@ -288,7 +307,9 @@ export function ArchiveScreen() {
           }
           initialNumToRender={20}
           renderSectionHeader={({ section }) => (
-            <Text accessibilityRole="header" style={[styles.month, { color: t.faint }]}>
+            <Text
+              accessibilityRole="header"
+              style={[styles.month, { color: t.faint, backgroundColor: t.canvas }]}>
               {section.title}
             </Text>
           )}
@@ -459,8 +480,9 @@ const styles = StyleSheet.create({
     fontSize: 11.5,
     letterSpacing: 0.8,
     textTransform: 'uppercase',
-    marginTop: 18,
-    marginBottom: 0,
+    // Padding, not margin, so the sticky header's canvas covers the gap above it too.
+    paddingTop: 18,
+    paddingBottom: 4,
   },
   footer: { height: 72 },
 });
