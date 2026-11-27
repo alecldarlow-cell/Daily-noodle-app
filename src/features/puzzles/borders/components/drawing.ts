@@ -78,15 +78,30 @@ function worldSVG(s,pin){
 
 const esc = (s: string) => s.replace(/</g, '\\u003c');
 
+/** A question's drawing data, as the map page's script reads it (C). */
+const mapData = (q: BordersQ) => esc(JSON.stringify({ ...q, fill: colourOf(q) }));
+
+/** Adds or removes the inset world map (the hint), so one page can serve every question. */
+const SET_INSET = `function setInset(on){var d=document.getElementById('inset');
+ if(on&&!d){d=document.createElement('div');d.id='inset';d.appendChild(document.createElementNS('http://www.w3.org/2000/svg','svg'));document.body.appendChild(d);}
+ else if(!on&&d){d.parentNode.removeChild(d);}}`;
+
 /** The question's map: its outline on the graticule, the scale bar, and the inset when shown. */
 export function mapHtml(q: BordersQ, inset: boolean, c: BordersColors): string {
-  const data = { ...q, fill: colourOf(q) };
   return `<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"><style>${css(c)}
 #qmap{position:absolute;inset:0;width:100%;height:100%;background:${c.sea}}</style></head><body>
 <svg id="qmap" role="img" aria-label="Country outline"></svg><div id="scale"></div>${inset ? '<div id="inset"><svg></svg></div>' : ''}
-<script>var W=${esc(JSON.stringify(WORLD))},C=${esc(JSON.stringify(data))};${DRAW}
+<script>var W=${esc(JSON.stringify(WORLD))},C=${mapData(q)};${DRAW}${SET_INSET}
 function go(){drawLand(document.getElementById('qmap'),C);scaleBar(C);var i=document.querySelector('#inset svg');if(i)worldSVG(i,C);}
 go();addEventListener('resize',go);</script></body></html>`;
+}
+
+/**
+ * Redraws a loaded map page (mapHtml) for another question, or with the inset shown or not,
+ * without reloading it (#190): the page stays, so nothing flashes between questions.
+ */
+export function mapUpdate(q: BordersQ, inset: boolean): string {
+  return `C=${mapData(q)};setInset(${inset ? 'true' : 'false'});go();`;
 }
 
 /** The world map on the start card (no pin). */

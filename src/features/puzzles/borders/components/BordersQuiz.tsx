@@ -10,7 +10,7 @@ import { PRESSED, pressable } from '@/shared/ui';
 import { useAnnounce } from '../../link/hooks/announce';
 import { quizView, type BordersState, type Move } from '../model';
 import type { BordersColors } from './colors';
-import { bigMapHtml, mapHtml } from './drawing';
+import { bigMapHtml, mapHtml, mapUpdate } from './drawing';
 import { Picture } from './Picture';
 
 interface Props {
@@ -82,8 +82,10 @@ export function BordersQuiz({ state, c, dispatch, name, streak, onBack }: Props)
         </View>
         <View style={[styles.sheet, { backgroundColor: c.sea, borderColor: c.edge }]}>
           <Picture
-            key={`${v.q.n}-${v.inset ? 1 : 0}-${c.bg}`}
+            // One page for the whole round (#190): questions and the inset redraw into it.
+            key={c.bg}
             html={mapHtml(v.q, v.inset, c)}
+            update={mapUpdate(v.q, v.inset)}
             style={styles.map}
             label="Country outline"
             testID="borders-map"
