@@ -1394,3 +1394,10 @@ Alec ran an outside review of the app and asked for its findings to be checked a
 - **Tests proved:** `scripts/tests/tabIcons.test.ts`: four icons at three sizes, every PNG what the script draws, white on clear with enough line, and the tab bar uses them (no stock icons). make-icons `--check` still current. Typecheck, ESLint, Prettier clean.
 - **Needs Alec:** a look on the phone (and #202's emulator pass) that the icons tint grey and green and sit right in the bar.
 - **Native:** none. JS and bundled images; ships by Update production.
+
+## 27 Nov 2026 — Sweep tile: the board's flag (no queue issue; Alec's call in chat)
+
+- **Why:** after the app review, Alec found the Sweep tile's red explosion out of line with the rest of the set (the only red in it). From a mock (https://claude.ai/artifact/MNYZrNbcT53otvSaMFvizr) he agreed with a flag, drawn as the game draws it.
+- **What:** `assets/images/tiles/sweep-light.png` / `-dark.png`: the hit cell is now marigold with the board's flag (`SweepGlyphs` FlagGlyph / the site's `FLAG_SVG`: ink pole, two-tone blue pennant), fixed colours in both themes. Rendered from the site's new `assets/sweep-thumb.svg` (dailynoodle#170) in Chromium at 288 px, and only that cell spliced into the existing PNGs, so the numbers, grid and frame stay pixel-for-pixel as they were (a full re-render differs by font anti-aliasing).
+- **Tests proved:** the PNGs stay 288 px RGBA; the existing tile tests and `npm run check` cover their use. Checked by eye beside Path in light and dark.
+- **Native:** none. Bundled images; ships by Update production.
