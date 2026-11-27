@@ -52,12 +52,17 @@ jobs:
           SDK=$ANDROID_HOME
           yes | $SDK/cmdline-tools/latest/bin/sdkmanager "system-images;android-34;google_apis;x86_64" "emulator" "platform-tools" > /dev/null
           echo no | $SDK/cmdline-tools/latest/bin/avdmanager create avd -n review -k "system-images;android-34;google_apis;x86_64" -d pixel_6
-          nohup $SDK/emulator/emulator -avd review -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect -memory 4096 > emulator.log 2>&1 &
-          $SDK/platform-tools/adb wait-for-device
+          ls -l /dev/kvm; $SDK/emulator/emulator -accel-check || true
+          nohup $SDK/emulator/emulator -avd review -no-window -no-audio -no-boot-anim -no-snapshot -gpu swiftshader_indirect -memory 4096 > emulator.log 2>&1 &
+          if ! timeout 300 $SDK/platform-tools/adb wait-for-device; then
+            echo "The emulator never came up:"; tail -80 emulator.log; exit 1
+          fi
+          booted=0
           for i in $(seq 1 120); do
-            [ "$($SDK/platform-tools/adb shell getprop sys.boot_completed | tr -d '\r')" = "1" ] && break
+            if [ "$($SDK/platform-tools/adb shell getprop sys.boot_completed | tr -d '\r')" = "1" ]; then booted=1; break; fi
             sleep 5
           done
+          if [ $booted = 0 ]; then echo "The emulator didn't finish booting:"; tail -80 emulator.log; exit 1; fi
           $SDK/platform-tools/adb shell input keyevent 82
       - name: Install Maestro
         run: |
