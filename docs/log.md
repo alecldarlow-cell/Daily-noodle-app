@@ -1401,3 +1401,11 @@ Alec ran an outside review of the app and asked for its findings to be checked a
 - **What:** `assets/images/tiles/sweep-light.png` / `-dark.png`: the hit cell is now marigold with the board's flag (`SweepGlyphs` FlagGlyph / the site's `FLAG_SVG`: ink pole, two-tone blue pennant), fixed colours in both themes. Rendered from the site's new `assets/sweep-thumb.svg` (dailynoodle#170) in Chromium at 288 px, and only that cell spliced into the existing PNGs, so the numbers, grid and frame stay pixel-for-pixel as they were (a full re-render differs by font anti-aliasing).
 - **Tests proved:** the PNGs stay 288 px RGBA; the existing tile tests and `npm run check` cover their use. Checked by eye beside Path in light and dark.
 - **Native:** none. Bundled images; ships by Update production.
+
+## 27 Nov 2026 — Borders: the map no longer reloads per question (queue #190)
+
+- **Why:** the outline picture was a WebView keyed by question, so every question (and the hint's inset) made a new page that loaded and flashed (log, 26 Oct: needed a phone to verify an injectJavaScript redraw). Raised again by the 27 Nov review.
+- **What:** `Picture` takes an optional `update` script. The page loads once per round (keyed only by colour scheme); later questions and the inset are drawn into it with `injectJavaScript` (`mapUpdate`: sets `C`, `setInset`, `go()`), each redraw posting `drawn:<n>` back. If a redraw hasn't reported within `REDRAW_FALLBACK_MS` (1.5 s), the page reloads with the current question: the worst case is the old behaviour. `mapHtml` gains `setInset`; the first question's page is otherwise unchanged. The big map and other pictures keep plain reloads.
+- **Tests proved:** `picture.test.tsx` (first page loads with nothing run; the next question and the hint redraw in place with no remount; same content runs nothing; no report → reload with the current question; the script's shape; plain pictures unchanged). `BordersScreen.test` now checks the hint's inset is drawn in place and that one page served all ten. ESLint, typecheck clean; Borders suites green.
+- **Needs Alec / #202:** a round on a device to see no flash between questions, light and dark.
+- **Native:** none. JS only; ships by Update production.

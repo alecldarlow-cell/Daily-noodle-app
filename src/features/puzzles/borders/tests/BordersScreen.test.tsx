@@ -1,5 +1,5 @@
 import { createSaveStore } from '@noodle/core';
-import { act, fireEvent, screen, within } from '@testing-library/react-native';
+import { act, fireEvent, screen } from '@testing-library/react-native';
 
 import { onFinish, type PuzzleFinish } from '@/shared/results';
 import { appStorage } from '@/shared/storage';
@@ -15,21 +15,34 @@ jest.mock('expo-router', () => ({
   useIsFocused: () => true,
 }));
 // The drawings' WebView, as a plain view carrying its HTML.
+/** Every script run in a drawing, newest last (#190: the map redraws in place). */
+const injected: string[] = [];
 jest.mock('react-native-webview', () => {
-  const { createElement } = jest.requireActual<typeof import('react')>('react');
+  const { createElement, forwardRef, useImperativeHandle } =
+    jest.requireActual<typeof import('react')>('react');
   const { View } = jest.requireActual<typeof import('react-native')>('react-native');
+  type P = {
+    source: { html: string };
+    onShouldStartLoadWithRequest: (r: { url: string }) => boolean;
+    onMessage?: (e: { nativeEvent: { data: string } }) => void;
+  };
   return {
-    WebView: (p: {
-      source: { html: string };
-      onShouldStartLoadWithRequest: (r: { url: string }) => boolean;
-    }) =>
-      createElement(View, {
+    WebView: forwardRef((p: P, ref) => {
+      useImperativeHandle(ref, () => ({
+        injectJavaScript: (js: string) => {
+          injected.push(js);
+          const n = /postMessage\('(drawn:\d+)'\)/.exec(js);
+          if (n) p.onMessage?.({ nativeEvent: { data: n[1]! } });
+        },
+      }));
+      return createElement(View, {
         testID: 'drawing',
         accessibilityHint: p.source.html,
         accessibilityValue: {
           text: String(p.onShouldStartLoadWithRequest({ url: 'https://example.com' })),
         },
-      }),
+      });
+    }),
   };
 });
 jest.setTimeout(30_000);
@@ -47,6 +60,7 @@ const saved = () => JSON.parse(appStorage.getItem(SAVE_KEY) ?? 'null');
 let finishes: PuzzleFinish[] = [];
 let off = () => {};
 beforeEach(() => {
+  injected.length = 0;
   for (const k of appStorage.keys()) appStorage.setItem(k, 'null');
   appStorage.setItem(ATLAS_KEY, '');
   t = 0;
@@ -97,15 +111,16 @@ describe('GIVEN a Borders not yet played', () => {
     for (let i = 0; i < 10; i++) {
       if (i === 5) {
         await press('borders-hint');
-        expect(
-          within(screen.getByTestId('borders-map')).getByTestId('drawing').props.accessibilityHint,
-        ).toContain('id="inset"');
+        // The hint's inset is drawn into the page already showing, not by reloading it (#190).
+        expect(injected.at(-1)).toContain('setInset(true)');
       }
       await press(`borders-opt-${pick(i, ![3, 6, 8].includes(i))}`);
       expect(screen.getByTestId('borders-plate')).toBeOnTheScreen();
       await press('borders-next');
     }
     expect(screen.getByTestId('finish-sheet')).toBeOnTheScreen();
+    // One map page served all ten questions: later ones were drawn into it (#190).
+    expect(injected.filter((js) => js.includes('go();')).length).toBeGreaterThanOrEqual(9);
     expect(screen.getByTestId('finish-title')).toHaveTextContent('Spotted');
     expect(screen.getByText('7 of 10')).toBeOnTheScreen();
     expect(await sharedLine()).toMatch(/^🌍 Borders #15 — 7\/10 · \d+ pts$/);
