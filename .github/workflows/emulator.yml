@@ -40,7 +40,8 @@ jobs:
         run: |
           npx expo prebuild --platform android --no-install --clean
           # Run this commit's bundle, never an over-the-air update from a channel.
-          sed -i 's#</application>#<meta-data android:name="expo.modules.updates.ENABLED" android:value="false"/></application>#' android/app/src/main/AndroidManifest.xml
+          sed -i 's#\(android:name="expo.modules.updates.ENABLED" android:value="\)true#\1false#' android/app/src/main/AndroidManifest.xml
+          grep -q 'expo.modules.updates.ENABLED" android:value="false"' android/app/src/main/AndroidManifest.xml
           cd android && ./gradlew assembleRelease -PreactNativeArchitectures=x86_64 --no-daemon
       - name: Enable KVM
         run: |
