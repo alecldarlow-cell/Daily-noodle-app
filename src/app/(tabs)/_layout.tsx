@@ -5,6 +5,17 @@ import { useFeatures } from '@/shared/features';
 import { tabBarProps } from '@/shared/shell';
 import { tokensFor } from '@/shared/theme';
 
+/**
+ * The noodle-line tab icons (#199, Alec, 27 Nov 2026), drawn by scripts/make-tab-icons.js:
+ * one rounded line plus a dot each, tinted grey or the accent by the tab bar.
+ */
+const TAB_ICONS = {
+  today: require('../../../assets/images/tabs/today.png') as number,
+  leagues: require('../../../assets/images/tabs/leagues.png') as number,
+  archive: require('../../../assets/images/tabs/archive.png') as number,
+  account: require('../../../assets/images/tabs/account.png') as number,
+};
+
 export default function TabsLayout() {
   const scheme = useColorScheme();
   const t = tokensFor(scheme);
@@ -16,15 +27,15 @@ export default function TabsLayout() {
     <NativeTabs {...tabBarProps(t)}>
       <NativeTabs.Trigger name="index">
         <NativeTabs.Trigger.Label>Today</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon sf="square.grid.2x2" md="grid_view" />
+        <NativeTabs.Trigger.Icon src={TAB_ICONS.today} />
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="leagues">
         <NativeTabs.Trigger.Label>Leagues</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon sf="trophy" md="trophy" />
+        <NativeTabs.Trigger.Icon src={TAB_ICONS.leagues} />
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="archive">
         <NativeTabs.Trigger.Label>Archive</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon sf="calendar" md="calendar_month" />
+        <NativeTabs.Trigger.Icon src={TAB_ICONS.archive} />
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="stats" hidden={!features.stats}>
         <NativeTabs.Trigger.Label>Stats</NativeTabs.Trigger.Label>
@@ -32,7 +43,7 @@ export default function TabsLayout() {
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="account">
         <NativeTabs.Trigger.Label>Account</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon sf="person.crop.circle" md="account_circle" />
+        <NativeTabs.Trigger.Icon src={TAB_ICONS.account} />
       </NativeTabs.Trigger>
     </NativeTabs>
   );
