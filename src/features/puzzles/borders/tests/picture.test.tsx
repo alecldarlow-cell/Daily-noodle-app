@@ -8,16 +8,16 @@ import { borders15 } from './fixtures';
 const mockInjected: string[] = [];
 let mockAck = true;
 let mockMounts = 0;
+type MockP = {
+  source: { html: string };
+  onMessage?: (e: { nativeEvent: { data: string } }) => void;
+};
 jest.mock('react-native-webview', () => {
   const { createElement, forwardRef, useEffect, useImperativeHandle } =
     jest.requireActual<typeof import('react')>('react');
   const { View } = jest.requireActual<typeof import('react-native')>('react-native');
-  type P = {
-    source: { html: string };
-    onMessage?: (e: { nativeEvent: { data: string } }) => void;
-  };
   return {
-    WebView: forwardRef((p: P, ref) => {
+    WebView: forwardRef((p: MockP, ref) => {
       useEffect(() => {
         mockMounts++;
       }, []);

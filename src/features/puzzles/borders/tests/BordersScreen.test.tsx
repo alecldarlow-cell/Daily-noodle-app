@@ -17,17 +17,17 @@ jest.mock('expo-router', () => ({
 // The drawings' WebView, as a plain view carrying its HTML.
 /** Every script run in a drawing, newest last (#190: the map redraws in place). */
 const mockInjected: string[] = [];
+type MockP = {
+  source: { html: string };
+  onShouldStartLoadWithRequest: (r: { url: string }) => boolean;
+  onMessage?: (e: { nativeEvent: { data: string } }) => void;
+};
 jest.mock('react-native-webview', () => {
   const { createElement, forwardRef, useImperativeHandle } =
     jest.requireActual<typeof import('react')>('react');
   const { View } = jest.requireActual<typeof import('react-native')>('react-native');
-  type P = {
-    source: { html: string };
-    onShouldStartLoadWithRequest: (r: { url: string }) => boolean;
-    onMessage?: (e: { nativeEvent: { data: string } }) => void;
-  };
   return {
-    WebView: forwardRef((p: P, ref) => {
+    WebView: forwardRef((p: MockP, ref) => {
       useImperativeHandle(ref, () => ({
         injectJavaScript: (js: string) => {
           mockInjected.push(js);
