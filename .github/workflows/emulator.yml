@@ -54,6 +54,7 @@ jobs:
           # One AVD folder for both tools (the runner's avdmanager and emulator look in different places).
           export ANDROID_AVD_HOME=$HOME/.android/avd; mkdir -p "$ANDROID_AVD_HOME"
           echo "ANDROID_AVD_HOME=$ANDROID_AVD_HOME" >> "$GITHUB_ENV"
+          echo "$SDK/platform-tools" >> "$GITHUB_PATH"
           echo no | $SDK/cmdline-tools/latest/bin/avdmanager create avd -n review -k "system-images;android-34;google_apis;x86_64" -d pixel_6 -p "$ANDROID_AVD_HOME/review.avd"
           $SDK/emulator/emulator -list-avds
           ls -l /dev/kvm; $SDK/emulator/emulator -accel-check || true

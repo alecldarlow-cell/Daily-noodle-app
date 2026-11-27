@@ -17,6 +17,7 @@ flow() { # name file [env...]
     echo "- ✅ $name" >> "$OUT/summary.md"
   else
     echo "- ❌ $name (see $name.log)" >> "$OUT/summary.md"
+    echo "::group::$name failed"; tail -40 "$OUT/$name.log"; echo "::endgroup::"
     FAILED=1
   fi
   # Maestro writes screenshots to the working directory.
