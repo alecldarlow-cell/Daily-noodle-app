@@ -1409,3 +1409,9 @@ Alec ran an outside review of the app and asked for its findings to be checked a
 - **Tests proved:** `picture.test.tsx` (first page loads with nothing run; the next question and the hint redraw in place with no remount; same content runs nothing; no report → reload with the current question; the script's shape; plain pictures unchanged). `BordersScreen.test` now checks the hint's inset is drawn in place and that one page served all ten. ESLint, typecheck clean; Borders suites green.
 - **Needs Alec / #202:** a round on a device to see no flash between questions, light and dark.
 - **Native:** none. JS only; ships by Update production.
+
+## 27 Nov 2026 — Emulator checks workflow (queue #202)
+
+- **Why:** the review's never-tested list (small screen, double text, leave and return, reduced motion, Back from each tab) had no device run; Alec asked for an Android emulator wherever it can stand in for his phone. This sandbox has no KVM, and there's no installable build of the current runtime, so the run lives in GitHub Actions (free on the public repo).
+- **What:** `.github/workflows/emulator.yml` (Run workflow only): prebuilds Android, assembles a release APK for x86_64 with over-the-air updates switched off (so it runs this commit's JavaScript), boots an Android 14 Pixel emulator with KVM, installs Maestro and runs `scripts/emulator-checks.sh`. That runs `.maestro/review/`: `back.yaml` (#189: each tab's Back to Today, a puzzle back to Today or Archive, Today's Back leaves), `borders-round.yaml` (#190: three maps in a row, and the inset), `resume.yaml`, and `screens.yaml` (every screen and puzzle, start card and board) under normal, dark, font scale 2.0, a 320 × 569 dp screen and animations off. Screenshots, logs and a summary upload as the `emulator-results` artifact.
+- **Not covered (phone, #193):** TalkBack listening, one-handed feel, thumb mis-taps.

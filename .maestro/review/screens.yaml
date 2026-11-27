@@ -1,0 +1,51 @@
+# Screenshots of every screen and puzzle, for the settings the run sets (SET): normal,
+# dark, double text, small screen, reduced motion (#202). Read by eye; the flow fails only
+# if a screen does not open.
+appId: ${APP_ID}
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible:
+      id: today-screen
+    timeout: 40000
+- takeScreenshot: ${SET}-today
+- runFlow:
+    file: player.yaml
+    env: { TYPE: mini }
+- runFlow:
+    file: player.yaml
+    env: { TYPE: doku }
+- runFlow:
+    file: player.yaml
+    env: { TYPE: sweep }
+- runFlow:
+    file: player.yaml
+    env: { TYPE: path }
+- runFlow:
+    file: player.yaml
+    env: { TYPE: link }
+- runFlow:
+    file: player.yaml
+    env: { TYPE: tangle }
+- runFlow:
+    file: player.yaml
+    env: { TYPE: borders }
+- runFlow:
+    file: player.yaml
+    env: { TYPE: reckon }
+- runFlow:
+    file: player.yaml
+    env: { TYPE: tally }
+- tapOn: Leagues
+- waitForAnimationToEnd
+- takeScreenshot: ${SET}-leagues
+- tapOn: Archive
+- extendedWaitUntil:
+    visible:
+      id: archive-screen
+    timeout: 20000
+- takeScreenshot: ${SET}-archive
+- tapOn: Account
+- waitForAnimationToEnd
+- takeScreenshot: ${SET}-account

@@ -1,0 +1,79 @@
+name: Emulator checks
+
+# The device pass from #202 (review of 27 Nov 2026): builds a test APK of this commit and
+# runs .maestro/review/ on an Android emulator, under normal, dark, double text, a small
+# screen and reduced motion. Screenshots and a summary are uploaded as an artifact.
+# Run by hand only (Actions → Emulator checks → Run workflow): about 40 minutes, free on
+# this public repo. Nothing is published or signed for the store.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: emulator-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  emulator:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      APP_ID: uk.co.dailynoodle.app
+      # The public values every build carries (eas.json › base.env).
+      EXPO_PUBLIC_SUPABASE_URL: https://gnehttjheoyutrfsvslq.supabase.co
+      EXPO_PUBLIC_SUPABASE_ANON_KEY: sb_publishable_dEMntRNiElpGHn3Hd5Ef1Q_HvLa2wTB
+      EXPO_PUBLIC_SYNC: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - run: npm ci
+      - name: Build a test APK (this commit's JavaScript, x86_64 only)
+        run: |
+          npx expo prebuild --platform android --no-install --clean
+          # Run this commit's bundle, never an over-the-air update from a channel.
+          sed -i 's#</application>#<meta-data android:name="expo.modules.updates.ENABLED" android:value="false"/></application>#' android/app/src/main/AndroidManifest.xml
+          cd android && ./gradlew assembleRelease -PreactNativeArchitectures=x86_64 --no-daemon
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules && sudo udevadm trigger --name-match=kvm
+      - name: Start an emulator (Pixel, Android 14)
+        run: |
+          SDK=$ANDROID_HOME
+          yes | $SDK/cmdline-tools/latest/bin/sdkmanager "system-images;android-34;google_apis;x86_64" "emulator" "platform-tools" > /dev/null
+          echo no | $SDK/cmdline-tools/latest/bin/avdmanager create avd -n review -k "system-images;android-34;google_apis;x86_64" -d pixel_6
+          nohup $SDK/emulator/emulator -avd review -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect -memory 4096 > emulator.log 2>&1 &
+          $SDK/platform-tools/adb wait-for-device
+          for i in $(seq 1 120); do
+            [ "$($SDK/platform-tools/adb shell getprop sys.boot_completed | tr -d '\r')" = "1" ] && break
+            sleep 5
+          done
+          $SDK/platform-tools/adb shell input keyevent 82
+      - name: Install Maestro
+        run: |
+          curl -Ls "https://get.maestro.mobile.dev" | bash
+          echo "$HOME/.maestro/bin" >> "$GITHUB_PATH"
+      - name: Install the app
+        run: adb install -r android/app/build/outputs/apk/release/app-release.apk
+      - name: Run the checks
+        run: OUT=emulator-results scripts/emulator-checks.sh
+      - name: Summary
+        if: always()
+        run: cat emulator-results/summary.md >> "$GITHUB_STEP_SUMMARY" || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: emulator-results
+          path: |
+            emulator-results
+            emulator.log
+          retention-days: 14
