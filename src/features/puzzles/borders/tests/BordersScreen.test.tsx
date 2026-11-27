@@ -16,7 +16,7 @@ jest.mock('expo-router', () => ({
 }));
 // The drawings' WebView, as a plain view carrying its HTML.
 /** Every script run in a drawing, newest last (#190: the map redraws in place). */
-const injected: string[] = [];
+const mockInjected: string[] = [];
 jest.mock('react-native-webview', () => {
   const { createElement, forwardRef, useImperativeHandle } =
     jest.requireActual<typeof import('react')>('react');
@@ -30,7 +30,7 @@ jest.mock('react-native-webview', () => {
     WebView: forwardRef((p: P, ref) => {
       useImperativeHandle(ref, () => ({
         injectJavaScript: (js: string) => {
-          injected.push(js);
+          mockInjected.push(js);
           const n = /postMessage\('(drawn:\d+)'\)/.exec(js);
           if (n) p.onMessage?.({ nativeEvent: { data: n[1]! } });
         },
@@ -60,7 +60,7 @@ const saved = () => JSON.parse(appStorage.getItem(SAVE_KEY) ?? 'null');
 let finishes: PuzzleFinish[] = [];
 let off = () => {};
 beforeEach(() => {
-  injected.length = 0;
+  mockInjected.length = 0;
   for (const k of appStorage.keys()) appStorage.setItem(k, 'null');
   appStorage.setItem(ATLAS_KEY, '');
   t = 0;
@@ -112,7 +112,7 @@ describe('GIVEN a Borders not yet played', () => {
       if (i === 5) {
         await press('borders-hint');
         // The hint's inset is drawn into the page already showing, not by reloading it (#190).
-        expect(injected.at(-1)).toContain('setInset(true)');
+        expect(mockInjected.at(-1)).toContain('setInset(true)');
       }
       await press(`borders-opt-${pick(i, ![3, 6, 8].includes(i))}`);
       expect(screen.getByTestId('borders-plate')).toBeOnTheScreen();
@@ -120,7 +120,7 @@ describe('GIVEN a Borders not yet played', () => {
     }
     expect(screen.getByTestId('finish-sheet')).toBeOnTheScreen();
     // One map page served all ten questions: later ones were drawn into it (#190).
-    expect(injected.filter((js) => js.includes('go();')).length).toBeGreaterThanOrEqual(9);
+    expect(mockInjected.filter((js) => js.includes('go();')).length).toBeGreaterThanOrEqual(9);
     expect(screen.getByTestId('finish-title')).toHaveTextContent('Spotted');
     expect(screen.getByText('7 of 10')).toBeOnTheScreen();
     expect(await sharedLine()).toMatch(/^🌍 Borders #15 — 7\/10 · \d+ pts$/);

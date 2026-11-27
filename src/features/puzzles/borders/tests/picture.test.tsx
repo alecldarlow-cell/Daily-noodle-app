@@ -5,9 +5,9 @@ import { mapHtml, mapUpdate } from '../components/drawing';
 import { Picture, REDRAW_FALLBACK_MS } from '../components/Picture';
 import { borders15 } from './fixtures';
 
-const injected: string[] = [];
-let ack = true;
-let mounts = 0;
+const mockInjected: string[] = [];
+let mockAck = true;
+let mockMounts = 0;
 jest.mock('react-native-webview', () => {
   const { createElement, forwardRef, useEffect, useImperativeHandle } =
     jest.requireActual<typeof import('react')>('react');
@@ -19,13 +19,13 @@ jest.mock('react-native-webview', () => {
   return {
     WebView: forwardRef((p: P, ref) => {
       useEffect(() => {
-        mounts++;
+        mockMounts++;
       }, []);
       useImperativeHandle(ref, () => ({
         injectJavaScript: (js: string) => {
-          injected.push(js);
+          mockInjected.push(js);
           const n = /postMessage\('(drawn:\d+)'\)/.exec(js);
-          if (n && ack) p.onMessage?.({ nativeEvent: { data: n[1]! } });
+          if (n && mockAck) p.onMessage?.({ nativeEvent: { data: n[1]! } });
         },
       }));
       return createElement(View, { testID: 'drawing', accessibilityHint: p.source.html });
@@ -38,9 +38,9 @@ const [q1, q2] = borders15.qs;
 const page = () => String(screen.getByTestId('drawing').props.accessibilityHint);
 
 beforeEach(() => {
-  injected.length = 0;
-  ack = true;
-  mounts = 0;
+  mockInjected.length = 0;
+  mockAck = true;
+  mockMounts = 0;
   jest.useFakeTimers();
 });
 afterEach(() => jest.useRealTimers());
@@ -55,49 +55,49 @@ describe('GIVEN the Borders map picture', () => {
   it('THEN the first question loads as a page, with nothing to run', async () => {
     await render(show(q1));
     expect(page()).toContain(q1!.d);
-    expect(injected).toEqual([]);
-    expect(mounts).toBe(1);
+    expect(mockInjected).toEqual([]);
+    expect(mockMounts).toBe(1);
   });
 
   describe('WHEN the next question comes', () => {
     it('THEN it is drawn into the same page: no reload, so no flash', async () => {
       const r = await render(show(q1));
       await r.rerender(show(q2));
-      expect(mounts).toBe(1);
+      expect(mockMounts).toBe(1);
       expect(page()).toContain(q1!.d);
-      expect(injected).toHaveLength(1);
-      expect(injected[0]).toContain(q2!.d);
-      expect(injected[0]).toContain('setInset(false)');
+      expect(mockInjected).toHaveLength(1);
+      expect(mockInjected[0]).toContain(q2!.d);
+      expect(mockInjected[0]).toContain('setInset(false)');
       await act(async () => {
         jest.advanceTimersByTime(REDRAW_FALLBACK_MS * 2);
       });
-      expect(mounts).toBe(1);
+      expect(mockMounts).toBe(1);
     });
 
     it('THEN a hint redraws it with the inset', async () => {
       const r = await render(show(q1));
       await r.rerender(show(q1, true));
-      expect(injected.at(-1)).toContain('setInset(true)');
-      expect(mounts).toBe(1);
+      expect(mockInjected.at(-1)).toContain('setInset(true)');
+      expect(mockMounts).toBe(1);
     });
 
     it('THEN the same content again runs nothing', async () => {
       const r = await render(show(q1));
       await r.rerender(show(q1));
-      expect(injected).toEqual([]);
+      expect(mockInjected).toEqual([]);
     });
   });
 
   describe('WHEN a redraw never reports back', () => {
     it('THEN the page reloads with the current question, as it used to', async () => {
-      ack = false;
+      mockAck = false;
       const r = await render(show(q1));
       await r.rerender(show(q2));
-      expect(mounts).toBe(1);
+      expect(mockMounts).toBe(1);
       await act(async () => {
         jest.advanceTimersByTime(REDRAW_FALLBACK_MS);
       });
-      expect(mounts).toBe(2);
+      expect(mockMounts).toBe(2);
       expect(page()).toContain(q2!.d);
     });
   });
@@ -115,6 +115,6 @@ describe('GIVEN the Borders map picture', () => {
     const r = await render(<Picture html="<p>a</p>" />);
     await r.rerender(<Picture html="<p>b</p>" />);
     expect(page()).toBe('<p>b</p>');
-    expect(injected).toEqual([]);
+    expect(mockInjected).toEqual([]);
   });
 });
