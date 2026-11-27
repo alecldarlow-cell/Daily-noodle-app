@@ -18,6 +18,7 @@ import { useBackfill } from '../hooks/useResults';
 import { unhide, useHidden } from '../hooks/hidden';
 import type { BoardView, DayBoard, Overall } from '../types';
 import { dayText, TypePager, viewName } from './BoardControls';
+import { PlayNext } from './BoardNext';
 import { BoardFailed, TopCard } from './BoardNotices';
 import { DayView, OverallView } from './BoardViews';
 import { RecordsCtx } from './boardShared';
@@ -234,6 +235,10 @@ export function Board({
                 showDay={showDay}
               />
             )}
+            {/* Fills the space under Share with somewhere to go (#200): today only. */}
+            {!records && !filling && day === today ? (
+              <PlayNext cards={cards.data} today={today} skip={isType ? view : undefined} />
+            ) : null}
           </ScrollView>
         </View>
       </View>

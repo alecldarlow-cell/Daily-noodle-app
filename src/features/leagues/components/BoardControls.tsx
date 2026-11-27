@@ -173,6 +173,9 @@ export function dayText(date: string, today: string): string {
   return day === shortDate(date) ? day : `${day} · ${shortDate(date)}`;
 }
 
+/** Each dot's tap reaches 44 pt tall: 28 pt drawn plus 8 above and below (#200). */
+const DOT_SLOP = { top: 8, bottom: 8 } as const;
+
 /** A view's name in the pager: "All puzzles", "Records", or the puzzle type's. */
 export function viewName(v: BoardView): string {
   return v === 'all' ? 'All puzzles' : v === 'records' ? 'Records' : BOARD_TYPE[v].name;
@@ -277,6 +280,7 @@ export function TypePager({
               accessibilityState={{ selected: on }}
               testID={`pill-${v}`}
               onPress={() => onPick(v)}
+              hitSlop={DOT_SLOP}
               style={styles.dotHit}>
               <View
                 style={[
@@ -288,8 +292,19 @@ export function TypePager({
           );
         })}
       </View>
+      {/* Where you are, in words (#200, review of 27 Nov 2026): the dots alone said nothing. */}
+      {at >= 0 ? (
+        <Text style={[styles.count, { color: t.faint }]} testID="pager-count">
+          {pagerCount(stops, view)}
+        </Text>
+      ) : null}
     </View>
   );
+}
+
+/** The pager's place in words: "Mini · 2 of 11". */
+export function pagerCount(stops: readonly BoardView[], view: BoardView): string {
+  return `${viewName(view)} · ${stops.indexOf(view) + 1} of ${stops.length}`;
 }
 
 /** The day as one slim line, "‹ Today · Wed 28 Oct ›", with an optional puzzle after it. */
@@ -389,9 +404,17 @@ const styles = StyleSheet.create({
   pagerTitle: { fontFamily: FONT.displayHeavy, fontSize: 18, lineHeight: 23 },
   dayBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start' },
   pagerSub: { fontFamily: FONT.bodySemi, fontSize: 12.5, lineHeight: 17 },
-  // A 28 pt tap target round each dot; ten fit across a small phone.
-  dots: { flexDirection: 'row', justifyContent: 'center', marginTop: 2, marginBottom: 2 },
-  dotHit: { width: 26, height: 28, alignItems: 'center', justifyContent: 'center' },
+  // Each dot 32 wide and 44 tall to the touch (28 drawn plus DOT_SLOP); eleven fit across a
+  // small phone (#200).
+  dots: { flexDirection: 'row', justifyContent: 'center', marginTop: 2, marginBottom: 0 },
+  dotHit: { width: 32, height: 28, alignItems: 'center', justifyContent: 'center' },
+  count: {
+    fontFamily: FONT.bodySemi,
+    fontSize: 11.5,
+    lineHeight: 15,
+    textAlign: 'center',
+    marginBottom: 4,
+  },
   dot: { height: 6, borderRadius: 3 },
   dayLine: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4, marginBottom: 2 },
   arrow: {
