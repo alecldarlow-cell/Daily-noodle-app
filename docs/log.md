@@ -1385,3 +1385,12 @@ Alec ran an outside review of the app and asked for its findings to be checked a
 - **Also:** #199 tab icons mocked (https://claude.ai/artifact/8ziEw7u7FPEe727T7sT6oK); Alec chose Option A: every icon carries its dot, marigold when selected.
 - **Needs Alec:** a phone glance at the sticky months and the Play next card, light and dark.
 - **Native:** none. JS only; ships by Update production.
+
+## 27 Nov 2026 — Noodle-line tab icons (queue #199)
+
+- **Why:** the review (27 Nov) found the stock Material tab icons generic; Alec chose Option A of the mock (https://claude.ai/artifact/8ziEw7u7FPEe727T7sT6oK): one rounded line plus a dot per icon, the dot marigold on the selected tab.
+- **What:** `scripts/make-tab-icons.js` (no dependencies; reuses make-icons.js's rasteriser, now exported) draws today, leagues, archive and account at 24/48/72 px into `assets/images/tabs/`, white on clear; `--check` fails on a stale PNG. `(tabs)/_layout.tsx` uses them via `src` (Stats, hidden, keeps its stock icon). Shapes: the noodle-n; a podium with the winner's dot; a calendar with a played day; the n's arch as shoulders with a dot head.
+- **Not yet:** the marigold dot. expo-router 58.0.26 tints Android tab icons one colour; 58.0.33 passes `renderingMode` through as `tinting` but needs react-native-screens 4.30.1, a native change. Alec chose the shapes now over the air, the dot with the next store build: issue #206.
+- **Tests proved:** `scripts/tests/tabIcons.test.ts`: four icons at three sizes, every PNG what the script draws, white on clear with enough line, and the tab bar uses them (no stock icons). make-icons `--check` still current. Typecheck, ESLint, Prettier clean.
+- **Needs Alec:** a look on the phone (and #202's emulator pass) that the icons tint grey and green and sit right in the bar.
+- **Native:** none. JS and bundled images; ships by Update production.

@@ -357,7 +357,12 @@ function render() {
 module.exports = {
   render,
   encodePng,
+  decodePng,
   cover,
+  paint,
+  stroke,
+  circle,
+  clockwise,
   GREEN,
   TILE_TOP,
   TILE_BOTTOM,
