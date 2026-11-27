@@ -34,6 +34,19 @@ reset() {
 }
 
 reset
+# Smoke: open the app by hand, then print what's on screen and any JavaScript or crash
+# lines, so a run whose flows all fail still says why (the screenshots need the artifact).
+echo "::group::Smoke: launch and screen"
+adb logcat -c
+adb shell monkey -p "$APP_ID" -c android.intent.category.LAUNCHER 1 > /dev/null 2>&1
+sleep 25
+adb shell uiautomator dump /sdcard/ui.xml > /dev/null 2>&1 && adb shell cat /sdcard/ui.xml \
+  | tr '>' '\n' | grep -o 'text="[^"]*"\|resource-id="[^"]*"\|content-desc="[^"]*"' | grep -v '=""' | head -60
+echo "--- logcat (JS, errors, crashes)"
+adb logcat -d | grep -E "ReactNativeJS|AndroidRuntime|FATAL|expo|E/unknown" | tail -60
+echo "::endgroup::"
+adb shell am force-stop "$APP_ID"
+
 flow back .maestro/review/back.yaml
 flow borders-round .maestro/review/borders-round.yaml
 flow resume .maestro/review/resume.yaml
