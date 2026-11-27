@@ -1,14 +1,16 @@
 import { act, fireEvent, screen, waitFor } from '@testing-library/react-native';
 import { router } from 'expo-router';
+import { StyleSheet } from 'react-native';
 
 import { appStorage } from '@/shared/storage';
+import { tokensFor } from '@/shared/theme';
 import { mockSite, renderWithProviders } from '@/shared/testing';
 
 import { ArchiveScreen } from '../components/ArchiveScreen/ArchiveScreen';
 import { LAST_ARCHIVE_KEY } from '../hooks/useArchive';
 import { FEED_LITE } from './fixtures';
 
-jest.mock('expo-router', () => ({ router: { push: jest.fn() } }));
+jest.mock('expo-router', () => ({ router: { push: jest.fn(), navigate: jest.fn() } }));
 
 beforeEach(() => {
   for (const k of appStorage.keys()) appStorage.setItem(k, 'null');
@@ -116,7 +118,54 @@ describe('GIVEN the site’s archive list', () => {
       await waitFor(() => expect(screen.getByTestId('archive-DP·PATH·0050')).toBeOnTheScreen());
       await pickType('Path');
       await fireEvent.press(screen.getByRole('switch', { name: 'Hide done' }));
-      expect(screen.getByTestId('archive-empty')).toHaveTextContent('All done here');
+      expect(screen.getByTestId('archive-empty')).toHaveTextContent(/^All done here/);
+    });
+
+    it('THEN “All done here” offers a way on: back to Today, or the finished ones again (#191)', async () => {
+      appStorage.setItem(
+        'digi-path-v1',
+        JSON.stringify({ v: 1, done: { 'DP·PATH·0050': { t: '01:42', d: '2026-09-01' } } }),
+      );
+      await renderWithProviders(<ArchiveScreen />);
+      await waitFor(() => expect(screen.getByTestId('archive-DP·PATH·0050')).toBeOnTheScreen());
+      await pickType('Path');
+      await fireEvent.press(screen.getByRole('switch', { name: 'Hide done' }));
+      await fireEvent.press(screen.getByRole('button', { name: 'Back to Today' }));
+      expect(router.navigate).toHaveBeenCalledWith('/');
+      await fireEvent.press(screen.getByRole('button', { name: 'Show finished ones' }));
+      expect(screen.queryByTestId('archive-empty')).toBeNull();
+      expect(screen.getByTestId('archive-DP·PATH·0050')).toBeOnTheScreen();
+    });
+  });
+
+  describe('WHEN a picked type has no puzzles in the list (#191)', () => {
+    it('THEN “No puzzles match” offers all puzzles again, or Today', async () => {
+      await renderWithProviders(<ArchiveScreen />);
+      await waitFor(() => expect(screen.getByTestId('archive-DP·PATH·0050')).toBeOnTheScreen());
+      await pickType('Doku');
+      expect(screen.getByTestId('archive-empty')).toHaveTextContent(/^No puzzles match/);
+      await fireEvent.press(screen.getByRole('button', { name: 'Back to Today' }));
+      expect(router.navigate).toHaveBeenCalledWith('/');
+      await fireEvent.press(screen.getByRole('button', { name: 'Show all puzzles' }));
+      expect(screen.queryByTestId('archive-empty')).toBeNull();
+      expect(screen.getByTestId('archive-DP·PATH·0050')).toBeOnTheScreen();
+    });
+  });
+
+  describe('WHEN the list scrolls (#191, review of 27 Nov 2026)', () => {
+    it('THEN its month headers stick at the top, on the canvas colour so rows slide under them', async () => {
+      await renderWithProviders(<ArchiveScreen />);
+      await waitFor(() => expect(screen.getByTestId('archive-DP·PATH·0050')).toBeOnTheScreen());
+      expect(screen.getByTestId('archive-list').props.stickyHeaderIndices?.length).toBeGreaterThan(
+        0,
+      );
+      const month = screen
+        .getAllByRole('header')
+        .find((h) => /\d{4}/.test(String(h.props.children)));
+      expect(month).toBeTruthy();
+      expect(StyleSheet.flatten(month!.props.style).backgroundColor).toBe(
+        tokensFor('light').canvas,
+      );
     });
   });
 
