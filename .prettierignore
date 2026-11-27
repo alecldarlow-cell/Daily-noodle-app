@@ -8,3 +8,4 @@ assets
 src/features/puzzles/doku/engine-words.json
 THIRD-PARTY-NOTICES.md
 src/features/puzzles/reckon/tests/units-fixture.json
+src/features/account/notices.json

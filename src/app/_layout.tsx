@@ -88,6 +88,14 @@ export default function RootLayout() {
                 options={{ headerShown: true, title: 'Privacy', headerBackTitle: 'Back' }}
               />
               <Stack.Screen
+                name="licences"
+                options={{
+                  headerShown: true,
+                  title: 'Open-source licences',
+                  headerBackTitle: 'Back',
+                }}
+              />
+              <Stack.Screen
                 name="how-to-play"
                 options={{ headerShown: true, title: 'How to play', headerBackTitle: 'Back' }}
               />

@@ -7,7 +7,11 @@
  * bundles these packages, so the Account tab's "Open-source licences" row links here.
  *
  *   node scripts/make-notices.js          writes THIRD-PARTY-NOTICES.md (needs npm ci first)
- *   node scripts/make-notices.js --check  fails if the file is missing a package in the lock
+ *   node scripts/make-notices.js --check  fails if the file is missing a package in the lock,
+ *                                         or the app's list (LIST) differs from the lock
+ *
+ * It also writes LIST, the short list (name, version, licence) the app shows on its own
+ * Open-source licences screen (#192, 27 Nov 2026); the full texts stay in the notices file.
  *
  * Copyright audit, 8 Nov 2026 (project doc claude/ip-audit-2026-11-08.md).
  */
@@ -17,6 +21,7 @@ const path = require('path');
 
 const ROOT = path.join(__dirname, '..');
 const OUT = path.join(ROOT, 'THIRD-PARTY-NOTICES.md');
+const LIST = path.join(ROOT, 'src/features/account/notices.json');
 const LICENCE_FILE = /^(licen[cs]e|copying|notice)(\.(md|txt|markdown|mit|bsd|apache))?$/i;
 
 /** Every package the app is built from: the lock's non-dev, non-workspace entries. */
@@ -93,6 +98,12 @@ function render(pkgs) {
   return parts.join('');
 }
 
+/** The app's short list: one { name, version, license } per package, as JSON text. */
+function listJson(pkgs) {
+  const rows = pkgs.map((p) => ({ name: p.name, version: p.version, license: p.license }));
+  return '[\n' + rows.map((r) => ' ' + JSON.stringify(r)).join(',\n') + '\n]\n';
+}
+
 function missing(text, pkgs) {
   return pkgs
     .filter((p) => !text.includes(`\n### ${p.name} ${p.version}\n`))
@@ -112,6 +123,12 @@ if (require.main === module) {
       );
       process.exit(1);
     }
+    if (!fs.existsSync(LIST) || fs.readFileSync(LIST, 'utf8') !== listJson(pkgs)) {
+      console.error(
+        `${path.relative(ROOT, LIST)} is out of date. Run node scripts/make-notices.js`,
+      );
+      process.exit(1);
+    }
     console.log(`notices cover all ${pkgs.length} packages`);
   } else {
     if (!fs.existsSync(path.join(ROOT, 'node_modules'))) {
@@ -119,8 +136,9 @@ if (require.main === module) {
       process.exit(2);
     }
     fs.writeFileSync(OUT, render(pkgs));
+    fs.writeFileSync(LIST, listJson(pkgs));
     console.log(`wrote THIRD-PARTY-NOTICES.md: ${pkgs.length} packages`);
   }
 }
 
-module.exports = { shippedPackages, missing };
+module.exports = { shippedPackages, missing, listJson };

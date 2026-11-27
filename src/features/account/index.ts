@@ -1,6 +1,7 @@
 import { authClient } from './api/authClient';
 
 export { AccountScreen } from './components/AccountScreen/AccountScreen';
+export { LicencesScreen } from './components/LicencesScreen/LicencesScreen';
 export { AuthLinkScreen } from './components/AuthLinkScreen/AuthLinkScreen';
 export { SyncRunner } from './components/SyncRunner/SyncRunner';
 

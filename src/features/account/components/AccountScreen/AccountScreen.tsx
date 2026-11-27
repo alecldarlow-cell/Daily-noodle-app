@@ -19,11 +19,6 @@ import { SyncCard } from '../SyncCard/SyncCard';
 /** Where the website's privacy page sends requests to delete an account (privacy.html › contact). */
 export const CONTACT_EMAIL = 'contact@dailynoodle.co.uk';
 
-/** The app's third-party notices: every open-source package, font and word list it carries
- *  with its licence (scripts/make-notices.js; copyright audit, 8 Nov 2026). */
-export const NOTICES_URL =
-  'https://github.com/alecldarlow-cell/Daily-noodle-app/blob/main/THIRD-PARTY-NOTICES.md';
-
 /** The app's Google Play listing: the Play Store app first, the web page if that won't open. */
 export const PLAY_APP_URL = 'market://details?id=uk.co.dailynoodle.app';
 export const PLAY_WEB_URL = 'https://play.google.com/store/apps/details?id=uk.co.dailynoodle.app';
@@ -142,7 +137,7 @@ export function AccountScreen({
             role="link"
             label="Open-source licences"
             testID="account-licences"
-            onPress={() => void Linking.openURL(NOTICES_URL).catch(() => undefined)}
+            onPress={() => router.navigate('/licences')}
           />
           {syncOn ? (
             <Row
@@ -286,5 +281,6 @@ const styles = StyleSheet.create({
   p: { fontFamily: FONT.body, fontSize: 15, lineHeight: 22 },
   small: { fontFamily: FONT.body, fontSize: 13.5, lineHeight: 19 },
   acts: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 8 },
-  build: { fontFamily: FONT.body, marginTop: 24, fontSize: 13 },
+  // A quiet footer (#192): small, centred, well clear of the last card.
+  build: { fontFamily: FONT.body, marginTop: 40, fontSize: 12, textAlign: 'center' },
 });

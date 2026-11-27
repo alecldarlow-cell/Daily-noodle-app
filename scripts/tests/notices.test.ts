@@ -2,9 +2,10 @@ declare const __dirname: string;
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { readFileSync } = require('fs') as { readFileSync: (p: string, e: 'utf8') => string };
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const { shippedPackages, missing } = require('../make-notices.js') as {
+const { shippedPackages, missing, listJson } = require('../make-notices.js') as {
   shippedPackages: (lock: unknown) => { name: string; version: string }[];
   missing: (text: string, pkgs: { name: string; version: string }[]) => string[];
+  listJson: (pkgs: { name: string; version: string }[]) => string;
 };
 
 const root = `${__dirname}/../..`;
@@ -23,6 +24,15 @@ describe('GIVEN THIRD-PARTY-NOTICES.md (copyright audit, 8 Nov 2026)', () => {
       expect(t).toContain('Copyright 2000-2018 by Kevin Atkinson');
       expect(t).toContain('SIL Open Font License');
       expect(t).toContain('Natural Earth');
+    });
+  });
+
+  describe('WHEN the app’s own licences screen list is compared with the lock (#192)', () => {
+    it('THEN src/features/account/notices.json is exactly what make-notices writes, so a new dependency shows in the app too', () => {
+      const pkgs = shippedPackages(lock);
+      const list = readFileSync(`${root}/src/features/account/notices.json`, 'utf8');
+      expect(list).toBe(listJson(pkgs));
+      expect(JSON.parse(list)).toHaveLength(pkgs.length);
     });
   });
 

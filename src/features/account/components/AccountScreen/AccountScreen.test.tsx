@@ -12,7 +12,6 @@ import { SWITCH_THUMB } from '../SettingsCard/SettingsCard';
 import {
   AccountScreen,
   CONTACT_EMAIL,
-  NOTICES_URL,
   PLAY_APP_URL,
   PLAY_WEB_URL,
   deletionRequestUrl,
@@ -78,13 +77,24 @@ describe('GIVEN the Account tab in a build without sign-in', () => {
     });
   });
 
-  describe('WHEN the player taps Open-source licences (copyright audit, 8 Nov 2026)', () => {
-    it('THEN the app’s third-party notices open in the browser', async () => {
+  describe('WHEN the player taps Open-source licences (copyright audit, 8 Nov 2026; #192)', () => {
+    it('THEN the licences open inside the app, not in the browser', async () => {
       const open = jest.spyOn(Linking, 'openURL').mockResolvedValue(undefined);
       await render(<AccountScreen client={null} />);
       await fireEvent.press(screen.getByRole('link', { name: 'Open-source licences' }));
-      expect(open).toHaveBeenCalledWith(NOTICES_URL);
+      expect(router.navigate).toHaveBeenCalledWith('/licences');
+      expect(open).not.toHaveBeenCalled();
       open.mockRestore();
+    });
+  });
+
+  describe('WHEN the version line shows at the foot (#192)', () => {
+    it('THEN it is a quiet footer: small, faint and centred', async () => {
+      await render(<AccountScreen client={null} />);
+      const style = flat(screen.getByTestId('account-build'));
+      expect(style.fontSize).toBe(12);
+      expect(style.textAlign).toBe('center');
+      expect(style.color).toBe(light.faint);
     });
   });
 
