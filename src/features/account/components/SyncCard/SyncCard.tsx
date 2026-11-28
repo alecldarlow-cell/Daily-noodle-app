@@ -4,6 +4,7 @@ import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { cachedFeatures, FEATURES_KEY } from '@/shared/features';
 import { appStorage, useStoredRaw, type CachedStorage } from '@/shared/storage';
 import { FONT, useTokens } from '@/shared/theme';
 import { Button, Chevron, TAP, TextField } from '@/shared/ui';
@@ -11,7 +12,14 @@ import { Button, Chevron, TAP, TextField } from '@/shared/ui';
 import { authClient } from '../../api/authClient';
 import { AccountError, sayAccountError } from '../../hooks/authErrors';
 import { tapId } from '../../hooks/tap';
-import { lastSync, sendLink, signOut, syncNow, useAccount } from '../../hooks/useAccount';
+import {
+  lastSync,
+  sendLink,
+  signOut,
+  syncNow,
+  useAccount,
+  verifyCode,
+} from '../../hooks/useAccount';
 import { LAST_SYNC_KEY } from '../../hooks/syncEngine';
 import { emailSchema } from '../../schemas/email';
 
@@ -67,10 +75,14 @@ export function SyncCard({
   // Read through the store's subscriptions, so the card follows a sync as it finishes.
   useStoredRaw(LAST_SYNC_KEY, store);
   useStoredRaw(BOARD_KEY, store);
+  // The site's switches (#215): whether the sign-in email's code can be typed in here.
+  useStoredRaw(FEATURES_KEY, store);
+  const codeEntry = cachedFeatures(store).signInCode;
   const account = useAccount(client);
   const [email, setEmail] = useState('');
   const [msg, setMsg] = useState<string | null>(null);
-  const [busy, setBusy] = useState<'send' | 'sync' | 'signout' | null>(null);
+  const [code, setCode] = useState('');
+  const [busy, setBusy] = useState<'send' | 'code' | 'sync' | 'signout' | null>(null);
   const [sent, setSent] = useState<{ to: string; at: number } | null>(null);
   const [now, setNow] = useState(Date.now);
   const [, setTick] = useState(0);
@@ -119,6 +131,13 @@ export function SyncCard({
       const at = Date.now();
       setNow(at);
       setSent({ to: valid, at });
+      setCode('');
+    });
+
+  // The code from the same email (#215): signs in here when the link opens somewhere else.
+  const submitCode = () =>
+    act('code', async () => {
+      if (sent) await verifyCode(sent.to, code, client);
     });
 
   const errorLine = msg ? (
@@ -182,8 +201,34 @@ export function SyncCard({
               Check your email
             </Text>
             <Text style={[styles.p, { color: t.ink }]} testID="sync-sent">
-              We’ve sent a link to {sent.to}. Open it on this phone.
+              {codeEntry
+                ? `We’ve sent a link to ${sent.to}. Open it on this phone, or type the code from the email here.`
+                : `We’ve sent a link to ${sent.to}. Open it on this phone.`}
             </Text>
+            {codeEntry ? (
+              <>
+                <TextField
+                  label="Code from the email"
+                  testID="sync-code"
+                  value={code}
+                  onChangeText={setCode}
+                  keyboardType="number-pad"
+                  inputMode="numeric"
+                  textContentType="oneTimeCode"
+                  autoComplete="one-time-code"
+                  maxLength={12}
+                  returnKeyType="done"
+                  onSubmitEditing={() => void submitCode()}
+                />
+                <Button
+                  variant="filled"
+                  label="Sign in with the code"
+                  onPress={() => submitCode()}
+                  loading={busy === 'code'}
+                  testID="sync-code-send"
+                />
+              </>
+            ) : null}
             {errorLine}
             <View style={styles.row}>
               <Button
@@ -197,7 +242,7 @@ export function SyncCard({
               <Button
                 variant="text"
                 label="Use a different email"
-                onPress={() => (setSent(null), setMsg(null))}
+                onPress={() => (setSent(null), setMsg(null), setCode(''))}
                 testID="sync-different"
               />
             </View>

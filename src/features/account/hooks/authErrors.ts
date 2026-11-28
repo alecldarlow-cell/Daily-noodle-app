@@ -9,6 +9,8 @@ export const AUTH_WORDS = {
   expired: 'That sign-in link has expired or was already used.',
   offline: 'Couldn’t reach the server. Check your connection and try again.',
   wrong: 'Something went wrong. Please try again.',
+  codeShape: 'Type the code from the email: just its numbers.',
+  badCode: 'That code is wrong or has expired. Use the newest email, or send a new one.',
 } as const;
 
 /** A failure already in the house's words (the email check, "not available in this build"). */
@@ -35,4 +37,10 @@ export function authMessage(raw: string | null | undefined): string {
 export function sayAccountError(e: unknown): string {
   if (e instanceof AccountError) return e.message;
   return authMessage(e instanceof Error ? e.message : null);
+}
+
+/** The house's line when a typed code is refused (#215): a code, not a link, went wrong. */
+export function codeMessage(raw: string | null | undefined): string {
+  const said = authMessage(raw);
+  return said === AUTH_WORDS.expired ? AUTH_WORDS.badCode : said;
 }

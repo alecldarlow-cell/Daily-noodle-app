@@ -8,20 +8,31 @@ import { appStorage, type CachedStorage } from '@/shared/storage';
  * stats off after testing, with no app update): `{"archive": true, "stats": true}`. Only an
  * explicit `false` turns a feature off; missing, unreadable or offline counts as on, using the
  * last copy the app saw.
+ *
+ * `signInCode` (#215) is the other way round: on only when the file says `true`. It shows the
+ * box for the code in the sign-in email, which is only worth showing once Supabase's sign-in
+ * emails carry the code (`{{ .Token }}`), so the site turns it on after the templates change.
  */
 export interface Features {
   archive: boolean;
   stats: boolean;
+  signInCode: boolean;
 }
 export const FEATURES_KEY = 'noodle-app-features';
-export const ALL_ON: Features = { archive: true, stats: true };
+/** What the app assumes with no file: the on-by-default features on, `signInCode` off. */
+export const ALL_ON: Features = { archive: true, stats: true, signInCode: false };
 
 export function parseFeatures(x: unknown): Features {
   const o = x && typeof x === 'object' ? (x as Record<string, unknown>) : {};
-  return { archive: o.archive !== false, stats: o.stats !== false };
+  return {
+    archive: o.archive !== false,
+    stats: o.stats !== false,
+    signInCode: o.signInCode === true,
+  };
 }
 
-function cached(store: CachedStorage): Features {
+/** The last copy of the switches the app saw, read straight from storage (no fetch). */
+export function cached(store: CachedStorage = appStorage): Features {
   try {
     return parseFeatures(JSON.parse(store.getItem(FEATURES_KEY) ?? 'null'));
   } catch {

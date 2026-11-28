@@ -35,6 +35,15 @@ export function fakeClient(
         return { data: { subscription: { unsubscribe: () => listeners.delete(fn) } } };
       }),
       signInWithOtp: jest.fn(async () => ({ error: opts.fail ? { message: opts.fail } : null })),
+      // The code from the sign-in email (#215): 123456 is right, anything else is refused.
+      verifyOtp: jest.fn(async ({ email, token }: { email: string; token: string }) => {
+        if (opts.fail) return { data: {}, error: { message: opts.fail } };
+        if (token !== '123456')
+          return { data: {}, error: { message: 'Token has expired or is invalid' } };
+        session = { user: { email }, access_token: 'code' };
+        emit('SIGNED_IN');
+        return { data: { session }, error: null };
+      }),
       setSession: jest.fn(async ({ access_token }: { access_token: string }) => {
         if (access_token === 'bad') return { error: { message: 'Invalid token' } };
         session = { user: { email: 'alec@example.com' }, access_token };

@@ -5,7 +5,7 @@ import { appStorage, type CachedStorage } from '@/shared/storage';
 
 import { authClient } from '../api/authClient';
 import { syncApi } from '../api/syncApi';
-import { AccountError, authMessage } from './authErrors';
+import { AccountError, AUTH_WORDS, authMessage, codeMessage } from './authErrors';
 import { readAuthLink } from './authLink';
 import { LAST_SYNC_KEY, runSync } from './syncEngine';
 
@@ -49,6 +49,23 @@ export async function sendLink(
     options: { emailRedirectTo: redirectUrl() },
   });
   if (error) throw new AccountError(authMessage(error.message));
+}
+
+/**
+ * Finish signing in with the code from the same email (#215): for when the link opens on another
+ * device or in a browser, and for App Review. Spaces are ignored; Supabase's codes are 6 to 10
+ * digits. Throws the house's words for why when the code is refused.
+ */
+export async function verifyCode(
+  email: string,
+  code: string,
+  client: SupabaseClient | null = authClient(),
+): Promise<void> {
+  if (!client) throw new AccountError('Sign-in isn’t available in this build.');
+  const token = code.replace(/\s+/g, '');
+  if (!/^\d{6,10}$/.test(token)) throw new AccountError(AUTH_WORDS.codeShape);
+  const { error } = await client.auth.verifyOtp({ email, token, type: 'email' });
+  if (error) throw new AccountError(codeMessage(error.message));
 }
 
 /**

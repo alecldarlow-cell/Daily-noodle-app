@@ -1,1 +1,8 @@
-export { ALL_ON, FEATURES_KEY, parseFeatures, useFeatures, type Features } from './features';
+export {
+  ALL_ON,
+  cached as cachedFeatures,
+  FEATURES_KEY,
+  parseFeatures,
+  useFeatures,
+  type Features,
+} from './features';
