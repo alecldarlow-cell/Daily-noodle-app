@@ -1,0 +1,11 @@
+# The app opens to Today from a fresh install (#217's gate: nothing else can pass without it).
+appId: ${APP_ID}
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible:
+      id: today-screen
+    timeout: 60000
+- waitForAnimationToEnd
+- takeScreenshot: launch-today
