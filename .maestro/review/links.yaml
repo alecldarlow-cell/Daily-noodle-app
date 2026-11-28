@@ -1,0 +1,24 @@
+# The app's own links open the right screens (#217): a league invite and the sign-in
+# link. The site's https links (universal links on iPhone, #213) need the Apple Team ID.
+appId: ${APP_ID}
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible:
+      id: today-screen
+    timeout: 40000
+- openLink: dailynoodle://leagues?join=TESTCODE
+- extendedWaitUntil:
+    visible:
+      id: leagues-screen
+    timeout: 15000
+- waitForAnimationToEnd
+- takeScreenshot: links-join
+- openLink: dailynoodle://auth
+- extendedWaitUntil:
+    visible:
+      id: auth-screen
+    timeout: 15000
+- waitForAnimationToEnd
+- takeScreenshot: links-auth

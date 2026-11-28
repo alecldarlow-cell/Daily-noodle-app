@@ -1,0 +1,77 @@
+# App Store screenshots (#217): run on a 6.9-inch iPhone simulator, light and dark (SET).
+# Today, a Mini mid-play, today's Doku solved, the Archive and Leagues. Read by eye and
+# picked by Alec; the flow fails only if a screen does not open.
+appId: ${APP_ID}
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible:
+      id: today-screen
+    timeout: 40000
+- waitForAnimationToEnd
+- takeScreenshot: ${SET}-1-today
+# The Mini's board: the clue bar over the grid and keyboard.
+- tapOn:
+    id: today-mini
+- extendedWaitUntil:
+    visible:
+      id: play-screen
+    timeout: 15000
+- tapOn: 'Play'
+- waitForAnimationToEnd
+- takeScreenshot: ${SET}-2-mini
+- tapOn:
+    text: 'Back to Puzzles'
+    optional: true
+- runFlow:
+    when:
+      platform: Android
+    commands:
+      - back
+- extendedWaitUntil:
+    visible:
+      id: today-screen
+    timeout: 10000
+# Today's Doku, solved from the site's own answer file, to its finish sheet.
+- runScript: ../scripts/doku-today.js
+- tapOn:
+    id: today-doku
+- extendedWaitUntil:
+    visible:
+      id: start-card
+    timeout: 15000
+- tapOn: 'Play'
+- extendedWaitUntil:
+    visible:
+      id: doku-board
+    timeout: 10000
+- repeat:
+    while:
+      true: ${output.i < output.n}
+    commands:
+      - tapOn:
+          id: ${output.cells[output.i]}
+      - inputText: ${output.letters[output.i]}
+      - evalScript: ${output.i = output.i + 1}
+- extendedWaitUntil:
+    visible:
+      id: finish-sheet
+    timeout: 10000
+- waitForAnimationToEnd
+- takeScreenshot: ${SET}-3-doku-finish
+- tapOn: '← Puzzles'
+- extendedWaitUntil:
+    visible:
+      id: today-screen
+    timeout: 10000
+- tapOn: Archive
+- extendedWaitUntil:
+    visible:
+      id: archive-screen
+    timeout: 20000
+- waitForAnimationToEnd
+- takeScreenshot: ${SET}-4-archive
+- tapOn: Leagues
+- waitForAnimationToEnd
+- takeScreenshot: ${SET}-5-leagues

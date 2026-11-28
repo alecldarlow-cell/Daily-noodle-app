@@ -19,7 +19,17 @@ appId: ${APP_ID}
     optional: true
 - waitForAnimationToEnd
 - takeScreenshot: ${SET}-${TYPE}-play
-- back
+# Android's Back key; iPhones have none, so the puzzle's own Back to Puzzles (#217).
+- runFlow:
+    when:
+      platform: Android
+    commands:
+      - back
+- runFlow:
+    when:
+      platform: iOS
+    commands:
+      - tapOn: 'Back to Puzzles'
 - extendedWaitUntil:
     visible:
       id: today-screen
