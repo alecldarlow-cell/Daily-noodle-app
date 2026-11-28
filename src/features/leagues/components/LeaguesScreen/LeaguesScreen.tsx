@@ -13,7 +13,14 @@ import { Board } from '../Board';
 import { LeagueKicker, LeagueMenu } from '../BoardControls';
 import { ClaimForm, CodeForm, InviteForm, Intro, PendCard, NickForm, StartForm } from '../Forms';
 
-const CLEARED = { join: undefined, go: undefined, p: undefined, d: undefined, n: undefined };
+const CLEARED = {
+  join: undefined,
+  go: undefined,
+  from: undefined,
+  p: undefined,
+  d: undefined,
+  n: undefined,
+};
 
 /** While the tab is in view, the league list and the boards showing refresh this often. */
 export const AUTO_REFRESH_MS = 60_000;
@@ -33,6 +40,7 @@ export function LeaguesScreen({
   const params = useLocalSearchParams<{
     join?: string;
     go?: string;
+    from?: string;
     p?: string;
     d?: string;
     n?: string;

@@ -4,10 +4,12 @@ import { useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { FONT, useTokens } from '@/shared/theme';
+import { appRecorder } from '@/shared/track';
 import { FieldLabel } from '@/shared/ui';
 
 import { BoardError, isOffline, SaidError } from '../api/errors';
 import { useBoardState } from '../hooks/boardStore';
+import { inviteLink, inviteText } from '../hooks/boardText';
 import { useForm } from '../hooks/useForm';
 import type { Flow } from '../hooks/useLeaguesFlow';
 import {
@@ -20,6 +22,7 @@ import {
 } from '../hooks/useLeagues';
 import { claimSchema, codeSchema, nicknameSchema, startSchema } from '../schemas';
 import { object } from 'yup';
+import { share } from './boardShared';
 import { Acts, Btn, Card, Field, Msg, P, PinField, RULES_NEEDED, RulesTick, TextLink } from './ui';
 
 export function Intro({ flow }: { flow: Flow }) {
@@ -47,10 +50,24 @@ export function Intro({ flow }: { flow: Flow }) {
   );
 }
 
-export function StartForm({ flow }: { flow: Flow }) {
+/**
+ * Start a league. Opened from the finish sheet's league offer (`from: 'offer'`, 28 Nov 2026,
+ * Alec's mock), its button reads "Start and invite": the league is made, then the phone's
+ * share sheet opens with the invite, and the "is ready" card stays for a second go. A start
+ * is recorded as the site's board_create {from} (anonymous).
+ */
+export function StartForm({
+  flow,
+  record = appRecorder.event,
+}: {
+  flow: Flow;
+  record?: typeof appRecorder.event;
+}) {
   const create = useCreateLeague();
   const f = useForm({ name: '', nick: '' }, startSchema);
   const [rules, setRules] = useState(false);
+  const from = flow.view.k === 'start' ? flow.view.from : undefined;
+  const invite = from === 'offer';
   return (
     <Card title="Start a league" testID="start-form">
       <Field
@@ -75,20 +92,28 @@ export function StartForm({ flow }: { flow: Flow }) {
       <Acts>
         <Btn
           variant="filled"
-          label="Start league"
+          label={invite ? 'Start and invite' : 'Start league'}
           disabled={f.busy}
           onPress={() =>
             !rules
               ? f.setMsg(RULES_NEEDED)
               : f.submit(async (v) => {
                   const l = await create.mutateAsync({ name: v.name, nick: v.nick });
+                  record('board_create', { from: from || 'intro' }, 'board.html');
                   flow.setNotice({ k: 'created', code: l.code });
                   flow.home();
+                  if (invite) void share(`${inviteText(v.name)}\n${inviteLink(l.code)}`);
                 })
           }
         />
         <Btn label="Back" onPress={flow.back} />
       </Acts>
+      {invite ? (
+        <P>
+          Next, your phone’s share sheet opens so you can send the link to your family chat. Anyone
+          who taps it picks a nickname and joins.
+        </P>
+      ) : null}
     </Card>
   );
 }
