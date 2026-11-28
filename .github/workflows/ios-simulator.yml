@@ -20,21 +20,14 @@ on:
         description: Run only these checks (comma-separated names, e.g. screens-normal,links). Blank runs all.
         required: false
         default: ''
-  push: # TEMPORARY while #217 is built; removed before merge
-    branches: [ios/simulator-checks]
 
 permissions:
-  contents: write # TEMPORARY while #217 is built (the scratch branch below); read before merge
+  contents: read
   actions: read
 
 concurrency:
   group: ios-simulator-${{ github.ref }}
   cancel-in-progress: true
-
-env:
-  # TEMPORARY while #217 is built: what a push to the branch runs.
-  PUSH_APP_RUN: '46155343502'
-  PUSH_ONLY: 'screens-dark,screens-reduced-motion'
 
 jobs:
   ios:
@@ -50,12 +43,9 @@ jobs:
       - name: Plan
         id: plan
         env:
-          EVENT: ${{ github.event_name }}
-          IN_APP_RUN: ${{ inputs.app_run }}
-          IN_ONLY: ${{ inputs.only }}
+          APP_RUN: ${{ inputs.app_run }}
+          ONLY: ${{ inputs.only }}
         run: |
-          if [ "$EVENT" = push ]; then APP_RUN=$PUSH_APP_RUN; ONLY=$PUSH_ONLY
-          else APP_RUN=$IN_APP_RUN; ONLY=$IN_ONLY; fi
           case "$APP_RUN" in ''|*[!0-9]*) [ -n "$APP_RUN" ] && { echo "app_run must be a run id"; exit 1; } ;; esac
           echo "app_run=$APP_RUN" >> "$GITHUB_OUTPUT"
           echo "only=$ONLY" >> "$GITHUB_OUTPUT"
@@ -127,21 +117,6 @@ jobs:
       - name: Summary
         if: always()
         run: cat ios-results/summary.md >> "$GITHUB_STEP_SUMMARY" || true
-      # TEMPORARY while #217 is built: the screenshots and logs on a scratch branch, so they
-      # can be read where the artifact store can't be reached. Removed before merge.
-      - name: Screenshots to the ios-sim-shots branch
-        if: always() && github.event_name == 'push'
-        env:
-          GH_TOKEN: ${{ github.token }}
-          REPO: ${{ github.repository }}
-        run: |
-          mkdir shots && cd shots && git init -q && git checkout -q -b ios-sim-shots
-          rsync -a --exclude='logs/' --include='*/' --include='*.png' --include='*.log' --include='*.md' \
-            --include='*.txt' --exclude='*' --prune-empty-dirs ../ios-results/ ./
-          git add -A
-          git -c user.name=github-actions -c user.email=actions@users.noreply.github.com \
-            commit -qm "iOS simulator run $GITHUB_RUN_ID"
-          git push -qf "https://x-access-token:${GH_TOKEN}@github.com/${REPO}.git" HEAD:ios-sim-shots
       - uses: actions/upload-artifact@v4
         if: always()
         with:

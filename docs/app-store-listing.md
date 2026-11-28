@@ -56,10 +56,15 @@ Console's list).
 - iPhone 6.9-inch display, portrait, 1320 × 2868 px: 3 to 10 of them. App Store Connect scales
   them down for smaller iPhones. No iPad screenshots: the app is iPhone only
   (`ios.supportsTablet: false`).
-- Raw captures come from the iOS simulator run (`.github/workflows/ios-simulator.yml`, artifact
-  `ios-results/store-light` and `store-dark`): Doku finished, Today, a Mini board, Archive,
-  Leagues. Framed versions (brand green, caption, the Play set's style) live in
-  `store/screenshots/appstore-*.png`.
+- Ready to upload, 1320 × 2868, framed like the Play set (house green, Archivo ExtraBold caption,
+  the screen as a rounded card), in order: `store/screenshots/appstore-1-today`, `-2-mini`,
+  `-3-leagues`, `-4-archive`, each `-dark.png` (to match the Play set) or `-light.png`. Captions
+  reuse the Play set's: "Nine new puzzles, fresh every morning"; "Beat your time. Keep your
+  streak."; "Race your friends in a private league"; "Missed a day? It's in the archive".
+- They're from a fresh install on the iOS simulator (`.github/workflows/ios-simulator.yml`,
+  28 Nov 2026), so nothing is solved and there are no streaks. Richer scenes like the Play set's
+  (solve times, a streak, a league board) can be captured from TestFlight on a played phone later.
+  Raw captures come from the run's `ios-results` artifact (`store-light`, `store-dark`).
 - Screenshots must show the app as it runs on iPhone: never the Play set's Android captures.
 
 ## App Privacy ("nutrition label")
