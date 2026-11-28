@@ -10,6 +10,27 @@ export APP_ID=${APP_ID:-uk.co.dailynoodle.app}
 : "${APP:?set APP to the simulator .app}"
 FAILED=0
 : > "$OUT/summary.md"
+# A new simulator's first XCTest driver can take minutes to start on a shared runner.
+export MAESTRO_DRIVER_STARTUP_TIMEOUT=${MAESTRO_DRIVER_STARTUP_TIMEOUT:-240000}
+
+# show_hierarchy <udid> [limit]: every element on screen with an id, label or text.
+show_hierarchy() {
+  maestro --device "$1" hierarchy 2> /dev/null | node -e '
+    const walk = (n, out) => {
+      const a = n.attributes || {};
+      const bits = [a["resource-id"] && "id=" + a["resource-id"],
+        a.accessibilityText && "label=" + JSON.stringify(a.accessibilityText),
+        a.text && "text=" + JSON.stringify(a.text)].filter(Boolean);
+      if (bits.length) out.push(bits.join(" ") + "  " + (a.bounds || ""));
+      (n.children || []).forEach((c) => walk(c, out));
+      return out;
+    };
+    try {
+      const raw = require("fs").readFileSync(0, "utf8");
+      walk(JSON.parse(raw.slice(raw.indexOf("{"))), []).slice(0, Number(process.argv[1]))
+        .forEach((l) => console.log(l));
+    } catch (e) { console.log("no hierarchy: " + e.message); }' "${2:-150}"
+}
 
 # The newest iOS runtime, and the first device type on a list that the runner has.
 RUNTIME=$(xcrun simctl list runtimes -j | node -e '
@@ -60,6 +81,8 @@ flow() { # udid name file [env...]
     # The artifact has the whole log; the job log gets the end, where the failing step is.
     echo "::group::❌ $name"
     tail -40 "$OUT/$name.log"
+    echo "--- on screen when it stopped:"
+    show_hierarchy "$udid" 70
     echo "::endgroup::"
   fi
   # Maestro writes screenshots to the working directory.
@@ -83,22 +106,8 @@ reset "$PHONE"
 if wanted probe; then
   xcrun simctl launch "$PHONE" "$APP_ID" > /dev/null
   sleep 20
-  maestro --device "$PHONE" hierarchy > "$OUT/hierarchy-today.json" 2> /dev/null || true
   echo "::group::Today as the flows see it"
-  node -e '
-    const walk = (n, out) => {
-      const a = n.attributes || {};
-      const bits = [a["resource-id"] && "id=" + a["resource-id"],
-        a.accessibilityText && "label=" + JSON.stringify(a.accessibilityText),
-        a.text && "text=" + JSON.stringify(a.text)].filter(Boolean);
-      if (bits.length) out.push(bits.join(" ") + "  " + (a.bounds || ""));
-      (n.children || []).forEach((c) => walk(c, out));
-      return out;
-    };
-    try {
-      const raw = require("fs").readFileSync(process.argv[1], "utf8");
-      walk(JSON.parse(raw.slice(raw.indexOf("{"))), []).slice(0, 150).forEach((l) => console.log(l));
-    } catch (e) { console.log("no hierarchy: " + e.message); }' "$OUT/hierarchy-today.json"
+  show_hierarchy "$PHONE" 150 | tee "$OUT/hierarchy-today.txt"
   echo "::endgroup::"
   xcrun simctl terminate "$PHONE" "$APP_ID" || true
 fi
@@ -127,13 +136,16 @@ down "$PHONE"
 
 # Small screen: the 4.7-inch iPhone SE (375 × 667 pt), the smallest phone on iOS 26.
 SMALL=""
-wanted screens-small && SMALL=$(new_device "Review SE" "iPhone SE (3rd generation)" "iPhone SE (2nd generation)")
+# The narrowest iPhone the runtime has: an SE (375 pt wide) or a mini (375 pt, taller).
+wanted screens-small && SMALL=$(new_device "Review small" "iPhone SE (3rd generation)" \
+  "iPhone 13 mini" "iPhone 12 mini" "iPhone SE (2nd generation)")
 if [ -n "$SMALL" ]; then
   up "$SMALL"
   flow "$SMALL" screens-small .maestro/review/screens.yaml SET=small
   down "$SMALL"
 else
-  echo "- ⚠️ screens-small skipped: no iPhone SE simulator on this runner" >> "$OUT/summary.md"
+  echo "- ⚠️ screens-small skipped: no small iPhone simulator on this runner" >> "$OUT/summary.md"
+  xcrun simctl list devicetypes | grep -i iphone
 fi
 
 # App Store screenshots: the 6.9-inch size App Store Connect asks for.

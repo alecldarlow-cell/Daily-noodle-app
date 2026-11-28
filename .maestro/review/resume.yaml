@@ -19,7 +19,7 @@ appId: ${APP_ID}
     id: borders-play-button
 - tapOn:
     id: borders-opt-0
-- tapOn: 'Next'
+- runFlow: borders-next.yaml
 - takeScreenshot: resume-before
 - stopApp
 - launchApp

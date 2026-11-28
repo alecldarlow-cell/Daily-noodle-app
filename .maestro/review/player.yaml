@@ -16,7 +16,7 @@ appId: ${APP_ID}
     id: today-${TYPE}
 - extendedWaitUntil:
     visible:
-      id: play-screen
+      id: 'start-card|finish-sheet|play-screen'
     timeout: 15000
 - waitForAnimationToEnd
 - takeScreenshot: ${SET}-${TYPE}-start

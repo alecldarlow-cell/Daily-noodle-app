@@ -22,14 +22,15 @@ appId: ${APP_ID}
 - takeScreenshot: borders-q1
 - tapOn:
     id: borders-opt-0
-- tapOn: 'Next'
+- runFlow: borders-next.yaml
 - takeScreenshot: borders-q2-instant
 - waitForAnimationToEnd
 - takeScreenshot: borders-q2
-- tapOn: 'Show on map (half points)'
+- tapOn:
+    id: borders-hint
 - waitForAnimationToEnd
 - takeScreenshot: borders-q2-inset
 - tapOn:
     id: borders-opt-1
-- tapOn: 'Next'
+- runFlow: borders-next.yaml
 - takeScreenshot: borders-q3-instant
