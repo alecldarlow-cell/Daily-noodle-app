@@ -77,7 +77,7 @@ describe('GIVEN Cryptic 1 (BARGAIN)', () => {
     expect(idleLine(s)).toMatch(/^Type your answer/);
     s = apply(s, { t: 'hint' });
     expect(s.hints).toBe(1);
-    expect(message(s)).toBe('The definition is underlined: it’s at one end of the clue.');
+    expect(message(s)).toBe('The definition is highlighted. The rest is the wordplay.');
     s = apply(s, { t: 'hint' });
     expect(s.hints).toBe(2);
     expect(message(s)).toBe('Still stuck? Reveal a letter: it counts as a hint.');
