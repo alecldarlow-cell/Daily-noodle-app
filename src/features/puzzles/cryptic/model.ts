@@ -297,7 +297,7 @@ export function apply(s: CrypticState, m: Move): CrypticState {
       if (revealed(s) >= N) return s;
       const hints = s.hints + 1;
       const next: CrypticState = { ...s, hints, msg: '' };
-      if (hints === 1) next.msg = 'The definition is underlined: it’s at one end of the clue.';
+      if (hints === 1) next.msg = 'The definition is highlighted. The rest is the wordplay.';
       else if (hints > 2) {
         const i = revealed(next) - 1;
         const letters = s.letters.slice();
