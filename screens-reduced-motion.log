@@ -1,0 +1,242 @@
+Running on Review iPhone - iOS 26.5 - 6D13B6FF-B6AE-421E-8803-907F86D5F032
+ > Flow screens
+Launch app "${APP_ID}" with clear state... COMPLETED
+Assert that id: today-screen is visible... COMPLETED
+Take screenshot ${SET}-today... COMPLETED
+Run player.yaml...
+  Tap on "Today"... COMPLETED
+  Assert that id: today-screen is visible... COMPLETED
+  Scrolling DOWN until id: today-${TYPE} is visible with speed 40, visibility percentage 100%, timeout 20000 ms, with centering enabled... COMPLETED
+  Wait for animation to end... COMPLETED
+  Tap on id: today-${TYPE}... COMPLETED
+  Wait for animation to end... COMPLETED
+  Run flow when id: start-card|finish-sheet|lab-finish|play-screen|[a-z]+-home is not visible...
+  Run flow when id: start-card|finish-sheet|lab-finish|play-screen|[a-z]+-home is not visible... SKIPPED
+  Assert that id: start-card|finish-sheet|lab-finish|play-screen|[a-z]+-home is visible... COMPLETED
+  Wait for animation to end... COMPLETED
+  Take screenshot ${SET}-${TYPE}-start... COMPLETED
+  Tap on (Optional) "Play|Start|Continue|Resume"... COMPLETED
+  Wait for animation to end... COMPLETED
+  Take screenshot ${SET}-${TYPE}-play... COMPLETED
+  Run flow when Platform is ANDROID...
+  Run flow when Platform is ANDROID... SKIPPED
+  Run flow when Platform is IOS...
+    Tap on "Back to Puzzles"... COMPLETED
+    Wait for animation to end... COMPLETED
+    Run flow when id: today-screen is not visible...
+    Run flow when id: today-screen is not visible... SKIPPED
+  Run flow when Platform is IOS... COMPLETED
+  Assert that id: today-screen is visible... COMPLETED
+Run player.yaml... COMPLETED
+Run player.yaml...
+  Tap on "Today"... COMPLETED
+  Assert that id: today-screen is visible... COMPLETED
+  Scrolling DOWN until id: today-${TYPE} is visible with speed 40, visibility percentage 100%, timeout 20000 ms, with centering enabled... COMPLETED
+  Wait for animation to end... COMPLETED
+  Tap on id: today-${TYPE}... COMPLETED
+  Wait for animation to end... COMPLETED
+  Run flow when id: start-card|finish-sheet|lab-finish|play-screen|[a-z]+-home is not visible...
+  Run flow when id: start-card|finish-sheet|lab-finish|play-screen|[a-z]+-home is not visible... SKIPPED
+  Assert that id: start-card|finish-sheet|lab-finish|play-screen|[a-z]+-home is visible... COMPLETED
+  Wait for animation to end... COMPLETED
+  Take screenshot ${SET}-${TYPE}-start... COMPLETED
+  Tap on (Optional) "Play|Start|Continue|Resume"... COMPLETED
+  Wait for animation to end... COMPLETED
+  Take screenshot ${SET}-${TYPE}-play... COMPLETED
+  Run flow when Platform is ANDROID...
+  Run flow when Platform is ANDROID... SKIPPED
+  Run flow when Platform is IOS...
+    Tap on "Back to Puzzles"... COMPLETED
+    Wait for animation to end... COMPLETED
+    Run flow when id: today-screen is not visible...
+    Run flow when id: today-screen is not visible... SKIPPED
+  Run flow when Platform is IOS... COMPLETED
+  Assert that id: today-screen is visible... COMPLETED
+Run player.yaml... COMPLETED
+Run player.yaml...
+  Tap on "Today"... COMPLETED
+  Assert that id: today-screen is visible... COMPLETED
+  Scrolling DOWN until id: today-${TYPE} is visible with speed 40, visibility percentage 100%, timeout 20000 ms, with centering enabled... COMPLETED
+  Wait for animation to end... COMPLETED
+  Tap on id: today-${TYPE}... COMPLETED
+  Wait for animation to end... COMPLETED
+  Run flow when id: start-card|finish-sheet|lab-finish|play-screen|[a-z]+-home is not visible...
+  Run flow when id: start-card|finish-sheet|lab-finish|play-screen|[a-z]+-home is not visible... SKIPPED
+  Assert that id: start-card|finish-sheet|lab-finish|play-screen|[a-z]+-home is visible... COMPLETED
+  Wait for animation to end... COMPLETED
+  Take screenshot ${SET}-${TYPE}-start... COMPLETED
+  Tap on (Optional) "Play|Start|Continue|Resume"... COMPLETED
+  Wait for animation to end... COMPLETED
+  Take screenshot ${SET}-${TYPE}-play... COMPLETED
+  Run flow when Platform is ANDROID...
+  Run flow when Platform is ANDROID... SKIPPED
+  Run flow when Platform is IOS...
+    Tap on "Back to Puzzles"... COMPLETED
+    Wait for animation to end... COMPLETED
+    Run flow when id: today-screen is not visible...
+    Run flow when id: today-screen is not visible... SKIPPED
+  Run flow when Platform is IOS... COMPLETED
+  Assert that id: today-screen is visible... COMPLETED
+Run player.yaml... COMPLETED
+Run player.yaml...
+  Tap on "Today"... COMPLETED
+  Assert that id: today-screen is visible... COMPLETED
+  Scrolling DOWN until id: today-${TYPE} is visible with speed 40, visibility percentage 100%, timeout 20000 ms, with centering enabled... COMPLETED
+  Wait for animation to end... COMPLETED
+  Tap on id: today-${TYPE}... COMPLETED
+  Wait for animation to end... COMPLETED
+  Run flow when id: start-card|finish-sheet|lab-finish|play-screen|[a-z]+-home is not visible...
+    Scrolling UP until id: today-${TYPE} is visible with speed 40, visibility percentage 100%, timeout 10000 ms, with centering enabled... COMPLETED
+    Wait for animation to end... COMPLETED
+    Tap on id: today-${TYPE}... COMPLETED
+  Run flow when id: start-card|finish-sheet|lab-finish|play-screen|[a-z]+-home is not visible... COMPLETED
+  Assert that id: start-card|finish-sheet|lab-finish|play-screen|[a-z]+-home is visible... COMPLETED
+  Wait for animation to end... COMPLETED
+  Take screenshot ${SET}-${TYPE}-start... COMPLETED
+  Tap on (Optional) "Play|Start|Continue|Resume"... COMPLETED
+  Wait for animation to end... COMPLETED
+  Take screenshot ${SET}-${TYPE}-play... COMPLETED
+  Run flow when Platform is ANDROID...
+  Run flow when Platform is ANDROID... SKIPPED
+  Run flow when Platform is IOS...
+    Tap on "Back to Puzzles"... COMPLETED
+    Wait for animation to end... COMPLETED
+    Run flow when id: today-screen is not visible...
+    Run flow when id: today-screen is not visible... SKIPPED
+  Run flow when Platform is IOS... COMPLETED
+  Assert that id: today-screen is visible... COMPLETED
+Run player.yaml... COMPLETED
+Run player.yaml...
+  Tap on "Today"... COMPLETED
+  Assert that id: today-screen is visible... COMPLETED
+  Scrolling DOWN until id: today-${TYPE} is visible with speed 40, visibility percentage 100%, timeout 20000 ms, with centering enabled... COMPLETED
+  Wait for animation to end... COMPLETED
+  Tap on id: today-${TYPE}... COMPLETED
+  Wait for animation to end... COMPLETED
+  Run flow when id: start-card|finish-sheet|lab-finish|play-screen|[a-z]+-home is not visible...
+  Run flow when id: start-card|finish-sheet|lab-finish|play-screen|[a-z]+-home is not visible... SKIPPED
+  Assert that id: start-card|finish-sheet|lab-finish|play-screen|[a-z]+-home is visible... COMPLETED
+  Wait for animation to end... COMPLETED
+  Take screenshot ${SET}-${TYPE}-start... COMPLETED
+  Tap on (Optional) "Play|Start|Continue|Resume"... COMPLETED
+  Wait for animation to end... COMPLETED
+  Take screenshot ${SET}-${TYPE}-play... COMPLETED
+  Run flow when Platform is ANDROID...
+  Run flow when Platform is ANDROID... SKIPPED
+  Run flow when Platform is IOS...
+    Tap on "Back to Puzzles"... COMPLETED
+    Wait for animation to end... COMPLETED
+    Run flow when id: today-screen is not visible...
+    Run flow when id: today-screen is not visible... SKIPPED
+  Run flow when Platform is IOS... COMPLETED
+  Assert that id: today-screen is visible... COMPLETED
+Run player.yaml... COMPLETED
+Run player.yaml...
+  Tap on "Today"... COMPLETED
+  Assert that id: today-screen is visible... COMPLETED
+  Scrolling DOWN until id: today-${TYPE} is visible with speed 40, visibility percentage 100%, timeout 20000 ms, with centering enabled... COMPLETED
+  Wait for animation to end... COMPLETED
+  Tap on id: today-${TYPE}... COMPLETED
+  Wait for animation to end... COMPLETED
+  Run flow when id: start-card|finish-sheet|lab-finish|play-screen|[a-z]+-home is not visible...
+  Run flow when id: start-card|finish-sheet|lab-finish|play-screen|[a-z]+-home is not visible... SKIPPED
+  Assert that id: start-card|finish-sheet|lab-finish|play-screen|[a-z]+-home is visible... COMPLETED
+  Wait for animation to end... COMPLETED
+  Take screenshot ${SET}-${TYPE}-start... COMPLETED
+  Tap on (Optional) "Play|Start|Continue|Resume"... COMPLETED
+  Wait for animation to end... COMPLETED
+  Take screenshot ${SET}-${TYPE}-play... COMPLETED
+  Run flow when Platform is ANDROID...
+  Run flow when Platform is ANDROID... SKIPPED
+  Run flow when Platform is IOS...
+    Tap on "Back to Puzzles"... COMPLETED
+    Wait for animation to end... COMPLETED
+    Run flow when id: today-screen is not visible...
+    Run flow when id: today-screen is not visible... SKIPPED
+  Run flow when Platform is IOS... COMPLETED
+  Assert that id: today-screen is visible... COMPLETED
+Run player.yaml... COMPLETED
+Run player.yaml...
+  Tap on "Today"... COMPLETED
+  Assert that id: today-screen is visible... COMPLETED
+  Scrolling DOWN until id: today-${TYPE} is visible with speed 40, visibility percentage 100%, timeout 20000 ms, with centering enabled... COMPLETED
+  Wait for animation to end... COMPLETED
+  Tap on id: today-${TYPE}... COMPLETED
+  Wait for animation to end... COMPLETED
+  Run flow when id: start-card|finish-sheet|lab-finish|play-screen|[a-z]+-home is not visible...
+  Run flow when id: start-card|finish-sheet|lab-finish|play-screen|[a-z]+-home is not visible... SKIPPED
+  Assert that id: start-card|finish-sheet|lab-finish|play-screen|[a-z]+-home is visible... COMPLETED
+  Wait for animation to end... COMPLETED
+  Take screenshot ${SET}-${TYPE}-start... COMPLETED
+  Tap on (Optional) "Play|Start|Continue|Resume"... COMPLETED
+  Wait for animation to end... COMPLETED
+  Take screenshot ${SET}-${TYPE}-play... COMPLETED
+  Run flow when Platform is ANDROID...
+  Run flow when Platform is ANDROID... SKIPPED
+  Run flow when Platform is IOS...
+    Tap on "Back to Puzzles"... COMPLETED
+    Wait for animation to end... COMPLETED
+    Run flow when id: today-screen is not visible...
+    Run flow when id: today-screen is not visible... SKIPPED
+  Run flow when Platform is IOS... COMPLETED
+  Assert that id: today-screen is visible... COMPLETED
+Run player.yaml... COMPLETED
+Run player.yaml...
+  Tap on "Today"... COMPLETED
+  Assert that id: today-screen is visible... COMPLETED
+  Scrolling DOWN until id: today-${TYPE} is visible with speed 40, visibility percentage 100%, timeout 20000 ms, with centering enabled... COMPLETED
+  Wait for animation to end... COMPLETED
+  Tap on id: today-${TYPE}... COMPLETED
+  Wait for animation to end... COMPLETED
+  Run flow when id: start-card|finish-sheet|lab-finish|play-screen|[a-z]+-home is not visible...
+  Run flow when id: start-card|finish-sheet|lab-finish|play-screen|[a-z]+-home is not visible... SKIPPED
+  Assert that id: start-card|finish-sheet|lab-finish|play-screen|[a-z]+-home is visible... COMPLETED
+  Wait for animation to end... COMPLETED
+  Take screenshot ${SET}-${TYPE}-start... COMPLETED
+  Tap on (Optional) "Play|Start|Continue|Resume"... COMPLETED
+  Wait for animation to end... COMPLETED
+  Take screenshot ${SET}-${TYPE}-play... COMPLETED
+  Run flow when Platform is ANDROID...
+  Run flow when Platform is ANDROID... SKIPPED
+  Run flow when Platform is IOS...
+    Tap on "Back to Puzzles"... COMPLETED
+    Wait for animation to end... COMPLETED
+    Run flow when id: today-screen is not visible...
+    Run flow when id: today-screen is not visible... SKIPPED
+  Run flow when Platform is IOS... COMPLETED
+  Assert that id: today-screen is visible... COMPLETED
+Run player.yaml... COMPLETED
+Run player.yaml...
+  Tap on "Today"... COMPLETED
+  Assert that id: today-screen is visible... COMPLETED
+  Scrolling DOWN until id: today-${TYPE} is visible with speed 40, visibility percentage 100%, timeout 20000 ms, with centering enabled... COMPLETED
+  Wait for animation to end... COMPLETED
+  Tap on id: today-${TYPE}... COMPLETED
+  Wait for animation to end... COMPLETED
+  Run flow when id: start-card|finish-sheet|lab-finish|play-screen|[a-z]+-home is not visible...
+  Run flow when id: start-card|finish-sheet|lab-finish|play-screen|[a-z]+-home is not visible... SKIPPED
+  Assert that id: start-card|finish-sheet|lab-finish|play-screen|[a-z]+-home is visible... COMPLETED
+  Wait for animation to end... COMPLETED
+  Take screenshot ${SET}-${TYPE}-start... COMPLETED
+  Tap on (Optional) "Play|Start|Continue|Resume"... COMPLETED
+  Wait for animation to end... COMPLETED
+  Take screenshot ${SET}-${TYPE}-play... COMPLETED
+  Run flow when Platform is ANDROID...
+  Run flow when Platform is ANDROID... SKIPPED
+  Run flow when Platform is IOS...
+    Tap on "Back to Puzzles"... COMPLETED
+    Wait for animation to end... COMPLETED
+    Run flow when id: today-screen is not visible...
+    Run flow when id: today-screen is not visible... SKIPPED
+  Run flow when Platform is IOS... COMPLETED
+  Assert that id: today-screen is visible... COMPLETED
+Run player.yaml... COMPLETED
+Tap on "Leagues"... COMPLETED
+Wait for animation to end... COMPLETED
+Take screenshot ${SET}-leagues... COMPLETED
+Tap on "Archive"... COMPLETED
+Assert that id: archive-screen is visible... COMPLETED
+Take screenshot ${SET}-archive... COMPLETED
+Tap on "Account"... COMPLETED
+Wait for animation to end... COMPLETED
+Take screenshot ${SET}-account... COMPLETED
