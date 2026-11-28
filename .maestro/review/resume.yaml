@@ -8,13 +8,19 @@ appId: ${APP_ID}
     visible:
       id: today-screen
     timeout: 40000
+- scrollUntilVisible:
+    element:
+      id: today-borders
+    direction: DOWN
+    centerElement: true
+    timeout: 20000
 - tapOn:
     id: today-borders
 - tapOn:
     id: borders-play-button
 - tapOn:
     id: borders-opt-0
-- tapOn: 'Next'
+- runFlow: borders-next.yaml
 - takeScreenshot: resume-before
 - stopApp
 - launchApp
@@ -22,6 +28,12 @@ appId: ${APP_ID}
     visible:
       id: today-screen
     timeout: 40000
+- scrollUntilVisible:
+    element:
+      id: today-borders
+    direction: DOWN
+    centerElement: true
+    timeout: 20000
 - tapOn:
     id: today-borders
 - waitForAnimationToEnd

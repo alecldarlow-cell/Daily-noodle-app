@@ -1,0 +1,25 @@
+# Borders: on to the next question (#217, #202). A wrong answer opens the big map over the
+# quiz after 0.7 s (BIG_MAP_MS), as a modal whose button reads "…. Next" and hides the quiz's
+# own Next; a right answer leaves the quiz's Next. Tap whichever is showing. Next is hidden
+# until a question is answered, so this never skips two.
+appId: ${APP_ID}
+---
+- extendedWaitUntil:
+    visible:
+      id: 'borders-next|borders-bigmap'
+    timeout: 5000
+- waitForAnimationToEnd
+- runFlow:
+    when:
+      visible:
+        id: borders-bigmap
+    commands:
+      - tapOn:
+          id: borders-bigmap
+- runFlow:
+    when:
+      visible:
+        id: borders-next
+    commands:
+      - tapOn:
+          id: borders-next

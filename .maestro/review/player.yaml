@@ -4,13 +4,39 @@ appId: ${APP_ID}
 - tapOn: Today
 - extendedWaitUntil:
     visible:
-      id: today-${TYPE}
+      id: today-screen
     timeout: 20000
+# Rows below the fold need a scroll before they can be tapped (iPhone lists them all).
+- scrollUntilVisible:
+    element:
+      id: today-${TYPE}
+    direction: DOWN
+    centerElement: true
+    timeout: 20000
+# Let the scroll's momentum stop before tapping, so the row is where the tap thinks it is.
+- waitForAnimationToEnd
 - tapOn:
     id: today-${TYPE}
+- waitForAnimationToEnd
+# Still on Today: the scroll overshot and the row slid up under the masthead. Bring it back
+# down to the middle and tap again, once.
+- runFlow:
+    when:
+      notVisible:
+        id: 'start-card|finish-sheet|lab-finish|play-screen|[a-z]+-home'
+    commands:
+      - scrollUntilVisible:
+          element:
+            id: today-${TYPE}
+          direction: UP
+          centerElement: true
+          timeout: 10000
+      - waitForAnimationToEnd
+      - tapOn:
+          id: today-${TYPE}
 - extendedWaitUntil:
     visible:
-      id: play-screen
+      id: 'start-card|finish-sheet|lab-finish|play-screen|[a-z]+-home'
     timeout: 15000
 - waitForAnimationToEnd
 - takeScreenshot: ${SET}-${TYPE}-start
@@ -19,7 +45,25 @@ appId: ${APP_ID}
     optional: true
 - waitForAnimationToEnd
 - takeScreenshot: ${SET}-${TYPE}-play
-- back
+# Android has a Back key; on iPhone, the header's own button.
+- runFlow:
+    when:
+      platform: Android
+    commands:
+      - back
+- runFlow:
+    when:
+      platform: iOS
+    commands:
+      - tapOn: 'Back to Puzzles'
+      - waitForAnimationToEnd
+      # A tap during a board's opening animation can be lost (seen once on Sweep): once more.
+      - runFlow:
+          when:
+            notVisible:
+              id: today-screen
+          commands:
+            - tapOn: 'Back to Puzzles'
 - extendedWaitUntil:
     visible:
       id: today-screen
