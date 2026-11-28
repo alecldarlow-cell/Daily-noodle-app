@@ -13,8 +13,27 @@ appId: ${APP_ID}
     direction: DOWN
     centerElement: true
     timeout: 20000
+# Let the scroll's momentum stop before tapping, so the row is where the tap thinks it is.
+- waitForAnimationToEnd
 - tapOn:
     id: today-${TYPE}
+- waitForAnimationToEnd
+# Still on Today: the scroll overshot and the row slid up under the masthead. Bring it back
+# down to the middle and tap again, once.
+- runFlow:
+    when:
+      notVisible:
+        id: 'start-card|finish-sheet|lab-finish|play-screen|[a-z]+-home'
+    commands:
+      - scrollUntilVisible:
+          element:
+            id: today-${TYPE}
+          direction: UP
+          centerElement: true
+          timeout: 10000
+      - waitForAnimationToEnd
+      - tapOn:
+          id: today-${TYPE}
 - extendedWaitUntil:
     visible:
       id: 'start-card|finish-sheet|lab-finish|play-screen|[a-z]+-home'

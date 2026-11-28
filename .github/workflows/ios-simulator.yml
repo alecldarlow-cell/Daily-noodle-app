@@ -34,7 +34,7 @@ concurrency:
 env:
   # TEMPORARY while #217 is built: what a push to the branch runs.
   PUSH_APP_RUN: '46155343502'
-  PUSH_ONLY: 'screens-normal,screens-small,screens-dark,store-light,store-dark'
+  PUSH_ONLY: 'screens-dark,borders-round-dark,screens-text-largest,screens-reduced-motion'
 
 jobs:
   ios:
