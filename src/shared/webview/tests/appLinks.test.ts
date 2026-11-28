@@ -39,3 +39,18 @@ describe('GIVEN the app config', () => {
     });
   });
 });
+
+// iPhone universal links (#213): the same site links open the app on iOS, verified by the site's
+// /.well-known/apple-app-site-association, which lists exactly the Android paths above.
+describe('GIVEN the app config for iPhone', () => {
+  describe('WHEN iOS decides which https links the app opens', () => {
+    it('THEN dailynoodle.co.uk is the one associated domain, for app links only', () => {
+      expect(app.expo.ios.associatedDomains).toEqual(['applinks:dailynoodle.co.uk']);
+    });
+
+    it('THEN the app stays iPhone only, with the same bundle id as the Android package', () => {
+      expect(app.expo.ios.supportsTablet).toBe(false);
+      expect(app.expo.ios.bundleIdentifier).toBe(app.expo.android.package);
+    });
+  });
+});

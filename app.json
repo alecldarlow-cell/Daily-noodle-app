@@ -11,6 +11,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "uk.co.dailynoodle.app",
+      "associatedDomains": ["applinks:dailynoodle.co.uk"],
       "config": {
         "usesNonExemptEncryption": false
       }
