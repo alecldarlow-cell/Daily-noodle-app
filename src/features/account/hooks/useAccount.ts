@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { appStorage, type CachedStorage } from '@/shared/storage';
 
 import { authClient } from '../api/authClient';
-import { syncApi } from '../api/syncApi';
+import { missingFunction, syncApi } from '../api/syncApi';
 import { AccountError, authMessage } from './authErrors';
 import { readAuthLink } from './authLink';
 import { LAST_SYNC_KEY, runSync } from './syncEngine';
@@ -92,6 +92,38 @@ export async function deleteSynced(client: SupabaseClient | null = authClient())
   if (!client) return;
   await syncApi(client).forget();
   await client.auth.signOut();
+}
+
+/** Shown when the database hasn't got account_delete yet: the email request still works. */
+export const DELETE_NOT_YET =
+  'Deleting your account from the app isn’t switched on yet. Ask us by email instead.';
+
+/**
+ * Delete my account (#188): sync first, so the account holds this phone's league id, then
+ * account_delete (the caller's own account only; league results stay as "Former player"),
+ * then sign out on this phone. The phone keeps its own results. Throws the house's words.
+ */
+export async function deleteAccount(
+  store: CachedStorage = appStorage,
+  client: SupabaseClient | null = authClient(),
+): Promise<void> {
+  if (!client) throw new AccountError('Sign-in isn’t available in this build.');
+  const { data } = await client.auth.getSession();
+  if (!data.session) throw new AccountError('Sign in again to delete your account.');
+  const api = syncApi(client);
+  try {
+    await runSync(store, api);
+  } catch {
+    // A failed sync doesn't stop the delete: the account's last copy is used.
+  }
+  try {
+    await api.deleteAccount();
+  } catch (e) {
+    if (missingFunction(e)) throw new AccountError(DELETE_NOT_YET);
+    throw e;
+  }
+  // The account is gone, so only this phone's session is cleared (no server call).
+  await client.auth.signOut({ scope: 'local' });
 }
 
 /** When this phone last synced, as epoch milliseconds, or null. */

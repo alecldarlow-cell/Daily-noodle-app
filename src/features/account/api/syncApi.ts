@@ -21,6 +21,15 @@ export interface SyncApi {
   forget(): Promise<boolean>;
   pullRev(): Promise<Record<string, RevDoc>>;
   pushRev(saves: Record<string, RevDoc>): Promise<PushRevResult>;
+  /** account_delete (2026-11-28-account-delete.sql): the signed-in caller's account, league rows anonymised. */
+  deleteAccount(): Promise<DeleteAccountResult>;
+}
+
+/** account_delete's answer: what happened to the league rows, and how many own rows went. */
+export interface DeleteAccountResult {
+  ok: boolean;
+  board: 'anonymised' | 'shared' | 'none';
+  deleted: number;
 }
 
 class SyncError extends Error {
@@ -54,6 +63,12 @@ export function syncApi(client: SupabaseClient): SyncApi {
     pull: () => call<Record<string, unknown>>('sync_pull').then((d) => (isObj(d) ? d : {})),
     push: (saves) => call<number>('sync_push', { p_saves: saves }),
     forget: () => call<boolean>('sync_forget'),
+    deleteAccount: () =>
+      call<unknown>('account_delete').then((r) => {
+        if (!isObj(r) || r.ok !== true) throw new SyncError('delete_failed');
+        const board = r.board === 'anonymised' || r.board === 'shared' ? r.board : 'none';
+        return { ok: true, board, deleted: Number(r.deleted) || 0 };
+      }),
     pullRev: () =>
       call<unknown>('sync_pull_rev').then((d) => {
         const out: Record<string, RevDoc> = {};

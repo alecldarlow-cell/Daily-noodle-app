@@ -10,6 +10,8 @@ export function fakeClient(
     fail?: string;
     /** A database without the revision functions (before 29 Oct 2026). */
     legacy?: boolean;
+    /** A database without account_delete (before 2026-11-28-account-delete.sql is applied). */
+    noAccountDelete?: boolean;
     /** Run before each sync_push_rev is decided (another device writing in between). */
     beforePushRev?: (remote: Record<string, unknown>, bump: (k: string) => void) => void;
   } = {},
@@ -64,6 +66,21 @@ export function fakeClient(
           delete revs[k];
         }
         return { data: true, error: null };
+      }
+      if (fn === 'account_delete') {
+        if (opts.noAccountDelete)
+          return {
+            data: null,
+            error: {
+              code: 'PGRST202',
+              message: 'Could not find the function public.account_delete',
+            },
+          };
+        for (const k of Object.keys(remote)) {
+          delete remote[k];
+          delete revs[k];
+        }
+        return { data: { ok: true, board: 'anonymised', deleted: 4 }, error: null };
       }
       if ((fn === 'sync_pull_rev' || fn === 'sync_push_rev') && opts.legacy)
         return {

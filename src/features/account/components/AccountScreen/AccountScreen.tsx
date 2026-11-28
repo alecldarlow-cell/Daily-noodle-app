@@ -11,7 +11,7 @@ import { Button, Screen } from '@/shared/ui';
 
 import { authClient } from '../../api/authClient';
 import { sayAccountError } from '../../hooks/authErrors';
-import { deleteSynced, useAccount } from '../../hooks/useAccount';
+import { DELETE_NOT_YET, deleteAccount, deleteSynced, useAccount } from '../../hooks/useAccount';
 import { Card, Row, Section } from '../AccountParts/AccountParts';
 import { SettingsCard } from '../SettingsCard/SettingsCard';
 import { SyncCard } from '../SyncCard/SyncCard';
@@ -52,8 +52,8 @@ export function deletionRequestUrl(email: string | null): string {
 
 /**
  * Account (tracker AF-018; tidied 7 Nov 2026): sign-in or its status, the app-wide settings,
- * then one Help & privacy card (how to play, privacy, contact, deleting your data) and the
- * version. Joining a league lives on Leagues only.
+ * then one Help & privacy card (how to play, privacy, contact, deleting your data and, signed
+ * in, your account, #188) and the version. Joining a league lives on Leagues only.
  */
 export function AccountScreen({
   client = authClient(),
@@ -64,11 +64,25 @@ export function AccountScreen({
 }) {
   const t = useTokens();
   const account = useAccount(client);
-  const [view, setView] = useState<'home' | 'delete'>('home');
+  const [view, setView] = useState<'home' | 'delete' | 'delete-account'>('home');
   const [notice, setNotice] = useState<string | null>(null);
   const [mailFailed, setMailFailed] = useState(false);
   const signedIn = account.kind === 'signed-in';
   const syncOn = account.kind !== 'off';
+
+  if (view === 'delete-account' && signedIn)
+    return (
+      <DeleteAccountView
+        email={account.email}
+        client={client}
+        store={store}
+        onCancel={() => setView('home')}
+        onDeleted={() => {
+          setNotice('Your account was deleted. This phone keeps its results.');
+          setView('home');
+        }}
+      />
+    );
 
   if (view === 'delete' && syncOn)
     return (
@@ -76,6 +90,7 @@ export function AccountScreen({
         email={signedIn ? account.email : null}
         client={client}
         onCancel={() => setView('home')}
+        onDeleteAccount={() => setView('delete-account')}
         onDeleted={() => {
           setNotice('Your saved copy was deleted. This phone keeps its results.');
           setView('home');
@@ -146,6 +161,13 @@ export function AccountScreen({
               onPress={() => (setNotice(null), setMailFailed(false), setView('delete'))}
             />
           ) : null}
+          {signedIn ? (
+            <Row
+              label="Delete my account"
+              testID="account-delete-account"
+              onPress={() => (setNotice(null), setMailFailed(false), setView('delete-account'))}
+            />
+          ) : null}
         </Card>
         {mailFailed ? (
           <Text style={[styles.small, { color: t.ink }]} testID="account-mail-failed" selectable>
@@ -163,19 +185,22 @@ export function AccountScreen({
 
 /**
  * Delete my data: the two kinds of deleting, each saying what it does. Signed in, the saved
- * copy can be deleted here (a red Delete, never the filled accent button, AF-019); the
- * account itself, sign-in email included, is asked for by email (G2).
+ * copy can be deleted here (a red Delete, never the filled accent button, AF-019), and the
+ * account itself from its own confirm screen (#188); signed out, the account is asked for by
+ * email (G2).
  */
 function DeleteDataView({
   email,
   client,
   onCancel,
   onDeleted,
+  onDeleteAccount,
 }: {
   email: string | null;
   client: SupabaseClient | null;
   onCancel: () => void;
   onDeleted: () => void;
+  onDeleteAccount: () => void;
 }) {
   const t = useTokens();
   const [err, setErr] = useState<string | null>(null);
@@ -242,18 +267,38 @@ function DeleteDataView({
             <Text accessibilityRole="header" style={[styles.h3, { color: t.ink }]}>
               Delete your account
             </Text>
-            <Text style={[styles.p, { color: t.muted }]} testID="delete-account-says">
-              Removes your sign-in email as well as your saved data. This opens an email to us; we
-              delete it and reply to confirm.
-            </Text>
-            <View style={styles.acts}>
-              <Button
-                variant="tonal"
-                label="Request account deletion"
-                onPress={requestDeletion}
-                testID="account-request-deletion"
-              />
-            </View>
+            {email ? (
+              <>
+                <Text style={[styles.p, { color: t.muted }]} testID="delete-account-says">
+                  Removes your sign-in email as well as your saved data and Lab votes. Your league
+                  results stay on the tables as “Former player”.
+                </Text>
+                <View style={styles.acts}>
+                  <Button
+                    variant="tonal"
+                    destructive
+                    label="Delete my account"
+                    onPress={onDeleteAccount}
+                    testID="account-open-delete-account"
+                  />
+                </View>
+              </>
+            ) : (
+              <>
+                <Text style={[styles.p, { color: t.muted }]} testID="delete-account-says">
+                  Removes your sign-in email as well as your saved data. Sign in to delete it here,
+                  or this opens an email to us; we delete it and reply to confirm.
+                </Text>
+                <View style={styles.acts}>
+                  <Button
+                    variant="tonal"
+                    label="Request account deletion"
+                    onPress={requestDeletion}
+                    testID="account-request-deletion"
+                  />
+                </View>
+              </>
+            )}
             {mailFailed ? (
               <Text
                 style={[styles.small, { color: t.ink }]}
@@ -269,6 +314,112 @@ function DeleteDataView({
       <View style={styles.acts}>
         <Button variant="text" label="Cancel" onPress={onCancel} testID="delete-cancel" />
       </View>
+    </Screen>
+  );
+}
+
+/**
+ * Delete my account (#188; Alec, 27 Nov 2026): one confirm screen saying what goes, what
+ * happens to league results (kept, as "Former player", so other players' points stand) and
+ * what stays. A red Delete my account, never the filled accent; Keep it goes back. If the
+ * database can't delete accounts yet, it says so and offers the email request.
+ */
+function DeleteAccountView({
+  email,
+  client,
+  store,
+  onCancel,
+  onDeleted,
+}: {
+  email: string;
+  client: SupabaseClient | null;
+  store: CachedStorage;
+  onCancel: () => void;
+  onDeleted: () => void;
+}) {
+  const t = useTokens();
+  const [err, setErr] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [mailFailed, setMailFailed] = useState(false);
+  const del = async () => {
+    if (busy) return;
+    setErr(null);
+    setBusy(true);
+    try {
+      await deleteAccount(store, client);
+      onDeleted();
+    } catch (e) {
+      setErr(sayAccountError(e));
+      setBusy(false);
+    }
+  };
+  const requestDeletion = () => {
+    setMailFailed(false);
+    Linking.openURL(deletionRequestUrl(email)).catch(() => setMailFailed(true));
+  };
+  return (
+    <Screen title="Account" testID="account-delete-account-screen">
+      <Card>
+        <View style={styles.cardBody}>
+          <Text accessibilityRole="header" style={[styles.h3, { color: t.ink }]}>
+            Delete your account?
+          </Text>
+          <Text style={[styles.h4, { color: t.ink }]}>Deleted</Text>
+          <Text style={[styles.p, { color: t.muted }]} testID="account-goes">
+            Your account and sign-in email ({email}), the copy of your results, streaks and leagues
+            kept for it, your Lab votes and your league PIN. This can’t be undone.
+          </Text>
+          <Text style={[styles.h4, { color: t.ink }]}>League results</Text>
+          <Text style={[styles.p, { color: t.muted }]} testID="account-league">
+            Kept on your leagues’ tables, so other players’ points don’t change, but shown as
+            “Former player” and no longer linked to you.
+          </Text>
+          <Text style={[styles.h4, { color: t.ink }]}>Stays</Text>
+          <Text style={[styles.p, { color: t.muted }]} testID="account-stays">
+            Everything on this phone: your results and streaks here. You’re signed out.
+          </Text>
+          {err ? (
+            <Text
+              style={[styles.small, { color: t.bad }]}
+              testID="account-delete-error"
+              accessibilityLiveRegion="polite">
+              {err}
+            </Text>
+          ) : null}
+          <View style={styles.acts}>
+            <Button
+              variant="tonal"
+              destructive
+              label="Delete my account"
+              onPress={del}
+              disabled={busy}
+              testID="account-delete-confirm"
+            />
+            <Button
+              variant="text"
+              label="Keep it"
+              onPress={onCancel}
+              testID="account-delete-cancel"
+            />
+          </View>
+          {err === DELETE_NOT_YET ? (
+            <View style={styles.acts}>
+              <Button
+                variant="tonal"
+                label="Request account deletion"
+                onPress={requestDeletion}
+                testID="account-request-deletion"
+              />
+            </View>
+          ) : null}
+          {mailFailed ? (
+            <Text style={[styles.small, { color: t.ink }]} testID="account-mail-failed" selectable>
+              No email app opened. Email {CONTACT_EMAIL} from the address you sign in with, and ask
+              for your account to be deleted.
+            </Text>
+          ) : null}
+        </View>
+      </Card>
     </Screen>
   );
 }

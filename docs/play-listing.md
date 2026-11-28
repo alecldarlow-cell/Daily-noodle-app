@@ -83,10 +83,21 @@ because Supabase acts as our processor and Play doesn't count processors as shar
 | App info and performance › Crash logs, Diagnostics             | Yes: the app's crash and save notes (`insights.app_errors`, since 5 Nov 2026), kept 90 days  | Analytics                              | Yes: the same "Don't record my visits" switch                                 |
 | Location, contacts, photos, files, messages, financial, health | No                                                                                           |                                        |                                                                               |
 
-**Deletion:** a signed-in player can delete their synced results in Account. For league records,
-the email address or anything else, the privacy page's contact address takes requests. Play's
-"Delete account URL" and "Delete data URL" are both https://dailynoodle.co.uk/privacy.html#delete
+**Deletion:** a signed-in player can delete their synced results in Account, or their whole
+account (Account › Delete my account, #188): email address, sign-in, synced copy, Lab votes,
+league PIN and push subscriptions are deleted. League nicknames and results are **retained,
+anonymised** (shown as "Former player", unlinked from the account, email, nickname and phone),
+because league points count players beaten; privacy.html `#league-results` discloses it. For
+anything else (or without the app) the privacy page's contact address takes requests. Play's
+"Delete account URL" and "Delete data URL" stay https://dailynoodle.co.uk/privacy.html#delete
 (set 8 Nov 2026), the page's "Delete your data" section.
+
+**Data deletion answers to change in Play Console** once the `account_delete` migration is
+live and the build with the row is out (not before): "Do you provide a way for users to request
+that their data is deleted?" Yes, in the app and at the URL above. Under data types: Email
+address, Device or other IDs (league code) and Other user-generated content are deleted on
+request, except league nicknames and results, which are kept anonymised for the league tables
+(say so in the retention note). Not yet changed in Play Console.
 
 **Updated in Play Console on 8 Nov 2026:** App info and performance (crash logs, diagnostics) and
 the two deletion links, after the legal check (project doc `claude/legal-compliance-2026-11-08.md`).
