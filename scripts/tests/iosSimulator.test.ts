@@ -41,6 +41,7 @@ describe('GIVEN the iPhone simulator workflow (#217)', () => {
     it('THEN it keeps the app, Info.plist and privacy manifests, and the results', () => {
       expect(yml).toContain('name: ios-sim-app');
       expect(yml).toContain('PrivacyInfo.xcprivacy');
+      expect(yml).toContain('plutil -p ios-build/Info.plist');
       expect(yml).toContain('name: ios-results');
       expect(yml).toMatch(/if: always\(\)\n\s+with:\n\s+name: ios-results/);
     });
@@ -60,6 +61,16 @@ describe('GIVEN the iPhone simulator workflow (#217)', () => {
         expect(on).toContain(`- ${path}`);
     });
 
+    it('THEN the app is rebuilt only when what goes into it changes', () => {
+      const key = /key: ios-sim-app-v\d+-\$\{\{ hashFiles\(([^)]*)\) \}\}/.exec(yml)?.[1] ?? '';
+      for (const input of ['package-lock.json', 'app.json', 'src/**', 'assets/**', 'packages/**'])
+        expect(key).toContain(`'${input}'`);
+      expect(key).not.toMatch(/maestro|scripts|workflows/);
+      expect(
+        yml.match(/if: steps\.cache\.outputs\.cache-hit != 'true'/g)!.length,
+      ).toBeGreaterThanOrEqual(7);
+    });
+
     it('THEN a run can reuse an earlier run’s app instead of building again', () => {
       expect(yml).toContain(
         "if: github.event_name != 'workflow_dispatch' || inputs.app_from_run == ''",
@@ -73,6 +84,7 @@ describe('GIVEN the iPhone checks script', () => {
   describe('WHEN it runs the review flows', () => {
     it('THEN every setting Android checks is checked on iPhone too, plus links and the store set', () => {
       expect(flows()).toEqual([
+        'launch .maestro/review/launch.yaml',
         'resume .maestro/review/resume.yaml',
         'borders-round .maestro/review/borders-round.yaml',
         'links .maestro/review/links.yaml',
@@ -105,7 +117,25 @@ describe('GIVEN the iPhone checks script', () => {
       expect(script).toMatch(/boot pro-max "\$BIG_TYPE"\n(?:.*\n)*?flow store-light/);
     });
 
-    it('THEN a failed flow is recorded and the run still fails at the end', () => {
+    it('THEN it stops first, with the crash report and log, if the app does not open to Today', () => {
+      expect(script).toMatch(
+        /flow launch \.maestro\/review\/launch\.yaml\nif \[ \$FAILED = 1 \]; then\n\s+why\n[\s\S]*?exit 1\nfi/,
+      );
+      expect(script).toContain('DiagnosticReports');
+      expect(script).toContain('log show --last 3m');
+      const launch = read('.maestro/review/launch.yaml');
+      expect(launch).toMatch(/clearState: true[\s\S]*id: today-screen/);
+    });
+
+    it('THEN it picks the newest models this iOS runs, by model number', () => {
+      expect(script).toContain('rt.get("supportedDeviceTypes", [])');
+      expect(script).toContain(
+        't.sort(key=lambda d: [int(n) for n in re.findall(r"\\d+", d["name"])])',
+      );
+    });
+
+    it('THEN a failed flow is recorded, printed into the log, and the run still fails at the end', () => {
+      expect(script).toMatch(/FAILED=1\n.*\n\s+echo "::group::\$name failed"; tail -60/);
       expect(script).toContain('FAILED=1');
       expect(script.trimEnd().endsWith('exit $FAILED')).toBe(true);
     });

@@ -47,21 +47,34 @@ jobs:
     timeout-minutes: 75
     steps:
       - uses: actions/checkout@v4
+      # The built app is kept by what goes into it (code, assets, packages, config), so a
+      # change to the flows or this script alone reuses it and skips the 30-minute build.
+      - uses: actions/cache/restore@v4
+        id: cache
+        with:
+          path: ios-build
+          key: ios-sim-app-v1-${{ hashFiles('package-lock.json', 'app.json', 'eas.json', 'tsconfig.json', 'src/**', 'assets/**', 'packages/**') }}
       - uses: actions/setup-node@v4
+        if: steps.cache.outputs.cache-hit != 'true'
         with:
           node-version: 22
           cache: npm
       - name: Use the newest Xcode (SDK 58 needs 26.4 or later)
+        if: steps.cache.outputs.cache-hit != 'true'
         run: |
           XC=$(ls -d /Applications/Xcode_26*.app | sort -V | tail -1)
           sudo xcode-select -s "$XC"
           xcodebuild -version
-      - run: npm ci
+      - if: steps.cache.outputs.cache-hit != 'true'
+        run: npm ci
       - name: Generate the iPhone project
+        if: steps.cache.outputs.cache-hit != 'true'
         run: npx expo prebuild --platform ios --clean
       - name: Run this commit's JavaScript, never an over-the-air update
+        if: steps.cache.outputs.cache-hit != 'true'
         run: /usr/libexec/PlistBuddy -c "Set :EXUpdatesEnabled false" ios/DailyNoodle/Supporting/Expo.plist
       - name: Build for the simulator (no signing)
+        if: steps.cache.outputs.cache-hit != 'true'
         run: |
           set -o pipefail
           xcodebuild -workspace ios/DailyNoodle.xcworkspace -scheme DailyNoodle \
@@ -71,6 +84,7 @@ jobs:
             build > xcodebuild.log 2>&1 || { tail -200 xcodebuild.log; exit 1; }
           tail -5 xcodebuild.log
       - name: Keep the app and what App Review reads from it
+        if: steps.cache.outputs.cache-hit != 'true'
         run: |
           mkdir -p ios-build
           APP=ios/build/Build/Products/Release-iphonesimulator/DailyNoodle.app
@@ -78,7 +92,19 @@ jobs:
           plutil -convert xml1 -o ios-build/Info.plist "$APP/Info.plist"
           cp ios/DailyNoodle/PrivacyInfo.xcprivacy ios-build/ 2>/dev/null || echo "no app privacy manifest" > ios-build/PrivacyInfo.missing
           find "$APP" -name PrivacyInfo.xcprivacy | sed "s#^$APP/##" > ios-build/privacy-manifests.txt
+          grep -E "warning:" xcodebuild.log | sort | uniq -c | sort -rn > ios-build/xcode-warnings.txt || true
           cp xcodebuild.log ios-build/
+      - uses: actions/cache/save@v4
+        if: steps.cache.outputs.cache-hit != 'true'
+        with:
+          path: ios-build
+          key: ${{ steps.cache.outputs.cache-primary-key }}
+      - name: Print what App Review reads (so the log can be read without the artifact)
+        run: |
+          echo "::group::Privacy manifests in the app"; cat ios-build/privacy-manifests.txt; echo "::endgroup::"
+          echo "::group::App privacy manifest"; plutil -p ios-build/PrivacyInfo.xcprivacy || cat ios-build/PrivacyInfo.missing; echo "::endgroup::"
+          echo "::group::Info.plist"; plutil -p ios-build/Info.plist; echo "::endgroup::"
+          echo "::group::Xcode warnings (count, text)"; head -40 ios-build/xcode-warnings.txt; echo "::endgroup::"
       - uses: actions/upload-artifact@v4
         with:
           name: ios-sim-app
