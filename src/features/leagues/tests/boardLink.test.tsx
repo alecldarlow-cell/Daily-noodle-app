@@ -128,14 +128,19 @@ describe('GIVEN the league line’s wording (dn-board.js rankText, AF-019)', () 
 });
 
 describe('GIVEN a finished puzzle’s sheet (design B3)', () => {
-  describe('WHEN the player is in no league', () => {
-    it('THEN there is no line at all, and nothing is asked', async () => {
+  describe('WHEN the player is in no league (league offer, 28 Nov 2026: was no line at all)', () => {
+    it('THEN a reopened sheet has the quiet start line, no card, and the board is never asked', async () => {
       await slot(pathOn(today));
-      expect(screen.queryByTestId('board-slot')).toBeNull();
-      expect(screen.queryByText(/Start a league/)).toBeNull();
+      expect(screen.getByTestId('board-line')).toHaveTextContent('Start a league with friends ›');
+      expect(screen.queryByTestId('league-offer')).toBeNull();
       expect(m.boardMoment).not.toHaveBeenCalled();
       expect(m.boardDay).not.toHaveBeenCalled();
       expect(tags).toEqual([]);
+      fireEvent.press(screen.getByTestId('board-slot'));
+      expect(router.dismissTo).toHaveBeenCalledWith({
+        pathname: '/leagues',
+        params: expect.objectContaining({ go: 'start', from: 'result' }),
+      });
     });
   });
 

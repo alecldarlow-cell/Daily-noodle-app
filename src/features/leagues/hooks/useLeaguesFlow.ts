@@ -34,6 +34,8 @@ export type Notice =
 export interface LeaguesParams {
   join?: string;
   go?: string;
+  /** Where a `go: 'start'` came from (`offer`, `result`): Start a league tailors itself to it. */
+  from?: string;
   p?: string;
   d?: string;
   n?: string;
@@ -68,7 +70,7 @@ function fromParams(p: LeaguesParams): View | null {
   const join = codeFrom(p.join ?? '');
   if (join) return { k: 'invite', code: join };
   if (p.go === 'claim') return { k: 'claim' };
-  if (p.go === 'start') return { k: 'start' };
+  if (p.go === 'start') return p.from ? { k: 'start', from: p.from } : { k: 'start' };
   if (p.go === 'code') return { k: 'code' };
   if (p.go === 'home') return { k: 'home' };
   const pick = pickFrom(p);

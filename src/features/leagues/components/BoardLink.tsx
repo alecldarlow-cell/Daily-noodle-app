@@ -10,7 +10,9 @@
  *     earlier day), and the share line is tagged 🏆, as dn-board.js does.
  * It opens the Leagues tab on that league, puzzle and day, as board.html?p=&d=. Standing
  * alone (no personal best or streak above it, `lead`), a podium place leads with its disc,
- * which pops and shines only on a fresh finish. Not in a league: no line.
+ * which pops and shines only on a fresh finish. Not in a league: the league offer card on a
+ * fresh finish when an ask is due, else a quiet "Start a league with friends ›" (LeagueOffer,
+ * 28 Nov 2026; until then, no line).
  */
 import { boardTypeOfPath, dateOfPath, type BoardTypeId } from '@noodle/core';
 import { useQuery } from '@tanstack/react-query';
@@ -29,13 +31,15 @@ import { momentLine } from '../hooks/boardText';
 import { myRank, placeLine } from '../hooks/rankText';
 import { leaguesParams } from '../hooks/useLeaguesFlow';
 import { onSubmission, submissionOf } from '../hooks/submissions';
+import { LeagueOffer } from './LeagueOffer';
 import { isPlace, PlaceMedal } from './PlaceMedal';
 
 export function BoardLink({ path, onTag, solved = true, celebrate = false, lead }: BoardSlotProps) {
   const s = useBoardState();
   const league = currentLeague(s);
   const T = /^reports\//.test(path) ? boardTypeOfPath(path) : null;
-  if (!T || !league) return null;
+  if (!T) return null;
+  if (!league) return <LeagueOffer path={path} celebrate={celebrate} lead={lead} />;
   return (
     <MemberLink
       path={path}

@@ -22,6 +22,7 @@ export function isDisposableKey(key: string): boolean {
     key === 'noodle-board-pinlater' ||
     key === 'noodle-board-medal-shine' ||
     key === 'noodle-app-review' ||
+    key === 'noodle-leagueoffer-v1' ||
     key === 'digi.sid' ||
     key === 'digi.last'
   );

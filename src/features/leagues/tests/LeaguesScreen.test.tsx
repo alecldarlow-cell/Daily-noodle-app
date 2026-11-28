@@ -8,6 +8,7 @@ import { BUILD_ENV } from '@/shared/env';
 import { tokensFor } from '@/shared/theme';
 import { appStorage } from '@/shared/storage';
 import { renderWithProviders } from '@/shared/testing';
+import { appRecorder } from '@/shared/track';
 
 import * as api from '../api/board';
 import { BoardError } from '../api/errors';
@@ -131,6 +132,46 @@ describe('GIVEN someone in no league', () => {
       expect(shared).toEqual([
         'Join Noodle family on Daily Noodle: tap the link, pick a nickname, and your results go on our daily leaderboards.\nhttps://dailynoodle.co.uk/join.html?c=NEWC2345',
       ]);
+    });
+
+    it('THEN from the finish sheet’s offer it reads Start and invite, and the share sheet opens with the invite (28 Nov 2026)', async () => {
+      const rec = jest.spyOn(appRecorder, 'event').mockImplementation(() => undefined);
+      params.mockReturnValue({ go: 'start', from: 'offer', n: '1' });
+      m.boardCreate.mockResolvedValue({ code: 'NEWC2345', name: 'Hendersons' });
+      m.boardMine.mockResolvedValue([
+        mineRow({ ...FAMILY, code: 'NEWC2345', name: 'Hendersons', pin: false }),
+      ]);
+      await renderWithProviders(<LeaguesScreen />);
+      expect(screen.getByTestId('start-form')).toBeOnTheScreen();
+      expect(screen.getByText(/your phone’s share sheet opens/)).toBeOnTheScreen();
+      await type('League name', 'Hendersons');
+      await type('Your nickname', 'Sam');
+      await fireEvent.press(screen.getByTestId('rules-tick'));
+      await press('Start and invite');
+      await waitFor(() => expect(shared).toHaveLength(1));
+      expect(shared[0]).toBe(
+        'Join Hendersons on Daily Noodle: tap the link, pick a nickname, and your results go on our daily leaderboards.\nhttps://dailynoodle.co.uk/join.html?c=NEWC2345',
+      );
+      expect(screen.getByTestId('notice-created')).toBeOnTheScreen();
+      expect(rec).toHaveBeenCalledWith('board_create', { from: 'offer' }, 'board.html');
+      rec.mockRestore();
+    });
+
+    it('THEN started from the intro it reads Start league and opens no share sheet by itself', async () => {
+      const rec = jest.spyOn(appRecorder, 'event').mockImplementation(() => undefined);
+      m.boardCreate.mockResolvedValue({ code: 'NEWC2345', name: 'Family' });
+      m.boardMine.mockResolvedValue([mineRow({ ...FAMILY, code: 'NEWC2345', pin: false })]);
+      await renderWithProviders(<LeaguesScreen />);
+      await press('Start a league');
+      expect(screen.queryByText(/your phone’s share sheet opens/)).toBeNull();
+      await type('League name', 'Family');
+      await type('Your nickname', 'Alec');
+      await fireEvent.press(screen.getByTestId('rules-tick'));
+      await press('Start league');
+      await waitFor(() => expect(screen.getByTestId('notice-created')).toBeOnTheScreen());
+      expect(shared).toEqual([]);
+      expect(rec).toHaveBeenCalledWith('board_create', { from: 'intro' }, 'board.html');
+      rec.mockRestore();
     });
 
     it('THEN a nickname the server would refuse is caught first, in the site’s words', async () => {
