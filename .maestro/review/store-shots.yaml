@@ -13,6 +13,11 @@ appId: ${APP_ID}
     timeout: 10000
 - waitForAnimationToEnd
 - takeScreenshot: store-${SET}-today
+- scrollUntilVisible:
+    element:
+      id: today-mini
+    direction: DOWN
+    timeout: 20000
 - tapOn:
     id: today-mini
 - extendedWaitUntil:

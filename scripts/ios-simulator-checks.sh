@@ -42,9 +42,13 @@ up() { # udid: boot, install, a tidy status bar (9:41, full battery) for screens
 }
 down() { xcrun simctl shutdown "$1" || true; }
 
+# ONLY (comma-separated check names) picks some checks; empty runs them all.
+wanted() { [ -z "${ONLY:-}" ] || [[ ",$ONLY," == *",$1,"* ]]; }
+
 flow() { # udid name file [env...]
   local udid=$1 name=$2 file=$3
   shift 3
+  wanted "$name" || return 0
   local args=(-e "APP_ID=$APP_ID")
   for e in "$@"; do args+=(-e "$e"); done
   if maestro --device "$udid" test "${args[@]}" --test-output-dir "$OUT/$name" "$file" \
@@ -53,6 +57,10 @@ flow() { # udid name file [env...]
   else
     echo "- ❌ $name (see $name.log)" >> "$OUT/summary.md"
     FAILED=1
+    # The artifact has the whole log; the job log gets the end, where the failing step is.
+    echo "::group::❌ $name"
+    tail -40 "$OUT/$name.log"
+    echo "::endgroup::"
   fi
   # Maestro writes screenshots to the working directory.
   mkdir -p "$OUT/$name"
@@ -70,6 +78,31 @@ PHONE=$(new_device "Review iPhone" "iPhone 17 Pro" "iPhone 16 Pro" "iPhone 16" "
 echo "Runtime $RUNTIME" >> "$OUT/summary.md"
 up "$PHONE"
 reset "$PHONE"
+
+# What the flows can see on Today: every element with an id, label or text, top to bottom.
+if wanted probe; then
+  xcrun simctl launch "$PHONE" "$APP_ID" > /dev/null
+  sleep 20
+  maestro --device "$PHONE" hierarchy > "$OUT/hierarchy-today.json" 2> /dev/null || true
+  echo "::group::Today as the flows see it"
+  node -e '
+    const walk = (n, out) => {
+      const a = n.attributes || {};
+      const bits = [a["resource-id"] && "id=" + a["resource-id"],
+        a.accessibilityText && "label=" + JSON.stringify(a.accessibilityText),
+        a.text && "text=" + JSON.stringify(a.text)].filter(Boolean);
+      if (bits.length) out.push(bits.join(" ") + "  " + (a.bounds || ""));
+      (n.children || []).forEach((c) => walk(c, out));
+      return out;
+    };
+    try {
+      const raw = require("fs").readFileSync(process.argv[1], "utf8");
+      walk(JSON.parse(raw.slice(raw.indexOf("{"))), []).slice(0, 150).forEach((l) => console.log(l));
+    } catch (e) { console.log("no hierarchy: " + e.message); }' "$OUT/hierarchy-today.json"
+  echo "::endgroup::"
+  xcrun simctl terminate "$PHONE" "$APP_ID" || true
+fi
+
 flow "$PHONE" borders-round .maestro/review/borders-round.yaml
 flow "$PHONE" resume .maestro/review/resume.yaml
 flow "$PHONE" screens-normal .maestro/review/screens.yaml SET=normal
@@ -93,7 +126,8 @@ reset "$PHONE"
 down "$PHONE"
 
 # Small screen: the 4.7-inch iPhone SE (375 × 667 pt), the smallest phone on iOS 26.
-SMALL=$(new_device "Review SE" "iPhone SE (3rd generation)" "iPhone SE (2nd generation)")
+SMALL=""
+wanted screens-small && SMALL=$(new_device "Review SE" "iPhone SE (3rd generation)" "iPhone SE (2nd generation)")
 if [ -n "$SMALL" ]; then
   up "$SMALL"
   flow "$SMALL" screens-small .maestro/review/screens.yaml SET=small
@@ -103,7 +137,8 @@ else
 fi
 
 # App Store screenshots: the 6.9-inch size App Store Connect asks for.
-BIG=$(new_device "Store iPhone" "iPhone 17 Pro Max" "iPhone 16 Pro Max")
+BIG=""
+{ wanted store-light || wanted store-dark; } && BIG=$(new_device "Store iPhone" "iPhone 17 Pro Max" "iPhone 16 Pro Max")
 if [ -n "$BIG" ]; then
   up "$BIG"
   flow "$BIG" store-light .maestro/review/store-shots.yaml SET=light

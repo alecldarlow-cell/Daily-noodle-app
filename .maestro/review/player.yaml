@@ -4,7 +4,13 @@ appId: ${APP_ID}
 - tapOn: Today
 - extendedWaitUntil:
     visible:
+      id: today-screen
+    timeout: 20000
+# Rows below the fold need a scroll before they can be tapped (iPhone lists them all).
+- scrollUntilVisible:
+    element:
       id: today-${TYPE}
+    direction: DOWN
     timeout: 20000
 - tapOn:
     id: today-${TYPE}

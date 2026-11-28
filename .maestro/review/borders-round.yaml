@@ -8,6 +8,11 @@ appId: ${APP_ID}
     visible:
       id: today-screen
     timeout: 40000
+- scrollUntilVisible:
+    element:
+      id: today-borders
+    direction: DOWN
+    timeout: 20000
 - tapOn:
     id: today-borders
 - tapOn:
