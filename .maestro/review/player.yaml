@@ -56,6 +56,14 @@ appId: ${APP_ID}
       platform: iOS
     commands:
       - tapOn: 'Back to Puzzles'
+      - waitForAnimationToEnd
+      # A tap during a board's opening animation can be lost (seen once on Sweep): once more.
+      - runFlow:
+          when:
+            notVisible:
+              id: today-screen
+          commands:
+            - tapOn: 'Back to Puzzles'
 - extendedWaitUntil:
     visible:
       id: today-screen
