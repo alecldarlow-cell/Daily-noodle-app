@@ -24,18 +24,44 @@ export const PLAY_APP_URL = 'market://details?id=uk.co.dailynoodle.app';
 export const PLAY_WEB_URL = 'https://play.google.com/store/apps/details?id=uk.co.dailynoodle.app';
 
 /**
- * Rate Daily Noodle (Alec, 20 Nov 2026: no ratings yet, and Google rations the in-app sheet):
- * opens the store listing, recorded as an anonymous `review_link`. There's no App Store
- * listing yet, so iPhones don't show the row.
+ * The App Store's id for Daily Noodle (#214): App Store Connect › App Information › Apple ID,
+ * digits only. Empty until the app is on the App Store, and while it is, iPhones don't show
+ * the Rate row. Filling it in is the only change the row needs.
  */
-export function openRating(record = appRecorder.event): void {
+export const APP_STORE_ID = '';
+
+/**
+ * Where Rate Daily Noodle sends a player on this phone: the store app first, its web page if
+ * that won't open. Null on an iPhone until there's an App Store id.
+ */
+export function ratingUrls(
+  os: string = Platform.OS,
+  appStoreId: string = APP_STORE_ID,
+): [string, string] | null {
+  if (os !== 'ios') return [PLAY_APP_URL, PLAY_WEB_URL];
+  if (!/^\d+$/.test(appStoreId)) return null;
+  const listing = `apps.apple.com/app/id${appStoreId}?action=write-review`;
+  return [`itms-apps://${listing}`, `https://${listing}`];
+}
+
+/**
+ * Rate Daily Noodle (Alec, 20 Nov 2026: no ratings yet, and Google rations the in-app sheet):
+ * opens the store listing (on iPhone, straight to writing a review), recorded as an anonymous
+ * `review_link`. The row passes `ratingUrls()`; without it, the Play listing.
+ */
+export function openRating(
+  record = appRecorder.event,
+  urls: [string, string] | null = [PLAY_APP_URL, PLAY_WEB_URL],
+): void {
+  if (!urls) return;
   try {
     record('review_link', { from: 'account' }, 'review');
   } catch {
     // Recording must never stop the link.
   }
-  Linking.openURL(PLAY_APP_URL)
-    .catch(() => Linking.openURL(PLAY_WEB_URL))
+  const [app, web] = urls;
+  Linking.openURL(app)
+    .catch(() => Linking.openURL(web))
     .catch(() => undefined);
 }
 
@@ -58,9 +84,12 @@ export function deletionRequestUrl(email: string | null): string {
 export function AccountScreen({
   client = authClient(),
   store = appStorage,
+  appStoreId = APP_STORE_ID,
 }: {
   client?: SupabaseClient | null;
   store?: CachedStorage;
+  /** Tests only: stands in for APP_STORE_ID. */
+  appStoreId?: string;
 }) {
   const t = useTokens();
   const account = useAccount(client);
@@ -68,6 +97,7 @@ export function AccountScreen({
   const [notice, setNotice] = useState<string | null>(null);
   const [mailFailed, setMailFailed] = useState(false);
   const signedIn = account.kind === 'signed-in';
+  const rating = ratingUrls(Platform.OS, appStoreId);
   const syncOn = account.kind !== 'off';
 
   if (view === 'delete' && syncOn)
@@ -123,13 +153,13 @@ export function AccountScreen({
             testID="account-privacy"
             onPress={() => router.navigate('/privacy')}
           />
-          {Platform.OS !== 'ios' ? (
+          {rating ? (
             <Row
               role="link"
               label="Rate Daily Noodle"
-              sub="Tell other players what you think on Google Play"
+              sub={`Tell other players what you think on ${Platform.OS === 'ios' ? 'the App Store' : 'Google Play'}`}
               testID="account-rate"
-              onPress={() => openRating()}
+              onPress={() => openRating(undefined, rating)}
             />
           ) : null}
           <Row role="link" label="Contact us" testID="account-contact" onPress={contact} />

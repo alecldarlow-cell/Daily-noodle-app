@@ -16,6 +16,7 @@ import {
   PLAY_WEB_URL,
   deletionRequestUrl,
   openRating,
+  ratingUrls,
 } from './AccountScreen';
 
 jest.mock('expo-router', () => ({ router: { navigate: jest.fn() } }));
@@ -390,6 +391,60 @@ describe('GIVEN the Rate Daily Noodle row (Alec, 20 Nov 2026: no ratings yet)', 
       Platform.OS = 'ios';
       await render(<AccountScreen client={null} />);
       expect(screen.queryByTestId('account-rate')).toBeNull();
+    });
+  });
+
+  describe('WHEN the app has an App Store id and the player is on an iPhone (#214)', () => {
+    it('THEN the row names the App Store and opens the review page there', async () => {
+      Platform.OS = 'ios';
+      const open = jest.spyOn(Linking, 'openURL').mockResolvedValue(undefined);
+      await render(<AccountScreen client={null} appStoreId="6740001234" />);
+      const row = screen.getByRole('link', { name: 'Rate Daily Noodle' });
+      expect(within(row).getByText(/on the App Store$/)).toBeTruthy();
+      await act(async () => fireEvent.press(row));
+      expect(open).toHaveBeenCalledWith(
+        'itms-apps://apps.apple.com/app/id6740001234?action=write-review',
+      );
+      expect(open).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('WHEN the App Store app won’t open the link', () => {
+    it('THEN the review page opens on the web instead, and the tap is recorded', async () => {
+      const open = jest
+        .spyOn(Linking, 'openURL')
+        .mockRejectedValueOnce(new Error('no store'))
+        .mockResolvedValue(undefined);
+      const record = jest.fn();
+      openRating(record, ratingUrls('ios', '6740001234'));
+      await flush();
+      expect(open).toHaveBeenNthCalledWith(
+        2,
+        'https://apps.apple.com/app/id6740001234?action=write-review',
+      );
+      expect(record).toHaveBeenCalledWith('review_link', { from: 'account' }, 'review');
+    });
+  });
+
+  describe('WHEN there is nowhere to rate (an iPhone without an App Store id)', () => {
+    it('THEN nothing opens and nothing is recorded', () => {
+      const open = jest.spyOn(Linking, 'openURL').mockResolvedValue(undefined);
+      const record = jest.fn();
+      openRating(record, ratingUrls('ios', ''));
+      expect(open).not.toHaveBeenCalled();
+      expect(record).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('WHEN ratingUrls reads the platform and id', () => {
+    it('THEN Android always gets Play, and an iPhone needs an all-digit id', () => {
+      expect(ratingUrls('android', '')).toEqual([PLAY_APP_URL, PLAY_WEB_URL]);
+      expect(ratingUrls('ios', '')).toBeNull();
+      expect(ratingUrls('ios', 'id674')).toBeNull();
+      expect(ratingUrls('ios', '674')).toEqual([
+        'itms-apps://apps.apple.com/app/id674?action=write-review',
+        'https://apps.apple.com/app/id674?action=write-review',
+      ]);
     });
   });
 });
