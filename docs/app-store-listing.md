@@ -10,8 +10,10 @@ does. Tracker: #218.
 
 - **#188 in-app account deletion** must be in the build. Apple requires deletion to start inside
   the app; an email request is not enough.
-- **#215 sign-in code** should be in the build, so the reviewer can sign in with a code typed on
-  the review iPhone (the review notes below assume it).
+- **#215 sign-in code** should be in the build and switched on, so the reviewer can sign in with
+  a code typed on the review iPhone (the review notes below assume it). The app's box is built
+  but hidden until the sign-in emails carry the code: the Supabase template step in
+  `docs/muse/supabase-sign-in-code.md`, then `"signInCode": true` in the site's `features.json`.
 - **Sign in with Apple** is not needed: Apple asks for it only when an app offers a third-party
   or social login. Daily Noodle's sign-in is email only.
 - **Export compliance** is already answered by the build (`ios.config.usesNonExemptEncryption:
