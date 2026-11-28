@@ -1,0 +1,79 @@
+name: iOS simulator checks
+
+# The iOS pass (#217): builds this commit for the iPhone simulator (no signing, no Apple
+# account), then runs .maestro/review/ on iPhone simulators under normal, dark, the largest
+# text, a small screen and reduce motion, checks the app's own links, and takes App Store
+# screenshots at the 6.9-inch size. Screenshots and a summary upload as an artifact.
+# Run by hand only (Actions → iOS simulator checks → Run workflow). macOS runners are free
+# on this public repo. Nothing is published or signed for the store.
+on:
+  workflow_dispatch:
+  push: # TEMPORARY while #217 is built; removed before merge
+    branches: [ios/simulator-checks]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ios-simulator-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ios:
+    runs-on: macos-26
+    timeout-minutes: 150
+    env:
+      APP_ID: uk.co.dailynoodle.app
+      # The public values every build carries (eas.json › base.env).
+      EXPO_PUBLIC_SUPABASE_URL: https://gnehttjheoyutrfsvslq.supabase.co
+      EXPO_PUBLIC_SUPABASE_ANON_KEY: sb_publishable_dEMntRNiElpGHn3Hd5Ef1Q_HvLa2wTB
+      EXPO_PUBLIC_SYNC: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Use the newest Xcode on the runner
+        run: |
+          X=$(ls -d /Applications/Xcode_*.app | sort -V | tail -1)
+          sudo xcode-select -s "$X"
+          xcodebuild -version
+          xcrun simctl list runtimes
+      - name: Prebuild iOS
+        run: |
+          npx expo prebuild --platform ios --clean
+          # Run this commit's bundle, never an over-the-air update from a channel.
+          P=$(ls ios/*/Supporting/Expo.plist | head -1)
+          /usr/libexec/PlistBuddy -c "Delete :EXUpdatesEnabled" "$P" 2>/dev/null || true
+          /usr/libexec/PlistBuddy -c "Add :EXUpdatesEnabled bool false" "$P"
+      - name: Build for the simulator (unsigned)
+        run: |
+          WS=$(ls -d ios/*.xcworkspace | head -1)
+          SCHEME=$(basename "$WS" .xcworkspace)
+          if ! xcodebuild -workspace "$WS" -scheme "$SCHEME" -configuration Release \
+              -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' \
+              -derivedDataPath build CODE_SIGNING_ALLOWED=NO > xcodebuild.log 2>&1; then
+            grep -E "error:|BUILD FAILED" xcodebuild.log | head -40
+            tail -80 xcodebuild.log
+            exit 1
+          fi
+          echo "APP=$(ls -d "$PWD"/build/Build/Products/Release-iphonesimulator/*.app | head -1)" >> "$GITHUB_ENV"
+      - name: Install Maestro
+        run: |
+          curl -Ls "https://get.maestro.mobile.dev" | bash
+          echo "$HOME/.maestro/bin" >> "$GITHUB_PATH"
+      - name: Run the checks
+        run: OUT=ios-results scripts/ios-simulator-checks.sh
+      - name: Summary
+        if: always()
+        run: cat ios-results/summary.md >> "$GITHUB_STEP_SUMMARY" || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ios-results
+          path: |
+            ios-results
+            xcodebuild.log
+          retention-days: 14

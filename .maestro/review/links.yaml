@@ -1,0 +1,23 @@
+# The app's own links on iPhone (#217): a league invite and a (dud) sign-in link open the
+# app's screens, not a blank page or a crash. Read by eye from the screenshots.
+appId: ${APP_ID}
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible:
+      id: today-screen
+    timeout: 40000
+- openLink: dailynoodle://leagues?join=ABCD2345
+# iOS asks before an app link opens from outside the app.
+- tapOn:
+    text: 'Open'
+    optional: true
+- waitForAnimationToEnd
+- takeScreenshot: link-league-join
+- openLink: dailynoodle://auth#access_token=x&refresh_token=y&type=magiclink
+- tapOn:
+    text: 'Open'
+    optional: true
+- waitForAnimationToEnd
+- takeScreenshot: link-auth-dud
