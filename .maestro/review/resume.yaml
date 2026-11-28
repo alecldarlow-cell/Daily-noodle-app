@@ -12,6 +12,7 @@ appId: ${APP_ID}
     element:
       id: today-borders
     direction: DOWN
+    centerElement: true
     timeout: 20000
 - tapOn:
     id: today-borders
@@ -31,6 +32,7 @@ appId: ${APP_ID}
     element:
       id: today-borders
     direction: DOWN
+    centerElement: true
     timeout: 20000
 - tapOn:
     id: today-borders

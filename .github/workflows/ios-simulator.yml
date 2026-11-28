@@ -34,7 +34,7 @@ concurrency:
 env:
   # TEMPORARY while #217 is built: what a push to the branch runs.
   PUSH_APP_RUN: '46155343502'
-  PUSH_ONLY: 'probe,borders-round,resume,screens-normal,links,screens-small,store-light'
+  PUSH_ONLY: 'screens-normal,screens-small,screens-dark,store-light,store-dark'
 
 jobs:
   ios:
@@ -136,7 +136,7 @@ jobs:
           REPO: ${{ github.repository }}
         run: |
           mkdir shots && cd shots && git init -q && git checkout -q -b ios-sim-shots
-          rsync -a --include='*/' --include='*.png' --include='*.log' --include='*.md' \
+          rsync -a --exclude='logs/' --include='*/' --include='*.png' --include='*.log' --include='*.md' \
             --include='*.txt' --exclude='*' --prune-empty-dirs ../ios-results/ ./
           git add -A
           git -c user.name=github-actions -c user.email=actions@users.noreply.github.com \

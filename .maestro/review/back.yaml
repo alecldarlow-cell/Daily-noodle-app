@@ -34,7 +34,7 @@ appId: ${APP_ID}
     id: today-path
 - extendedWaitUntil:
     visible:
-      id: 'start-card|finish-sheet|play-screen'
+      id: 'start-card|finish-sheet|lab-finish|play-screen|[a-z]+-home'
     timeout: 15000
 - back
 - extendedWaitUntil:
@@ -51,7 +51,7 @@ appId: ${APP_ID}
 - tapOn: Mini 100
 - extendedWaitUntil:
     visible:
-      id: 'start-card|finish-sheet|play-screen'
+      id: 'start-card|finish-sheet|lab-finish|play-screen|[a-z]+-home'
     timeout: 15000
 - back
 - extendedWaitUntil:

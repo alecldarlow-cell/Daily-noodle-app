@@ -1,28 +1,27 @@
-# App Store screenshots (#217), taken on a 6.9-inch iPhone simulator with a 9:41 status
-# bar: today's Doku solved to its finish sheet (../doku.yaml), then Today, a Mini board,
-# Archive and Leagues. SET names the run (light, dark).
+# App Store screenshots (#217), on a 6.9-inch iPhone simulator with a 9:41 status bar: Today,
+# a Mini board, Leagues and the Archive, matching the Play set's captions where the scene
+# is the same. SET names the run (light, dark).
 appId: ${APP_ID}
 ---
-- runFlow: ../doku.yaml
-- waitForAnimationToEnd
-- takeScreenshot: store-${SET}-doku-finish
-- tapOn: 'Back to Puzzles'
+- launchApp:
+    clearState: true
 - extendedWaitUntil:
     visible:
       id: today-screen
-    timeout: 10000
+    timeout: 40000
 - waitForAnimationToEnd
 - takeScreenshot: store-${SET}-today
 - scrollUntilVisible:
     element:
       id: today-mini
     direction: DOWN
+    centerElement: true
     timeout: 20000
 - tapOn:
     id: today-mini
 - extendedWaitUntil:
     visible:
-      id: 'start-card|finish-sheet|play-screen'
+      id: 'start-card|finish-sheet|lab-finish|play-screen|[a-z]+-home'
     timeout: 15000
 - tapOn:
     text: 'Play|Start'
@@ -30,6 +29,13 @@ appId: ${APP_ID}
 - waitForAnimationToEnd
 - takeScreenshot: store-${SET}-mini
 - tapOn: 'Back to Puzzles'
+- extendedWaitUntil:
+    visible:
+      id: today-screen
+    timeout: 10000
+- tapOn: Leagues
+- waitForAnimationToEnd
+- takeScreenshot: store-${SET}-leagues
 - tapOn: Archive
 - extendedWaitUntil:
     visible:
@@ -37,6 +43,3 @@ appId: ${APP_ID}
     timeout: 20000
 - waitForAnimationToEnd
 - takeScreenshot: store-${SET}-archive
-- tapOn: Leagues
-- waitForAnimationToEnd
-- takeScreenshot: store-${SET}-leagues

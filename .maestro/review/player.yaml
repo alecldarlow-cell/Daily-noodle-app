@@ -11,12 +11,13 @@ appId: ${APP_ID}
     element:
       id: today-${TYPE}
     direction: DOWN
+    centerElement: true
     timeout: 20000
 - tapOn:
     id: today-${TYPE}
 - extendedWaitUntil:
     visible:
-      id: 'start-card|finish-sheet|play-screen'
+      id: 'start-card|finish-sheet|lab-finish|play-screen|[a-z]+-home'
     timeout: 15000
 - waitForAnimationToEnd
 - takeScreenshot: ${SET}-${TYPE}-start
