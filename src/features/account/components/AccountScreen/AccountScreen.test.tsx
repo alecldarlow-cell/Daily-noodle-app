@@ -227,6 +227,49 @@ describe('GIVEN a signed-out player in a build with sign-in', () => {
   });
 });
 
+describe('GIVEN a signed-out player asking for their account to be deleted (G2)', () => {
+  const open = async () => {
+    const { client } = fakeClient();
+    await render(<AccountScreen client={client} store={memoryStorage()} />);
+    await flush();
+    await act(async () => fireEvent.press(screen.getByRole('button', { name: 'Delete my data' })));
+  };
+  describe('WHEN they tap “Request account deletion”', () => {
+    it('THEN an email to the privacy page’s contact opens, asking for the account to go', async () => {
+      const spy = jest.spyOn(Linking, 'openURL').mockResolvedValue(undefined);
+      await open();
+      await act(async () =>
+        fireEvent.press(screen.getByRole('button', { name: 'Request account deletion' })),
+      );
+      const url = spy.mock.calls[0]![0];
+      expect(url).toBe(deletionRequestUrl(null));
+      expect(url.startsWith(`mailto:${CONTACT_EMAIL}?subject=`)).toBe(true);
+      expect(CONTACT_EMAIL).toBe('contact@dailynoodle.co.uk');
+      expect(decodeURIComponent(url)).toMatch(/Delete my Daily Noodle account/);
+      expect(screen.queryByTestId('account-mail-failed')).toBeNull();
+    });
+
+    it('THEN with no email app, it says where to write instead', async () => {
+      jest.spyOn(Linking, 'openURL').mockRejectedValue(new Error('no handler'));
+      await open();
+      await act(async () =>
+        fireEvent.press(screen.getByRole('button', { name: 'Request account deletion' })),
+      );
+      await flush();
+      expect(screen.getByTestId('account-mail-failed')).toHaveTextContent(CONTACT_EMAIL, {
+        exact: false,
+      });
+    });
+  });
+
+  it('THEN there is no Delete my account row: it needs a sign-in', async () => {
+    const { client } = fakeClient();
+    await render(<AccountScreen client={client} store={memoryStorage()} />);
+    await flush();
+    expect(screen.queryByTestId('account-delete-account')).toBeNull();
+  });
+});
+
 describe('GIVEN a signed-in player', () => {
   const signedIn = async (opts: { fail?: string } = {}) => {
     const r = fakeClient({ email: 'alec@example.com', remote: { 'digi-mini-v1': { v: 1 } } });
@@ -301,38 +344,16 @@ describe('GIVEN a signed-in player', () => {
     });
   });
 
-  describe('WHEN they tap “Request account deletion” (G2)', () => {
-    it('THEN an email to the privacy page’s contact opens, asking for the account to go, with their email', async () => {
-      const open = jest.spyOn(Linking, 'openURL').mockResolvedValue(undefined);
+  describe('WHEN they open “Delete my data” (#188)', () => {
+    it('THEN the account card deletes the account here, from its own confirm screen, not by email', async () => {
       await signedIn();
       await act(async () =>
         fireEvent.press(screen.getByRole('button', { name: 'Delete my data' })),
       );
-      await act(async () =>
-        fireEvent.press(screen.getByRole('button', { name: 'Request account deletion' })),
-      );
-      const url = open.mock.calls[0]![0];
-      expect(url).toBe(deletionRequestUrl('alec@example.com'));
-      expect(url.startsWith(`mailto:${CONTACT_EMAIL}?subject=`)).toBe(true);
-      expect(CONTACT_EMAIL).toBe('contact@dailynoodle.co.uk');
-      expect(decodeURIComponent(url)).toMatch(/Delete my Daily Noodle account/);
-      expect(decodeURIComponent(url)).toMatch(/Sign-in email: alec@example\.com/);
-      expect(screen.queryByTestId('account-mail-failed')).toBeNull();
-    });
-
-    it('THEN with no email app, it says where to write instead', async () => {
-      jest.spyOn(Linking, 'openURL').mockRejectedValue(new Error('no handler'));
-      await signedIn();
-      await act(async () =>
-        fireEvent.press(screen.getByRole('button', { name: 'Delete my data' })),
-      );
-      await act(async () =>
-        fireEvent.press(screen.getByRole('button', { name: 'Request account deletion' })),
-      );
-      await flush();
-      expect(screen.getByTestId('account-mail-failed')).toHaveTextContent(CONTACT_EMAIL, {
-        exact: false,
-      });
+      expect(screen.getByTestId('delete-account-says')).toHaveTextContent(/Former player/);
+      expect(screen.queryByTestId('account-request-deletion')).toBeNull();
+      await act(async () => fireEvent.press(screen.getByTestId('account-open-delete-account')));
+      expect(screen.getByRole('header', { name: 'Delete your account?' })).toBeOnTheScreen();
     });
   });
 
